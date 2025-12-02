@@ -528,6 +528,12 @@ dispatch(new YourJob($data));
 
 ## Documentation Wiki
 
+### AI-Powered Documentation
+
+📚 **[DeepWiki Documentation](https://deepwiki.com/oyi77/AlgoExpertHub)** - Interactive AI-powered documentation with visual diagrams, code analysis, and context-aware Q&A for this repository.
+
+### Manual Documentation
+
 Complete documentation for all platform features and workflows:
 
 - 📖 [Documentation Index](./docs/README.md) - Overview of all documentation
