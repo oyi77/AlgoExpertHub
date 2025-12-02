@@ -1,0 +1,38 @@
+{
+    "name": "trading-preset-addon",
+    "title": "Trading Preset Addon",
+    "description": "Comprehensive preset system for trading configurations that can be applied to signals, trading bots, and copy trading executions",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\TradingPresetAddon",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": {},
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes, views, and menus for preset management.",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Preset Management",
+            "description": "Enables user-facing preset management pages and navigation.",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "core_services",
+            "name": "Core Services",
+            "description": "Provides preset services for execution engine, copy trading, and trading bots.",
+            "targets": ["services"],
+            "enabled": true
+        }
+    ]
+}
+

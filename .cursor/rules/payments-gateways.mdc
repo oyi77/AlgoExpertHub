@@ -1,0 +1,547 @@
+---
+description: Payment gateway integration patterns and financial transaction workflows
+globs: ["main/app/Services/Gateway/**/*", "main/app/Services/PaymentService.php", "main/app/Http/Controllers/PaymentController.php"]
+alwaysApply: true
+---
+
+# Payment Gateway & Financial Transaction Rules
+
+## Overview
+The platform supports multiple payment gateways for plan subscriptions and wallet deposits. All gateways follow a consistent service pattern with automated or manual processing.
+
+## Payment Flow Architecture
+
+### Step 1: Gateway Selection
+- User selects plan → Redirected to gateway selection page
+- Route: `/user/payment-method/{plan_id}`
+- Controller: `PaymentController::gateways($planId)`
+- View displays active gateways (`status = 1`)
+
+### Step 2: Payment Initiation
+- User selects gateway → Form submitted
+- Route: `POST /user/pay-now`
+- Controller: `PaymentController::paynow(PaymentRequest $request)`
+- Service: `PaymentService::payNow($request)`
+
+### Step 3: Transaction Creation
+**Service Logic** (`PaymentService::payNow`):
+```php
+1. Validate gateway exists and is active
+2. Generate unique transaction ID: Str::upper(Str::random(16))
+3. Calculate total: ($amount * $gateway->rate) + $gateway->charge
+4. Create Payment or Deposit record (status = 0 = pending)
+5. Store trx in session
+6. Return redirect to gateway details page
+```
+
+### Step 4: Gateway Processing
+- Route: `/user/gateway-details/{gateway_id}`
+- Controller: `PaymentController::gatewayRedirect($gatewayId)`
+- Flow:
+  1. Retrieve gateway and payment/deposit by trx (from session)
+  2. Route to appropriate gateway service:
+     - Manual: `App\Services\Gateway\Manual::process()`
+     - Automated: `App\Services\Gateway\{GatewayName}Service::process()`
+  3. Gateway service returns redirect URL or view
+  4. User redirected to external payment page OR manual instructions
+
+### Step 5: Gateway Callback
+- Route: Varies per gateway (e.g., `/user/payment/success/paypal`)
+- Gateway sends callback with payment result
+- Service validates signature/authenticity
+- Update Payment/Deposit status:
+  - `status = 1` → Approved
+  - `status = 2` → Rejected
+
+### Step 6: Subscription Activation (For Plan Payments)
+**On Payment Approval**:
+```php
+1. Create PlanSubscription:
+   - user_id, plan_id
+   - start_date = now()
+   - end_date = calculated (limited: now() + duration, lifetime: now() + 50 years)
+   - is_current = 1 (deactivate old subscription's is_current)
+   - status = 'active'
+2. Send notification to user (email, Telegram)
+3. Send notification to admin
+4. Update user's balance (if deposit)
+5. Create Transaction record
+```
+
+## Supported Payment Gateways
+
+### Manual Gateway
+- **Type**: 0 (manual)
+- **Service**: `App\Services\Gateway\Manual`
+- **Flow**:
+  1. Admin provides bank details, instructions
+  2. User makes payment offline (bank transfer)
+  3. User uploads proof of payment
+  4. Admin reviews and approves/rejects
+- **Configuration**: `parameter` JSON with instructions
+
+### PayPal
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\PaypalService`
+- **API**: PayPal REST API
+- **Credentials**: Client ID, Client Secret (in `parameter` JSON)
+- **Flow**:
+  1. Create PayPal order
+  2. Redirect to PayPal approval link
+  3. User approves payment
+  4. Callback to `/user/payment/success/paypal`
+  5. Capture payment, update status
+
+### Stripe
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\StripeService`
+- **API**: Stripe Checkout or Payment Intents
+- **Credentials**: Publishable Key, Secret Key
+- **Flow**:
+  1. Create Stripe checkout session
+  2. Redirect to Stripe hosted page
+  3. User completes payment
+  4. Webhook callback updates status
+
+### Paystack
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\PaystackService`
+- **API**: Paystack API
+- **Credentials**: Public Key, Secret Key
+- **Region**: Nigeria, Ghana, South Africa
+- **Flow**:
+  1. Initialize transaction
+  2. Redirect to Paystack page
+  3. User pays
+  4. Callback verifies transaction
+
+### Paytm
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\PaytmService`
+- **API**: Paytm Payment Gateway
+- **Credentials**: Merchant ID, Merchant Key, Website, Channel, Industry Type
+- **Region**: India
+- **Flow**:
+  1. Generate checksum hash
+  2. POST form to Paytm endpoint
+  3. User completes payment
+  4. Callback verifies checksum
+
+### Mollie
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\MollieService`
+- **API**: Mollie API
+- **Package**: `mollie/laravel-mollie`
+- **Credentials**: API Key
+- **Flow**:
+  1. Create Mollie payment
+  2. Redirect to Mollie checkout
+  3. User selects payment method (iDEAL, credit card, etc.)
+  4. Callback updates status
+
+### Mercadopago
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\MercadopagoService`
+- **API**: Mercadopago SDK
+- **Package**: `mercadopago/dx-php`
+- **Credentials**: Public Key, Access Token
+- **Region**: Latin America
+- **Flow**:
+  1. Create preference
+  2. Redirect to Mercadopago page
+  3. User pays
+  4. Webhook updates status
+
+### Coinpayments (Crypto)
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\CoinpaymentsService`
+- **API**: Coinpayments API
+- **Package**: `coinpaymentsnet/coinpayments-php`
+- **Credentials**: Merchant ID, IPN Secret, Public Key, Private Key
+- **Coins**: BTC, ETH, LTC, DOGE, etc.
+- **Flow**:
+  1. Create transaction
+  2. Redirect to Coinpayments checkout
+  3. User sends crypto
+  4. IPN callback confirms payment
+
+### Nowpayments (Crypto)
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\NowpaymentsService`
+- **API**: Nowpayments API
+- **Package**: `nowpayments/nowpayments-api-php`
+- **Credentials**: API Key
+- **Coins**: 100+ cryptocurrencies
+- **Flow**:
+  1. Create invoice
+  2. Redirect to invoice URL
+  3. User pays in crypto
+  4. Callback confirms payment
+
+### Gourl (Crypto)
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\Gourl`
+- **API**: GoUrl Bitcoin Gateway
+- **Credentials**: Private Key, Public Key
+- **Coins**: BTC, BCH, LTC, DOGE, etc.
+- **Flow**:
+  1. Create payment box
+  2. Display payment QR code
+  3. User sends crypto
+  4. Callback confirms payment
+
+### Paghiper (Brazil)
+- **Type**: 1 (automated)
+- **Service**: `App\Services\Gateway\PaghiperService`
+- **API**: Paghiper API
+- **Package**: `doocacommerce/paghiper-php-sdk`
+- **Credentials**: API Key, Token
+- **Payment Methods**: Boleto, PIX
+- **Region**: Brazil
+
+## Gateway Service Pattern
+
+### Interface
+All gateway services implement a consistent interface:
+```php
+class {Gateway}Service
+{
+    /**
+     * Process payment
+     * 
+     * @param Request $request
+     * @param Gateway $gateway
+     * @param float $totalAmount
+     * @param Payment|Deposit $deposit
+     * @return array ['type' => 'success|error', 'message' => '...', 'data' => ...]
+     */
+    public static function process($request, $gateway, $totalAmount, $deposit)
+    {
+        // 1. Extract gateway credentials from $gateway->parameter
+        // 2. Call gateway API to create transaction
+        // 3. Return redirect URL or view data
+        // 4. Return ['type' => 'success', 'data' => $redirectUrl] OR ['type' => 'error', 'message' => '...']
+    }
+    
+    /**
+     * Handle gateway callback
+     * 
+     * @param Request $request
+     * @return Response
+     */
+    public function success(Request $request)
+    {
+        // 1. Retrieve payment by trx
+        // 2. Validate gateway signature/response
+        // 3. Update payment status
+        // 4. If approved, create subscription (for payments)
+        // 5. Redirect user with success/error message
+    }
+}
+```
+
+### Manual Gateway Service
+```php
+class Manual
+{
+    public static function process($request, $gateway, $totalAmount, $deposit)
+    {
+        // Return view with manual payment instructions
+        // User uploads payment proof
+        // Admin reviews and approves manually
+        
+        return [
+            'type' => 'success',
+            'view' => 'user.gateway.manual',
+            'data' => [
+                'gateway' => $gateway,
+                'deposit' => $deposit,
+                'instructions' => $gateway->parameter->instructions
+            ]
+        ];
+    }
+}
+```
+
+## Gateway Configuration
+
+### Database Schema
+**Table**: `gateways`
+**Fields**:
+- `name` (string, unique): Gateway identifier (e.g., 'paypal', 'stripe')
+- `type` (tinyint): 0=manual, 1=automated
+- `parameter` (json): Gateway credentials and config
+- `rate` (decimal): Conversion rate (e.g., 1.0 for same currency)
+- `charge` (decimal): Fixed or percentage charge
+- `currency` (string): Gateway currency (USD, EUR, etc.)
+- `status` (tinyint): 1=active, 0=inactive
+
+### Parameter JSON Structure
+Each gateway has custom parameter structure:
+
+**PayPal**:
+```json
+{
+    "client_id": "...",
+    "client_secret": "...",
+    "mode": "sandbox|live"
+}
+```
+
+**Stripe**:
+```json
+{
+    "publishable_key": "pk_...",
+    "secret_key": "sk_..."
+}
+```
+
+**Coinpayments**:
+```json
+{
+    "merchant_id": "...",
+    "ipn_secret": "...",
+    "public_key": "...",
+    "private_key": "..."
+}
+```
+
+**Manual**:
+```json
+{
+    "instructions": "Bank: XYZ Bank\nAccount: 123456\n...",
+    "upload_proof": true
+}
+```
+
+### Security: Encrypt Sensitive Data
+Gateway credentials SHOULD be encrypted:
+```php
+$gateway->parameter = encrypt(json_encode($credentials));
+
+// Decrypt when using
+$credentials = json_decode(decrypt($gateway->parameter));
+```
+
+## Transaction Management
+
+### Transaction Record
+**Model**: `App\Models\Transaction`
+**Purpose**: Log ALL financial activities
+
+**Fields**:
+- `user_id`: User involved
+- `type`: deposit, withdraw, referral_commission, subscription, etc.
+- `amount`: Transaction amount
+- `charge`: Fees/charges
+- `description`: Human-readable description
+- `trx`: Related payment/deposit trx ID
+- `status`: 0=pending, 1=approved, 2=rejected
+
+### Create Transaction on Payment Approval
+```php
+Transaction::create([
+    'user_id' => $payment->user_id,
+    'type' => 'subscription',
+    'amount' => $payment->amount,
+    'charge' => $payment->charge,
+    'description' => 'Subscription to ' . $payment->plan->name,
+    'trx' => $payment->trx,
+    'status' => 1
+]);
+```
+
+## Wallet System
+
+### User Balance
+**Field**: `users.balance` (decimal)
+**Purpose**: Internal wallet for deposits, referral commissions, etc.
+
+### Deposit Flow
+1. User deposits via gateway
+2. Payment approved → `users.balance += $amount`
+3. Transaction record created (type='deposit')
+
+### Withdraw Flow
+1. User requests withdrawal
+2. Create `Withdraw` record (status=pending)
+3. Admin reviews and approves
+4. On approval: `users.balance -= $netAmount`
+5. Admin processes payment to user's account
+6. Transaction record created (type='withdraw')
+
+### Referral Commission Flow
+1. User B subscribes (referred by User A)
+2. Calculate commission: `$commission = $subscriptionAmount * $commissionRate`
+3. `users.balance += $commission` (User A)
+4. Create `ReferralCommission` record
+5. Create `Transaction` record (type='referral_commission')
+
+## Payment Validation & Security
+
+### Validate Gateway Status
+```php
+$gateway = Gateway::where('status', 1)->findOrFail($id);
+if (!$gateway) {
+    return ['type' => 'error', 'message' => 'Gateway not available'];
+}
+```
+
+### Validate Callback Signatures
+**Example: PayPal**
+```php
+$webhook = new PayPalWebhookVerification($request->all());
+if (!$webhook->verify()) {
+    abort(403, 'Invalid signature');
+}
+```
+
+**Example: Stripe**
+```php
+$signature = $request->header('Stripe-Signature');
+try {
+    $event = \Stripe\Webhook::constructEvent(
+        $request->getContent(),
+        $signature,
+        $webhookSecret
+    );
+} catch (\Exception $e) {
+    abort(403, 'Invalid signature');
+}
+```
+
+### Idempotency: Prevent Duplicate Processing
+```php
+$payment = Payment::where('trx', $request->trx)->first();
+if ($payment->status == 1) {
+    // Already processed
+    return redirect()->back()->with('info', 'Payment already processed');
+}
+```
+
+### Rate Limiting
+```php
+Route::post('/payment/webhook')->middleware('throttle:60,1');
+```
+
+## Error Handling
+
+### Gateway API Failures
+```php
+try {
+    $result = $gatewayApi->createTransaction($data);
+} catch (\Exception $e) {
+    Log::error('Gateway API error', [
+        'gateway' => $gateway->name,
+        'error' => $e->getMessage(),
+        'trx' => $deposit->trx
+    ]);
+    
+    return [
+        'type' => 'error',
+        'message' => 'Payment gateway error. Please try again.'
+    ];
+}
+```
+
+### Callback Failures
+- Log all callback data for debugging
+- Retry failed callbacks (gateway-dependent)
+- Manual admin intervention for persistent failures
+
+### User Notifications
+- On payment success: Email + Telegram notification
+- On payment failure: Error message, suggest retry or alternative gateway
+- On manual approval: Admin notification to review
+
+## Testing Gateways
+
+### Sandbox/Test Mode
+- Use gateway's sandbox credentials in `.env`
+- Set gateway's `mode` parameter to 'sandbox' or 'test'
+- Test full flow: payment → callback → subscription activation
+
+### Manual Testing
+1. Create test plan ($0.01 price)
+2. Subscribe with test gateway
+3. Verify payment record created
+4. Trigger callback manually (or via gateway dashboard)
+5. Verify subscription activated
+
+### Automated Testing
+- Mock gateway API responses
+- Test service methods with fixtures
+- Test callback signature validation
+- Test error scenarios (failed payments, invalid signatures)
+
+## Admin Gateway Management
+
+### Routes
+- `/admin/gateways` - List all gateways
+- `/admin/gateways/create` - Add new gateway
+- `/admin/gateways/{id}/edit` - Edit gateway config
+- `/admin/gateways/{id}/status` - Toggle gateway status
+
+### Controller
+- `Backend\ManageGatewayController`
+
+### Actions
+- **Create**: Add gateway with name, type, credentials, rate, charge
+- **Edit**: Update credentials, rate, charge, status
+- **Toggle Status**: Enable/disable gateway (affects availability to users)
+- **Delete**: Not recommended (has foreign key references)
+
+## Best Practices
+
+### Practice 1: Always Log Transactions
+- Create `Transaction` record for every financial event
+- Include `trx` ID for traceability
+- Helps with accounting, reconciliation, dispute resolution
+
+### Practice 2: Encrypt Gateway Credentials
+- Use Laravel's `encrypt()` for sensitive data in database
+- Decrypt only when needed for API calls
+- Never log decrypted credentials
+
+### Practice 3: Validate Callbacks
+- ALWAYS verify webhook signatures
+- Reject unsigned or tampered callbacks
+- Use gateway's official SDK/library for verification
+
+### Practice 4: Handle Failures Gracefully
+- Catch API exceptions
+- Return user-friendly error messages
+- Log detailed errors for debugging
+- Provide alternative payment options
+
+### Practice 5: Idempotency
+- Check payment status before processing callback
+- Prevent double-charging or double-crediting
+- Use unique `trx` IDs
+
+### Practice 6: Rate Limiting
+- Throttle payment endpoints to prevent abuse
+- Limit failed payment attempts (prevent fraud)
+- Monitor for suspicious activity
+
+### Practice 7: Reconciliation
+- Regularly reconcile platform transactions with gateway reports
+- Detect discrepancies (missing callbacks, failed payments)
+- Admin dashboard for financial overview
+
+### Practice 8: User Communication
+- Send immediate confirmation on payment
+- Clear error messages with actionable steps
+- Support ticket system for payment issues
+
+### Practice 9: Gateway Diversification
+- Offer multiple payment options
+- Provide regional gateways (Brazil: Paghiper, India: Paytm)
+- Include crypto options for global reach
+
+### Practice 10: Compliance
+- PCI DSS compliance (never store card details)
+- GDPR compliance (data retention, privacy)
+- Tax compliance (record keeping, invoicing)
+- Terms of service for refunds, chargebacks
+

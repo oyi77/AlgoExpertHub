@@ -1,0 +1,39 @@
+{
+    "name": "copy-trading-addon",
+    "title": "Copy Trading",
+    "description": "Enable users to copy trades from other traders automatically",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\CopyTrading",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": {
+        "trading-execution-engine-addon": "^1.0.0"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes, views, and menus for copy trading management and trader oversight.",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Provides user-facing copy trading features: settings, trader browsing, subscriptions, and history.",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "copy_engine",
+            "name": "Copy Trading Engine",
+            "description": "Trade copying logic, event listeners, and async jobs.",
+            "targets": ["jobs", "listeners"],
+            "enabled": true
+        }
+    ]
+}

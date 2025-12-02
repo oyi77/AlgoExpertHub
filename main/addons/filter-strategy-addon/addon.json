@@ -1,0 +1,38 @@
+{
+    "name": "filter-strategy-addon",
+    "title": "Filter Strategy Addon",
+    "description": "Technical indicator-based filter strategies for signal validation before execution",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\FilterStrategyAddon",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": {},
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes and views for managing filter strategies",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Enables user-facing filter strategy management and marketplace",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "processing",
+            "name": "Filter Evaluation",
+            "description": "Background evaluation of filter strategies for signal validation",
+            "targets": ["jobs"],
+            "enabled": true
+        }
+    ]
+}
+

@@ -1,0 +1,647 @@
+---
+description: Queue system, background jobs, notifications, and event-driven patterns
+globs: ["main/app/Jobs/**/*", "main/app/Notifications/**/*", "main/app/Providers/EventServiceProvider.php"]
+alwaysApply: true
+---
+
+# Queue, Jobs & Notifications Rules
+
+## Queue System Architecture
+
+### Queue Driver
+- **Default**: Database (`jobs` table)
+- **Alternatives**: Redis, Beanstalkd, SQS
+- **Config**: `config/queue.php`
+- **Connection**: `QUEUE_CONNECTION` in `.env`
+
+### Jobs Table Schema
+```sql
+- id (bigint, primary key, auto-increment)
+- queue (string) -- Queue name (default, high, low, etc.)
+- payload (longtext) -- Serialized job data
+- attempts (tinyint) -- Retry attempts
+- reserved_at (integer, nullable) -- When job was picked up
+- available_at (integer) -- When job should be processed
+- created_at (integer)
+```
+
+### Queue Workers
+**Start Worker**:
+```bash
+php artisan queue:work
+php artisan queue:work --queue=high,default  # Priority queues
+php artisan queue:work --tries=3 --timeout=60
+```
+
+**Supervisor Configuration** (Production):
+```ini
+[program:laravel-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/artisan queue:work --sleep=3 --tries=3
+autostart=true
+autorestart=true
+user=www-data
+numprocs=4
+redirect_stderr=true
+stdout_logfile=/path/to/worker.log
+```
+
+## Job Classes
+
+### Base Job Structure
+```php
+namespace App\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+class ExampleJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $data;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle()
+    {
+        // Job logic here
+    }
+
+    /**
+     * Handle job failure.
+     */
+    public function failed(\Throwable $exception)
+    {
+        // Log failure, notify admin, etc.
+    }
+}
+```
+
+### Job Properties
+- **Queue**: `public $queue = 'high';` (specify queue)
+- **Tries**: `public $tries = 3;` (max retry attempts)
+- **Timeout**: `public $timeout = 120;` (seconds)
+- **Delay**: `public $delay = 60;` (delay before processing)
+- **Delete on Failure**: `public $deleteWhenMissingModels = true;`
+
+### Dispatching Jobs
+```php
+// Immediate dispatch
+dispatch(new ProcessMessage($message));
+
+// Delayed dispatch
+ProcessMessage::dispatch($message)->delay(now()->addMinutes(5));
+
+// Dispatch to specific queue
+ProcessMessage::dispatch($message)->onQueue('high');
+
+// Dispatch with chain (sequential)
+ProcessMessage::withChain([
+    new CreateSignal($parsedData),
+    new NotifyUsers($signal)
+])->dispatch($message);
+
+// Dispatch batch (parallel)
+Bus::batch([
+    new ProcessMessage($msg1),
+    new ProcessMessage($msg2),
+    new ProcessMessage($msg3),
+])->dispatch();
+
+// Conditional dispatch
+dispatch_if($condition, new JobClass());
+dispatch_unless($condition, new JobClass());
+```
+
+## Core Jobs
+
+### 1. ProcessChannelMessage
+**Location**: `App\Jobs\ProcessChannelMessage`
+**Purpose**: Process incoming messages from channel sources (Multi-Channel Addon)
+**Queue**: `default`
+**Triggered By**: Telegram webhook, RSS poller, web scraper
+
+**Flow**:
+1. Receive channel message
+2. Store in `channel_messages` table (status=pending)
+3. Dispatch `ProcessChannelMessage` job
+4. Job runs parsers (Regex, AI, Pattern templates)
+5. Extract signal data, calculate confidence score
+6. If successful: Create draft signal (is_published=0, auto_created=1)
+7. If failed: Mark message as failed, log error
+8. If duplicate: Mark as duplicate (skip)
+
+**Properties**:
+```php
+public $tries = 3;
+public $timeout = 60;
+```
+
+**Handle**:
+```php
+public function handle()
+{
+    $message = ChannelMessage::find($this->messageId);
+    
+    // Parse message
+    $parser = new MessageParserPipeline();
+    $result = $parser->parse($message->raw_message);
+    
+    if ($result->success) {
+        // Create signal
+        $signal = SignalService::createFromParsedData($result->data);
+        $message->update(['signal_id' => $signal->id, 'status' => 'processed']);
+    } else {
+        $message->update(['status' => 'failed', 'error_message' => $result->error]);
+    }
+}
+```
+
+### 2. SendEmailJob
+**Location**: `App\Jobs\SendEmailJob`
+**Purpose**: Send emails asynchronously
+**Queue**: `default`
+**Triggered By**: User registration, password reset, signal published, payment approved
+
+**Flow**:
+1. User action triggers email notification
+2. Dispatch `SendEmailJob` with email data
+3. Job uses Laravel's Mail facade or Mailable class
+4. Send email via configured mail driver (SMTP, Mailgun, etc.)
+
+**Properties**:
+```php
+public $tries = 3;
+public $timeout = 30;
+```
+
+**Handle**:
+```php
+public function handle()
+{
+    Mail::to($this->recipient)->send(new SignalPublishedMail($this->signal));
+}
+```
+
+### 3. SendSubscriberMail
+**Location**: `App\Jobs\SendSubscriberMail`
+**Purpose**: Send newsletter/broadcast emails to subscribers
+**Queue**: `default`
+**Triggered By**: Admin sending newsletter
+
+**Flow**:
+1. Admin creates newsletter
+2. Retrieve all subscribers
+3. Dispatch job for each subscriber
+4. Job sends email
+
+**Handle**:
+```php
+public function handle()
+{
+    Mail::to($this->subscriber->email)->send(new NewsletterMail($this->content));
+}
+```
+
+## Addon-Specific Jobs
+
+### Multi-Channel Signal Addon
+- **ProcessChannelMessage**: Parse incoming messages (see above)
+- **FetchTelegramUpdates**: Poll Telegram for new messages (long polling mode)
+- **ScrapeWebSource**: Scrape web sources for new content
+- **FetchRssFeed**: Poll RSS feeds for new items
+- **DistributeAdminSignalJob**: Distribute admin-owned channel signals to assigned users/plans
+
+### Trading Execution Engine Addon
+- **ExecuteSignalJob**: Execute signal on connected exchange/broker
+  - Triggered when signal is published (SignalObserver)
+  - For each active ExecutionConnection
+  - Calculates position size
+  - Places order via CCXT or MT4/MT5 API
+  - Creates ExecutionPosition record
+  - Sends notification
+- **MonitorPositionsJob**: Monitor open positions, check SL/TP
+  - Runs every minute (scheduled)
+  - Updates position prices
+  - Checks if SL or TP hit
+  - Closes position if conditions met
+  - Updates analytics
+- **UpdateAnalyticsJob**: Calculate daily analytics
+  - Runs daily at midnight (scheduled)
+  - Calculates win rate, profit factor, drawdown
+  - Stores in ExecutionAnalytic table
+
+### Trading Bot Signal Addon
+- **ProcessTradingBotNotification**: Process notifications from Firebase
+- **SyncFirebaseDataJob**: Sync historical data from Firebase
+
+## Scheduled Jobs
+
+### Kernel Schedule
+**Location**: `app/Console/Kernel.php`
+
+**Define Scheduled Tasks**:
+```php
+protected function schedule(Schedule $schedule)
+{
+    // Monitor positions every minute
+    $schedule->job(new MonitorPositionsJob())->everyMinute();
+    
+    // Update analytics daily
+    $schedule->job(new UpdateAnalyticsJob())->dailyAt('00:00');
+    
+    // Cleanup old jobs
+    $schedule->command('queue:prune-batches')->daily();
+    
+    // Expire subscriptions
+    $schedule->call(function () {
+        PlanSubscription::where('end_date', '<', now())
+            ->update(['is_current' => 0, 'status' => 'expired']);
+    })->hourly();
+}
+```
+
+**Run Scheduler**:
+```bash
+# Single cron entry
+* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1
+```
+
+## Notification System
+
+### Notification Channels
+1. **Database**: Laravel's notifications table
+2. **Email**: Via Mail driver
+3. **Telegram**: Via Telegram Bot API
+4. **SMS**: Via Nexmo/Twilio (optional)
+
+### Notification Classes
+**Location**: `app/Notifications/`
+
+**Structure**:
+```php
+namespace App\Notifications;
+
+use Illuminate\Notifications\Notification;
+
+class SignalPublishedNotification extends Notification
+{
+    protected $signal;
+    
+    public function __construct($signal)
+    {
+        $this->signal = $signal;
+    }
+    
+    /**
+     * Get notification channels.
+     */
+    public function via($notifiable)
+    {
+        return ['database', 'telegram']; // Multiple channels
+    }
+    
+    /**
+     * Database notification data.
+     */
+    public function toArray($notifiable)
+    {
+        return [
+            'signal_id' => $this->signal->id,
+            'title' => $this->signal->title,
+            'message' => 'New signal published',
+            'url' => route('user.signal.show', $this->signal->id)
+        ];
+    }
+    
+    /**
+     * Telegram notification data.
+     */
+    public function toTelegram($notifiable)
+    {
+        return TelegramMessage::create()
+            ->to($notifiable->telegram_id)
+            ->content("*New Signal*\n{$this->signal->title}");
+    }
+}
+```
+
+### Sending Notifications
+```php
+// Single user
+$user->notify(new SignalPublishedNotification($signal));
+
+// Multiple users
+Notification::send($users, new SignalPublishedNotification($signal));
+
+// Queue notification (recommended)
+$user->notify((new SignalPublishedNotification($signal))->delay(now()->addMinutes(1)));
+```
+
+### Core Notifications
+
+#### 1. SignalPublished (Custom)
+- **To**: Users subscribed to signal's plans
+- **Channels**: Telegram, Email, Database
+- **Trigger**: Signal is published (is_published=1)
+- **Data**: Signal title, pair, direction, prices
+
+#### 2. TicketNotification
+- **Location**: `App\Notifications\TicketNotification`
+- **To**: Admin
+- **Channel**: Database
+- **Trigger**: User creates ticket
+- **Data**: Ticket ID, user, message, URL
+
+#### 3. PlanSubscriptionNotification
+- **Location**: `App\Notifications\PlanSubscriptionNotification`
+- **To**: Admin
+- **Channel**: Database
+- **Trigger**: User subscribes to plan
+- **Data**: User, plan, subscription details
+
+#### 4. DepositNotification
+- **Location**: `App\Notifications\DepositNotification`
+- **To**: Admin
+- **Channel**: Database
+- **Trigger**: User deposits funds
+- **Data**: User, amount, gateway
+
+#### 5. WithdrawNotification
+- **Location**: `App\Notifications\WithdrawNotification`
+- **To**: Admin
+- **Channel**: Database
+- **Trigger**: User requests withdrawal
+- **Data**: User, amount, gateway
+
+#### 6. KycUpdateNotification
+- **Location**: `App\Notifications\KycUpdateNotification`
+- **To**: User
+- **Channel**: Database, Email
+- **Trigger**: KYC status changes (approved/rejected)
+- **Data**: KYC status, reason (if rejected)
+
+### Database Notifications
+**Table**: `notifications`
+**Schema**:
+```sql
+- id (uuid, primary key)
+- type (string) -- Notification class
+- notifiable_type (string) -- Polymorphic (User, Admin)
+- notifiable_id (bigint) -- Polymorphic ID
+- data (text) -- JSON notification data
+- read_at (timestamp, nullable)
+- created_at, updated_at (timestamps)
+```
+
+**Retrieve Notifications**:
+```php
+// Unread notifications
+$user->unreadNotifications;
+
+// All notifications
+$user->notifications;
+
+// Mark as read
+$user->unreadNotifications->markAsRead();
+
+// Mark specific notification as read
+$notification->markAsRead();
+
+// Delete notification
+$notification->delete();
+```
+
+**Display in UI**:
+```blade
+@foreach(auth()->user()->unreadNotifications as $notification)
+    <div class="notification">
+        {{ $notification->data['message'] }}
+        <a href="{{ $notification->data['url'] }}">View</a>
+    </div>
+@endforeach
+```
+
+### Telegram Notifications
+
+#### Configuration
+- **Package**: `notificationchannels/telegram`
+- **Config**: `config/services.php`
+```php
+'telegram' => [
+    'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+],
+```
+
+#### User Setup
+- Users MUST link Telegram account (store `telegram_id` in users table)
+- Bot command: `/start` to get user's telegram_id
+
+#### Sending via Service
+**Location**: `App\Services\TelegramChannelService`
+
+**Send Signal**:
+```php
+public function sendSignal($signal, $users)
+{
+    foreach ($users as $user) {
+        if ($user->telegram_id) {
+            $message = $this->formatSignalMessage($signal);
+            Telegram::sendMessage([
+                'chat_id' => $user->telegram_id,
+                'text' => $message,
+                'parse_mode' => 'Markdown',
+            ]);
+        }
+    }
+}
+
+protected function formatSignalMessage($signal)
+{
+    return sprintf(
+        "*New Signal*\n\n" .
+        "📈 *Pair:* %s\n" .
+        "🔄 *Direction:* %s\n" .
+        "💰 *Entry:* %s\n" .
+        "🛑 *SL:* %s\n" .
+        "🎯 *TP:* %s\n" .
+        "⏰ *Timeframe:* %s\n" .
+        "🏦 *Market:* %s",
+        $signal->pair->name,
+        strtoupper($signal->direction),
+        $signal->open_price,
+        $signal->sl,
+        $signal->tp,
+        $signal->time->name,
+        $signal->market->name
+    );
+}
+```
+
+## Event-Driven Architecture
+
+### Laravel Events
+**Location**: `app/Providers/EventServiceProvider.php`
+
+**Event-Listener Mapping**:
+```php
+protected $listen = [
+    'App\Events\SignalPublished' => [
+        'App\Listeners\NotifyUsersListener',
+        'App\Listeners\ExecuteTradeListener',
+    ],
+    'App\Events\UserRegistered' => [
+        'App\Listeners\SendWelcomeEmailListener',
+        'App\Listeners\AssignDefaultPresetListener',
+    ],
+];
+```
+
+### Model Events (Observers)
+**Location**: `app/Observers/`
+
+**Signal Observer** (Execution Engine Addon):
+```php
+namespace Addons\TradingExecutionEngine\App\Observers;
+
+class SignalObserver
+{
+    public function updated(Signal $signal)
+    {
+        // Detect if signal was just published
+        if ($signal->isDirty('is_published') && $signal->is_published == 1) {
+            // Dispatch execution jobs for all active connections
+            $connections = ExecutionConnection::where('is_active', 1)->get();
+            foreach ($connections as $connection) {
+                ExecuteSignalJob::dispatch($signal, $connection);
+            }
+        }
+    }
+}
+```
+
+**Register Observer** (in service provider):
+```php
+public function boot()
+{
+    Signal::observe(SignalObserver::class);
+}
+```
+
+## Job Monitoring & Debugging
+
+### Failed Jobs
+**Table**: `failed_jobs`
+**Schema**:
+```sql
+- id (bigint, primary key)
+- uuid (string, unique)
+- connection (string)
+- queue (string)
+- payload (longtext) -- Job data
+- exception (longtext) -- Error details
+- failed_at (timestamp)
+```
+
+**Retry Failed Jobs**:
+```bash
+php artisan queue:retry all
+php artisan queue:retry {id}
+```
+
+**Flush Failed Jobs**:
+```bash
+php artisan queue:flush
+```
+
+### Horizon (Redis Queue Dashboard)
+**Package**: `laravel/horizon` (optional)
+- Real-time dashboard for queue monitoring
+- Job metrics, throughput, failures
+- Queue priorities, balancing
+
+### Job Logging
+Log job start/end for debugging:
+```php
+public function handle()
+{
+    Log::info('Job started', ['job' => static::class, 'data' => $this->data]);
+    
+    try {
+        // Job logic
+        Log::info('Job completed', ['job' => static::class]);
+    } catch (\Exception $e) {
+        Log::error('Job failed', ['job' => static::class, 'error' => $e->getMessage()]);
+        throw $e; // Re-throw to trigger retry
+    }
+}
+```
+
+## Best Practices
+
+### Practice 1: Always Queue Long Operations
+- External API calls
+- Email sending
+- File processing
+- Database-intensive operations
+- Anything > 2 seconds
+
+### Practice 2: Handle Job Failures
+- Implement `failed()` method
+- Log failures with context
+- Notify admin for critical failures
+- Provide fallback mechanisms
+
+### Practice 3: Job Idempotency
+- Jobs should be safe to run multiple times
+- Check if work already done before processing
+- Use database locks or unique constraints
+
+### Practice 4: Timeout & Retries
+- Set appropriate `$timeout` for job execution
+- Set `$tries` based on operation (3 for API calls, 1 for one-time operations)
+- Use exponential backoff: `$this->release(60 * $this->attempts())`
+
+### Practice 5: Queue Priorities
+- Use multiple queues: `high`, `default`, `low`
+- Critical jobs on `high` queue
+- Worker processes high priority first: `--queue=high,default,low`
+
+### Practice 6: Batch Operations
+- Process large datasets in chunks
+- Dispatch batch of jobs instead of one huge job
+- Monitor batch progress
+
+### Practice 7: Job Tags
+- Tag jobs for monitoring: `public $tags = ['signal-processing', 'high-priority'];`
+- Filter jobs by tags in Horizon
+
+### Practice 8: Graceful Failures
+- Don't crash entire system on job failure
+- Log errors, notify, but continue processing
+- Retry transient failures (network issues)
+
+### Practice 9: Test Jobs
+- Unit test job's `handle()` method
+- Mock external dependencies (APIs, databases)
+- Test failure scenarios
+
+### Practice 10: Monitor Queue Health
+- Monitor queue size (should not grow unbounded)
+- Monitor failed jobs (investigate patterns)
+- Monitor job execution time (detect slow jobs)
+- Set up alerts for queue issues
+

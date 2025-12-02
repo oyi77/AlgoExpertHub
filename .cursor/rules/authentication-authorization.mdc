@@ -1,0 +1,427 @@
+---
+description: Authentication, authorization, security patterns and conventions
+globs: ["main/app/Http/Middleware/**/*", "main/app/Providers/AuthServiceProvider.php", "main/config/auth.php"]
+alwaysApply: true
+---
+
+# Authentication & Authorization Rules
+
+## Authentication Guards
+
+### Web Guard (Users)
+- **Guard**: `web`
+- **Provider**: `users`
+- **Driver**: `session`
+- **Model**: `App\Models\User`
+- **Middleware**: `auth`
+- **Routes**: User-facing routes (prefix `/user` or root)
+- **Login Route**: `/login`
+- **Logout Route**: `/user/logout`
+
+### Admin Guard (Admins)
+- **Guard**: `admin`
+- **Provider**: `admins`
+- **Driver**: `session`
+- **Model**: `App\Models\Admin`
+- **Middleware**: `admin`
+- **Routes**: Admin panel routes (prefix `/admin`)
+- **Login Route**: `/admin/login`
+- **Logout Route**: `/admin/logout`
+
+## Authentication Flow
+
+### User Authentication
+1. **Registration**:
+   - Route: `/register/{reffer?}` (optional referrer)
+   - Controller: `Auth\RegistrationController::register`
+   - Service: `App\Services\UserRegistration`
+   - Flow:
+     - Validate input
+     - Create user record
+     - Hash password (bcrypt)
+     - Send verification email (if enabled)
+     - Redirect to login or auto-login
+   - Middleware: `reg_off` (can disable registration)
+
+2. **Login**:
+   - Route: `/login`
+   - Controller: `Auth\LoginController::login`
+   - Service: `App\Services\UserLogin`
+   - Flow:
+     - Validate credentials
+     - `auth()->attempt($credentials, $remember)`
+     - Redirect to `/user/dashboard`
+   - Middleware: `guest`
+
+3. **Email Verification**:
+   - Route: `/verify/email`
+   - Controller: `Auth\LoginController::emailVerify`
+   - Middleware: `is_email_verified` enforces verification
+   - User cannot access protected routes until verified
+
+4. **Password Reset**:
+   - Routes: `/forgot/password`, `/verify/code`, `/reset/password`
+   - Controller: `Auth\ForgotPasswordController`
+   - Flow:
+     - User requests reset (email or SMS)
+     - Verification code sent
+     - User verifies code
+     - User resets password
+   - Uses `password_resets` table
+
+5. **2FA (Google Authenticator)**:
+   - Model: `App\Models\LoginSecurity`
+   - Relationship: `User::loginSecurity()`
+   - Routes: `/user/2fa`
+   - Controller: `LoginSecurityController`
+   - Middleware: `2fa` enforces 2FA check
+   - Package: `pragmarx/google2fa-laravel`
+   - Flow:
+     - User enables 2FA, scans QR code
+     - User verifies with TOTP code
+     - `login_securities.is_enabled = 1`
+     - On login, user must provide TOTP code
+
+6. **Social Login** (OAuth):
+   - **Facebook**: `/auth/facebook`, `/auth/facebook/callback`
+   - **Google**: `/auth/google`, `/auth/google/callback`
+   - Controllers: `Auth\FacebookController`, `Auth\GoogleController`
+   - Package: `laravel/socialite`
+   - Flow:
+     - Redirect to provider
+     - Callback with user info
+     - Create or find user by email
+     - Auto-login
+
+### Admin Authentication
+1. **Login**:
+   - Route: `/admin/login`
+   - Controller: `Backend\Auth\LoginController`
+   - Service: `App\Services\AdminLoginService`
+   - Flow:
+     - Validate credentials
+     - `auth()->guard('admin')->attempt($credentials, $remember)`
+     - Redirect to `/admin/dashboard`
+   - Middleware: `admin.guest`
+
+2. **Password Reset**:
+   - Routes: `/admin/password/reset`, `/admin/password/verify-code`, `/admin/password/reset/{token}`
+   - Controller: `Backend\Auth\ForgotPasswordController`, `ResetPasswordController`
+   - Uses `admin_password_resets` table
+
+3. **Logout**:
+   - Route: `/admin/logout`
+   - `auth()->guard('admin')->logout()`
+
+## Authorization (Permissions & Roles)
+
+### Package
+- **Spatie Laravel Permission**: `spatie/laravel-permission`
+- **Models**: `Role`, `Permission` (Spatie's)
+- **Config**: `config/permission.php`
+- **Migration**: `database/migrations/*_create_permission_tables.php`
+
+### Admin Permission System
+**Admin Types**:
+1. **Super Admin**: `admins.type = 'super'`
+   - Bypasses ALL permission checks
+   - Gate::before returns true for super admins
+   - Full system access
+
+2. **Staff Admin**: `admins.type != 'super'`
+   - Role-based permissions
+   - Assigned roles with specific permissions
+   - Restricted access based on permissions
+
+### Permission Middleware
+- **Middleware**: `permission:permission-name,guard`
+- **Usage**: `Route::middleware('permission:manage-plan,admin')`
+- **Guard**: Always specify `admin` for admin routes
+
+### Core Permissions
+- `manage-addon` - Manage addons (upload, enable/disable)
+- `manage-plan` - Manage subscription plans
+- `signal` - Manage signals and related entities (currency pairs, timeframes, markets)
+- `manage-user` - Manage users
+- `manage-gateway` - Manage payment gateways
+- `manage-section` - Manage CMS sections
+- `manage-role` - Manage roles and permissions
+- `manage-deposit` - Manage deposits
+- `manage-withdraw` - Manage withdrawals
+- `manage-ticket` - Manage support tickets
+- `manage-referral` - Manage referral system
+- `manage-email-template` - Manage email templates
+- `manage-page` - Manage CMS pages
+- `manage-language` - Manage languages
+
+### Permission Checks in Controllers
+```php
+// Via middleware (recommended)
+Route::middleware('permission:manage-plan,admin')->group(function () {
+    Route::resource('plan', PlanController::class);
+});
+
+// Via authorization in controller
+public function index()
+{
+    $this->authorize('manage-plan'); // Uses policy or gate
+    // OR
+    abort_unless(auth()->guard('admin')->user()->hasPermissionTo('manage-plan'), 403);
+}
+```
+
+### Gate Definition (Super Admin Bypass)
+**Location**: `App\Providers\AuthServiceProvider::boot()`
+```php
+Gate::before(function ($user, $ability) {
+    if ($user instanceof Admin && $user->type === 'super') {
+        return true; // Super admin bypasses all checks
+    }
+    return null;
+});
+```
+
+## Security Middleware
+
+### 1. Authenticate (`auth`)
+- **Class**: `App\Http\Middleware\Authenticate`
+- **Purpose**: Ensure user is authenticated
+- **Redirects**: Unauthenticated users to `/login`
+
+### 2. RedirectIfNotAdmin (`admin`)
+- **Class**: `App\Http\Middleware\RedirectIfNotAdmin`
+- **Purpose**: Ensure admin is authenticated
+- **Redirects**: Unauthenticated admins to `/admin/login`
+
+### 3. RedirectIfAuthenticated (`guest`)
+- **Class**: `App\Http\Middleware\RedirectIfAuthenticated`
+- **Purpose**: Redirect authenticated users away from guest routes
+- **Guards**: Checks both `web` and `admin` guards
+
+### 4. RedirectIfAdmin (`admin.guest`)
+- **Class**: `App\Http\Middleware\RedirectIfAdmin`
+- **Purpose**: Redirect authenticated admins away from guest routes
+
+### 5. DemoMiddleware (`demo`)
+- **Class**: `App\Http\Middleware\DemoMiddleware`
+- **Purpose**: Prevent destructive actions in demo mode
+- **Actions Blocked**: POST, PUT, PATCH, DELETE (except logout)
+- **Returns**: Error message "This is demo version. You can not change anything."
+
+### 6. Inactive (`inactive`)
+- **Class**: `App\Http\Middleware\Inactive`
+- **Purpose**: Check if user account is active
+- **Field**: `users.status` (1=active, 0=inactive)
+- **Action**: Logout and redirect if inactive
+
+### 7. isEmailVerified (`is_email_verified`)
+- **Class**: `App\Http\Middleware\isEmailVerified`
+- **Purpose**: Ensure user has verified email
+- **Field**: `users.is_email_verified`
+- **Redirects**: To `/user/authentication-verify` if not verified
+
+### 8. LoginSecurityMiddleware (`2fa`)
+- **Class**: `App\Http\Middleware\LoginSecurityMiddleware`
+- **Purpose**: Enforce 2FA verification after login
+- **Checks**: `login_securities.is_enabled = 1`
+- **Redirects**: To `/user/2fa` if 2FA enabled but not verified in session
+
+### 9. KycMiddleware (`kyc`)
+- **Class**: `App\Http\Middleware\KycMiddleware`
+- **Purpose**: Enforce KYC verification for certain actions
+- **Field**: `users.kyc_status` (unverified, pending, approved, rejected)
+- **Redirects**: To `/user/kyc` if KYC required but not approved
+
+### 10. RegistrationOff (`reg_off`)
+- **Class**: `App\Http\Middleware\RegistrationOff`
+- **Purpose**: Disable registration if config disables it
+- **Config**: `configurations.registration`
+- **Redirects**: To home with error if registration disabled
+
+## Password Policies
+
+### Hashing
+- **Algorithm**: Bcrypt (Laravel default)
+- **Rounds**: 10 (Laravel default)
+- **Method**: `Hash::make($password)`
+
+### Reset Tokens
+- **Tables**: `password_resets`, `admin_password_resets`
+- **Expiry**: 60 minutes (configurable in `config/auth.php`)
+- **Throttle**: 60 seconds between requests
+
+### Password Requirements
+- Implement in Form Request validation
+- Recommended: Min 8 characters, uppercase, lowercase, number, special char
+- Use Laravel's validation rules: `required|string|min:8|confirmed`
+
+## Session Management
+
+### Configuration
+- **Driver**: Database (or file, redis)
+- **Lifetime**: 120 minutes (configurable)
+- **Cookie Name**: `laravel_session`
+- **Secure**: HTTPS only (in production)
+- **HttpOnly**: true (prevent XSS access)
+- **SameSite**: Lax
+
+### Remember Me
+- **Field**: `users.remember_token`, `admins.remember_token`
+- **Checkbox**: "Remember me" on login forms
+- **Usage**: `auth()->attempt($credentials, $remember)`
+- **Duration**: 2 weeks (Laravel default)
+
+## API Authentication (Sanctum)
+
+### Package
+- **Laravel Sanctum**: `laravel/sanctum`
+- **Config**: `config/sanctum.php`
+- **Purpose**: API token authentication for SPAs or mobile apps
+
+### Token Generation
+```php
+$token = $user->createToken('token-name')->plainTextToken;
+```
+
+### Token Validation
+- **Middleware**: `auth:sanctum`
+- **Routes**: API routes in `routes/api.php`
+
+### Token Abilities
+```php
+$token = $user->createToken('token-name', ['ability1', 'ability2']);
+if ($user->tokenCan('ability1')) {
+    // Authorized
+}
+```
+
+## Security Best Practices
+
+### Practice 1: Never Trust User Input
+- Always validate input with Form Requests
+- Sanitize output (use Blade `{{ }}` for auto-escaping)
+- Use Laravel's `clean()` helper for HTML (Purifier)
+
+### Practice 2: CSRF Protection
+- Enabled by default for all POST/PUT/PATCH/DELETE routes
+- Blade directive: `@csrf` in forms
+- Middleware: `VerifyCsrfToken` (in global middleware)
+
+### Practice 3: SQL Injection Prevention
+- Use Eloquent ORM and Query Builder (parameterized queries)
+- Never concatenate user input into raw SQL
+- Use bindings: `DB::select('select * from users where id = ?', [$id])`
+
+### Practice 4: XSS Prevention
+- Use Blade `{{ }}` for output (auto-escapes)
+- Use `{!! !!}` ONLY for trusted HTML (e.g., from rich text editors)
+- Sanitize with Purifier: `clean($html)`
+
+### Practice 5: Encrypt Sensitive Data
+- Use Laravel's encryption: `encrypt($value)`, `decrypt($value)`
+- Store encrypted: API keys, tokens, credentials
+- Example: Payment gateway credentials stored encrypted in `gateways.parameter` JSON
+
+### Practice 6: Rate Limiting
+- Use `throttle` middleware for sensitive routes
+- Example: `Route::middleware('throttle:10,1')` (10 requests per minute)
+- Prevent brute force attacks on login
+
+### Practice 7: Secure Configuration
+- Never commit `.env` to version control
+- Use strong `APP_KEY` (generate with `php artisan key:generate`)
+- Set `APP_DEBUG=false` in production
+- Use HTTPS (`ASSET_URL`, `APP_URL` with https)
+
+### Practice 8: Audit Logging
+- Log authentication events: login, logout, failed attempts
+- Model: `App\Models\UserLog`
+- Fields: `user_id`, `ip`, `browser`, `action`, `timestamp`
+- Track: login, logout, failed login, password reset, KYC changes
+
+### Practice 9: IP Whitelisting (for admin)
+- Optional: Restrict admin access to specific IPs
+- Implement in middleware or firewall
+- Useful for high-security environments
+
+### Practice 10: Regular Security Updates
+- Keep Laravel and dependencies updated
+- Run `composer update` regularly
+- Monitor security advisories
+- Use `composer audit` to check for vulnerabilities
+
+## Common Authentication Patterns
+
+### Check if User is Authenticated
+```php
+if (auth()->check()) {
+    // User is authenticated
+}
+```
+
+### Get Authenticated User
+```php
+$user = auth()->user();
+$admin = auth()->guard('admin')->user();
+```
+
+### Logout
+```php
+auth()->logout();
+auth()->guard('admin')->logout();
+```
+
+### Login Programmatically
+```php
+auth()->login($user, $remember = false);
+auth()->guard('admin')->login($admin);
+```
+
+### Attempt Login
+```php
+if (auth()->attempt(['email' => $email, 'password' => $password], $remember)) {
+    // Success
+}
+```
+
+### Check Permission (Spatie)
+```php
+if (auth()->guard('admin')->user()->hasPermissionTo('manage-plan')) {
+    // Authorized
+}
+
+if (auth()->guard('admin')->user()->hasRole('editor')) {
+    // Has role
+}
+```
+
+### Authorize in Controller
+```php
+$this->authorize('update', $signal); // Uses policy
+abort_unless(auth()->user()->can('update', $signal), 403);
+```
+
+## User Account Status Management
+
+### Active/Inactive
+- **Field**: `users.status` (1=active, 0=inactive)
+- **Middleware**: `inactive` enforces active status
+- **Admin Action**: Admin can activate/deactivate users
+
+### Email Verification
+- **Field**: `users.is_email_verified`, `users.email_verified_at`
+- **Middleware**: `is_email_verified` enforces verification
+- **Flow**: Verification email → User clicks link → Email verified
+
+### KYC Status
+- **Field**: `users.kyc_status` (unverified, pending, approved, rejected)
+- **Middleware**: `kyc` enforces KYC approval
+- **Documents**: `users.kyc_information` (JSON)
+- **Admin Action**: Admin reviews and approves/rejects KYC
+
+### Subscription Status
+- **Table**: `plan_subscriptions`
+- **Field**: `is_current` (1=active subscription, 0=inactive)
+- **Expiry**: `end_date` (enforced by cron or middleware)
+- **Access Control**: Check subscription before allowing plan-restricted actions
+
