@@ -29,3 +29,10 @@ yarn-error.log
 Thumbs.db
 # Laravel Telescope
 storage/telescope
+
+# Webserver files
+error_log
+access_log
+error.log
+access.log
+MadelineProto.log
