@@ -1,0 +1,6 @@
+[09-Nov-2025 08:37:43 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '1' for key 'PRIMARY' in /home1/algotrad/public_html/install/lib/functions.php:123
+Stack trace:
+#0 /home1/algotrad/public_html/install/lib/functions.php(123): PDO->query()
+#1 /home1/algotrad/public_html/install/database.php(130): updateAdminCredentials()
+#2 {main}
+  thrown in /home1/algotrad/public_html/install/lib/functions.php on line 123
