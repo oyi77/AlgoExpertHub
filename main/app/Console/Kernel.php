@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Console;
+
+use App\Support\AddonRegistry;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+
+class Kernel extends ConsoleKernel
+{
+    /**
+     * Define the application's command schedule.
+     *
+     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @return void
+     */
+    protected function schedule(Schedule $schedule)
+    {
+        // $schedule->command('inspire')->hourly();
+        
+        if (AddonRegistry::active('multi-channel-signal-addon') && AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'processing')) {
+            // Process RSS feeds every 10 minutes
+            $schedule->command('channel:process-rss')->everyTenMinutes();
+
+            // Process web scraping channels every minute
+            $schedule->command('channel:process-web-scrape')->everyMinute();
+
+            // Process Telegram MTProto channels every 5 minutes
+            $schedule->command('channel:process-telegram-mtproto')->everyFiveMinutes();
+
+            // Process Trading Bot channels every 2 minutes
+            $schedule->command('channel:process-trading-bot')->everyTwoMinutes();
+        }
+
+        // Trading Bot Signal Addon - Run worker continuously (or use supervisor/systemd)
+        if (AddonRegistry::active('trading-bot-signal-addon') && AddonRegistry::moduleEnabled('trading-bot-signal-addon', 'signal_processing')) {
+            // Note: For production, run as a daemon/service instead of scheduled command
+            // $schedule->command('trading-bot:worker')->everyMinute();
+        }
+
+        // Trading Execution Engine Addon
+        if (AddonRegistry::active('trading-execution-engine-addon') && AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'execution')) {
+            // Monitor positions every minute
+            if (class_exists(\Addons\TradingExecutionEngine\App\Jobs\MonitorPositionsJob::class)) {
+            $schedule->job(\Addons\TradingExecutionEngine\App\Jobs\MonitorPositionsJob::class)
+                ->everyMinute()
+                ->withoutOverlapping();
+            }
+
+            // Update analytics daily
+            if (class_exists(\Addons\TradingExecutionEngine\App\Jobs\UpdateAnalyticsJob::class)) {
+            $schedule->job(\Addons\TradingExecutionEngine\App\Jobs\UpdateAnalyticsJob::class)
+                ->daily()
+                ->at('00:00');
+            }
+        }
+    }
+
+    /**
+     * Register the commands for the application.
+     *
+     * @return void
+     */
+    protected function commands()
+    {
+        $this->load(__DIR__.'/Commands');
+
+        require base_path('routes/console.php');
+    }
+}

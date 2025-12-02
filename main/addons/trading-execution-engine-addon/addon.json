@@ -1,0 +1,46 @@
+{
+    "name": "trading-execution-engine-addon",
+    "title": "Trading Execution Engine",
+    "description": "Execute trades on connected exchanges/brokers based on published signals",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\TradingExecutionEngine",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": [],
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes, views, and menus for connection management and execution monitoring.",
+            "targets": [
+                "admin_routes",
+                "admin_menu"
+            ],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Enables user-facing connection setup and personal execution analytics.",
+            "targets": [
+                "user_routes",
+                "user_menu"
+            ],
+            "enabled": true
+        },
+        {
+            "key": "execution",
+            "name": "Execution Engine",
+            "description": "Signal execution, position monitoring, and scheduled jobs.",
+            "targets": [
+                "jobs",
+                "scheduling"
+            ],
+            "enabled": true
+        }
+    ]
+}

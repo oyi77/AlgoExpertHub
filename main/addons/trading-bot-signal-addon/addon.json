@@ -1,0 +1,33 @@
+{
+    "name": "trading-bot-signal-addon",
+    "title": "Trading Bot Signal Addon",
+    "description": "PHP implementation of trading bot signal fetcher - fetches signals from Firebase and processes them",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\TradingBotSignalAddon",
+    "status": "active",
+    "requires": {
+        "php": "^8.0",
+        "laravel": "^9.0"
+    },
+    "dependencies": {
+        "kreait/firebase-php": "^6.0"
+    },
+    "modules": [
+        {
+            "key": "signal_processing",
+            "name": "Signal Processing",
+            "description": "Processes signals from Firebase and integrates with signal system",
+            "targets": ["jobs", "scheduling", "listeners"],
+            "enabled": true
+        },
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Admin interface for managing trading bot configuration",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        }
+    ]
+}
+

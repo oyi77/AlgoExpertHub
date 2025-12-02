@@ -1,0 +1,37 @@
+{
+    "name": "openrouter-integration-addon",
+    "title": "OpenRouter AI Integration",
+    "description": "Unified AI gateway for signal parsing and market analysis",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\OpenRouterIntegration",
+    "status": "active",
+    "requires": {
+        "php": "^8.0",
+        "laravel": "^9.0"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Configuration management",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "signal_parsing",
+            "name": "Signal Parsing",
+            "description": "Multi-Channel Addon integration",
+            "targets": ["ai_parsing"],
+            "enabled": true
+        },
+        {
+            "key": "market_analysis",
+            "name": "Market Analysis",
+            "description": "AI-powered market confirmation",
+            "targets": ["market_validation"],
+            "enabled": true
+        }
+    ]
+}
+

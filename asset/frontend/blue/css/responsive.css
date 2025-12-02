@@ -1,0 +1,199 @@
+@media (max-width: 1550px) {
+  .sp_banner .sp_banner_title {
+    font-size: 44px;
+  }
+
+  .sp_banner_description {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 1399px) {
+  .sp_container {
+    padding-left: 30px;
+  }
+
+  .sp_team_item .sp_team_thumb {
+    height: 230px;
+  }
+
+  .sp_banner {
+    padding-top: 8.625rem;
+    padding-bottom: 3.875rem;
+  }
+  
+  .sp_theme_top_title {
+    font-size: 38px;
+  }
+
+  .sp_overview_item .sp_overview_amount {
+    font-size: 44px;
+  }
+
+  .sp_overview_item .sp_overview_caption {
+    font-size: 16px;
+  }
+
+  .sp_choose_item .sp_choose_content {
+    margin-top: 0;
+    padding-left: 25px;
+  }
+
+  .sp_testimonial_thumb {
+    width: 60px;
+    height: 60px;
+  }
+
+  .sp_testimonial_top .sp_testimonial_top_content {
+    width: calc(100% - 60px);
+  }
+
+  .sp_testimonial_top .name {
+    font-size: 18px;
+  }
+}
+
+@media screen and (max-width: 1399px) and (min-width: 1200px) {
+  .sp_header .site-logo img {
+    max-height: 35px;
+  }
+
+  .sp_header .sp_site_menu li+li {
+    margin-left: 10px;
+  }
+
+  .navbar-action {
+    margin-left: 15px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .fixed-auth-sidebar {
+    display: none;
+  }
+
+  .sp_container {
+    padding: 0 15px;
+  }
+
+  .sp_theme_top_title {
+    font-size: 34px;
+  }
+
+  .sp_choose_item .sp_choose_icon {
+    width: 50px;
+  }
+
+  .sp_choose_item .sp_choose_content {
+    width: calc(100% - 50px);
+  }
+
+  .sp_choose_item .sp_choose_content .title {
+    font-size: 20px;
+  }
+
+  .sp_theme_top {
+    margin-bottom: 35px;
+  }
+
+  .sp_overview_item .sp_overview_amount {
+    font-size: 36px;
+  }
+
+  .sp_pricing_item .pricing-header .right .package-price {
+    font-size: 24px;
+  }
+
+  .sp_work_item .sp_work_content .title {
+    font-size: 20px;
+  }
+  
+  .sp_benefit_item .sp_benefit_icon {
+    width: 50px;
+  }
+
+  .sp_benefit_item .sp_benefit_content {
+    width: calc(100% - 50px);
+  }
+
+  .sp_benefit_item .sp_benefit_content .title {
+    font-size: 20px;
+  }
+
+  .sp_team_item .sp_team_content .name {
+    font-size: 20px;
+  }
+
+  .sp_blog_item .sp_blog_title a {
+    font-size: 20px;
+  }
+
+  .sp_blog_item .sp_blog_thumb {
+    height: 195px;
+  }
+}
+
+@media (max-width: 991px) {
+  .sp_banner .sp_banner_title {
+    font-size: 38px;
+  }
+
+  .sp_banner_description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sp_banner .sp_banner_title {
+    font-size: 34px;
+  }
+
+  .sp_theme_top_title {
+    font-size: 32px;
+  }
+
+  .sp_overview_item .sp_overview_amount {
+    font-size: 34px;
+  }
+
+  .about-thumb {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575px) {
+  .sp_banner .sp_banner_title {
+    font-size: 26px;
+  }
+
+  .sp_theme_top_title {
+    font-size: 24px;
+  }
+
+  .sp_overview_item .sp_overview_amount {
+    font-size: 26px;
+  }
+
+  .sp_overview_item .sp_overview_caption {
+    font-size: 14px;
+  }
+
+  .sp_choose_item .sp_choose_content {
+    width: 100%;
+    padding-left: 0;
+    margin-top: 15px;
+  }
+
+  .sp_pricing_item {
+    padding: 20px;
+  }
+
+  .sp_benefit_item .sp_benefit_content {
+    width: 100%;
+  }
+
+  .sp_header .site-logo img,
+  .site-logo img {
+    max-height: 35px;
+  }
+}

@@ -1,0 +1,40 @@
+{
+    "name": "ai-trading-addon",
+    "title": "AI Trading Decision Addon",
+    "description": "AI-powered market analysis, signal confirmation, and position management for trading signals",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\AiTradingAddon",
+    "status": "active",
+    "requires": {
+        "php": "^8.0",
+        "laravel": "^9.0"
+    },
+    "dependencies": {
+        "filter-strategy-addon": "^1.0"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes and views for AI Model Profiles",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Provides user routes and views for AI Model Profiles",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "processing",
+            "name": "Background Processing",
+            "description": "AI analysis jobs and scheduled tasks",
+            "targets": ["jobs", "scheduling"],
+            "enabled": true
+        }
+    ]
+}
+

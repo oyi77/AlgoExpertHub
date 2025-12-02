@@ -1,0 +1,41 @@
+{
+    "name": "multi-channel-signal-addon",
+    "title": "Multi-Channel Signal Addon",
+    "description": "Automatically forward messages from external channels into signals",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\MultiChannelSignalAddon",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": {
+        "danielstjules/stringy": "^3.1"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes, views, and menus for reviewing channel signals.",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Channel Management",
+            "description": "Enables user-facing channel management pages and navigation.",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "processing",
+            "name": "Message Processing",
+            "description": "Dispatches background jobs, scheduled commands, and webhooks for channel ingestion.",
+            "targets": ["jobs", "scheduling", "webhooks"],
+            "enabled": true
+        }
+    ]
+}
+
+
