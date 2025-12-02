@@ -1,15 +1,63 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
+# Laravel default .gitignore
+
+# Laravel & Composer
+/vendor/
+/node_modules/
+composer.lock
+
+# Laravel Environment Files
 .env
-.env.backup
+.env.*
+!.env.example
+
+# Laravel Cache & Log Files
+/storage/*.key
+/storage/app/public
+/storage/debugbar
+/storage/logs
+/storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+storage/framework/testing/
+public/storage
+
+# Laravel/Test Files
 .phpunit.result.cache
-docker-compose.override.yml
-Homestead.json
+
+# Laravel Homestead
 Homestead.yaml
-npm-debug.log
-yarn-error.log
-/.idea
-/.vscode
+Homestead.json
+.vagrant/
+
+# Docker
+docker-compose.override.yml
+
+# Node
+npm-debug.log*
+yarn-error.log*
+yarn.lock
+pnpm-debug.log*
+/public/hot
+
+# IDEs & Editors
+/.idea/
+/.vscode/
+/*.sublime-workspace
+/*.sublime-project
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Others
+/.env.backup
+
+# Laravel Mix
+/public/css/
+/public/js/
+/public/mix-manifest.json
+/public/vendor
+
+# Npm package lock
+package-lock.json
+
