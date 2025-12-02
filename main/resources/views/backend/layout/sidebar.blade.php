@@ -20,6 +20,7 @@
                 $tradingPresetAdminModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'admin_ui');
                 $filterStrategyAdminModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'admin_ui');
                 $aiTradingAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'admin_ui');
+                $openRouterAdminModuleEnabled = \App\Support\AddonRegistry::active('openrouter-integration-addon') && \App\Support\AddonRegistry::moduleEnabled('openrouter-integration-addon', 'admin_ui');
             @endphp
 
             @if ($adminUser && $adminUser->can('manage-plan'))
@@ -29,40 +30,43 @@
             @endif
 
             @if ($adminUser && $adminUser->can('signal'))
+                {{-- Core Signal Management --}}
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="activity"></i><span class="nav-text">{{ __('Signal Tools') }}</span></a>
                     <ul aria-expanded="false">
-
-
                         <li><a href="{{ route('admin.markets.index') }}"
                                 aria-expanded="false">{{ __('Markets Type') }}</a>
                         </li>
-
                         <li><a href="{{ route('admin.currency-pair.index') }}"
                                 aria-expanded="false">{{ __('Currency Pair') }}</a>
                         </li>
-
                         <li><a href="{{ route('admin.frames.index') }}"
                                 aria-expanded="false">{{ __('Time Frames') }}</a>
                         </li>
-
                         <li><a href="{{ route('admin.signals.index') }}" aria-expanded="false">{{ __('Signals') }}</a>
                         </li>
+                    </ul>
+                </li>
+            @endif
 
-                        @if ($multiChannelAdminModuleEnabled)
-                            <li><a href="{{ route('admin.channel-signals.index') }}" aria-expanded="false">{{ __('Channel Signals Review') }}</a>
+            {{-- Multi-Channel Signal Addon (Separate Section) --}}
+            @if ($adminUser && $adminUser->can('signal') && $multiChannelAdminModuleEnabled)
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="rss"></i><span class="nav-text">{{ __('Multi-Channel Signals') }}</span></a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.channel-signals.index') }}" aria-expanded="false">{{ __('Channel Signals Review') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.signal-analytics.index') }}" aria-expanded="false">{{ __('Signal Analytics') }}</a>
+                        </li>
+                        @if ($adminUser && ($adminUser->type === 'super' || $adminUser->hasRole('Super Admin')))
+                            <li class="nav-label">{{ __('Configuration') }}</li>
+                            <li><a href="{{ route('admin.signal-sources.index') }}" aria-expanded="false">{{ __('Signal Sources') }}</a>
                             </li>
-                            @if ($adminUser && ($adminUser->type === 'super' || $adminUser->hasRole('Super Admin')))
-                                <li><a href="{{ route('admin.signal-sources.index') }}" aria-expanded="false">{{ __('Signal Sources') }}</a>
-                                </li>
-                                <li><a href="{{ route('admin.channel-forwarding.index') }}" aria-expanded="false">{{ __('Channel Forwarding') }}</a>
-                                </li>
-                                <li><a href="{{ route('admin.pattern-templates.index') }}" aria-expanded="false">{{ __('Pattern Templates') }}</a>
-                                </li>
-                                <li><a href="{{ route('admin.ai-configuration.index') }}" aria-expanded="false">{{ __('AI Configuration') }}</a>
-                                </li>
-                            @endif
-                            <li><a href="{{ route('admin.signal-analytics.index') }}" aria-expanded="false">{{ __('Signal Analytics') }}</a>
+                            <li><a href="{{ route('admin.channel-forwarding.index') }}" aria-expanded="false">{{ __('Channel Forwarding') }}</a>
+                            </li>
+                            <li><a href="{{ route('admin.pattern-templates.index') }}" aria-expanded="false">{{ __('Pattern Templates') }}</a>
+                            </li>
+                            <li><a href="{{ route('admin.ai-configuration.index') }}" aria-expanded="false">{{ __('AI Configuration') }}</a>
                             </li>
                         @endif
                     </ul>
@@ -115,6 +119,20 @@
                         @endif
                         @if (Route::has('admin.ai-decision-logs.index'))
                         <li><a href="{{ route('admin.ai-decision-logs.index') }}" aria-expanded="false">{{ __('Decision Logs') }}</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            @if ($adminUser && $openRouterAdminModuleEnabled)
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="zap"></i><span class="nav-text">{{ __('OpenRouter') }}</span></a>
+                    <ul aria-expanded="false">
+                        @if (Route::has('admin.openrouter.configurations.index'))
+                        <li><a href="{{ route('admin.openrouter.configurations.index') }}" aria-expanded="false">{{ __('Configurations') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.openrouter.models.index'))
+                        <li><a href="{{ route('admin.openrouter.models.index') }}" aria-expanded="false">{{ __('Available Models') }}</a></li>
                         @endif
                     </ul>
                 </li>

@@ -1,7 +1,9 @@
 @extends(Config::theme() . 'layout.auth')
 
 @section('content')
-    <div class="sp_site_card">
+    <div class="row gy-4">
+        <div class="col-12">
+            <div class="sp_site_card">
         <div class="card-header">
             <div class="d-flex flex-wrap align-items-center justify-content-between">
                 <h4>{{ __($title) }}</h4>
@@ -157,8 +159,8 @@
                                                     </a>
                                                     <form action="{{ route('user.trading-presets.destroy', $preset) }}" 
                                                           method="POST" 
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('{{ __('Are you sure you want to delete this preset?') }}');">
+                                                          class="d-inline delete-preset-form"
+                                                          data-message="{{ __('Are you sure you want to delete this preset?') }}">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-outline-danger btn-sm">
@@ -187,6 +189,7 @@
                                 {{ $presets->links() }}
                             </div>
                         @endif
+            </div>
         </div>
     </div>
 @endsection
@@ -212,6 +215,28 @@
                             'message' => '',
                             'message_error' => 'Failed to change preset status',
                         ])
+                    }
+                })
+            })
+            
+            // Delete preset confirmation
+            $('.delete-preset-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
                     }
                 })
             })

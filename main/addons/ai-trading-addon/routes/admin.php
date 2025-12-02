@@ -5,7 +5,9 @@ use Addons\AiTradingAddon\App\Http\Controllers\Backend\AiModelProfileController;
 use Addons\AiTradingAddon\App\Http\Controllers\Backend\AiDecisionLogController;
 
 Route::middleware(['permission:signal,admin'])->group(function () {
-    Route::resource('ai-model-profiles', AiModelProfileController::class);
+    Route::resource('ai-model-profiles', AiModelProfileController::class)->parameters([
+        'ai-model-profiles' => 'aiModelProfile'
+    ]);
     
     // AI & Filter Decision Logs (Observability)
     Route::prefix('ai-decision-logs')->name('ai-decision-logs.')->group(function () {

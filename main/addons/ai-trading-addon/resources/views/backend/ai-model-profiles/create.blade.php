@@ -1,6 +1,6 @@
 @extends('backend.layout.master')
 
-@section('content')
+@section('element')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -61,9 +61,9 @@
 
                         <div class="form-group">
                             <label>Prompt Template</label>
-                            <textarea name="prompt_template" class="form-control" rows="10" placeholder="Enter prompt template with placeholders like {{symbol}}, {{direction}}, {{market_data}}, etc.">{{ old('prompt_template') }}</textarea>
+                            <textarea name="prompt_template" class="form-control" rows="10" placeholder="Enter prompt template with placeholders like @{{symbol}}, @{{direction}}, @{{market_data}}, etc.">{{ old('prompt_template') }}</textarea>
                             <small class="form-text text-muted">
-                                Use placeholders: {{symbol}}, {{direction}}, {{entry}}, {{sl}}, {{tp}}, {{market_data}}
+                                Use placeholders: @{{symbol}}, @{{direction}}, @{{entry}}, @{{sl}}, @{{tp}}, @{{market_data}}
                             </small>
                         </div>
 

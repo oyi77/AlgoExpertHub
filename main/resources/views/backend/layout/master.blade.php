@@ -113,6 +113,9 @@
 
     @stack('external-script')
 
+    <!-- Dialog Wrapper - Replaces native alert/confirm/prompt with custom modals -->
+    <script src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
+
     <script src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
 
     @stack('script')

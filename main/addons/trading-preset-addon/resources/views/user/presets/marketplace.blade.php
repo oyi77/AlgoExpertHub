@@ -1,16 +1,18 @@
 @extends(Config::theme() . 'layout.auth')
 
 @section('content')
-    <div class="sp_site_card">
-        <div class="card-header">
+    <div class="row gy-4">
+        <div class="col-12">
+            <div class="sp_site_card">
+                <div class="card-header">
             <div class="d-flex flex-wrap align-items-center justify-content-between">
                 <h4>{{ __($title) }}</h4>
                 <a href="{{ route('user.trading-presets.index') }}" class="btn btn-sm btn-secondary">
                     <i class="fa fa-arrow-left"></i> {{ __('My Presets') }}
                 </a>
+                </div>
             </div>
-        </div>
-        <div class="card-body">
+            <div class="card-body">
                         {{-- Search and Filter --}}
                         <form action="{{ route('user.trading-presets.marketplace') }}" method="get" class="mb-4">
                             <div class="row">
@@ -143,7 +145,6 @@
                                 </a>
                             </div>
                         @endif
-                    </div>
                 </div>
             </div>
         </div>

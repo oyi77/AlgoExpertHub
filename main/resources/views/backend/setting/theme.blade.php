@@ -2,7 +2,26 @@
 
 @section('element')
 <div class="row">
+    <div class="col-12">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ __('Theme Management') }}</h5>
+                    <div>
+                        <a href="{{ route('admin.manage.theme.download.template') }}" class="btn btn-info btn-sm">
+                            <i data-feather="download"></i> {{ __('Download Theme Template') }}
+                        </a>
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadThemeModal">
+                            <i data-feather="upload"></i> {{ __('Upload Theme ZIP') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="row">
     <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
 
@@ -144,6 +163,45 @@
 
         </div>
 
+    </div>
+</div>
+
+<!-- Upload Theme Modal -->
+<div class="modal fade" id="uploadThemeModal" tabindex="-1" role="dialog" aria-labelledby="uploadThemeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="{{ route('admin.manage.theme.upload') }}" method="post" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadThemeModalLabel">{{ __('Upload Theme ZIP') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="theme_package">{{ __('Theme ZIP File') }}</label>
+                        <input type="file" class="form-control-file" id="theme_package" name="theme_package" accept=".zip" required>
+                        <small class="form-text text-muted">
+                            {{ __('Upload a ZIP file containing your theme. Maximum file size: 10MB') }}
+                        </small>
+                        <div class="mt-2">
+                            <strong>{{ __('Theme ZIP Structure:') }}</strong>
+                            <ul class="mb-0">
+                                <li><code>assets/</code> - CSS, JS, images, fonts</li>
+                                <li><code>views/</code> - Blade template files</li>
+                                <li>{{ __('OR') }}</li>
+                                <li>{{ __('Theme folder with assets and views subdirectories') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Upload Theme') }}</button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

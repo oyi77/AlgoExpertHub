@@ -4,3 +4,7 @@
 Stack trace:
 #0 {main}
   thrown in Command line code on line 1
+[02-Dec-2025 16:31:05 UTC] PHP Fatal error:  Uncaught Error: Class "Addons\FilterStrategyAddon\AddonServiceProvider" not found in Command line code:1
+Stack trace:
+#0 {main}
+  thrown in Command line code on line 1

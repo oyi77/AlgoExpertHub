@@ -15,6 +15,12 @@ class AddonServiceProvider extends ServiceProvider
         // Register services, bindings, singletons
         $this->app->singleton(\Addons\AiTradingAddon\App\Services\AiTradingProviderFactory::class);
         
+        // Bind AiModelProfileService for dependency injection
+        $this->app->bind(
+            \Addons\AiTradingAddon\App\Services\AiModelProfileService::class,
+            \Addons\AiTradingAddon\App\Services\AiModelProfileService::class
+        );
+        
         // Merge addon config with app config (if exists)
         if (file_exists(__DIR__ . '/config/ai-trading.php')) {
             $this->mergeConfigFrom(__DIR__ . '/config/ai-trading.php', 'ai-trading');

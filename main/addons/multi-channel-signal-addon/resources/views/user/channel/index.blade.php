@@ -153,7 +153,7 @@
                                                     </button>
                                                 </form>
 
-                                                <form action="{{ route('user.channels.destroy', $channel->id) }}" method="post" onsubmit="return confirm('{{ __('Are you sure you want to delete this channel?') }}');">
+                                                <form action="{{ route('user.channels.destroy', $channel->id) }}" method="post" class="delete-channel-form" data-message="{{ __('Are you sure you want to delete this channel?') }}">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -186,4 +186,33 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+    <script>
+        $(function() {
+            'use strict'
+            
+            $('.delete-channel-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+        })
+    </script>
+@endpush
 

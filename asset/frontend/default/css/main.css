@@ -3386,25 +3386,25 @@ Dashboard css
     }
 }
 
-.dashbaord-main {
+.dashboard-main {
     background-color: #1E1F25;
     padding: 6.25rem 1.875rem 1.875rem 18.75rem;
 }
 
 @media (max-width: 1399px) {
-    .dashbaord-main {
+    .dashboard-main {
         padding: 3.75rem 0.9375rem 1.875rem 14.6875rem;
     }
 }
 
 @media (max-width: 1199px) {
-    .dashbaord-main {
+    .dashboard-main {
         padding-left: 0.9375rem;
     }
 }
 
 @media (max-width: 575px) {
-    .dashbaord-main {
+    .dashboard-main {
         padding: 5rem 0.9375rem 6.25rem 0.9375rem;
     }
 }

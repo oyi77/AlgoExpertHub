@@ -1,10 +1,9 @@
 @extends(Config::theme() . 'layout.auth')
 
 @section('content')
-<div class="container">
-    <div class="row">
+    <div class="row gy-4">
         <div class="col-12">
-            <div class="card">
+            <div class="sp_site_card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>AI Model Profile Marketplace</h4>
                     <a href="{{ route('user.ai-model-profiles.index') }}" class="btn btn-secondary">
@@ -64,6 +63,5 @@
             </div>
         </div>
     </div>
-</div>
 @endsection
 

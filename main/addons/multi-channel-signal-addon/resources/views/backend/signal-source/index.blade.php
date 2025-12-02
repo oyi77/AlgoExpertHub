@@ -140,8 +140,8 @@
                                                 
                                                 <form action="{{ route('admin.signal-sources.destroy', $source->id) }}" 
                                                       method="POST" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('{{ __('Are you sure you want to delete this source?') }}');">
+                                                      class="d-inline delete-source-form"
+                                                      data-message="{{ __('Are you sure you want to delete this source?') }}">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
@@ -299,6 +299,28 @@
                     btnElement.disabled = false;
                 });
             });
+            
+            // Delete source confirmation
+            $('.delete-source-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
         });
     </script>
     @endpush

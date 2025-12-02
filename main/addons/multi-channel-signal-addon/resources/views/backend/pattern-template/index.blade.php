@@ -46,7 +46,7 @@
                                             <span class="badge bg-primary">{{ ucfirst($template['pattern_type']) }}</span>
                                             <span class="badge bg-secondary">Priority: {{ $template['priority'] ?? 0 }}</span>
                                         </div>
-                                        <form action="{{ route('admin.pattern-templates.store') }}" method="POST" class="mt-2" onsubmit="return confirm('{{ __('Create pattern from this template?') }}');">
+                                        <form action="{{ route('admin.pattern-templates.store') }}" method="POST" class="mt-2 create-pattern-form" data-message="{{ __('Create pattern from this template?') }}">
                                             @csrf
                                             <input type="hidden" name="name" value="{{ $template['name'] }}">
                                             <input type="hidden" name="description" value="{{ $template['description'] ?? '' }}">
@@ -129,8 +129,7 @@
                                                 class="btn btn-xs btn-outline-secondary" title="{{ __('Edit') }}">
                                                 <i class="fa fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('admin.pattern-templates.destroy', $pattern->id) }}" method="POST" class="d-inline"
-                                                onsubmit="return confirm('{{ __('Are you sure?') }}');">
+                                            <form action="{{ route('admin.pattern-templates.destroy', $pattern->id) }}" method="POST" class="d-inline delete-pattern-form" data-message="{{ __('Are you sure?') }}">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-xs btn-outline-danger" title="{{ __('Delete') }}">
@@ -164,4 +163,54 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+    <script>
+        $(function() {
+            'use strict'
+            
+            $('.delete-pattern-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+            
+            $('.create-pattern-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Create') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+        })
+    </script>
+@endpush
 

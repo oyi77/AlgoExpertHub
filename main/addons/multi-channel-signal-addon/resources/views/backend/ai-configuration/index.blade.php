@@ -71,8 +71,8 @@
                                                 </a>
                                                 <form action="{{ route('admin.ai-configuration.destroy', $config->id) }}" 
                                                       method="POST" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('{{ __('Are you sure you want to delete this configuration?') }}');">
+                                                      class="d-inline delete-config-form"
+                                                      data-message="{{ __('Are you sure you want to delete this configuration?') }}">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger">
@@ -121,13 +121,37 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('{{ __('Connection successful!') }}');
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '{{ __('Connection Successful!') }}',
+                                    text: '{{ __('The AI configuration is working correctly.') }}'
+                                });
+                            } else {
+                                alert('{{ __('Connection successful!') }}');
+                            }
                         } else {
-                            alert('{{ __('Connection failed:') }} ' + (data.message || '{{ __('Unknown error') }}'));
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '{{ __('Connection Failed') }}',
+                                    text: data.message || '{{ __('Unknown error occurred while testing connection.') }}'
+                                });
+                            } else {
+                                alert('{{ __('Connection failed:') }} ' + (data.message || '{{ __('Unknown error') }}'));
+                            }
                         }
                     })
                     .catch(error => {
-                        alert('{{ __('Error testing connection:') }} ' + error.message);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '{{ __('Error') }}',
+                                text: '{{ __('Error testing connection:') }} ' + error.message
+                            });
+                        } else {
+                            alert('{{ __('Error testing connection:') }} ' + error.message);
+                        }
                     })
                     .finally(() => {
                         this.disabled = false;
@@ -135,6 +159,28 @@
                     });
                 });
             });
+            
+            // Delete configuration confirmation
+            $('.delete-config-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
         });
     </script>
 @endsection

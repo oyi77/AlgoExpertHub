@@ -1,6 +1,6 @@
 @extends('backend.layout.master')
 
-@section('content')
+@section('element')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -89,10 +89,10 @@
                                         <a href="{{ route('admin.ai-model-profiles.edit', $profile->id) }}" class="btn btn-sm btn-warning">
                                             <i class="fa fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.ai-model-profiles.destroy', $profile->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('admin.ai-model-profiles.destroy', $profile->id) }}" method="POST" class="d-inline delete-profile-form" data-message="Are you sure you want to delete this AI model profile?">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                            <button type="submit" class="btn btn-sm btn-danger">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                         </form>
@@ -113,4 +113,39 @@
     </div>
 </div>
 @endsection
+
+@push('script')
+<script>
+    $(function() {
+        'use strict'
+        
+        $('.delete-profile-form').on('submit', function(e) {
+            e.preventDefault()
+            const form = $(this)
+            const message = form.data('message') || 'Are you sure?'
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            } else {
+                if (confirm(message)) {
+                    form.off('submit').submit()
+                }
+            }
+        })
+    })
+</script>
+@endpush
 

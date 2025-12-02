@@ -12,8 +12,8 @@
                         </a>
                         <form action="{{ route('admin.trading-presets.clone', $preset) }}" 
                               method="POST" 
-                              class="d-inline"
-                              onsubmit="return confirm('{{ __('Are you sure you want to clone this preset?') }}');">
+                              class="d-inline clone-preset-form"
+                              data-message="{{ __('Are you sure you want to clone this preset?') }}">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fa fa-copy"></i> {{ __('Clone') }}
@@ -31,8 +31,8 @@
                         @if(!$preset->is_default_template)
                             <form action="{{ route('admin.trading-presets.destroy', $preset) }}" 
                                   method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('{{ __('Are you sure you want to delete this preset?') }}');">
+                                  class="d-inline delete-preset-form"
+                                  data-message="{{ __('Are you sure you want to delete this preset?') }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -339,4 +339,54 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+    <script>
+        $(function() {
+            'use strict'
+            
+            $('.delete-preset-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+            
+            $('.clone-preset-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Clone') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+        })
+    </script>
+@endpush
 

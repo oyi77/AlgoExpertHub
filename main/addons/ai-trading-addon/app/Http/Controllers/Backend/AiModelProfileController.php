@@ -19,23 +19,37 @@ class AiModelProfileController extends Controller
 
     public function index()
     {
-        $profiles = AiModelProfile::with('owner')
-            ->withCount('tradingPresets')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        try {
+            $profiles = AiModelProfile::with('owner:id,username')
+                ->withCount('tradingPresets')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
 
-        $stats = [
-            'total' => AiModelProfile::count(),
-            'enabled' => AiModelProfile::where('enabled', true)->count(),
-            'public' => AiModelProfile::where('visibility', 'PUBLIC_MARKETPLACE')->count(),
-        ];
+            // Optimize stats calculation
+            $stats = [
+                'total' => AiModelProfile::count(),
+                'enabled' => AiModelProfile::where('enabled', true)->count(),
+                'public' => AiModelProfile::where('visibility', 'PUBLIC_MARKETPLACE')->count(),
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error loading AI model profiles', ['error' => $e->getMessage()]);
+            $profiles = collect([])->paginate(20);
+            $stats = [
+                'total' => 0,
+                'enabled' => 0,
+                'public' => 0,
+            ];
+        }
 
-        return view('ai-trading-addon::backend.ai-model-profiles.index', compact('profiles', 'stats'));
+        $title = 'AI Model Profiles';
+
+        return view('ai-trading-addon::backend.ai-model-profiles.index', compact('profiles', 'stats', 'title'));
     }
 
     public function create()
     {
-        return view('ai-trading-addon::backend.ai-model-profiles.create');
+        $title = 'Create AI Model Profile';
+        return view('ai-trading-addon::backend.ai-model-profiles.create', compact('title'));
     }
 
     public function store(Request $request)
@@ -71,12 +85,14 @@ class AiModelProfileController extends Controller
     public function show(AiModelProfile $aiModelProfile)
     {
         $aiModelProfile->load('owner');
-        return view('ai-trading-addon::backend.ai-model-profiles.show', compact('aiModelProfile'));
+        $title = 'AI Model Profile Details';
+        return view('ai-trading-addon::backend.ai-model-profiles.show', compact('aiModelProfile', 'title'));
     }
 
     public function edit(AiModelProfile $aiModelProfile)
     {
-        return view('ai-trading-addon::backend.ai-model-profiles.edit', compact('aiModelProfile'));
+        $title = 'Edit AI Model Profile';
+        return view('ai-trading-addon::backend.ai-model-profiles.edit', compact('aiModelProfile', 'title'));
     }
 
     public function update(Request $request, AiModelProfile $aiModelProfile)

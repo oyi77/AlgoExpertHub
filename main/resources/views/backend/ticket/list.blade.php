@@ -83,41 +83,44 @@
     </div>
 
 
-    <!-- Start:: Delete Modal-->
-    <div class="modal fade" id="delete_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="" method="POST">
-                @csrf
-                {{ method_field('DELETE') }}
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ __('Delete Support Ticket') }} </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                   
-                    <div class="card-footer text-right">
-                        <button class="btn btn-sm btn-danger" type="submit"> <i class="fa fa-times"></i> {{ __('Delete') }}</button>
-                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal" aria-label="Close">
-                           {{__('Close')}}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- End:: Delete Modal-->
 @endsection
 
 @push('script')
     <script>
         'use strict'
-        $('.delete_confirm').on('click', function() {
-            const modal = $('#delete_modal')
-
-            modal.find('form').attr('action', $(this).data('href'))
-            modal.modal('show');
+        $('.delete_confirm').on('click', function(e) {
+            e.preventDefault()
+            const url = $(this).data('href')
+            
+            Swal.fire({
+                title: '{{ __('Delete Support Ticket') }}',
+                text: '{{ __('Are you sure you want to delete this ticket?') }}',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fa fa-times"></i> {{ __('Delete') }}',
+                cancelButtonText: '{{ __('Close') }}'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = $('<form>', {
+                        'method': 'POST',
+                        'action': url
+                    })
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': '_token',
+                        'value': '{{ csrf_token() }}'
+                    }))
+                    form.append($('<input>', {
+                        'type': 'hidden',
+                        'name': '_method',
+                        'value': 'DELETE'
+                    }))
+                    $('body').append(form)
+                    form.submit()
+                }
+            })
         })
     </script>
 @endpush

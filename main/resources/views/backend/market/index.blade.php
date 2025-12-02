@@ -166,39 +166,6 @@
     </div>
 
 
-    <div class="modal fade" id="delete" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-
-            <form action="" method="post">
-
-                @csrf
-
-                @method('DELETE')
-
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ __('Delete Market') }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-
-                        <p>{{ __('Are You sure to Delete this Market ?') }}</p>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger"> <i class="fa fa-trash"></i>
-                            {{ __('Delete') }}</button>
-                        <button type="button" class="btn btn-secondary"
-                            data-dismiss="modal">{{ __('Close') }}</button>
-                    </div>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
 @endsection
 
 @push('script')
@@ -225,12 +192,39 @@
                 modal.modal('show')
             })
 
-            $('.delete').on('click', function() {
-                const modal = $('#delete')
-
-                modal.find('form').attr('action', $(this).data('url'));
-
-                modal.modal('show');
+            $('.delete').on('click', function(e) {
+                e.preventDefault()
+                const url = $(this).data('url')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}!',
+                    text: '{{ __('Are you sure you want to Delete') }}?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: '<i class="fa fa-trash"></i> {{ __('DELETE') }}',
+                    cancelButtonText: '<i class="fa fa-times"></i> {{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': url
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_method',
+                            'value': 'DELETE'
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
 
             $('.status').on('change', function() {

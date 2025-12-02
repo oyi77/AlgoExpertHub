@@ -54,6 +54,12 @@
             "Addons\\TradingExecutionEngine\\App\\": "addons/trading-execution-engine-addon/app/",
             "Addons\\CopyTrading\\": "addons/copy-trading-addon/",
             "Addons\\CopyTrading\\App\\": "addons/copy-trading-addon/app/",
+            "Addons\\AiTradingAddon\\": "addons/ai-trading-addon/",
+            "Addons\\AiTradingAddon\\App\\": "addons/ai-trading-addon/app/",
+            "Addons\\OpenRouterIntegration\\": "addons/openrouter-integration-addon/",
+            "Addons\\OpenRouterIntegration\\App\\": "addons/openrouter-integration-addon/app/",
+            "Addons\\FilterStrategyAddon\\": "addons/filter-strategy-addon/",
+            "Addons\\FilterStrategyAddon\\App\\": "addons/filter-strategy-addon/app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

@@ -199,7 +199,7 @@ class AutoSignalService
 
             // If admin-owned channel, distribute to recipients
             if ($channelSource->isAdminOwned()) {
-                $this->distributeToRecipients($signal, $channelSource);
+                $this->distributeToRecipients($signal, $channelSource, $parsedData->confidence);
             } else {
                 // Auto-publish if confidence >= threshold (for user channels)
                 if ($parsedData->confidence >= $channelSource->auto_publish_confidence_threshold) {
@@ -438,7 +438,7 @@ class AutoSignalService
      * @param ChannelSource $channelSource
      * @return void
      */
-    protected function distributeToRecipients(Signal $signal, ChannelSource $channelSource): void
+    protected function distributeToRecipients(Signal $signal, ChannelSource $channelSource, ?int $confidenceScore = null): void
     {
         try {
             $assignmentService = app(\Addons\MultiChannelSignalAddon\App\Services\ChannelAssignmentService::class);
@@ -453,6 +453,20 @@ class AutoSignalService
             \Addons\MultiChannelSignalAddon\App\Jobs\DistributeAdminSignalJob::dispatch($signal, $channelSource, $recipients);
 
             Log::info("Dispatched distribution job for signal {$signal->id} to " . $recipients->count() . " recipients");
+
+            // Auto-publish if confidence >= threshold (for admin channels)
+            // Note: We delay auto-publish to ensure DistributeAdminSignalJob completes plan assignment first
+            // The distribution job assigns signals to plans, then auto-publish uses those assigned plans
+            if ($confidenceScore !== null 
+                && $channelSource->auto_publish_confidence_threshold > 0 
+                && $confidenceScore >= $channelSource->auto_publish_confidence_threshold) {
+                
+                // Dispatch auto-publish job with delay to ensure plan assignment completes
+                \Addons\MultiChannelSignalAddon\App\Jobs\AutoPublishSignalJob::dispatch($signal)
+                    ->delay(now()->addSeconds(10));
+                
+                Log::info("Scheduled auto-publish for signal {$signal->id} (confidence: {$confidenceScore} >= threshold: {$channelSource->auto_publish_confidence_threshold})");
+            }
         } catch (\Exception $e) {
             Log::error("Failed to distribute signal {$signal->id}: " . $e->getMessage(), [
                 'exception' => $e,

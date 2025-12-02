@@ -4,41 +4,53 @@
     <div class="row">
         <!-- Statistics Cards -->
         <div class="col-12">
-            <div class="row g-3">
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1">{{ __('Total') }}</h5>
-                        <span class="fw-semibold fs-4">{{ $stats['total'] }}</span>
+            <div class="row mb-3">
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Total</h5>
+                            <h3>{{ $stats['total'] }}</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1 text-info">{{ __('Default') }}</h5>
-                        <span class="fw-semibold fs-4 text-info">{{ $stats['default'] }}</span>
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Default</h5>
+                            <h3>{{ $stats['default'] }}</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1 text-primary">{{ __('Public') }}</h5>
-                        <span class="fw-semibold fs-4 text-primary">{{ $stats['public'] }}</span>
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Public</h5>
+                            <h3>{{ $stats['public'] }}</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1 text-secondary">{{ __('Private') }}</h5>
-                        <span class="fw-semibold fs-4 text-secondary">{{ $stats['private'] }}</span>
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Private</h5>
+                            <h3>{{ $stats['private'] }}</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1 text-success">{{ __('Enabled') }}</h5>
-                        <span class="fw-semibold fs-4 text-success">{{ $stats['enabled'] }}</span>
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Enabled</h5>
+                            <h3>{{ $stats['enabled'] }}</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-2">
-                    <div class="sp_site_card text-center">
-                        <h5 class="mb-1 text-danger">{{ __('Disabled') }}</h5>
-                        <span class="fw-semibold fs-4 text-danger">{{ $stats['disabled'] }}</span>
+                <div class="col-md-3 col-lg-2">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h5 class="mb-1">Disabled</h5>
+                            <h3>{{ $stats['disabled'] }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -184,10 +196,10 @@
                                                    title="{{ __('Edit') }}">
                                                     <i class="fa fa-pen"></i>
                                                 </a>
-                                                <form action="{{ route('admin.trading-presets.clone', $preset) }}" 
+                                                    <form action="{{ route('admin.trading-presets.clone', $preset) }}" 
                                                       method="POST" 
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('{{ __('Are you sure you want to clone this preset?') }}');">
+                                                      class="d-inline clone-preset-form"
+                                                      data-message="{{ __('Are you sure you want to clone this preset?') }}">
                                                     @csrf
                                                     <button type="submit" 
                                                             class="btn btn-outline-success btn-sm" 
@@ -198,8 +210,8 @@
                                                 @if(!$preset->is_default_template)
                                                     <form action="{{ route('admin.trading-presets.destroy', $preset) }}" 
                                                           method="POST" 
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('{{ __('Are you sure you want to delete this preset?') }}');">
+                                                          class="d-inline delete-preset-form"
+                                                          data-message="{{ __('Are you sure you want to delete this preset?') }}">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" 
@@ -235,6 +247,53 @@
 @endsection
 
 @push('script')
+    <script>
+        'use strict'
+
+        $(function() {
+            $('.delete-preset-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+            
+            $('.clone-preset-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Clone') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+            
+            $('.preset-status').on('change', function() {
     <script>
         'use strict'
 

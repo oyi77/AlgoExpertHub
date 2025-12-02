@@ -10,10 +10,11 @@
 6. [Database Schema](#database-schema)
 7. [Core Workflows](#core-workflows)
 8. [Addon System](#addon-system)
-9. [Installation](#installation)
-10. [Configuration](#configuration)
-11. [Development Guide](#development-guide)
-12. [API Documentation](#api-documentation)
+9. [Documentation Wiki](#documentation-wiki)
+10. [Installation](#installation)
+11. [Configuration](#configuration)
+12. [Development Guide](#development-guide)
+13. [API Documentation](#api-documentation)
 
 ---
 
@@ -214,6 +215,56 @@ public_html/
 ![diagram](./README-8.svg)
 
 ### Automated Trade Execution Flow
+
+The Trading Execution Engine automatically executes trades when signals are published. Here's the complete flow:
+
+1. **Signal Published** → Admin sets `is_published = 1`
+2. **SignalObserver Detects** → Watches for signal publication changes
+3. **Get Active Connections** → Retrieves all active execution connections
+4. **Filter Connections** → Admin = all signals, User = plan-based access
+5. **Dispatch Jobs** → `ExecuteSignalJob` queued for each eligible connection (async)
+6. **Execute Signal** → For each connection:
+   - AI Decision Check (optional - can reject/reduce size)
+   - AI Market Analysis (optional - can skip if unfavorable)
+   - Validation (connection active, signal data complete, balance check)
+   - Get Exchange Adapter (CCXT for crypto, MT4/MT5 for FX)
+   - Calculate Position Size (fixed/percentage/amount with AI adjustments)
+   - Place Order (market or limit with SL/TP)
+7. **Create Position** → If successful, create `ExecutionPosition` (status = 'open')
+8. **Monitor Positions** → `MonitorPositionsJob` runs every minute:
+   - Update current prices and PnL
+   - Check Stop Loss → Close if hit
+   - Check Take Profit → Close if hit
+9. **Close Position** → When SL/TP hit, update status and send notification
+10. **Analytics** → Daily job calculates win rate, profit factor, drawdown
+
+📖 **[Read Complete Trading Execution Flow Documentation →](./docs/trading-execution-flow.md)**
+
+#### Trading Execution Flow Diagram
+
+```mermaid
+graph TD
+    A[Signal Published] --> B[SignalObserver Detects]
+    B --> C[Get Active Connections]
+    C --> D{Filter Connections}
+    D -->|Admin| E[All Signals]
+    D -->|User| F[Plan-Based]
+    E --> G[Dispatch Jobs]
+    F --> G
+    G --> H[ExecuteSignalJob]
+    H --> I{AI Check}
+    I -->|Approved| J[Validate]
+    I -->|Rejected| K[Stop]
+    J --> L[Place Order]
+    L --> M{Success?}
+    M -->|Yes| N[Create Position]
+    M -->|No| O[Log Error]
+    N --> P[Monitor Positions<br/>Every Minute]
+    P --> Q{SL/TP Hit?}
+    Q -->|Yes| R[Close Position]
+    Q -->|No| P
+    R --> S[Update Analytics<br/>Daily]
+```
 
 ![diagram](./README-9.svg)
 
@@ -475,6 +526,48 @@ dispatch(new YourJob($data));
 
 ---
 
+## Documentation Wiki
+
+Complete documentation for all platform features and workflows:
+
+- 📖 [Documentation Index](./docs/README.md) - Overview of all documentation
+- 🔄 [Trading Execution Flow](./docs/trading-execution-flow.md) - Complete guide to automated trade execution
+- 📡 [Multi-Channel Signal Ingestion](./docs/multi-channel-signal-ingestion.md) - Automatic signal import flow
+- 💳 [Payment Gateway Integration](./docs/payment-gateway-integration.md) - Payment and subscription flow
+- ⚙️ [Trading Presets](./docs/trading-presets.md) - Risk management guide
+- 🤖 [AI Trading Integration](./docs/ai-trading-integration.md) - AI workflow documentation
+- 👥 [Copy Trading System](./docs/copy-trading-system.md) - Social trading flow
+- 🔍 [Filter Strategy Guide](./docs/filter-strategy-guide.md) - Technical indicator filtering
+- 🎨 [Theme Development](./docs/theme-development.md) - Creating custom themes
+
+### Documentation Structure
+
+All detailed documentation is organized in the `docs/` folder:
+
+```
+docs/
+├── README.md                          # Documentation index (wiki homepage)
+├── trading-execution-flow.md          # Trading execution complete guide
+├── multi-channel-signal-ingestion.md  # Signal ingestion flow
+├── payment-gateway-integration.md     # Payment flow documentation
+├── trading-presets.md                 # Risk management guide
+├── ai-trading-integration.md          # AI workflow documentation
+├── copy-trading-system.md             # Social trading flow
+├── filter-strategy-guide.md           # Technical indicator filtering
+└── theme-development.md               # Theme creation guide
+```
+
+**Documentation Standards**:
+- All docs use Markdown format
+- Flow diagrams use Mermaid syntax
+- Code examples included
+- Clear structure with headings
+- Relative links within docs folder
+
+For feature specifications, see `specs/` directory.
+
+---
+
 ## API Documentation
 
 ### Authentication
@@ -551,12 +644,6 @@ For issues, questions, or contributions:
 - **Documentation**: See `specs/` directory for feature specifications
 - **Rules**: See `.cursor/rules/` for development guidelines
 - **Issues**: Open an issue in the repository
-
----
-
-## License
-
-[Add your license information here]
 
 ---
 

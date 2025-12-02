@@ -106,6 +106,20 @@ class FilterStrategy extends Model
     }
 
     /**
+     * Check if strategy can be cloned by a user.
+     */
+    public function canBeClonedBy($userId): bool
+    {
+        // Can't clone own strategy
+        if ($this->created_by_user_id === $userId) {
+            return false;
+        }
+        
+        // Must be clonable and public
+        return $this->isClonable() && $this->isPublic();
+    }
+
+    /**
      * Clone this strategy for a user.
      */
     public function cloneForUser($userId): self

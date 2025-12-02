@@ -16,8 +16,8 @@
                             </form>
                             <form action="{{ route('user.trading-presets.destroy', $preset) }}" 
                                   method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('{{ __('Are you sure you want to delete this preset?') }}');">
+                                  class="d-inline delete-preset-form"
+                                  data-message="{{ __('Are you sure you want to delete this preset?') }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">

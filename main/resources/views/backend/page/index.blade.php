@@ -91,44 +91,40 @@
 
 
 
-    <div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{{ __('Delete Page') }}</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form action="" method="POST">
-                        @csrf
-
-                        <p>{{ __('Are You Sure To Delete Pages') }}?</p>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-sm btn-secondary text-dark mr-3"
-                                data-dismiss="modal">{{ __('Close') }}</button>
-                            <button type="submit" class="btn btn-sm btn-danger">{{ __('Delete Page') }}</button>
-                        </div>
-
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('script')
     <script>
         'use strict'
         $(function() {
-            $('.delete').on('click', function() {
-                const modal = $('#deleteModal');
-
-                modal.find('form').attr('action', $(this).data('url'))
-                modal.modal('show')
+            $('.delete').on('click', function(e) {
+                e.preventDefault()
+                const url = $(this).data('url')
+                
+                Swal.fire({
+                    title: '{{ __('Delete Page') }}',
+                    text: '{{ __('Are You Sure To Delete Pages') }}?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete Page') }}',
+                    cancelButtonText: '{{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': url
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
         })
     </script>

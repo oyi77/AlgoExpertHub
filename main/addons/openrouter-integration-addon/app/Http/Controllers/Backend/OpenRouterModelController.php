@@ -42,11 +42,22 @@ class OpenRouterModelController extends Controller
             });
         }
 
-        $models = $query->orderBy('provider')->orderBy('name')->paginate(50);
+        try {
+            $models = $query->select('id', 'model_id', 'name', 'provider', 'context_length', 'pricing', 'is_available', 'last_synced_at')
+                ->orderBy('provider')
+                ->orderBy('name')
+                ->paginate(50);
 
-        $providers = OpenRouterModel::distinct()->pluck('provider')->sort();
+            $providers = OpenRouterModel::distinct()->pluck('provider')->sort();
+        } catch (\Exception $e) {
+            \Log::error('Error loading OpenRouter models', ['error' => $e->getMessage()]);
+            $models = collect([])->paginate(50);
+            $providers = collect([]);
+        }
 
-        return view('openrouter::backend.models.index', compact('models', 'providers'));
+        $title = 'OpenRouter Models';
+
+        return view('openrouter::backend.models.index', compact('models', 'providers', 'title'));
     }
 
     /**

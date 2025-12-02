@@ -40,7 +40,7 @@
                                                 <a href="{{ route('user.copy-trading.subscriptions.edit', $subscription->id) }}" 
                                                     class="btn btn-sm btn-info">Edit</a>
                                                 <form action="{{ route('user.copy-trading.subscriptions.destroy', $subscription->id) }}" 
-                                                    method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                                    method="POST" class="d-inline delete-subscription-form" data-message="Are you sure?">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger">Unsubscribe</button>
@@ -58,4 +58,33 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+    <script>
+        $(function() {
+            'use strict'
+            
+            $('.delete-subscription-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: 'Confirmation',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Delete',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+        })
+    </script>
+@endpush
 

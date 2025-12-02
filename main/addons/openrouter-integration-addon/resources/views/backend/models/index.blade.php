@@ -27,9 +27,9 @@
                         </form>
                     </div>
                     <div class="card-header-right">
-                        <form action="{{ route('admin.openrouter.models.sync') }}" method="POST" class="d-inline">
+                        <form action="{{ route('admin.openrouter.models.sync') }}" method="POST" class="d-inline sync-models-form" data-message="Sync models from OpenRouter API?">
                             @csrf
-                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Sync models from OpenRouter API?');">
+                            <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fa fa-sync"></i> {{ __('Sync Models') }}
                             </button>
                         </form>
@@ -111,4 +111,39 @@
         </div>
     </div>
 @endsection
+
+@push('script')
+<script>
+    $(function() {
+        'use strict'
+        
+        $('.sync-models-form').on('submit', function(e) {
+            e.preventDefault()
+            const form = $(this)
+            const message = form.data('message') || 'Are you sure?'
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Sync') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            } else {
+                if (confirm(message)) {
+                    form.off('submit').submit()
+                }
+            }
+        })
+    })
+</script>
+@endpush
 

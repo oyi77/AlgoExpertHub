@@ -169,8 +169,8 @@
                                             
                                             <form action="{{ route('user.signal-sources.destroy', $source->id) }}" 
                                                   method="POST" 
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('{{ __('Are you sure?') }}');">
+                                                  class="d-inline delete-source-form"
+                                                  data-message="{{ __('Are you sure?') }}">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-xs btn-danger" title="{{ __('Delete') }}">
@@ -256,7 +256,17 @@
                         }, 2000);
                         
                         // Show success toast/alert
-                        alert('✓ ' + data.message);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '{{ __('Success') }}',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            alert('✓ ' + data.message);
+                        }
                     } else {
                         btnElement.classList.remove('btn-secondary', 'btn-success');
                         btnElement.classList.add('btn-danger');
@@ -267,7 +277,15 @@
                             btnElement.innerHTML = originalHtml;
                         }, 2000);
                         
-                        alert('✗ ' + data.message);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '{{ __('Error') }}',
+                                text: data.message
+                            });
+                        } else {
+                            alert('✗ ' + data.message);
+                        }
                     }
                 })
                 .catch(error => {
@@ -280,13 +298,48 @@
                         btnElement.innerHTML = originalHtml;
                     }, 2000);
                     
-                    alert('Error: ' + error.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '{{ __('Error') }}',
+                            text: error.message
+                        });
+                    } else {
+                        alert('Error: ' + error.message);
+                    }
                 })
                 .finally(() => {
                     btnElement.disabled = false;
                 });
             });
         });
+    </script>
+    
+    <script>
+        $(function() {
+            'use strict'
+            
+            $('.delete-source-form').on('submit', function(e) {
+                e.preventDefault()
+                const form = $(this)
+                const message = form.data('message')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            })
+        })
     </script>
     @endpush
 @endsection

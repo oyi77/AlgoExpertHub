@@ -136,6 +136,39 @@
         </div>
     </div>
 
+    <!-- Test Parse Modal -->
+    <div class="modal fade" id="testParseModal" tabindex="-1" role="dialog" aria-labelledby="testParseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testParseModalLabel">{{ __('Test AI Parsing') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="testMessageInput">{{ __('Enter a trading signal message to test parsing:') }}</label>
+                        <textarea class="form-control" id="testMessageInput" rows="8" placeholder="Example:
+BUY EUR/USD
+Entry: 1.0850
+SL: 1.0800
+TP: 1.0950"></textarea>
+                        <small class="form-text text-muted">
+                            {{ __('Enter a trading signal message in the format you want to test. The AI will attempt to parse it and extract trading information.') }}
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn btn-success" id="confirmTestParseBtn">
+                        <i class="fa fa-code"></i> {{ __('Test Parse') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const testBtn = document.querySelector('.test-connection-btn');
@@ -157,13 +190,25 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('{{ __('Connection successful!') }}');
+                            Swal.fire({
+                                icon: 'success',
+                                title: '{{ __('Connection Successful!') }}',
+                                text: '{{ __('The AI configuration is working correctly.') }}'
+                            });
                         } else {
-                            alert('{{ __('Connection failed:') }} ' + (data.message || '{{ __('Unknown error') }}'));
+                            Swal.fire({
+                                icon: 'error',
+                                title: '{{ __('Connection Failed') }}',
+                                text: data.message || '{{ __('Unknown error occurred while testing connection.') }}'
+                            });
                         }
                     })
                     .catch(error => {
-                        alert('{{ __('Error testing connection:') }} ' + error.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: '{{ __('Error') }}',
+                            text: '{{ __('Error testing connection:') }} ' + error.message
+                        });
                     })
                     .finally(() => {
                         this.disabled = false;
@@ -174,22 +219,41 @@
 
             // Test Parse button
             const testParseBtn = document.querySelector('.test-parse-btn');
+            const testParseModal = document.getElementById('testParseModal');
+            const testMessageInput = document.getElementById('testMessageInput');
+            const confirmTestParseBtn = document.getElementById('confirmTestParseBtn');
+            let currentConfigId = null;
+
             if (testParseBtn) {
                 testParseBtn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    const originalText = this.innerHTML;
+                    currentConfigId = this.getAttribute('data-id');
+                    testMessageInput.value = '';
+                    $(testParseModal).modal('show');
+                });
+            }
+
+            if (confirmTestParseBtn) {
+                confirmTestParseBtn.addEventListener('click', function() {
+                    const testMessage = testMessageInput.value.trim();
                     
-                    // Prompt for test message
-                    const testMessage = prompt('{{ __('Enter a trading signal message to test parsing:') }}\n\nExample:\nBUY EUR/USD\nEntry: 1.0850\nSL: 1.0800\nTP: 1.0950');
-                    
-                    if (!testMessage || !testMessage.trim()) {
+                    if (!testMessage) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '{{ __('Warning') }}',
+                            text: '{{ __('Please enter a message to test parsing.') }}'
+                        });
                         return;
                     }
+
+                    $(testParseModal).modal('hide');
                     
-                    this.disabled = true;
-                    this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ __('Parsing...') }}';
+                    const originalBtn = testParseBtn;
+                    const originalText = originalBtn.innerHTML;
                     
-                    fetch(`{{ url('admin/ai-configuration') }}/${id}/test-parse`, {
+                    originalBtn.disabled = true;
+                    originalBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> {{ __('Parsing...') }}';
+                    
+                    fetch(`{{ url('admin/ai-configuration') }}/${currentConfigId}/test-parse`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -203,26 +267,62 @@
                     .then(data => {
                         if (data.success && data.parsed) {
                             const parsed = data.parsed;
-                            const result = `{{ __('Parsing successful!') }}\n\n` +
-                                `{{ __('Currency Pair:') }} ${parsed.currency_pair || 'N/A'}\n` +
-                                `{{ __('Direction:') }} ${parsed.direction || 'N/A'}\n` +
-                                `{{ __('Open Price:') }} ${parsed.open_price || 0}\n` +
-                                `{{ __('Stop Loss:') }} ${parsed.sl || 'N/A'}\n` +
-                                `{{ __('Take Profit:') }} ${parsed.tp || 'N/A'}\n` +
-                                `{{ __('Timeframe:') }} ${parsed.timeframe || 'N/A'}\n` +
-                                `{{ __('Title:') }} ${parsed.title || 'N/A'}\n` +
-                                `{{ __('Description:') }} ${(parsed.description || '').substring(0, 100)}...`;
-                            alert(result);
+                            
+                            // Build HTML content for SweetAlert
+                            let htmlContent = '<div class="text-left">';
+                            htmlContent += '<p><strong>{{ __('Currency Pair:') }}</strong> ' + (parsed.currency_pair || 'N/A') + '</p>';
+                            htmlContent += '<p><strong>{{ __('Direction:') }}</strong> ' + (parsed.direction || 'N/A') + '</p>';
+                            htmlContent += '<p><strong>{{ __('Open Price:') }}</strong> ' + (parsed.open_price || 0) + '</p>';
+                            htmlContent += '<p><strong>{{ __('Stop Loss:') }}</strong> ' + (parsed.sl || 'N/A') + '</p>';
+                            
+                            // Handle TP (can be array or single value)
+                            let tpDisplay = 'N/A';
+                            if (parsed.tp) {
+                                if (Array.isArray(parsed.tp)) {
+                                    tpDisplay = parsed.tp.join(', ');
+                                } else {
+                                    tpDisplay = parsed.tp;
+                                }
+                            }
+                            htmlContent += '<p><strong>{{ __('Take Profit:') }}</strong> ' + tpDisplay + '</p>';
+                            htmlContent += '<p><strong>{{ __('Timeframe:') }}</strong> ' + (parsed.timeframe || 'N/A') + '</p>';
+                            
+                            if (parsed.title) {
+                                htmlContent += '<p><strong>{{ __('Title:') }}</strong> ' + parsed.title + '</p>';
+                            }
+                            
+                            if (parsed.description) {
+                                const desc = parsed.description.length > 200 ? parsed.description.substring(0, 200) + '...' : parsed.description;
+                                htmlContent += '<p><strong>{{ __('Description:') }}</strong> ' + desc + '</p>';
+                            }
+                            
+                            htmlContent += '</div>';
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: '{{ __('Parsing Successful!') }}',
+                                html: htmlContent,
+                                width: '600px',
+                                confirmButtonText: '{{ __('OK') }}'
+                            });
                         } else {
-                            alert('{{ __('Parsing failed:') }} ' + (data.message || '{{ __('Unknown error') }}'));
+                            Swal.fire({
+                                icon: 'error',
+                                title: '{{ __('Parsing Failed') }}',
+                                text: data.message || '{{ __('Unknown error occurred while parsing the message.') }}'
+                            });
                         }
                     })
                     .catch(error => {
-                        alert('{{ __('Error testing parse:') }} ' + error.message);
+                        Swal.fire({
+                            icon: 'error',
+                            title: '{{ __('Error') }}',
+                            text: '{{ __('Error testing parse:') }} ' + error.message
+                        });
                     })
                     .finally(() => {
-                        this.disabled = false;
-                        this.innerHTML = originalText;
+                        originalBtn.disabled = false;
+                        originalBtn.innerHTML = originalText;
                     });
                 });
             }
@@ -298,14 +398,22 @@
                     } else {
                         helpText.textContent = data.message || '{{ __('No models found or failed to fetch') }}';
                         if (data.message) {
-                            alert(data.message);
+                            Swal.fire({
+                                icon: 'warning',
+                                title: '{{ __('Warning') }}',
+                                text: data.message
+                            });
                         }
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching models:', error);
                     helpText.textContent = '{{ __('Error fetching models. Please try again.') }}';
-                    alert('{{ __('Error fetching models:') }} ' + error.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ __('Error') }}',
+                        text: '{{ __('Error fetching models:') }} ' + error.message
+                    });
                 })
                 .finally(() => {
                     refreshBtn.disabled = false;

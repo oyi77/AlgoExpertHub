@@ -1,10 +1,9 @@
 @extends(Config::theme() . 'layout.auth')
 
 @section('content')
-<div class="container">
-    <div class="row">
+    <div class="row gy-4">
         <div class="col-12">
-            <div class="card">
+            <div class="sp_site_card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>My AI Model Profiles</h4>
                     <a href="{{ route('user.ai-model-profiles.create') }}" class="btn btn-primary">
@@ -58,10 +57,10 @@
                                         <a href="{{ route('user.ai-model-profiles.edit', $profile->id) }}" class="btn btn-sm btn-info">
                                             <i class="fa fa-edit"></i> Edit
                                         </a>
-                                        <form action="{{ route('user.ai-model-profiles.destroy', $profile->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('user.ai-model-profiles.destroy', $profile->id) }}" method="POST" class="d-inline delete-profile-form" data-message="Are you sure you want to delete this AI model profile?">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                            <button type="submit" class="btn btn-sm btn-danger">
                                                 <i class="fa fa-trash"></i> Delete
                                             </button>
                                         </form>
@@ -80,6 +79,40 @@
             </div>
         </div>
     </div>
-</div>
 @endsection
+
+@push('script')
+<script>
+    $(function() {
+        'use strict'
+        
+        $('.delete-profile-form').on('submit', function(e) {
+            e.preventDefault()
+            const form = $(this)
+            const message = form.data('message') || 'Are you sure?'
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Delete') }}',
+                    cancelButtonText: '{{ __('Cancel') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit()
+                    }
+                })
+            } else {
+                if (confirm(message)) {
+                    form.off('submit').submit()
+                }
+            }
+        })
+    })
+</script>
+@endpush
 

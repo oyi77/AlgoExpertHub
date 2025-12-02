@@ -2,6 +2,7 @@
 
 namespace Addons\OpenRouterIntegration;
 
+use App\Support\AddonRegistry;
 use Addons\OpenRouterIntegration\App\Services\OpenRouterMarketAnalyzer;
 use Addons\OpenRouterIntegration\App\Services\OpenRouterService;
 use Addons\OpenRouterIntegration\App\Services\OpenRouterSignalParser;
@@ -10,6 +11,8 @@ use Illuminate\Support\ServiceProvider;
 
 class AddonServiceProvider extends ServiceProvider
 {
+    protected const SLUG = 'openrouter-integration-addon';
+
     /**
      * Register services.
      */
@@ -37,6 +40,10 @@ class AddonServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (!AddonRegistry::active(self::SLUG)) {
+            return;
+        }
+
         // Load migrations
         $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
 
@@ -66,13 +73,14 @@ class AddonServiceProvider extends ServiceProvider
      */
     protected function loadRoutes(): void
     {
-        // Check if admin_ui module is enabled
-        if ($this->isModuleEnabled('admin_ui')) {
-            // Load admin routes file
-            if (file_exists(__DIR__ . '/routes/admin.php')) {
-                Route::middleware(['web', 'admin', 'demo'])
-                    ->group(__DIR__ . '/routes/admin.php');
-            }
+        // Load admin routes (conditionally based on module status)
+        if (file_exists(__DIR__ . '/routes/admin.php') && AddonRegistry::moduleEnabled(self::SLUG, 'admin_ui')) {
+            Route::middleware(['web', 'admin', 'demo'])
+                ->prefix('admin')
+                ->name('admin.')
+                ->group(function (): void {
+                    require __DIR__ . '/routes/admin.php';
+                });
         }
     }
 
@@ -97,34 +105,5 @@ class AddonServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Check if module with target is enabled.
-     */
-    protected function isModuleEnabled(string $target): bool
-    {
-        // Get addon manifest
-        $manifestPath = __DIR__ . '/addon.json';
-        if (!file_exists($manifestPath)) {
-            return true; // Default to enabled if manifest not found
-        }
-
-        try {
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            $modules = $manifest['modules'] ?? [];
-
-            foreach ($modules as $module) {
-                $targets = $module['targets'] ?? [];
-                $enabled = $module['enabled'] ?? false;
-
-                if (in_array($target, $targets) && $enabled) {
-                    return true;
-                }
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            return true; // Default to enabled on error
-        }
-    }
 }
 

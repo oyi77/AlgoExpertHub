@@ -23,9 +23,19 @@ class OpenRouterConfigController extends Controller
      */
     public function index()
     {
-        $configurations = OpenRouterConfiguration::with('model')->latest()->paginate(20);
+        try {
+            $configurations = OpenRouterConfiguration::with('model:id,model_id,name')
+                ->select('id', 'name', 'model_id', 'enabled', 'priority', 'use_for_parsing', 'use_for_analysis', 'created_at')
+                ->latest()
+                ->paginate(20);
+        } catch (\Exception $e) {
+            \Log::error('Error loading OpenRouter configurations', ['error' => $e->getMessage()]);
+            $configurations = collect([])->paginate(20);
+        }
 
-        return view('openrouter::backend.config.index', compact('configurations'));
+        $title = 'OpenRouter Configurations';
+
+        return view('openrouter::backend.config.index', compact('configurations', 'title'));
     }
 
     /**
@@ -34,8 +44,9 @@ class OpenRouterConfigController extends Controller
     public function create()
     {
         $models = OpenRouterModel::getAvailable();
+        $title = 'Create OpenRouter Configuration';
 
-        return view('openrouter::backend.config.create', compact('models'));
+        return view('openrouter::backend.config.create', compact('models', 'title'));
     }
 
     /**
@@ -71,8 +82,9 @@ class OpenRouterConfigController extends Controller
     {
         $configuration = OpenRouterConfiguration::findOrFail($id);
         $models = OpenRouterModel::getAvailable();
+        $title = 'Edit OpenRouter Configuration';
 
-        return view('openrouter::backend.config.edit', compact('configuration', 'models'));
+        return view('openrouter::backend.config.edit', compact('configuration', 'models', 'title'));
     }
 
     /**

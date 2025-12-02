@@ -164,6 +164,13 @@
         .is-hide {
             display: none;
         }
+
+        /* Fix for Filter By Date button - prevent text wrapping */
+        .daterange-btn.btn-icon {
+            width: auto !important;
+            min-width: auto;
+            white-space: nowrap;
+        }
     </style>
 @endpush
 

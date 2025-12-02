@@ -13,15 +13,23 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('trading_presets', function (Blueprint $table) {
-            // Filter Strategy reference (nullable for backward compatibility)
-            $table->unsignedBigInteger('filter_strategy_id')->nullable()->after('created_by_user_id');
-            $table->index('filter_strategy_id');
-            $table->foreign('filter_strategy_id')
-                ->references('id')
-                ->on('filter_strategies')
-                ->onDelete('set null');
-        });
+        // Only add foreign key if filter_strategies table exists
+        if (Schema::hasTable('filter_strategies')) {
+            Schema::table('trading_presets', function (Blueprint $table) {
+                // Check if column already exists
+                if (!Schema::hasColumn('trading_presets', 'filter_strategy_id')) {
+                    // Filter Strategy reference (nullable for backward compatibility)
+                    $table->unsignedBigInteger('filter_strategy_id')->nullable()->after('created_by_user_id');
+                    $table->index('filter_strategy_id');
+                    
+                    // Add foreign key constraint
+                    $table->foreign('filter_strategy_id')
+                        ->references('id')
+                        ->on('filter_strategies')
+                        ->onDelete('set null');
+                }
+            });
+        }
     }
 
     /**

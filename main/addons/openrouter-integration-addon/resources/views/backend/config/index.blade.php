@@ -70,7 +70,7 @@
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             <form action="{{ route('admin.openrouter.configurations.destroy', $config->id) }}"
-                                                method="POST" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                                method="POST" class="d-inline delete-config-form" data-message="Are you sure?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -149,6 +149,28 @@
                 }
             });
         });
+        
+        // Delete configuration confirmation
+        $('.delete-config-form').on('submit', function(e) {
+            e.preventDefault()
+            const form = $(this)
+            const message = form.data('message')
+            
+            Swal.fire({
+                title: 'Confirmation',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.off('submit').submit()
+                }
+            })
+        })
     });
 </script>
 @endpush

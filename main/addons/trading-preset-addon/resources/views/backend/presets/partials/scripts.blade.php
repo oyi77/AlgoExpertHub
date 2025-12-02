@@ -297,6 +297,50 @@ $(function() {
     $('#layer_martingale_mode').trigger('change');
     $('#session_profile').trigger('change');
     updateTradingDaysMask();
+    
+    // Delete preset confirmation
+    $('.delete-preset-form').on('submit', function(e) {
+        e.preventDefault()
+        const form = $(this)
+        const message = form.data('message')
+        
+        Swal.fire({
+            title: '{{ __('Confirmation') }}',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '{{ __('Delete') }}',
+            cancelButtonText: '{{ __('Cancel') }}'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.off('submit').submit()
+            }
+        })
+    })
+    
+    // Clone preset confirmation
+    $('.clone-preset-form').on('submit', function(e) {
+        e.preventDefault()
+        const form = $(this)
+        const message = form.data('message')
+        
+        Swal.fire({
+            title: '{{ __('Confirmation') }}',
+            text: message,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '{{ __('Clone') }}',
+            cancelButtonText: '{{ __('Cancel') }}'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.off('submit').submit()
+            }
+        })
+    })
 });
 </script>
 

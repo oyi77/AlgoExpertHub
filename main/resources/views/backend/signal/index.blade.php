@@ -120,81 +120,76 @@
     </div>
 
 
-    <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" role="document">
-            <form action="" method="post">
-                @csrf
-                @method('DELETE')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel2"><i class="fa fa-exclamation-triangle"></i>
-                            {{ __('Confirmation') }} !</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <strong>{{ __('Are you sure you want to Delete') }} ?</strong>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-times"></i>
-                            {{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i>
-                            {{ __('DELETE') }}</button>
-
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <div class="modal fade" id="sent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" role="document">
-            <form action="" method="post">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel2"><i class="fa fa-exclamation-triangle"></i>
-                            {{ __('Confirmation') }} !</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <strong>{{ __('Are you sure you want to Send This Signal') }} ?</strong>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-times"></i>
-                            {{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-success">
-                            {{ __('Sent') }}</button>
-
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 @endsection
 
 @push('script')
     <script>
         $(function() {
-
             'use strict'
 
-            $('.delete').on('click', function() {
-                const modal = $('#delete')
-
-                modal.find('form').attr('action', $(this).data('href'))
-                modal.modal('show')
+            $('.delete').on('click', function(e) {
+                e.preventDefault()
+                const url = $(this).data('href')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}!',
+                    text: '{{ __('Are you sure you want to Delete') }}?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: '<i class="fa fa-trash"></i> {{ __('DELETE') }}',
+                    cancelButtonText: '<i class="fa fa-times"></i> {{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': url
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_method',
+                            'value': 'DELETE'
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
 
-            $('.sent').on('click', function() {
-                const modal = $('#sent')
-
-                modal.find('form').attr('action', $(this).data('href'))
-                modal.modal('show')
+            $('.sent').on('click', function(e) {
+                e.preventDefault()
+                const url = $(this).data('href')
+                
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}!',
+                    text: '{{ __('Are you sure you want to Send This Signal') }}?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Sent') }}',
+                    cancelButtonText: '<i class="fa fa-times"></i> {{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': url
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
         })
     </script>

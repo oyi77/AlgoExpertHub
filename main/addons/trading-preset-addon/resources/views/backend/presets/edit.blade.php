@@ -12,8 +12,8 @@
                         </a>
                         <form action="{{ route('admin.trading-presets.clone', $preset) }}" 
                               method="POST" 
-                              class="d-inline"
-                              onsubmit="return confirm('{{ __('Are you sure you want to clone this preset?') }}');">
+                              class="d-inline clone-preset-form"
+                              data-message="{{ __('Are you sure you want to clone this preset?') }}">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fa fa-copy"></i> {{ __('Clone') }}
@@ -22,8 +22,8 @@
                         @if(!$preset->is_default_template)
                             <form action="{{ route('admin.trading-presets.destroy', $preset) }}" 
                                   method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirm('{{ __('Are you sure you want to delete this preset?') }}');">
+                                  class="d-inline delete-preset-form"
+                                  data-message="{{ __('Are you sure you want to delete this preset?') }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger">

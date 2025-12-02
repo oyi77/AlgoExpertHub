@@ -4,18 +4,26 @@ namespace Addons\AiTradingAddon\App\Services;
 
 use Addons\AiTradingAddon\App\Models\AiModelProfile;
 use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AiModelProfileService
 {
-    public function create(array $data, ?User $user = null): AiModelProfile
+    public function create(array $data, $user = null): AiModelProfile
     {
         try {
             DB::beginTransaction();
 
             if ($user) {
-                $data['created_by_user_id'] = $user->id;
+                // Handle both User and Admin models
+                if ($user instanceof User) {
+                    $data['created_by_user_id'] = $user->id;
+                } elseif ($user instanceof Admin) {
+                    // Admin-created profiles can have null created_by_user_id
+                    // Or we can store admin ID differently if needed
+                    $data['created_by_user_id'] = null;
+                }
             }
 
             // Ensure visibility is set
@@ -42,7 +50,7 @@ class AiModelProfileService
         }
     }
 
-    public function update(AiModelProfile $profile, array $data, ?User $user = null): AiModelProfile
+    public function update(AiModelProfile $profile, array $data, $user = null): AiModelProfile
     {
         try {
             DB::beginTransaction();
@@ -66,7 +74,7 @@ class AiModelProfileService
         }
     }
 
-    public function delete(AiModelProfile $profile, ?User $user = null): bool
+    public function delete(AiModelProfile $profile, $user = null): bool
     {
         try {
             DB::beginTransaction();

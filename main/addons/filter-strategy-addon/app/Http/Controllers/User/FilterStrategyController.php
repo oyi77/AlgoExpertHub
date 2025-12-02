@@ -20,26 +20,70 @@ class FilterStrategyController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $strategies = FilterStrategy::where('created_by_user_id', $user->id)
-            ->orWhere(function ($query) {
-                $query->where('visibility', 'PUBLIC_MARKETPLACE');
-            })
+        
+        $query = FilterStrategy::where('created_by_user_id', $user->id)
             ->with('owner')
-            ->withCount('tradingPresets')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return view('filter-strategy-addon::user.filter-strategies.index', compact('strategies'));
+            ->withCount('tradingPresets');
+        
+        // Search
+        if (request()->has('search') && request('search')) {
+            $query->where(function($q) {
+                $q->where('name', 'like', '%' . request('search') . '%')
+                  ->orWhere('description', 'like', '%' . request('search') . '%');
+            });
+        }
+        
+        // Filter by enabled status
+        if (request()->has('enabled') && request('enabled') !== '') {
+            $query->where('enabled', request('enabled'));
+        }
+        
+        $strategies = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        // Statistics
+        $stats = [
+            'total' => FilterStrategy::where('created_by_user_id', $user->id)->count(),
+            'enabled' => FilterStrategy::where('created_by_user_id', $user->id)->where('enabled', true)->count(),
+            'disabled' => FilterStrategy::where('created_by_user_id', $user->id)->where('enabled', false)->count(),
+        ];
+        
+        $title = 'My Filter Strategies';
+        
+        return view('filter-strategy-addon::user.filter-strategies.index', compact('strategies', 'stats', 'title'));
     }
 
     public function marketplace()
     {
-        $strategies = FilterStrategy::where('visibility', 'PUBLIC_MARKETPLACE')
+        $query = FilterStrategy::where('visibility', 'PUBLIC_MARKETPLACE')
             ->with('owner')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return view('filter-strategy-addon::user.filter-strategies.marketplace', compact('strategies'));
+            ->withCount('tradingPresets');
+        
+        // Search
+        if (request()->has('search') && request('search')) {
+            $query->where(function($q) {
+                $q->where('name', 'like', '%' . request('search') . '%')
+                  ->orWhere('description', 'like', '%' . request('search') . '%');
+            });
+        }
+        
+        // Sort
+        $sort = request('sort', 'newest');
+        switch ($sort) {
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'popular':
+                $query->orderBy('trading_presets_count', 'desc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+        
+        $strategies = $query->paginate(20);
+        
+        $title = 'Filter Strategy Marketplace';
+        
+        return view('filter-strategy-addon::user.filter-strategies.marketplace', compact('strategies', 'title'));
     }
 
     public function create()
@@ -221,19 +265,6 @@ class FilterStrategyController extends Controller
             Log::error('Failed to delete filter strategy', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->with('error', 'Failed to delete filter strategy: ' . $e->getMessage());
-        }
-    }
-
-    public function clone(FilterStrategy $filterStrategy)
-    {
-        try {
-            $cloned = $this->service->clone($filterStrategy, auth()->user());
-            return redirect()->route('user.filter-strategies.edit', $cloned)
-                ->with('success', 'Filter strategy cloned successfully');
-        } catch (\Exception $e) {
-            Log::error('Failed to clone filter strategy', ['error' => $e->getMessage()]);
-            return redirect()->back()
-                ->with('error', 'Failed to clone filter strategy: ' . $e->getMessage());
         }
     }
 

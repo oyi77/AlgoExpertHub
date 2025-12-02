@@ -358,32 +358,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="confirmation" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <form action="" method="post">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ __('Confirmation') }}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" class="form-control" name="user_id" value="{{ $user->id }}">
-                        <input type="hidden" class="form-control" name="type" value="">
-                        <input type="hidden" class="form-control" name="balance" value="">
-                        <p>{{ __('Are you sure to perform this action') }} ?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
-                        <button type="button" class="btn btn-secondary"
-                            data-dismiss="modal">{{ __('Close') }}</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
 @endsection
 
@@ -528,15 +502,49 @@
                 e.preventDefault();
 
                 let formData = $(this).serializeArray();
+                const action = $(this).attr('action');
+                const type = formData[2].value;
+                const balance = formData[3].value;
 
-                const modal = $('#confirmation');
-
-                modal.find('input[name=type]').val(formData[2].value)
-                modal.find('input[name=balance]').val(formData[3].value)
-
-                modal.find('form').attr('action', $(this).attr('action'))
-
-                modal.modal('show')
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: '{{ __('Are you sure to perform this action') }}?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Update') }}',
+                    cancelButtonText: '{{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': action
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'user_id',
+                            'value': '{{ $user->id }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'type',
+                            'value': type
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'balance',
+                            'value': balance
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
 
 
@@ -544,16 +552,49 @@
                 e.preventDefault();
 
                 let formData = $(this).serializeArray();
+                const action = $(this).attr('action');
+                const type = formData[2].value;
+                const balance = formData[3].value;
 
-                const modal = $('#confirmation');
-
-                modal.find('input[name=type]').val(formData[2].value)
-                modal.find('input[name=balance]').val(formData[3].value)
-
-                modal.find('form').attr('action', $(this).attr('action'))
-
-                modal.modal('show')
-
+                Swal.fire({
+                    title: '{{ __('Confirmation') }}',
+                    text: '{{ __('Are you sure to perform this action') }}?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __('Update') }}',
+                    cancelButtonText: '{{ __('Close') }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            'method': 'POST',
+                            'action': action
+                        })
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': '_token',
+                            'value': '{{ csrf_token() }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'user_id',
+                            'value': '{{ $user->id }}'
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'type',
+                            'value': type
+                        }))
+                        form.append($('<input>', {
+                            'type': 'hidden',
+                            'name': 'balance',
+                            'value': balance
+                        }))
+                        $('body').append(form)
+                        form.submit()
+                    }
+                })
             })
 
             $('.sendMail').on('click', function(e) {

@@ -247,6 +247,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('manage-theme', [ConfigurationController::class, 'manageTheme'])->name('manage.theme');
             Route::post('manage-theme/{name}', [ConfigurationController::class, 'themeUpdate'])->name('manage.theme.update');
             Route::post('change/theme/color/{theme}', [ConfigurationController::class, 'themeColor'])->name('manage.theme.color');
+            Route::post('theme/upload', [ConfigurationController::class, 'themeUpload'])->name('manage.theme.upload');
+            Route::get('theme/download-template', [ConfigurationController::class, 'themeDownloadTemplate'])->name('manage.theme.download.template');
         });
 
         Route::middleware('permission:manage-frontend,admin')->group(function () {
