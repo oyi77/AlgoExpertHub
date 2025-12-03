@@ -177,4 +177,25 @@ class ConfigurationController extends Controller
 
         return redirect()->back()->with('success', 'Backend theme activated successfully');
     }
+
+    /**
+     * Deactivate all frontend themes
+     */
+    public function themeDeactivate()
+    {
+        try {
+            $general = Configuration::first();
+            
+            if (!$general) {
+                return redirect()->back()->with('error', 'Configuration not found.');
+            }
+
+            $general->theme = null;
+            $general->save();
+
+            return redirect()->back()->with('success', 'All frontend themes have been deactivated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to deactivate themes: ' . $e->getMessage());
+        }
+    }
 }

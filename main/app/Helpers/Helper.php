@@ -73,7 +73,8 @@ class Helper
             return 'asset/images/' . $folder;
         }
 
-        return 'asset/frontend/' . $general->theme . '/images/' . $folder;
+        $theme = $general && $general->theme ? $general->theme : 'default';
+        return 'asset/frontend/' . $theme . '/images/' . $folder;
     }
 
     public static function fetchImage($folder, $filename, $default = false)
@@ -86,14 +87,20 @@ class Helper
             return asset('asset/images/placeholder.png');
         }
         if (file_exists(Helper::imagePath($folder) . '/' . $filename) && $filename != null) {
-            return asset('asset/frontend/' . $general->theme . '/images/' . $folder . '/' . $filename);
+            $theme = $general && $general->theme ? $general->theme : 'default';
+            return asset('asset/frontend/' . $theme . '/images/' . $folder . '/' . $filename);
         }
         return asset('asset/images/placeholder.png');
     }
 
     public static function cssLib($folder, $filename)
     {
-        $template = self::config()->theme;
+        try {
+            $config = self::config();
+            $template = $config && $config->theme ? $config->theme : 'default';
+        } catch (\Exception $e) {
+            $template = 'default';
+        }
 
         if ($folder == 'backend') {
             return asset("asset/{$folder}/css/{$filename}");
@@ -106,7 +113,7 @@ class Helper
     {
         try {
             $config = self::config();
-            $template = $config ? $config->theme : 'default';
+            $template = $config && $config->theme ? $config->theme : 'default';
         } catch (\Exception $e) {
             $template = 'default';
         }
@@ -303,7 +310,8 @@ class Helper
             return 'asset/images/' . $folder_name;
         }
 
-        return 'asset/frontend/' . $general->theme . '/images/' . $folder_name;
+        $theme = $general && $general->theme ? $general->theme : 'default';
+        return 'asset/frontend/' . $theme . '/images/' . $folder_name;
     }
 
 
@@ -341,7 +349,8 @@ class Helper
         }
 
         if (file_exists(self::filePath($folder_name) . '/' . $filename) && $filename != null) {
-            return asset('asset/frontend/' . $general->theme . '/images/' . $folder_name . '/' . $filename);
+            $theme = $general && $general->theme ? $general->theme : 'default';
+            return asset('asset/frontend/' . $theme . '/images/' . $folder_name . '/' . $filename);
         }
 
         return asset('asset/images/placeholder.png');

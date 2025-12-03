@@ -47,7 +47,7 @@
         <div class="container">
             <nav class="navbar navbar-expand-xl p-0 align-items-center">
                 <a class="site-logo site-title" href="{{ route('home') }}">
-                    <img src="{{ Config::getFile('logo', Config::config()->logo) }}" alt="logo">
+                    <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '') }}" alt="logo">
                 </a>
                 <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false"

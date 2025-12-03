@@ -99,13 +99,21 @@ class ThemeManager
     }
 
     /**
-     * Check if frontend theme exists (has both assets and views)
+     * Check if frontend theme exists (has views, assets optional for built-in themes)
      */
     public function themeExists(string $themeName): bool
     {
-        $assetsPath = $this->themesPath . '/' . $themeName;
         $viewsPath = $this->viewsPath . '/' . $themeName;
-
+        
+        // Built-in themes only need views (they may use shared assets)
+        $isBuiltin = in_array($themeName, ['default', 'light', 'blue', 'materialize', 'dark', 'premium']);
+        
+        if ($isBuiltin) {
+            return File::isDirectory($viewsPath);
+        }
+        
+        // Custom themes require both assets and views
+        $assetsPath = $this->themesPath . '/' . $themeName;
         return File::isDirectory($assetsPath) && File::isDirectory($viewsPath);
     }
 

@@ -256,6 +256,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('theme/upload', [ConfigurationController::class, 'themeUpload'])->name('manage.theme.upload');
             Route::get('theme/download-template', [ConfigurationController::class, 'themeDownloadTemplate'])->name('manage.theme.download.template');
             Route::delete('theme/delete/{theme}', [ConfigurationController::class, 'themeDelete'])->name('manage.theme.delete');
+            Route::post('theme/deactivate-all', [ConfigurationController::class, 'themeDeactivate'])->name('manage.theme.deactivate.all');
         });
 
         Route::middleware('permission:manage-frontend,admin')->group(function () {

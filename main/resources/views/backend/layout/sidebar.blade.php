@@ -22,6 +22,7 @@
                 $aiTradingAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'admin_ui');
                 $aiConnectionAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-connection-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-connection-addon', 'admin_ui');
                 $openRouterAdminModuleEnabled = \App\Support\AddonRegistry::active('openrouter-integration-addon') && \App\Support\AddonRegistry::moduleEnabled('openrouter-integration-addon', 'admin_ui');
+                $srmAdminModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'admin_ui');
             @endphp
 
             @if ($adminUser && $adminUser->can('manage-plan'))
@@ -152,6 +153,29 @@
                         @endif
                         @if (Route::has('admin.copy-trading.traders.index'))
                         <li><a href="{{ route('admin.copy-trading.traders.index') }}" aria-expanded="false">{{ __('Manage Traders') }}</a></li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+
+            @if ($adminUser && $srmAdminModuleEnabled)
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="shield"></i><span class="nav-text">{{ __('Smart Risk Management') }}</span></a>
+                    <ul aria-expanded="false">
+                        @if (Route::has('admin.srm.signal-providers.index'))
+                        <li><a href="{{ route('admin.srm.signal-providers.index') }}" aria-expanded="false">{{ __('Signal Providers') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.srm.predictions.index'))
+                        <li><a href="{{ route('admin.srm.predictions.index') }}" aria-expanded="false">{{ __('Predictions') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.srm.models.index'))
+                        <li><a href="{{ route('admin.srm.models.index') }}" aria-expanded="false">{{ __('ML Models') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.srm.ab-tests.index'))
+                        <li><a href="{{ route('admin.srm.ab-tests.index') }}" aria-expanded="false">{{ __('A/B Tests') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.srm.settings.index'))
+                        <li><a href="{{ route('admin.srm.settings.index') }}" aria-expanded="false">{{ __('Settings') }}</a></li>
                         @endif
                     </ul>
                 </li>

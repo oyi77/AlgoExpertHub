@@ -38,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
                 'filter-strategy-addon' => \Addons\FilterStrategyAddon\AddonServiceProvider::class,
                 'ai-trading-addon' => \Addons\AiTradingAddon\AddonServiceProvider::class,
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
+                'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {

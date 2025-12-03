@@ -6,7 +6,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
                 <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
-                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{Config::trans($content->section_header)}}</div>
+                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{Config::trans(optional($content)->section_header)}}</div>
                     <h2 class="sp_theme_top_title"><?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?> </h2>
                 </div>
             </div>

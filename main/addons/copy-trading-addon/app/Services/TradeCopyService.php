@@ -106,10 +106,72 @@ class TradeCopyService
             return;
         }
 
+        // Apply SRM logic (Smart Risk Management Addon)
+        $srmAdjustments = [];
+        if (class_exists(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class)) {
+            try {
+                $srmService = app(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class);
+                
+                // Get trader's signal provider ID
+                $traderId = $traderPosition->connection->is_admin_owned ? null : $traderPosition->connection->user_id;
+                
+                if ($traderId && $traderPosition->signal) {
+                    // Get follower connection adapter for equity and current price
+                    $followerAdapter = $this->connectionService->getAdapter($followerConnection);
+                    $followerBalance = $followerAdapter ? $followerAdapter->getBalance() : null;
+                    $equity = $followerBalance['equity'] ?? $followerBalance['balance'] ?? 10000;
+                    
+                    // Get current price for slippage check
+                    $symbol = $traderPosition->symbol ?? 'EURUSD';
+                    $ticker = $followerAdapter ? $followerAdapter->getTicker($symbol) : null;
+                    $currentPrice = $ticker['last'] ?? $traderPosition->entry_price;
+                    
+                    // Prepare options for SRM
+                    $srmOptions = [
+                        'equity' => $equity,
+                        'risk_tolerance' => $subscription->risk_multiplier ?? 1.0,
+                        'current_price' => $currentPrice,
+                        'base_quantity' => $calculation['quantity'],
+                        'min_lot' => $subscription->getMinQuantity() ?? 0.01,
+                        'max_lot' => $subscription->getMaxQuantity(),
+                        'max_position_size' => $subscription->max_position_size,
+                    ];
+                    
+                    // Apply SRM before execution
+                    $srmResult = $srmService->applySrmBeforeExecution(
+                        $traderPosition->signal,
+                        $followerConnection,
+                        $srmOptions
+                    );
+                    
+                    if (!$srmResult['proceed']) {
+                        // SRM rejected the signal
+                        $this->createFailedExecution($traderPosition, $subscription, 
+                            'SRM rejected: ' . ($srmResult['reason'] ?? 'Signal quality too low'));
+                        return;
+                    }
+                    
+                    // Apply SRM adjustments
+                    if (isset($srmResult['options']['quantity'])) {
+                        $calculation['quantity'] = $srmResult['options']['quantity'];
+                    }
+                    if (isset($srmResult['options']['sl_price'])) {
+                        $calculation['srm_adjusted_sl'] = $srmResult['options']['sl_price'];
+                    }
+                    
+                    $srmAdjustments = $srmResult['adjustments'] ?? [];
+                }
+            } catch (\Exception $e) {
+                Log::warning("TradeCopyService: SRM integration failed, proceeding without SRM", [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Create execution record
-        $execution =         $traderId = $traderPosition->connection->is_admin_owned ? null : $traderPosition->connection->user_id;
+        $traderId = $traderPosition->connection->is_admin_owned ? null : $traderPosition->connection->user_id;
         
-        CopyTradingExecution::create([
+        $execution = CopyTradingExecution::create([
             'trader_position_id' => $traderPosition->id,
             'trader_id' => $traderId,
             'follower_id' => $subscription->follower_id,
@@ -119,12 +181,21 @@ class TradeCopyService
             'original_quantity' => $traderPosition->quantity,
             'copied_quantity' => $calculation['quantity'],
             'risk_multiplier_used' => $calculation['risk_multiplier'] ?? null,
-            'calculation_details' => $calculation['details'],
+            'calculation_details' => json_encode(array_merge($calculation['details'] ?? [], [
+                'srm_adjustments' => $srmAdjustments,
+                'srm_adjusted_sl' => $calculation['srm_adjusted_sl'] ?? null,
+            ])),
         ]);
 
         // Execute the trade
         try {
-            $result = $this->executeCopiedTrade($traderPosition, $followerConnection, $calculation['quantity']);
+            // Prepare execution options with SRM adjustments
+            $executionOptions = ['quantity' => $calculation['quantity']];
+            if (isset($calculation['srm_adjusted_sl'])) {
+                $executionOptions['sl_price'] = $calculation['srm_adjusted_sl'];
+            }
+            
+            $result = $this->executeCopiedTrade($traderPosition, $followerConnection, $executionOptions);
             
             if ($result['success']) {
                 $execution->markAsExecuted($result['position_id']);
@@ -246,7 +317,7 @@ class TradeCopyService
     /**
      * Execute the copied trade.
      */
-    protected function executeCopiedTrade(ExecutionPosition $traderPosition, ExecutionConnection $followerConnection, float $quantity): array
+    protected function executeCopiedTrade(ExecutionPosition $traderPosition, ExecutionConnection $followerConnection, array $options): array
     {
         $signal = $traderPosition->signal;
         
@@ -266,11 +337,11 @@ class TradeCopyService
         $followerConnection->save();
 
         try {
-            // Execute using SignalExecutionService with custom quantity
+            // Execute using SignalExecutionService with custom options (quantity, SL, etc.)
             $result = $this->signalExecutionService->executeSignal(
                 $signal,
                 $followerConnection->id,
-                ['quantity' => $quantity]
+                $options
             );
         } finally {
             // Restore original settings

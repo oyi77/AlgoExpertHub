@@ -60,6 +60,10 @@
             "Addons\\OpenRouterIntegration\\App\\": "addons/openrouter-integration-addon/app/",
             "Addons\\FilterStrategyAddon\\": "addons/filter-strategy-addon/",
             "Addons\\FilterStrategyAddon\\App\\": "addons/filter-strategy-addon/app/",
+            "Addons\\SmartRiskManagement\\": "addons/smart-risk-management-addon/",
+            "Addons\\SmartRiskManagement\\App\\": "addons/smart-risk-management-addon/app/",
+            "Addons\\AiConnectionAddon\\": "addons/ai-connection-addon/",
+            "Addons\\AiConnectionAddon\\App\\": "addons/ai-connection-addon/App/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

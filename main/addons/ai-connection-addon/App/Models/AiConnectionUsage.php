@@ -148,12 +148,23 @@ class AiConnectionUsage extends Model
      */
     public static function getUsageByFeature($days = 30): array
     {
-        return static::query()
+        $results = static::query()
             ->where('created_at', '>=', now()->subDays($days))
             ->selectRaw('feature, COUNT(*) as count, SUM(tokens_used) as tokens, SUM(cost) as cost')
             ->groupBy('feature')
-            ->get()
-            ->toArray();
+            ->get();
+
+        // Convert to associative array keyed by feature
+        $byFeature = [];
+        foreach ($results as $result) {
+            $byFeature[$result->feature] = [
+                'count' => $result->count,
+                'tokens' => $result->tokens,
+                'cost' => $result->cost,
+            ];
+        }
+        
+        return $byFeature;
     }
 
     /**

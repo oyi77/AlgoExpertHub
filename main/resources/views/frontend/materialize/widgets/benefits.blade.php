@@ -13,9 +13,9 @@
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
                 <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
-                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans($content->section_header) }}</div>
+                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans(optional($content)->section_header) }}</div>
                     <h2 class="sp_theme_top_title">
-                        <?= Config::trans($content->title) ?>
+                        <?= Config::trans(optional($content)->title) ?>
                     </h2>
                 </div>
             </div>
@@ -40,7 +40,7 @@
                 <div class="sp_benefit_thumb paroller" data-paroller-factor="0.2" data-paroller-factor-xs="0.0"
                     data-paroller-factor-sm="0.0" data-paroller-factor-md="0.0" data-paroller-factor-md="0.0"
                     data-paroller-factor-lg="0.0" data-paroller-type="foreground" data-paroller-direction="vertical">
-                    <img src="{{ Config::getFile('benefits', $content->image_one) }}" alt="image">
+                    <img src="{{ Config::getFile('benefits', optional($content)->image_one) }}" alt="image">
                 </div>
             </div>
             <div class="col-xl-4 col-md-6 wow fadeInUp" data-wow-duration="0.5s" data-wow-delay="0.9s">

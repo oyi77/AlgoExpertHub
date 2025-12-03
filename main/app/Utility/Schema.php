@@ -65,7 +65,7 @@ trait Schema
     {
         $content = Helper::builder($sectionName);
 
-        $data['content'] = optional($content)->content;
+        $data['content'] = $content ? optional($content)->content : null;
         
         $data['element'] = Helper::builder($sectionName, true);
         
