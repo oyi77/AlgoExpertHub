@@ -93,6 +93,22 @@ class ChannelSource extends Model
         return $this->belongsToMany(Plan::class, 'channel_source_plans');
     }
 
+    /**
+     * Get AI parsing profiles for this channel
+     */
+    public function parsingProfiles()
+    {
+        return $this->hasMany(AiParsingProfile::class, 'channel_source_id');
+    }
+
+    /**
+     * Get enabled parsing profiles
+     */
+    public function activeParsingProfiles()
+    {
+        return $this->parsingProfiles()->enabled()->byPriority();
+    }
+
     public function setConfigAttribute($value): void
     {
         if (is_array($value)) {

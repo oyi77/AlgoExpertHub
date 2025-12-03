@@ -172,4 +172,29 @@ class LanguageController extends Controller
 
         return redirect()->back()->with('success', __('Successfully Changed Language'));
     }
+
+    public function autoTranslate(Request $request)
+    {
+        $request->validate([
+            'lang' => 'required|string',
+            'type' => 'required|in:content,section',
+        ]);
+
+        $language = Language::where('code', $request->lang)->first();
+
+        if (!$language) {
+            return redirect()->back()->with('error', 'Language not found');
+        }
+
+        // Check if AI translation is configured
+        if (!\App\Models\TranslationSetting::isConfigured()) {
+            return redirect()->route('admin.language.translation-settings.index')
+                ->with('error', 'AI translation not configured. Please configure AI connection for translations first.');
+        }
+
+        // Dispatch translation job
+        \App\Jobs\TranslateLanguageJob::dispatch($language->id, $request->type);
+
+        return redirect()->back()->with('success', 'Auto-translation started. This may take a few minutes. Please refresh the page to see the results.');
+    }
 }

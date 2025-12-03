@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         try {
             $addonProviders = [
+                'ai-connection-addon' => \Addons\AiConnectionAddon\AddonServiceProvider::class,
                 'multi-channel-signal-addon' => \Addons\MultiChannelSignalAddon\AddonServiceProvider::class,
                 'trading-bot-signal-addon' => \Addons\TradingBotSignalAddon\AddonServiceProvider::class,
                 'trading-execution-engine-addon' => \Addons\TradingExecutionEngine\AddonServiceProvider::class,

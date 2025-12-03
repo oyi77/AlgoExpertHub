@@ -46,4 +46,9 @@ return [
         'token' => env('TELEGRAM_BOT_TOKEN', '5558318968:AAH89u1CBOZtGSBa7dcoLnm3qKpmDYsG45o')
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
+    ],
+
 ];

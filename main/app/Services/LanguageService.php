@@ -18,11 +18,33 @@ class LanguageService
         $path = resource_path('lang/');
         $sectionPath = resource_path('lang/sections/');
 
-        fopen($path . "$request->code.json", "w");
-        fopen($sectionPath . "$request->code.json", "w");
-
-        file_put_contents($path . "$request->code.json", '{}');
-        file_put_contents($sectionPath . "$request->code.json", '{}');
+        // Get default language (English) keys
+        $defaultLangPath = $path . 'en.json';
+        $defaultSectionPath = $sectionPath . 'en.json';
+        
+        // Initialize with default language keys but empty values
+        $defaultKeys = [];
+        $defaultSectionKeys = [];
+        
+        if (file_exists($defaultLangPath)) {
+            $defaultTranslations = json_decode(file_get_contents($defaultLangPath), true);
+            if ($defaultTranslations) {
+                // Create array with same keys but empty values
+                $defaultKeys = array_fill_keys(array_keys($defaultTranslations), '');
+            }
+        }
+        
+        if (file_exists($defaultSectionPath)) {
+            $defaultSectionTranslations = json_decode(file_get_contents($defaultSectionPath), true);
+            if ($defaultSectionTranslations) {
+                // Create array with same keys but empty values
+                $defaultSectionKeys = array_fill_keys(array_keys($defaultSectionTranslations), '');
+            }
+        }
+        
+        // Create new language files with default keys
+        file_put_contents($path . "$request->code.json", json_encode($defaultKeys, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        file_put_contents($sectionPath . "$request->code.json", json_encode($defaultSectionKeys, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return ['type' => 'success', 'message' => 'Language Created Successfully'];
     }

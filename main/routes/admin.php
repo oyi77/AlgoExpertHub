@@ -216,7 +216,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('translator/ajax/update/{lang}', [LanguageController::class, 'ajaxUpdate'])->name('ajax');
             Route::post('translator/delete/{lang}', [LanguageController::class, 'deleteKey'])->name('key.delete');
+            Route::post('translator/auto-translate/{lang}', [LanguageController::class, 'autoTranslate'])->name('auto.translate');
 
+            // Translation AI Settings
+            Route::get('translation-settings', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'index'])->name('translation-settings.index');
+            Route::post('translation-settings', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'update'])->name('translation-settings.update');
+            Route::post('translation-settings/test', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'test'])->name('translation-settings.test');
 
         });
 

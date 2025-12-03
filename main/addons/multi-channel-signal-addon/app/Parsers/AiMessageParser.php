@@ -4,34 +4,39 @@ namespace Addons\MultiChannelSignalAddon\App\Parsers;
 
 use Addons\MultiChannelSignalAddon\App\Contracts\MessageParserInterface;
 use Addons\MultiChannelSignalAddon\App\DTOs\ParsedSignalData;
-use Addons\MultiChannelSignalAddon\App\Models\AiConfiguration;
-use Addons\MultiChannelSignalAddon\App\Services\AiProviderFactory;
+use Addons\MultiChannelSignalAddon\App\Models\AiParsingProfile;
+use Addons\AiConnectionAddon\App\Services\AiConnectionService;
 use Illuminate\Support\Facades\Log;
 
 class AiMessageParser implements MessageParserInterface
 {
-    protected ?AiConfiguration $config = null;
+    protected ?AiParsingProfile $profile = null;
     protected int $priority = 50;
+    protected $aiConnectionService;
 
-    public function __construct(?AiConfiguration $config = null)
+    public function __construct(?AiParsingProfile $profile = null, ?AiConnectionService $aiConnectionService = null)
     {
-        $this->config = $config;
+        $this->profile = $profile;
+        $this->aiConnectionService = $aiConnectionService ?? app(AiConnectionService::class);
         
-        // If no config provided, try to get first active config
-        if (!$this->config) {
-            $this->config = AiConfiguration::getActive()->first();
+        // If no profile provided, try to get first enabled profile
+        if (!$this->profile) {
+            $this->profile = AiParsingProfile::with('aiConnection')
+                ->enabled()
+                ->byPriority()
+                ->first();
         }
         
-        // Set priority from config if available
-        if ($this->config) {
-            $this->priority = $this->config->priority ?? 50;
+        // Set priority from profile if available
+        if ($this->profile) {
+            $this->priority = $this->profile->priority ?? 50;
         }
     }
 
     public function canParse(string $message): bool
     {
-        // Only use AI parser if configuration is available and enabled
-        if (!$this->config || !$this->config->enabled) {
+        // Only use AI parser if profile is available and usable
+        if (!$this->profile || !$this->profile->isUsable()) {
             return false;
         }
 
@@ -51,12 +56,26 @@ class AiMessageParser implements MessageParserInterface
         }
 
         try {
-            $provider = AiProviderFactory::createFromConfig($this->config);
-            if (!$provider) {
+            // Build parsing prompt
+            $prompt = $this->buildParsingPrompt($message);
+
+            // Get settings from profile
+            $settings = $this->profile->getEffectiveSettings();
+
+            // Execute AI call through centralized service
+            $result = $this->aiConnectionService->execute(
+                connectionId: $this->profile->ai_connection_id,
+                prompt: $prompt,
+                options: $settings,
+                feature: 'signal_parsing'
+            );
+
+            if (!$result['success'] || empty($result['response'])) {
                 return null;
             }
 
-            $parsedData = $provider->parse($message, $this->config);
+            // Parse JSON response
+            $parsedData = $this->parseAiResponse($result['response']);
             if (!$parsedData) {
                 return null;
             }
@@ -67,7 +86,77 @@ class AiMessageParser implements MessageParserInterface
             Log::error("AI parser error: " . $e->getMessage(), [
                 'exception' => $e,
                 'message_preview' => substr($message, 0, 100),
-                'provider' => $this->config->provider ?? 'unknown',
+                'profile_id' => $this->profile->id ?? null,
+                'connection_id' => $this->profile->ai_connection_id ?? null,
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Build parsing prompt for AI
+     */
+    protected function buildParsingPrompt(string $message): string
+    {
+        // Use custom parsing prompt from profile if available
+        if ($this->profile->parsing_prompt) {
+            return str_replace('{message}', $message, $this->profile->parsing_prompt);
+        }
+
+        // Default parsing prompt
+        return <<<PROMPT
+You are a trading signal parser. Extract trading signal information from the following message and return ONLY valid JSON.
+
+Required fields:
+- currency_pair (string): The trading pair (e.g., "EUR/USD", "BTC/USDT", "GOLD")
+- direction (string): "buy" or "sell"
+
+Optional fields:
+- open_price (float): Entry price (use 0 if not specified, meaning market entry)
+- sl (float): Stop loss price
+- tp (float or array): Take profit price(s)
+- sl_percentage (float): Stop loss as percentage
+- tp_percentage (float or array): Take profit as percentage(s)
+- timeframe (string): Trading timeframe (e.g., "1H", "4H", "1D")
+- title (string): Short title for the signal
+- description (string): Additional description
+
+Message to parse:
+{$message}
+
+Return only valid JSON with no additional text.
+PROMPT;
+    }
+
+    /**
+     * Parse AI response to extract structured data
+     */
+    protected function parseAiResponse(string $response): ?array
+    {
+        // Try to extract JSON from response
+        $response = trim($response);
+        
+        // Remove markdown code blocks if present
+        $response = preg_replace('/```json\s*/', '', $response);
+        $response = preg_replace('/```\s*$/', '', $response);
+        $response = trim($response);
+
+        try {
+            $data = json_decode($response, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning("Failed to parse AI JSON response", [
+                    'error' => json_last_error_msg(),
+                    'response' => substr($response, 0, 200),
+                ]);
+                return null;
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error("AI response parsing error", [
+                'error' => $e->getMessage(),
+                'response' => substr($response, 0, 200),
             ]);
             return null;
         }
@@ -113,7 +202,7 @@ class AiMessageParser implements MessageParserInterface
             'title' => $data['title'] ?? "Signal: {$currencyPair} {$direction}",
             'description' => $data['description'] ?? $originalMessage,
             'confidence' => $this->calculateConfidence($data),
-            'pattern_used' => 'AI Parser (' . ($this->config->name ?? $this->config->provider) . ')',
+            'pattern_used' => 'AI Parser (' . ($this->profile->name ?? 'Unknown') . ')',
         ];
 
         // Handle market entry (open_price = 0)

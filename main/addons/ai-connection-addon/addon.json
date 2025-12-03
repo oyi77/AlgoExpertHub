@@ -1,0 +1,38 @@
+{
+    "name": "ai-connection-addon",
+    "title": "AI Connection Manager",
+    "description": "Centralized AI connection management for all platform features - provides credential management, connection rotation, rate limiting, and usage tracking for AI providers (OpenAI, Gemini, OpenRouter)",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\AiConnectionAddon",
+    "status": "active",
+    "requires": {
+        "php": "^8.0",
+        "laravel": "^9.0"
+    },
+    "dependencies": {},
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes and views for managing AI connections, providers, and usage analytics",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "api",
+            "name": "Public API",
+            "description": "Provides API for consumer addons to execute AI calls through centralized connections",
+            "targets": ["api"],
+            "enabled": true
+        },
+        {
+            "key": "monitoring",
+            "name": "Connection Monitoring",
+            "description": "Background jobs for health checks, usage tracking, and rate limit monitoring",
+            "targets": ["jobs", "scheduling"],
+            "enabled": true
+        }
+    ]
+}
+
