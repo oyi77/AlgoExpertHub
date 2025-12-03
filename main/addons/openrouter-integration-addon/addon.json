@@ -1,11 +1,14 @@
 {
     "name": "openrouter-integration-addon",
-    "title": "OpenRouter AI Integration",
-    "description": "Unified AI gateway for signal parsing and market analysis",
+    "title": "OpenRouter AI Integration [DEPRECATED]",
+    "description": "[DEPRECATED] This addon is deprecated. OpenRouter functionality is now integrated into AI Connection Manager addon. Use AI Manager instead.",
     "version": "1.0.0",
     "author": "AlgoExpertHub",
     "namespace": "Addons\\OpenRouterIntegration",
-    "status": "active",
+    "status": "deprecated",
+    "deprecation_notice": "This addon is deprecated as of December 2025. All OpenRouter functionality has been merged into the AI Connection Manager addon. Please migrate your configurations to AI Manager > AI Providers.",
+    "replacement_addon": "ai-connection-addon",
+    "migration_guide": "See history/OPENROUTER_MIGRATION_GUIDE.md",
     "requires": {
         "php": "^8.0",
         "laravel": "^9.0"
@@ -13,9 +16,9 @@
     "modules": [
         {
             "key": "admin_ui",
-            "name": "Admin Interface",
-            "description": "Configuration management",
-            "targets": ["admin_routes", "admin_menu"],
+            "name": "Admin Interface (Model Marketplace Only)",
+            "description": "Model marketplace for browsing 400+ AI models - accessible via AI Manager menu",
+            "targets": ["admin_routes"],
             "enabled": true
         },
         {

@@ -101,11 +101,36 @@ class OpenRouterAdapter implements AiProviderInterface
     }
 
     /**
-     * Get available models
+     * Get available models (fetch from OpenRouter API)
      */
     public function getAvailableModels(AiConnection $connection): array
     {
-        // OpenRouter supports 100+ models, listing popular ones
+        try {
+            $apiKey = $connection->getApiKey();
+            
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($this->baseUrl . '/models');
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $models = [];
+                
+                foreach ($data['data'] ?? [] as $model) {
+                    $modelId = $model['id'];
+                    $models[$modelId] = $model['name'] ?? $modelId;
+                }
+                
+                return $models;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Failed to fetch OpenRouter models: ' . $e->getMessage());
+        }
+
+        // Fallback to popular models
         return [
             'openai/gpt-4' => 'GPT-4',
             'openai/gpt-3.5-turbo' => 'GPT-3.5 Turbo',
@@ -115,6 +140,28 @@ class OpenRouterAdapter implements AiProviderInterface
             'meta-llama/llama-2-70b' => 'Llama 2 70B',
             'mistralai/mistral-7b' => 'Mistral 7B',
         ];
+    }
+    
+    /**
+     * Fetch and sync all available models from OpenRouter
+     * Returns detailed model information
+     */
+    public function fetchModelMarketplace(AiConnection $connection): array
+    {
+        $apiKey = $connection->getApiKey();
+        
+        $response = Http::timeout(15)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])
+            ->get($this->baseUrl . '/models');
+
+        if (!$response->successful()) {
+            throw new \Exception("Failed to fetch models: " . $response->body());
+        }
+
+        return $response->json()['data'] ?? [];
     }
 
     /**

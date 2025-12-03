@@ -20,6 +20,7 @@
                 $tradingPresetAdminModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'admin_ui');
                 $filterStrategyAdminModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'admin_ui');
                 $aiTradingAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'admin_ui');
+                $aiConnectionAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-connection-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-connection-addon', 'admin_ui');
                 $openRouterAdminModuleEnabled = \App\Support\AddonRegistry::active('openrouter-integration-addon') && \App\Support\AddonRegistry::moduleEnabled('openrouter-integration-addon', 'admin_ui');
             @endphp
 
@@ -65,8 +66,6 @@
                             <li><a href="{{ route('admin.channel-forwarding.index') }}" aria-expanded="false">{{ __('Channel Forwarding') }}</a>
                             </li>
                             <li><a href="{{ route('admin.pattern-templates.index') }}" aria-expanded="false">{{ __('Pattern Templates') }}</a>
-                            </li>
-                            <li><a href="{{ route('admin.ai-configuration.index') }}" aria-expanded="false">{{ __('AI Configuration') }}</a>
                             </li>
                         @endif
                     </ul>
@@ -124,15 +123,21 @@
                 </li>
             @endif
 
-            @if ($adminUser && $openRouterAdminModuleEnabled)
+            @if ($adminUser && $aiConnectionAdminModuleEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
-                            data-feather="zap"></i><span class="nav-text">{{ __('OpenRouter') }}</span></a>
+                            data-feather="cpu"></i><span class="nav-text">{{ __('AI Manager') }}</span></a>
                     <ul aria-expanded="false">
-                        @if (Route::has('admin.openrouter.configurations.index'))
-                        <li><a href="{{ route('admin.openrouter.configurations.index') }}" aria-expanded="false">{{ __('Configurations') }}</a></li>
+                        @if (Route::has('admin.ai-connections.providers.index'))
+                        <li><a href="{{ route('admin.ai-connections.providers.index') }}" aria-expanded="false">{{ __('AI Providers') }}</a></li>
                         @endif
-                        @if (Route::has('admin.openrouter.models.index'))
-                        <li><a href="{{ route('admin.openrouter.models.index') }}" aria-expanded="false">{{ __('Available Models') }}</a></li>
+                        @if (Route::has('admin.ai-connections.connections.index'))
+                        <li><a href="{{ route('admin.ai-connections.connections.index') }}" aria-expanded="false">{{ __('AI Connections') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.ai-connections.usage-analytics.index'))
+                        <li><a href="{{ route('admin.ai-connections.usage-analytics.index') }}" aria-expanded="false">{{ __('Usage Analytics') }}</a></li>
+                        @endif
+                        @if ($openRouterAdminModuleEnabled && Route::has('admin.openrouter.models.index'))
+                        <li><a href="{{ route('admin.openrouter.models.index') }}" aria-expanded="false">{{ __('Model Marketplace') }}</a></li>
                         @endif
                     </ul>
                 </li>

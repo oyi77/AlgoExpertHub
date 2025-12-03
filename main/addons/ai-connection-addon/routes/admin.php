@@ -37,7 +37,7 @@ Route::prefix('connections')->name('connections.')->group(function () {
 });
 
 // Usage analytics
-Route::prefix('analytics')->name('analytics.')->group(function () {
+Route::prefix('usage-analytics')->name('usage-analytics.')->group(function () {
     Route::get('/', [UsageAnalyticsController::class, 'index'])->name('index');
     Route::get('/connection/{connection}', [UsageAnalyticsController::class, 'connection'])->name('connection');
     Route::get('/export', [UsageAnalyticsController::class, 'export'])->name('export');
