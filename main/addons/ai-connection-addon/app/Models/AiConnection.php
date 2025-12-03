@@ -116,13 +116,34 @@ class AiConnection extends Model
     {
         try {
             $decrypted = decrypt($value);
-            return json_decode($decrypted, true) ?? $decrypted;
+            $decoded = json_decode($decrypted, true);
+            
+            // CRITICAL FIX: Always return array, never string
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+            
+            // If JSON decode failed but we have a string, wrap it as api_key
+            // This handles legacy data or simple string credentials
+            if (is_string($decrypted) && !empty($decrypted)) {
+                \Log::warning('Credentials stored as plain string, wrapping as api_key', [
+                    'connection_id' => $this->id,
+                ]);
+                return ['api_key' => $decrypted];
+            }
+            
+            // If we got here, something is wrong
+            \Log::error('Credentials could not be decoded to array', [
+                'connection_id' => $this->id,
+                'decrypted_type' => gettype($decrypted),
+            ]);
+            return [];
         } catch (\Exception $e) {
             \Log::error('Failed to decrypt credentials', [
                 'connection_id' => $this->id,
                 'error' => $e->getMessage()
             ]);
-            return null;
+            return [];
         }
     }
 
@@ -132,7 +153,17 @@ class AiConnection extends Model
     public function getCredential(string $key, $default = null)
     {
         $credentials = $this->credentials;
-        return is_array($credentials) ? ($credentials[$key] ?? $default) : $default;
+        
+        // Credentials should always be an array now (fixed in getter)
+        if (!is_array($credentials)) {
+            \Log::warning('Credentials not array in getCredential', [
+                'connection_id' => $this->id,
+                'type' => gettype($credentials),
+            ]);
+            return $default;
+        }
+        
+        return $credentials[$key] ?? $default;
     }
 
     /**
@@ -193,10 +224,16 @@ class AiConnection extends Model
      */
     public function recordError(string $errorMessage = null)
     {
+        // Increment error count and get new value
         $this->increment('error_count');
+        $this->refresh(); // CRITICAL: Refresh to get the updated error_count from DB
+        
+        // Now check the correct (post-increment) error_count value
+        $newStatus = $this->error_count >= 10 ? 'error' : $this->status;
+        
         $this->update([
             'last_error_at' => now(),
-            'status' => $this->error_count >= 10 ? 'error' : $this->status,
+            'status' => $newStatus,
         ]);
         
         if ($errorMessage) {
@@ -205,7 +242,7 @@ class AiConnection extends Model
                 'connection_name' => $this->name,
                 'provider' => $this->provider->slug ?? 'unknown',
                 'error' => $errorMessage,
-                'error_count' => $this->error_count,
+                'error_count' => $this->error_count, // Now shows correct count
             ]);
         }
     }
