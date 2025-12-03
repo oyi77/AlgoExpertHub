@@ -1,0 +1,10 @@
+{
+  "name": "premium",
+  "display_name": "Premium Backend",
+  "description": "Premium glassmorphism admin panel with advanced analytics and modern design",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "backend",
+  "preview": "preview.jpg"
+}
+

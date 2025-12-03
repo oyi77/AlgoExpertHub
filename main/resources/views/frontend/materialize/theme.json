@@ -1,0 +1,11 @@
+{
+  "name": "materialize",
+  "display_name": "Materialize Theme",
+  "description": "Material Design inspired theme with modern UI components, elevation effects, and smooth animations",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+

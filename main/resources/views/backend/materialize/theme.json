@@ -1,0 +1,10 @@
+{
+  "name": "materialize",
+  "display_name": "Materialize Backend",
+  "description": "Material Design inspired admin panel with modern UI components",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "backend",
+  "preview": "preview.jpg"
+}
+

@@ -1,0 +1,65 @@
+/* Dark Backend Theme */
+:root {
+    --dark-bg: #1a1a1a;
+    --dark-surface: #2d2d2d;
+    --dark-text: #ffffff;
+    --dark-accent: #00d4ff;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+#main-wrapper {
+    background-color: var(--dark-bg);
+}
+
+.sidebar {
+    background-color: var(--dark-surface);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.card {
+    background-color: var(--dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--dark-text);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--dark-text);
+}
+
+.table {
+    background-color: var(--dark-surface);
+    color: var(--dark-text);
+}
+
+.table thead th {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid var(--dark-accent);
+    color: var(--dark-text);
+}
+
+.table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.form-control {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--dark-text);
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--dark-accent);
+    color: var(--dark-text);
+}
+

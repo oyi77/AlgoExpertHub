@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('configurations', function (Blueprint $table) {
+            $table->string('backend_theme')->default('default')->after('theme');
+        });
+
+        // Update existing configuration record
+        DB::table('configurations')->update(['backend_theme' => 'default']);
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('configurations', function (Blueprint $table) {
+            $table->dropColumn('backend_theme');
+        });
+    }
+};

@@ -1,0 +1,10 @@
+{
+  "name": "default",
+  "display_name": "Default Backend",
+  "description": "Classic admin panel theme with professional design",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "backend",
+  "preview": "preview.jpg"
+}
+

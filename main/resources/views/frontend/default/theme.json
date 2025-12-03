@@ -1,0 +1,11 @@
+{
+  "name": "default",
+  "display_name": "Default Theme",
+  "description": "Classic default theme with professional design and clean layout",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+

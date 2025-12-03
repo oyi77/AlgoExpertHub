@@ -1,0 +1,11 @@
+{
+  "name": "dark",
+  "display_name": "Dark Theme",
+  "description": "Modern dark theme with reduced eye strain, high contrast, and neon accents perfect for night trading",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+

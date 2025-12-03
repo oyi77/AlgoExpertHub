@@ -1,0 +1,11 @@
+{
+  "name": "light",
+  "display_name": "Light Theme",
+  "description": "Bright and minimal light theme with excellent readability",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+

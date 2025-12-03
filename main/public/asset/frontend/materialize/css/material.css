@@ -1,0 +1,401 @@
+/* Material Design Theme for AlgoExpertHub */
+/* Based on Material Design principles with custom branding */
+
+:root {
+    /* Material Design Color Palette */
+    --md-primary: #6200ee;
+    --md-primary-dark: #3700b3;
+    --md-primary-light: #bb86fc;
+    --md-secondary: #03dac6;
+    --md-secondary-dark: #018786;
+    --md-error: #b00020;
+    --md-background: #ffffff;
+    --md-surface: #ffffff;
+    --md-on-primary: #ffffff;
+    --md-on-secondary: #000000;
+    --md-on-background: #000000;
+    --md-on-surface: #000000;
+    --md-on-error: #ffffff;
+    
+    /* Material Elevations */
+    --md-elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --md-elevation-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --md-elevation-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --md-elevation-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    --md-elevation-5: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+    
+    /* Typography */
+    --md-font-family: 'Roboto', 'Poppins', sans-serif;
+    --md-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Material Design Typography */
+body {
+    font-family: var(--md-font-family);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--md-font-family);
+    font-weight: 500;
+    letter-spacing: 0.0075em;
+}
+
+/* Material Cards */
+.card {
+    background: var(--md-surface);
+    border-radius: 8px;
+    box-shadow: var(--md-elevation-2);
+    transition: var(--md-transition);
+    border: none;
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--md-elevation-4);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 16px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Material Buttons */
+.btn {
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.0892857143em;
+    padding: 10px 24px;
+    transition: var(--md-transition);
+    box-shadow: var(--md-elevation-2);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    box-shadow: var(--md-elevation-3);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    box-shadow: var(--md-elevation-1);
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background-color: var(--md-primary);
+    color: var(--md-on-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--md-primary-dark);
+}
+
+.btn-secondary {
+    background-color: var(--md-secondary);
+    color: var(--md-on-secondary);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--md-primary);
+    border: 2px solid var(--md-primary);
+    box-shadow: none;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--md-primary);
+    color: var(--md-on-primary);
+}
+
+/* Ripple Effect */
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Material Forms */
+.form-control {
+    border: none;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.42);
+    border-radius: 0;
+    padding: 12px 0;
+    background: transparent;
+    transition: var(--md-transition);
+}
+
+.form-control:focus {
+    border-bottom-color: var(--md-primary);
+    box-shadow: none;
+    background: transparent;
+}
+
+.form-label {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 8px;
+}
+
+/* Floating Labels */
+.form-floating {
+    position: relative;
+}
+
+.form-floating > .form-control {
+    padding: 1rem 0;
+}
+
+.form-floating > label {
+    position: absolute;
+    top: 1rem;
+    left: 0;
+    transition: var(--md-transition);
+    pointer-events: none;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    top: -0.5rem;
+    font-size: 0.85rem;
+    color: var(--md-primary);
+}
+
+/* Material Tables */
+.table {
+    background: var(--md-surface);
+}
+
+.table thead th {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.1em;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.table tbody tr {
+    transition: var(--md-transition);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Material Navigation */
+.navbar {
+    box-shadow: var(--md-elevation-2);
+    background: var(--md-surface);
+}
+
+/* Material Modals */
+.modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: var(--md-elevation-5);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 20px 24px;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 16px 24px;
+}
+
+/* Material Alerts */
+.alert {
+    border-radius: 4px;
+    border: none;
+    box-shadow: var(--md-elevation-1);
+}
+
+/* Material Badges */
+.badge {
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+/* Material Progress */
+.progress {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(98, 0, 238, 0.2);
+}
+
+.progress-bar {
+    background-color: var(--md-primary);
+}
+
+/* Material Chips */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: rgba(0, 0, 0, 0.08);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: var(--md-transition);
+}
+
+.chip:hover {
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Floating Action Button (FAB) */
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--md-secondary);
+    color: var(--md-on-secondary);
+    box-shadow: var(--md-elevation-3);
+    transition: var(--md-transition);
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    border: none;
+    cursor: pointer;
+}
+
+.fab:hover {
+    box-shadow: var(--md-elevation-4);
+    transform: scale(1.05);
+}
+
+.fab-mini {
+    width: 40px;
+    height: 40px;
+}
+
+/* Material List */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    transition: var(--md-transition);
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Material Divider */
+.divider {
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.12);
+    margin: 16px 0;
+}
+
+/* Signal Card Material Design */
+.signal-card {
+    background: var(--md-surface);
+    border-radius: 12px;
+    box-shadow: var(--md-elevation-2);
+    transition: var(--md-transition);
+    overflow: hidden;
+}
+
+.signal-card:hover {
+    box-shadow: var(--md-elevation-4);
+    transform: translateY(-4px);
+}
+
+.signal-card-header {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--md-primary) 0%, var(--md-primary-dark) 100%);
+    color: var(--md-on-primary);
+}
+
+.signal-card-body {
+    padding: 20px;
+}
+
+.signal-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.signal-badge.buy {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #388e3c;
+}
+
+.signal-badge.sell {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #c62828;
+}
+
+/* Smooth Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Material Transitions */
+.mt-transition {
+    transition: var(--md-transition);
+}
+
+/* Responsive Material Design */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 16px;
+    }
+    
+    .fab {
+        width: 48px;
+        height: 48px;
+    }
+}
+

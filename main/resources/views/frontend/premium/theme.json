@@ -1,0 +1,12 @@
+{
+  "name": "premium",
+  "display_name": "Premium Theme",
+  "description": "Premium theme with glassmorphism UI, advanced TradingView charts, real-time analytics, and enhanced signal widgets",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": "premium",
+  "features": ["tradingview", "advanced-analytics", "heat-maps", "glassmorphism", "real-time-widgets"]
+}
+

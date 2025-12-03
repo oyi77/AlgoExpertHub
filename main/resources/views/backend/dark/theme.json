@@ -1,0 +1,10 @@
+{
+  "name": "dark",
+  "display_name": "Dark Backend",
+  "description": "Dark mode admin panel for reduced eye strain during long work sessions",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "backend",
+  "preview": "preview.jpg"
+}
+

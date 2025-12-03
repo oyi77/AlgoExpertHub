@@ -1,0 +1,485 @@
+/* Dark Theme for AlgoExpertHub */
+/* Optimized for reduced eye strain and enhanced readability */
+
+:root {
+    /* Dark Theme Colors */
+    --dark-bg-primary: #1a1a1a;
+    --dark-bg-secondary: #2d2d2d;
+    --dark-bg-tertiary: #3a3a3a;
+    --dark-surface: #252525;
+    --dark-surface-elevated: #333333;
+    
+    /* Text Colors */
+    --dark-text-primary: #ffffff;
+    --dark-text-secondary: #b0b0b0;
+    --dark-text-muted: #808080;
+    
+    /* Accent Colors */
+    --dark-accent-primary: #00d4ff;
+    --dark-accent-secondary: #b84fff;
+    --dark-accent-success: #00ff88;
+    --dark-accent-danger: #ff4466;
+    --dark-accent-warning: #ffaa00;
+    
+    /* Neon Glow */
+    --neon-blue: #00d4ff;
+    --neon-purple: #b84fff;
+    --neon-green: #00ff88;
+    --neon-red: #ff4466;
+    
+    /* Shadows */
+    --dark-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --dark-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+    --dark-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+    
+    /* Glow Effects */
+    --glow-blue: 0 0 10px rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.3);
+    --glow-purple: 0 0 10px rgba(184, 79, 255, 0.5), 0 0 20px rgba(184, 79, 255, 0.3);
+    --glow-green: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.3);
+    --glow-red: 0 0 10px rgba(255, 68, 102, 0.5), 0 0 20px rgba(255, 68, 102, 0.3);
+}
+
+/* Base Styles */
+body {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--dark-text-primary);
+}
+
+p, span, div {
+    color: var(--dark-text-secondary);
+}
+
+a {
+    color: var(--dark-accent-primary);
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--neon-blue);
+    text-shadow: var(--glow-blue);
+}
+
+/* Cards */
+.card {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--dark-shadow-md);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    background-color: var(--dark-bg-tertiary);
+    box-shadow: var(--dark-shadow-lg);
+    transform: translateY(-4px);
+}
+
+.card-header {
+    background-color: var(--dark-surface);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--dark-text-primary);
+}
+
+.card-body {
+    color: var(--dark-text-secondary);
+}
+
+.card-footer {
+    background-color: var(--dark-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Buttons */
+.btn {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--dark-accent-primary), var(--dark-accent-secondary));
+    color: var(--dark-text-primary);
+    box-shadow: var(--dark-shadow-sm);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--glow-blue);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--dark-accent-success), #00cc70);
+    color: var(--dark-text-primary);
+}
+
+.btn-success:hover {
+    box-shadow: var(--glow-green);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--dark-accent-danger), #cc3355);
+    color: var(--dark-text-primary);
+}
+
+.btn-danger:hover {
+    box-shadow: var(--glow-red);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: var(--dark-accent-primary);
+    border: 2px solid var(--dark-accent-primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--dark-accent-primary);
+    color: var(--dark-text-primary);
+    box-shadow: var(--glow-blue);
+}
+
+/* Forms */
+.form-control {
+    background-color: var(--dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--dark-text-primary);
+}
+
+.form-control:focus {
+    background-color: var(--dark-surface-elevated);
+    border-color: var(--dark-accent-primary);
+    box-shadow: var(--glow-blue);
+    color: var(--dark-text-primary);
+}
+
+.form-control::placeholder {
+    color: var(--dark-text-muted);
+}
+
+.form-label {
+    color: var(--dark-text-secondary);
+}
+
+.form-select {
+    background-color: var(--dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--dark-text-primary);
+}
+
+.form-select:focus {
+    background-color: var(--dark-surface-elevated);
+    border-color: var(--dark-accent-primary);
+    box-shadow: var(--glow-blue);
+}
+
+/* Tables */
+.table {
+    background-color: var(--dark-surface);
+    color: var(--dark-text-secondary);
+}
+
+.table thead th {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--dark-text-primary);
+    border-bottom: 2px solid var(--dark-accent-primary);
+}
+
+.table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: var(--dark-bg-tertiary);
+}
+
+.table-dark {
+    background-color: var(--dark-bg-secondary);
+    color: var(--dark-text-primary);
+}
+
+/* Navigation */
+.navbar {
+    background-color: var(--dark-bg-secondary);
+    box-shadow: var(--dark-shadow-md);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--dark-text-secondary);
+    transition: all 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: var(--dark-accent-primary);
+    text-shadow: var(--glow-blue);
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+    color: var(--dark-accent-primary);
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--dark-bg-secondary);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modals */
+.modal-content {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--dark-shadow-lg);
+}
+
+.modal-header {
+    background-color: var(--dark-surface);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--dark-text-primary);
+}
+
+.modal-body {
+    color: var(--dark-text-secondary);
+}
+
+.modal-footer {
+    background-color: var(--dark-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.close {
+    color: var(--dark-text-primary);
+    opacity: 0.8;
+}
+
+.close:hover {
+    color: var(--dark-accent-primary);
+    opacity: 1;
+}
+
+/* Alerts */
+.alert {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-success {
+    background-color: rgba(0, 255, 136, 0.1);
+    color: var(--dark-accent-success);
+    border-color: var(--dark-accent-success);
+}
+
+.alert-danger {
+    background-color: rgba(255, 68, 102, 0.1);
+    color: var(--dark-accent-danger);
+    border-color: var(--dark-accent-danger);
+}
+
+.alert-warning {
+    background-color: rgba(255, 170, 0, 0.1);
+    color: var(--dark-accent-warning);
+    border-color: var(--dark-accent-warning);
+}
+
+.alert-info {
+    background-color: rgba(0, 212, 255, 0.1);
+    color: var(--dark-accent-primary);
+    border-color: var(--dark-accent-primary);
+}
+
+/* Badges */
+.badge {
+    font-weight: 600;
+}
+
+.badge-primary {
+    background-color: var(--dark-accent-primary);
+    color: var(--dark-bg-primary);
+}
+
+.badge-success {
+    background-color: var(--dark-accent-success);
+    color: var(--dark-bg-primary);
+}
+
+.badge-danger {
+    background-color: var(--dark-accent-danger);
+    color: var(--dark-text-primary);
+}
+
+/* Progress Bars */
+.progress {
+    background-color: var(--dark-surface);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--dark-accent-primary), var(--dark-accent-secondary));
+}
+
+/* Pagination */
+.pagination .page-link {
+    background-color: var(--dark-surface);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--dark-text-secondary);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-accent-primary);
+    color: var(--dark-accent-primary);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--dark-accent-primary);
+    border-color: var(--dark-accent-primary);
+    color: var(--dark-bg-primary);
+}
+
+/* Signal Cards - Dark Theme */
+.signal-card {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    box-shadow: var(--dark-shadow-md);
+    transition: all 0.3s ease;
+}
+
+.signal-card:hover {
+    box-shadow: var(--glow-blue);
+    border-color: var(--dark-accent-primary);
+    transform: translateY(-4px);
+}
+
+.signal-card-header {
+    background: linear-gradient(135deg, var(--dark-accent-primary), var(--dark-accent-secondary));
+    color: var(--dark-text-primary);
+    border: none;
+}
+
+.signal-badge.buy {
+    background-color: rgba(0, 255, 136, 0.2);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-green);
+    box-shadow: var(--glow-green);
+}
+
+.signal-badge.sell {
+    background-color: rgba(255, 68, 102, 0.2);
+    color: var(--neon-red);
+    border: 1px solid var(--neon-red);
+    box-shadow: var(--glow-red);
+}
+
+/* Charts - Dark Optimized */
+.chart-container {
+    background-color: var(--dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dark-surface-elevated);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-accent-primary);
+    box-shadow: var(--glow-blue);
+}
+
+/* Footer */
+.footer {
+    background-color: var(--dark-bg-secondary);
+    border-top: 1px solid rgba(0, 212, 255, 0.2);
+    color: var(--dark-text-secondary);
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--dark-shadow-lg);
+}
+
+.dropdown-item {
+    color: var(--dark-text-secondary);
+}
+
+.dropdown-item:hover {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--dark-accent-primary);
+}
+
+/* List Group */
+.list-group-item {
+    background-color: var(--dark-surface);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--dark-text-secondary);
+}
+
+.list-group-item:hover {
+    background-color: var(--dark-bg-tertiary);
+}
+
+.list-group-item.active {
+    background-color: var(--dark-accent-primary);
+    border-color: var(--dark-accent-primary);
+    color: var(--dark-text-primary);
+}
+
+/* Tooltip */
+.tooltip .tooltip-inner {
+    background-color: var(--dark-surface-elevated);
+    color: var(--dark-text-primary);
+    box-shadow: var(--dark-shadow-md);
+}
+
+/* Animations */
+@keyframes glow-pulse {
+    0%, 100% {
+        box-shadow: var(--glow-blue);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.5);
+    }
+}
+
+.glow-animate {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Preloader */
+.preloader-holder {
+    background-color: var(--dark-bg-primary);
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background-color: var(--dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.breadcrumb-item {
+    color: var(--dark-text-secondary);
+}
+
+.breadcrumb-item.active {
+    color: var(--dark-accent-primary);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--dark-text-muted);
+}
+

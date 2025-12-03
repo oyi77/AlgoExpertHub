@@ -1,0 +1,11 @@
+{
+  "name": "blue",
+  "display_name": "Blue Theme",
+  "description": "Professional blue theme with modern styling and smooth transitions",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+
