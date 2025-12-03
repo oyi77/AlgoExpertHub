@@ -21,148 +21,248 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12 col-md-12 col-lg-12">
-        <div class="card">
+<!-- Tabs for Frontend and Backend Themes -->
+<ul class="nav nav-tabs" id="themeTab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="frontend-tab" data-toggle="tab" href="#frontend" role="tab" aria-controls="frontend" aria-selected="true">
+            <i data-feather="monitor"></i> Frontend Themes
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="backend-tab" data-toggle="tab" href="#backend" role="tab" aria-controls="backend" aria-selected="false">
+            <i data-feather="layout"></i> Backend Themes
+        </a>
+    </li>
+</ul>
 
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table" id="myTable">
-                        <thead>
-                            <tr>
-                                <th>{{ __('Theme') }}</th>
-                                <th>{{ __('Previw') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <h5>
-
-                                        {{ __('Default Theme') }}
-                                    </h5>
-                                    <p>
-                                        <a data-route="{{ route('admin.manage.theme.update', 'default') }}" data-color="#9c0ac" class="@if (Config::config()->theme != 'default') btn btn-outline-danger btn-sm active-btn @endif  @if (Config::config()->theme == 'default') text-success @else text-danger @endif font-weight-bolder">
-                                            @if (Config::config()->theme == 'default')
-                                            {{ __('Activated') }}
-                                            @else
-                                            {{ __('Active') }}
+<div class="tab-content" id="themeTabContent">
+    <!-- Frontend Themes Tab -->
+    <div class="tab-pane fade show active" id="frontend" role="tabpanel" aria-labelledby="frontend-tab">
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table" id="frontendThemesTable">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Theme') }}</th>
+                                        <th>{{ __('Version') }}</th>
+                                        <th>{{ __('Author') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($themes as $theme)
+                                    <tr>
+                                        <td>
+                                            <h5 class="mb-1">{{ $theme['display_name'] }}</h5>
+                                            @if($theme['description'])
+                                                <small class="text-muted d-block">{{ $theme['description'] }}</small>
                                             @endif
-                                        </a>
-                                    </p>
-                                </td>
-                              
-                                <td>
-                                    <button data-href="https://signalmax.springsoftit.com/" class="btn btn-primary btn-sm prev">
-                                        {{ __('Preview') }}
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>
-                                    <h5>
-
-                                        {{ __('Light Theme') }}
-                                    </h5>
-                                    <p>
-                                        <a data-route="{{ route('admin.manage.theme.update', 'light') }}" data-color="#F2062F" class="@if (Config::config()->theme != 'light') btn btn-outline-danger btn-sm active-btn @endif  @if (Config::config()->theme == 'light') text-success @else text-danger @endif font-weight-bolder" >
-                                            @if (Config::config()->theme == 'light')
-                                            {{ __('Activated') }}
-                                            @else
-                                            {{ __('Active') }}
+                                            @if($theme['is_builtin'])
+                                                <span class="badge badge-info badge-sm">{{ __('Built-in') }}</span>
                                             @endif
-                                        </a>
-                                    </p>
-                                </td>
-                                
-                                <td>
-                                    <button data-href="https://signalmax.springsoftit.com/" class="btn btn-primary btn-sm prev">
-                                        {{ __('Preview') }}
-                                    </button>
-                                </td>
-                            </tr>
-
-
-                            <tr>
-                                <td>
-                                    <h5>
-
-                                        {{ __('Blue Theme') }}
-                                    </h5>
-                                    <p>
-                                        <a data-route="{{ route('admin.manage.theme.update', 'blue') }}" data-color="#0099FA" class="@if (Config::config()->theme != 'blue') btn btn-outline-danger btn-sm active-btn @endif  @if (Config::config()->theme == 'blue') text-success @else text-danger @endif font-weight-bolder">
-                                            @if (Config::config()->theme == 'blue')
-                                            {{ __('Activated') }}
+                                        </td>
+                                        <td>
+                                            @if($theme['version'])
+                                                <span class="badge badge-secondary">{{ $theme['version'] }}</span>
                                             @else
-                                            {{ __('Active') }}
+                                                <span class="text-muted">-</span>
                                             @endif
-                                        </a>
-                                    </p>
-                                </td>
-                               
-                                <td>
-                                    <button data-href="https://signalmax.springsoftit.com/" class="btn btn-primary btn-sm prev">
-                                        {{ __('Preview') }}
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td>
+                                            @if($theme['author'])
+                                                <small>{{ $theme['author'] }}</small>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($theme['is_active'])
+                                                <span class="badge badge-success">{{ __('Activated') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">{{ __('Inactive') }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="/" target="_blank" class="btn btn-sm btn-info" title="{{ __('Preview') }}">
+                                                    <i data-feather="eye"></i> {{ __('Preview') }}
+                                                </a>
+                                                @if(!$theme['is_active'])
+                                                    <a data-route="{{ route('admin.manage.theme.update', $theme['name']) }}" 
+                                                       data-theme="{{ $theme['name'] }}"
+                                                       data-color="#9c0ac" 
+                                                       class="btn btn-sm btn-primary active-btn">
+                                                        <i data-feather="check"></i> {{ __('Activate') }}
+                                                    </a>
+                                                @endif
+                                                @if(!$theme['is_builtin'] && !$theme['is_active'])
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-danger delete-theme-btn" 
+                                                            data-theme="{{ $theme['name'] }}"
+                                                            data-display-name="{{ $theme['display_name'] }}">
+                                                        <i data-feather="trash-2"></i> {{ __('Delete') }}
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                    
+                                    @if($themes->isEmpty())
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            {{ __('No themes found. Upload a theme to get started.') }}
+                                        </td>
+                                    </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backend Themes Tab -->
+    <div class="tab-pane fade" id="backend" role="tabpanel" aria-labelledby="backend-tab">
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table" id="backendThemesTable">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Theme') }}</th>
+                                        <th>{{ __('Version') }}</th>
+                                        <th>{{ __('Author') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($backendThemes as $theme)
+                                    <tr>
+                                        <td>
+                                            <h5 class="mb-1">{{ $theme['display_name'] }}</h5>
+                                            @if($theme['description'])
+                                                <small class="text-muted d-block">{{ $theme['description'] }}</small>
+                                            @endif
+                                            @if($theme['is_builtin'])
+                                                <span class="badge badge-info badge-sm">{{ __('Built-in') }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($theme['version'])
+                                                <span class="badge badge-secondary">{{ $theme['version'] }}</span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($theme['author'])
+                                                <small>{{ $theme['author'] }}</small>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($theme['is_active'])
+                                                <span class="badge badge-success">{{ __('Activated') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">{{ __('Inactive') }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                @if(!$theme['is_active'])
+                                                    <a data-route="{{ route('admin.manage.backend.theme.update', $theme['name']) }}" 
+                                                       data-theme="{{ $theme['name'] }}"
+                                                       class="btn btn-sm btn-primary active-backend-btn">
+                                                        <i data-feather="check"></i> {{ __('Activate') }}
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                    
+                                    @if($backendThemes->isEmpty())
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            {{ __('No backend themes found.') }}
+                                        </td>
+                                    </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
-<!-- Modal -->
+<!-- Activate Frontend Theme Modal -->
 <div class="modal fade" id="activeTheme" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <form action="" method="post">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">{{ __('Active Template') }}</h5>
+                    <h5 class="modal-title">{{ __('Activate Frontend Theme') }}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <div class="container-fluid">
-                        <input type="hidden" name="theme">
-                        <input type="hidden" name="color">
-                        {{ __('Are you sure to active this template ?') }}
+                        <input type="hidden" name="name" id="activeThemeName">
+                        <input type="hidden" name="color" id="activeThemeColor">
+                        <p>{{ __('Are you sure you want to activate this theme for the frontend?') }}</p>
+                        <p class="mb-0"><strong id="activeThemeDisplayName"></strong></p>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
-                    <button type="submit" class="btn btn-primary">{{ __('Active') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Activate') }}</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-
-<!-- Modal -->
-<div class="modal fade" id="prev" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
-    <div class="modal-dialog modal--w" role="document">
-
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">{{ __('Template Preview') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+<!-- Activate Backend Theme Modal -->
+<div class="modal fade" id="activeBackendTheme" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="" method="post">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Activate Backend Theme') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <input type="hidden" name="name" id="activeBackendThemeName">
+                        <p>{{ __('Are you sure you want to activate this theme for the admin panel?') }}</p>
+                        <p class="mb-0"><strong id="activeBackendThemeDisplayName"></strong></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Activate') }}</button>
+                </div>
             </div>
-            <div class="modal-body">
-
-                <iframe src="" frameborder="0" id="iframe"></iframe>
-            </div>
-
-        </div>
-
+        </form>
     </div>
 </div>
 
@@ -204,52 +304,53 @@
         </form>
     </div>
 </div>
+
+<!-- Delete Theme Modal -->
+<div class="modal fade" id="deleteThemeModal" tabindex="-1" role="dialog" aria-labelledby="deleteThemeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="" method="post" id="deleteThemeForm">
+            @csrf
+            @method('DELETE')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteThemeModalLabel">{{ __('Delete Theme') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ __('Are you sure you want to delete the theme') }} <strong id="deleteThemeName"></strong>?</p>
+                    <p class="text-danger"><small>{{ __('This action cannot be undone. All theme files will be permanently deleted.') }}</small></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-danger">{{ __('Delete Theme') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('script')
 <style>
-    .modal-dialog.modal--w {
-        max-width: 96% !important;
+    .nav-tabs {
+        border-bottom: 2px solid #ddd;
+        margin-bottom: 0;
     }
-
-    #iframe {
-        width: 100%;
-        height: 100vh;
+    
+    .nav-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #6c757d;
     }
-
-
-    .sp-replacer {
-        padding: 0;
-        border: 1px solid rgba(0, 0, 0, .125);
-        border-radius: 5px 0 0 5px;
-        border-right: none;
-    }
-
-    select.form-control:not([size]):not([multiple]) {
-        height: calc(2.25rem + 9px);
-    }
-
-    .sp-preview {
-        width: 100px;
-        height: 46px;
-        border: 0;
-    }
-
-    .sp-preview-inner {
-        width: 110px;
-    }
-
-    .sp-dd {
-        display: none;
+    
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid #007bff;
+        color: #007bff;
+        font-weight: 600;
     }
 </style>
-@endpush
-@push('external-style')
-<link rel="stylesheet" href="{{ Config::cssLib('backend', 'bootstrap-colorpicker.min.css') }}">
-@endpush
-
-@push('external-script')
-<script src="{{ Config::jsLib('backend', 'bootstrap-colorpicker.min.js') }}"></script>
 @endpush
 
 @push('script')
@@ -257,26 +358,54 @@
     $(function() {
         'use strict'
        
-        $('.active-btn').on('click', function() {
+        // Activate Frontend Theme
+        $('.active-btn').on('click', function(e) {
+            e.preventDefault();
             const modal = $('#activeTheme');
+            const route = $(this).data('route');
+            const themeName = $(this).data('theme') || route.split('/').pop();
+            const displayName = $(this).closest('tr').find('h5').text().trim() || themeName;
 
-            modal.find('form').attr('action', $(this).data('route'))
+            modal.find('form').attr('action', route);
+            modal.find('#activeThemeName').val(themeName);
+            modal.find('#activeThemeColor').val($(this).data('color') || '#9c0ac');
+            modal.find('#activeThemeDisplayName').text(displayName);
 
-            modal.find('input[name=theme]').val($(this).data('theme'))
-            
-            modal.find('input[name=color]').val($(this).data('color'))
+            modal.modal('show');
+        });
 
-            modal.modal('show')
-        })
+        // Activate Backend Theme
+        $('.active-backend-btn').on('click', function(e) {
+            e.preventDefault();
+            const modal = $('#activeBackendTheme');
+            const route = $(this).data('route');
+            const themeName = $(this).data('theme') || route.split('/').pop();
+            const displayName = $(this).closest('tr').find('h5').text().trim() || themeName;
 
+            modal.find('form').attr('action', route);
+            modal.find('#activeBackendThemeName').val(themeName);
+            modal.find('#activeBackendThemeDisplayName').text(displayName);
 
-        $('.prev').on('click', function() {
-            const modal = $('#prev');
+            modal.modal('show');
+        });
 
-            modal.find('iframe').attr('src', $(this).data('href'))
+        // Delete Theme
+        $('.delete-theme-btn').on('click', function() {
+            const themeName = $(this).data('theme');
+            const displayName = $(this).data('display-name');
+            const deleteUrl = '{{ route("admin.manage.theme.delete", ":theme") }}'.replace(':theme', themeName);
 
-            modal.modal('show')
-        })
+            $('#deleteThemeForm').attr('action', deleteUrl);
+            $('#deleteThemeName').text(displayName);
+            $('#deleteThemeModal').modal('show');
+        });
+
+        // Reinitialize feather icons after tab switch
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
     })
 </script>
 @endpush

@@ -58,20 +58,27 @@ class ConfigurationController extends Controller
     {
         $data['title'] = 'Manage Theme';
         $data['themes'] = $this->themeManager->list();
+        $data['backendThemes'] = $this->themeManager->listBackend();
         return view('backend.setting.theme')->with($data);
     }
 
-    public function themeUpdate(Request $request)
+    public function themeUpdate(Request $request, $name = null)
     {
-
         $general = Configuration::first();
 
-        $general->theme =$request->name;
-        $general->color = $request->color;
+        // Get theme name from route parameter or request
+        $themeName = $name ?? $request->input('name') ?? $request->input('theme');
+        
+        if (!$themeName) {
+            return redirect()->back()->with('error', 'Theme name is required.');
+        }
+
+        $general->theme = $themeName;
+        $general->color = $request->input('color', '#9c0ac');
 
         $general->save();
 
-        return redirect()->back()->with('success', 'Template Actived successfully');
+        return redirect()->back()->with('success', 'Template Activated successfully');
     }
 
     public function themeColor(Request $request)
@@ -129,5 +136,45 @@ class ConfigurationController extends Controller
                 ->route('admin.manage.theme')
                 ->with('error', $exception->getMessage());
         }
+    }
+
+    /**
+     * Delete theme
+     */
+    public function themeDelete(Request $request, string $themeName)
+    {
+        try {
+            $result = $this->themeManager->delete($themeName);
+
+            return redirect()
+                ->route('admin.manage.theme')
+                ->with('success', __('Theme :theme deleted successfully.', [
+                    'theme' => $result['display_name'] ?? $result['name'],
+                ]));
+        } catch (Throwable $exception) {
+            return redirect()
+                ->route('admin.manage.theme')
+                ->with('error', $exception->getMessage());
+        }
+    }
+
+    /**
+     * Update backend theme
+     */
+    public function backendThemeUpdate(Request $request, $name = null)
+    {
+        $general = Configuration::first();
+
+        // Get theme name from route parameter or request
+        $themeName = $name ?? $request->input('name') ?? $request->input('theme');
+        
+        if (!$themeName) {
+            return redirect()->back()->with('error', 'Theme name is required.');
+        }
+
+        $general->backend_theme = $themeName;
+        $general->save();
+
+        return redirect()->back()->with('success', 'Backend theme activated successfully');
     }
 }

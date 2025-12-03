@@ -14,15 +14,19 @@ class ThemeManager
 {
     protected string $themesPath;
     protected string $viewsPath;
+    protected string $backendThemesPath;
+    protected string $backendViewsPath;
 
     public function __construct()
     {
         $this->themesPath = public_path('asset/frontend');
         $this->viewsPath = resource_path('views/frontend');
+        $this->backendThemesPath = public_path('asset/backend');
+        $this->backendViewsPath = resource_path('views/backend');
     }
 
     /**
-     * List all installed themes
+     * List all installed frontend themes
      */
     public function list(): Collection
     {
@@ -34,13 +38,18 @@ class ThemeManager
             ->map(function (string $directory) {
                 $themeName = basename($directory);
                 $isActive = $this->isActiveTheme($themeName);
+                $metadata = $this->getThemeMetadata($themeName);
                 
                 return [
                     'name' => $themeName,
-                    'display_name' => Str::title(str_replace(['-', '_'], ' ', $themeName)),
+                    'display_name' => $metadata['display_name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
                     'path' => $directory,
                     'is_active' => $isActive,
                     'exists' => $this->themeExists($themeName),
+                    'version' => $metadata['version'] ?? null,
+                    'author' => $metadata['author'] ?? null,
+                    'description' => $metadata['description'] ?? null,
+                    'is_builtin' => in_array($themeName, ['default', 'light', 'blue', 'materialize', 'dark', 'premium']),
                 ];
             })
             ->filter(function ($theme) {
@@ -50,7 +59,47 @@ class ThemeManager
     }
 
     /**
-     * Check if theme exists (has both assets and views)
+     * List all installed backend themes
+     */
+    public function listBackend(): Collection
+    {
+        if (!File::isDirectory($this->backendViewsPath)) {
+            return collect();
+        }
+
+        return collect(File::directories($this->backendViewsPath))
+            ->map(function (string $directory) {
+                $themeName = basename($directory);
+                
+                // Check if this directory has a theme.json file
+                $themeJsonPath = $directory . '/theme.json';
+                if (!File::exists($themeJsonPath)) {
+                    return null; // Skip directories without theme.json
+                }
+                
+                $isActive = $this->isActiveBackendTheme($themeName);
+                $metadata = $this->getBackendThemeMetadata($themeName);
+                
+                return [
+                    'name' => $themeName,
+                    'display_name' => $metadata['display_name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
+                    'path' => $directory,
+                    'is_active' => $isActive,
+                    'exists' => $this->themeExistsBackend($themeName),
+                    'version' => $metadata['version'] ?? null,
+                    'author' => $metadata['author'] ?? null,
+                    'description' => $metadata['description'] ?? null,
+                    'is_builtin' => in_array($themeName, ['default', 'materialize', 'dark', 'premium']),
+                ];
+            })
+            ->filter(function ($theme) {
+                return $theme !== null && $theme['exists'];
+            })
+            ->values();
+    }
+
+    /**
+     * Check if frontend theme exists (has both assets and views)
      */
     public function themeExists(string $themeName): bool
     {
@@ -61,13 +110,36 @@ class ThemeManager
     }
 
     /**
-     * Check if theme is currently active
+     * Check if backend theme exists (has views directory and theme.json)
+     */
+    public function themeExistsBackend(string $themeName): bool
+    {
+        $viewsPath = $this->backendViewsPath . '/' . $themeName;
+        $themeJsonPath = $viewsPath . '/theme.json';
+        return File::isDirectory($viewsPath) && File::exists($themeJsonPath);
+    }
+
+    /**
+     * Check if frontend theme is currently active
      */
     public function isActiveTheme(string $themeName): bool
     {
         try {
             $config = \App\Models\Configuration::first();
             return $config && $config->theme === $themeName;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if backend theme is currently active
+     */
+    public function isActiveBackendTheme(string $themeName): bool
+    {
+        try {
+            $config = \App\Models\Configuration::first();
+            return $config && $config->backend_theme === $themeName;
         } catch (\Exception $e) {
             return false;
         }
@@ -585,6 +657,116 @@ README;
     {
         if (!class_exists(ZipArchive::class)) {
             throw new RuntimeException('ZipArchive PHP extension is required for theme upload/download.');
+        }
+    }
+
+    /**
+     * Get frontend theme metadata from theme.json
+     */
+    public function getThemeMetadata(string $themeName): array
+    {
+        $metadata = [];
+        
+        // Check in assets directory
+        $manifestPath = $this->themesPath . '/' . $themeName . '/theme.json';
+        if (!File::exists($manifestPath)) {
+            // Check in views directory
+            $manifestPath = $this->viewsPath . '/' . $themeName . '/theme.json';
+        }
+        
+        if (File::exists($manifestPath)) {
+            try {
+                $manifest = json_decode(File::get($manifestPath), true);
+                if (is_array($manifest)) {
+                    $metadata = [
+                        'name' => $manifest['name'] ?? $themeName,
+                        'display_name' => $manifest['display_name'] ?? $manifest['name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
+                        'version' => $manifest['version'] ?? null,
+                        'author' => $manifest['author'] ?? null,
+                        'description' => $manifest['description'] ?? null,
+                        'screenshot' => $manifest['screenshot'] ?? null,
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Invalid JSON, return empty metadata
+            }
+        }
+        
+        return $metadata;
+    }
+
+    /**
+     * Get backend theme metadata from theme.json
+     */
+    public function getBackendThemeMetadata(string $themeName): array
+    {
+        $metadata = [];
+        
+        // Check in views directory
+        $manifestPath = $this->backendViewsPath . '/' . $themeName . '/theme.json';
+        if (!File::exists($manifestPath)) {
+            // Check in assets directory
+            $manifestPath = $this->backendThemesPath . '/' . $themeName . '/theme.json';
+        }
+        
+        if (File::exists($manifestPath)) {
+            try {
+                $manifest = json_decode(File::get($manifestPath), true);
+                if (is_array($manifest)) {
+                    $metadata = [
+                        'name' => $manifest['name'] ?? $themeName,
+                        'display_name' => $manifest['display_name'] ?? $manifest['name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
+                        'version' => $manifest['version'] ?? null,
+                        'author' => $manifest['author'] ?? null,
+                        'description' => $manifest['description'] ?? null,
+                        'screenshot' => $manifest['screenshot'] ?? null,
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Invalid JSON, return empty metadata
+            }
+        }
+        
+        return $metadata;
+    }
+
+    /**
+     * Delete a theme
+     */
+    public function delete(string $themeName): array
+    {
+        // Prevent deletion of built-in themes
+        if (in_array($themeName, ['default', 'light', 'blue', 'materialize', 'dark', 'premium'])) {
+            throw new RuntimeException('Cannot delete built-in themes.');
+        }
+
+        // Prevent deletion of active theme
+        if ($this->isActiveTheme($themeName)) {
+            throw new RuntimeException('Cannot delete the active theme. Please activate another theme first.');
+        }
+
+        if (!$this->themeExists($themeName)) {
+            throw new RuntimeException("Theme [{$themeName}] does not exist.");
+        }
+
+        $assetsPath = $this->themesPath . '/' . $themeName;
+        $viewsPath = $this->viewsPath . '/' . $themeName;
+
+        try {
+            if (File::isDirectory($assetsPath)) {
+                File::deleteDirectory($assetsPath);
+            }
+
+            if (File::isDirectory($viewsPath)) {
+                File::deleteDirectory($viewsPath);
+            }
+
+            return [
+                'name' => $themeName,
+                'display_name' => Str::title(str_replace(['-', '_'], ' ', $themeName)),
+            ];
+        } catch (\Exception $e) {
+            throw new RuntimeException("Failed to delete theme: " . $e->getMessage());
         }
     }
 }

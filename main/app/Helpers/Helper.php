@@ -260,6 +260,21 @@ class Helper
         }
     }
 
+    public static function backendTheme()
+    {
+        try {
+            $config = Configuration::first();
+            if ($config && $config->backend_theme && $config->backend_theme !== 'default') {
+                return 'backend.' . $config->backend_theme . '.';
+            }
+            // Fallback to default (no prefix for default backend theme)
+            return 'backend.';
+        } catch (\Exception $e) {
+            // Fallback to default on error
+            return 'backend.';
+        }
+    }
+
 
     public static function makeDir($path)
     {
