@@ -1,0 +1,58 @@
+# Development files
+*.log
+*.md
+!README.md
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+
+# Testing files
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Documentation
+docs/
+specs/
+history/
+.cursor/
+
+# Beads issue tracking
+.beads/
+
+# Development dependencies
+main/vendor/
+main/.env
+main/.env.example
+
+# Cache and temporary files
+main/storage/logs/*
+main/storage/framework/cache/*
+main/storage/framework/sessions/*
+main/storage/framework/views/*
+!main/storage/logs/.gitkeep
+!main/storage/framework/cache/.gitkeep
+!main/storage/framework/sessions/.gitkeep
+!main/storage/framework/views/.gitkeep
+
+# Build artifacts
+main/public/hot
+main/public/storage
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Installation files (not needed in production)
+install/

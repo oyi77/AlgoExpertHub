@@ -1,0 +1,26 @@
+# Railway Service Configuration
+# This file defines multiple services for your Laravel application
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "bash railway-deploy.sh"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Environment variables (these can be overridden in Railway dashboard)
+[env]
+APP_ENV = "production"
+APP_DEBUG = "false"
+APP_BASE_PATH = "main"
+LOG_CHANNEL = "stack"
+LOG_LEVEL = "info"
+
+# Services configuration
+# In Railway dashboard, you'll need to create separate services:
+# 1. Web Service - uses railway-deploy.sh
+# 2. Worker Service - uses railway-worker.sh  
+# 3. Scheduler Service - uses railway-scheduler.sh

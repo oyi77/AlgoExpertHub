@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["php82", "composer", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "php82Extensions.xml", "php82Extensions.curl", "php82Extensions.zip", "php82Extensions.gd", "php82Extensions.openssl", "php82Extensions.bcmath", "php82Extensions.fileinfo", "php82Extensions.tokenizer"]
+
+[phases.install]
+cmds = [
+    "cd main && composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction"
+]
+
+[phases.build]
+cmds = [
+    "cd main && php artisan config:cache || true",
+    "cd main && php artisan route:cache || true",
+    "cd main && php artisan view:cache || true"
+]
+
+[start]
+cmd = "bash railway-deploy.sh"
