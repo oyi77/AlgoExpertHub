@@ -28,6 +28,7 @@
     $tradingPresetUserModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'user_ui');
     $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
     $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
+    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
 @endphp
 
 <aside class="user-sidebar">
@@ -165,6 +166,35 @@
                     @if (Route::has('user.copy-trading.history.index'))
                     <li class="{{ Config::singleMenu('user.copy-trading.history.index') }}">
                         <a href="{{ route('user.copy-trading.history.index') }}">{{ __('History') }}</a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+        @endif
+
+        @if ($srmUserModuleEnabled)
+            @php
+                $srmRoutes = [];
+                if (Route::has('user.srm.dashboard')) $srmRoutes[] = route('user.srm.dashboard');
+                if (Route::has('user.srm.adjustments.index')) $srmRoutes[] = route('user.srm.adjustments.index');
+                if (Route::has('user.srm.insights.index')) $srmRoutes[] = route('user.srm.insights.index');
+            @endphp
+            <li class="has_submenu {{ in_array(url()->current(), $srmRoutes) ? 'open' : '' }}">
+                <a href="#0"><i class="fas fa-shield-alt"></i> {{ __('Smart Risk Management') }}</a>
+                <ul class="submenu">
+                    @if (Route::has('user.srm.dashboard'))
+                    <li class="{{ Config::singleMenu('user.srm.dashboard') }}">
+                        <a href="{{ route('user.srm.dashboard') }}">{{ __('Dashboard') }}</a>
+                    </li>
+                    @endif
+                    @if (Route::has('user.srm.adjustments.index'))
+                    <li class="{{ Config::singleMenu('user.srm.adjustments.index') }}">
+                        <a href="{{ route('user.srm.adjustments.index') }}">{{ __('Adjustments') }}</a>
+                    </li>
+                    @endif
+                    @if (Route::has('user.srm.insights.index'))
+                    <li class="{{ Config::singleMenu('user.srm.insights.index') }}">
+                        <a href="{{ route('user.srm.insights.index') }}">{{ __('Insights') }}</a>
                     </li>
                     @endif
                 </ul>

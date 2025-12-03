@@ -14,6 +14,9 @@
                         <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadThemeModal">
                             <i data-feather="upload"></i> {{ __('Upload Theme ZIP') }}
                         </button>
+                        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#deactivateAllThemesModal">
+                            <i data-feather="x-circle"></i> {{ __('Deactivate All Frontend Themes') }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -260,6 +263,36 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
                     <button type="submit" class="btn btn-primary">{{ __('Activate') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Deactivate All Frontend Themes Modal -->
+<div class="modal fade" id="deactivateAllThemesModal" tabindex="-1" role="dialog" aria-labelledby="deactivateAllThemesModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="{{ route('admin.manage.theme.deactivate.all') }}" method="post">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Deactivate All Frontend Themes') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <p>{{ __('Are you sure you want to deactivate all frontend themes?') }}</p>
+                        <p class="text-warning mb-0">
+                            <i data-feather="alert-triangle"></i> 
+                            {{ __('This will set the frontend theme to null. The system will fallback to the default theme.') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-warning">{{ __('Deactivate All') }}</button>
                 </div>
             </div>
         </form>

@@ -9,25 +9,30 @@
     $element = Config::builder('brand', true);
 @endphp
 
+@if($element && is_array($element))
 <div class="sp_brand_wrapper">
     <div class="sp_container">
         <div class="row">
             <div class="col-lg-12">
                 <div class="sp_brand_slider">
                     @foreach ($element as $brand)
+                        @if($brand && isset($brand->content))
                         <div class="sp_brand_slide">
                             <div class="sp_brand_item">
-                                <img src="{{ Config::getFile('brand', $brand->content->image_one) }}" alt="brand image">
+                                <img src="{{ Config::getFile('brand', $brand->content->image_one ?? '') }}" alt="brand image">
                             </div>
                         </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
         </div>
     </div>
 </div><!-- sp_brand_wrapper end -->
+@endif
 
 <!-- footer section start -->
+@if($content && $content->content)
 <footer class="footer-section">
     <div class="sp_footer_menu_area">
         <div class="back-to-top">
@@ -40,8 +45,8 @@
             <div class="row gy-4 justify-content-between">
                 <div class="col-lg-4 pe-xl-5">
                     <div class="sp_footer_item">
-                        <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('footer', $content->content->image_one) }}" alt="logo"></a>
-                        <p class="mt-4">{{ Config::trans($content->content->footer_short_details) }}</p>
+                        <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('footer', $content->content->image_one ?? '') }}" alt="logo"></a>
+                        <p class="mt-4">{{ Config::trans($content->content->footer_short_details ?? '') }}</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-6">
@@ -59,10 +64,14 @@
                     <div class="sp_footer_item">
                         <h5 class="sp_footer_item_title">{{ __('Links') }}</h5>
                         <ul class="sp_footer_menu">
-                            @foreach ($links as $item)
-                                <li><a href="{{ route('links', [$item->id, Str::slug($item->content->page_title)]) }}">{{ Config::trans($item->content->page_title) }}</a>
-                                </li>
-                            @endforeach
+                            @if($links && is_array($links))
+                                @foreach ($links as $item)
+                                    @if($item && isset($item->content) && isset($item->content->page_title))
+                                    <li><a href="{{ route('links', [$item->id, Str::slug($item->content->page_title)]) }}">{{ Config::trans($item->content->page_title) }}</a>
+                                    </li>
+                                    @endif
+                                @endforeach
+                            @endif
 
                         </ul>
                     </div>
@@ -78,40 +87,49 @@
                         </form>
                         <h5 class="mt-4 text-white">{{ __('Social Links') }}</h5>
                         <ul class="sp_social_links mt-2">
-                            @foreach ($socials as $social)
-                                <li><a href="{{ $social->content->link }}"><i class="{{ $social->content->icon }}"></i></a>
-                                </li>
-                            @endforeach
+                            @if($socials && is_array($socials))
+                                @foreach ($socials as $social)
+                                    @if($social && isset($social->content))
+                                    <li><a href="{{ $social->content->link ?? '#' }}"><i class="{{ $social->content->icon ?? '' }}"></i></a>
+                                    </li>
+                                    @endif
+                                @endforeach
+                            @endif
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div><!-- footer-top end -->
+    @if($felement && is_array($felement))
     <div class="sp_footer_content_area">
         <div class="sp_container">
             <div class="row gy-3">
                 @foreach ($felement as $item)
-                <div class="col-12">
-                    <div class="footer_content_item">
-                        <h6 class="title text-white">{{ $item->content->title}}</h6>
-                        <p class="mt-2">
-                            {{ Config::trans($item->content->description) }}
-                        </p>
+                    @if($item && isset($item->content))
+                    <div class="col-12">
+                        <div class="footer_content_item">
+                            <h6 class="title text-white">{{ $item->content->title ?? ''}}</h6>
+                            <p class="mt-2">
+                                {{ Config::trans($item->content->description ?? '') }}
+                            </p>
+                        </div>
                     </div>
-                </div>
+                    @endif
                 @endforeach
             </div>
         </div>
     </div>
+    @endif
     <div class="sp_copy_right_area">
         <div class="sp_container">
             <div class="row">
                 <div class="col-lg-12 text-center">
-                    <p>{{ Config::config()->copyright }}</p>
+                    <p>{{ Config::config()->copyright ?? '' }}</p>
                 </div>
             </div>
         </div>
     </div>
 </footer>
+@endif
 <!-- footer section end -->

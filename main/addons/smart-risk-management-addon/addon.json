@@ -1,0 +1,47 @@
+{
+    "name": "smart-risk-management-addon",
+    "title": "AI Smart Risk Management",
+    "description": "AI-powered adaptive risk management system that learns from historical data to optimize trading risk dynamically",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\SmartRiskManagement",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0"
+    },
+    "dependencies": [],
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes, views, and menus for SRM management, signal provider metrics, predictions, models, and A/B testing.",
+            "targets": [
+                "admin_routes",
+                "admin_menu"
+            ],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Enables user-facing SRM dashboard, adjustments history, and performance insights.",
+            "targets": [
+                "user_routes",
+                "user_menu"
+            ],
+            "enabled": true
+        },
+        {
+            "key": "srm_engine",
+            "name": "SRM Engine",
+            "description": "Core SRM functionality: performance scoring, slippage prediction, risk optimization, and adaptive mechanisms.",
+            "targets": [
+                "jobs",
+                "scheduling"
+            ],
+            "enabled": true
+        }
+    ]
+}
+

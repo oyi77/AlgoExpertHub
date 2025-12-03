@@ -54,6 +54,33 @@ class Kernel extends ConsoleKernel
                 ->at('00:00');
             }
         }
+
+        // Smart Risk Management Addon
+        if (AddonRegistry::active('smart-risk-management-addon') && AddonRegistry::moduleEnabled('smart-risk-management-addon', 'srm_engine')) {
+            // Update performance scores daily at 1 AM
+            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\UpdatePerformanceScoresJob::class)) {
+                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\UpdatePerformanceScoresJob::class)
+                    ->daily()
+                    ->at('01:00')
+                    ->withoutOverlapping();
+            }
+
+            // Monitor drawdown every 5 minutes
+            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\MonitorDrawdownJob::class)) {
+                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\MonitorDrawdownJob::class)
+                    ->everyFiveMinutes()
+                    ->withoutOverlapping();
+            }
+
+            // Retrain models weekly (Sunday at 3 AM)
+            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\RetrainModelsJob::class)) {
+                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\RetrainModelsJob::class)
+                    ->weekly()
+                    ->sundays()
+                    ->at('03:00')
+                    ->withoutOverlapping();
+            }
+        }
     }
 
     /**

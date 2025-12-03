@@ -73,7 +73,19 @@ Route::prefix('signal-analytics')->name('signal-analytics.')->group(function () 
     Route::get('/export', [SignalAnalyticsController::class, 'export'])->name('export');
 });
 
-// AI Configuration
+// AI Parsing Profiles (NEW - Uses AI Connection Addon)
+Route::prefix('ai-parsing-profiles')->name('ai-parsing-profiles.')->group(function () {
+    Route::get('/', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'index'])->name('index');
+    Route::get('/create', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'create'])->name('create');
+    Route::post('/', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'store'])->name('store');
+    Route::get('/{profile}/edit', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'edit'])->name('edit');
+    Route::put('/{profile}', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'update'])->name('update');
+    Route::delete('/{profile}', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'destroy'])->name('destroy');
+    Route::post('/{profile}/test', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'testParsing'])->name('test');
+    Route::post('/{profile}/toggle', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiParsingProfileController::class, 'toggleStatus'])->name('toggle');
+});
+
+// AI Configuration (DEPRECATED - Use AI Parsing Profiles instead)
 Route::prefix('ai-configuration')->name('ai-configuration.')->middleware('permission:manage-addon,admin')->group(function () {
     Route::get('/', [AiConfigurationController::class, 'index'])->name('index');
     Route::get('/create', [AiConfigurationController::class, 'create'])->name('create');

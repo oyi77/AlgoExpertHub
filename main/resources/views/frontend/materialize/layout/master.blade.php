@@ -8,10 +8,10 @@
 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <meta name="description" content="{{ $page->seo_description ?? Config::config()->seo_description }}" />
-    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? Config::config()->seo_tags) }} ">
+    <meta name="description" content="{{ $page->seo_description ?? optional(Config::config())->seo_description }}" />
+    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? optional(Config::config())->seo_tags ?? []) }} ">
 
-    <title>{{ Config::config()->appname }}</title>
+    <title>{{ optional(Config::config())->appname ?? 'AlgoExpert Hub' }}</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
@@ -64,7 +64,7 @@
 <body>
 
 
-    @if (Config::config()->preloader_status)
+    @if (optional(Config::config())->preloader_status)
         <div class="preloader-holder">
             <div class="preloader">
                 <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
@@ -73,8 +73,8 @@
     @endif
 
 
-    @if (Config::config()->analytics_status)
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ Config::config()->analytics_key }}"></script>
+    @if (optional(Config::config())->analytics_status)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ optional(Config::config())->analytics_key }}"></script>
         <script>
             'use strict'
             window.dataLayer = window.dataLayer || [];
@@ -83,11 +83,11 @@
                 dataLayer.push(arguments);
             }
             gtag("js", new Date());
-            gtag("config", "{{ Config::config()->analytics_key }}");
+            gtag("config", "{{ optional(Config::config())->analytics_key }}");
         </script>
     @endif
 
-    @if (Config::config()->allow_modal)
+    @if (optional(Config::config())->allow_modal)
         @include('cookie-consent::index')
     @endif
 
@@ -131,7 +131,7 @@
     @stack('script')
 
 
-    @if (Config::config()->twak_allow)
+    @if (optional(Config::config())->twak_allow)
         <script type="text/javascript">
             var Tawk_API = Tawk_API || {},
                 Tawk_LoadStart = new Date();
@@ -139,7 +139,7 @@
                 var s1 = document.createElement("script"),
                     s0 = document.getElementsByTagName("script")[0];
                 s1.async = true;
-                s1.src = "{{ Config::config()->twak_key }}";
+                s1.src = "{{ optional(Config::config())->twak_key }}";
                 s1.charset = 'UTF-8';
                 s1.setAttribute('crossorigin', '*');
                 s0.parentNode.insertBefore(s1, s0);

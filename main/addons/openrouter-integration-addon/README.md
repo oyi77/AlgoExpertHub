@@ -1,6 +1,6 @@
 # OpenRouter Integration Addon
 
-Unified AI gateway for signal parsing and market analysis powered by OpenRouter API.
+Unified AI gateway for signal parsing and market analysis powered by OpenRouter API, with centralized credential management through the AI Connection Addon.
 
 ## Overview
 
@@ -9,9 +9,29 @@ The OpenRouter Integration Addon provides AI capabilities for the AlgoExpertHub 
 **Key Features:**
 - **Signal Parsing**: Automatically parse trading signals from channel messages using AI
 - **Market Analysis**: Validate signals against market conditions before execution
-- **Dynamic Model Support**: Choose from 400+ AI models
+- **Dynamic Model Support**: Choose from 400+ AI models with marketplace/catalog
+- **Centralized Credentials**: Uses AI Connection Addon for credential management
+- **Automatic Rotation**: Leverages AI Connection Addon's rotation and rate limiting
+- **Usage Tracking**: All OpenRouter API calls tracked in centralized analytics
 - **Multi-Channel Integration**: Seamlessly integrates with Multi-Channel Signal Addon
 - **Execution Engine Integration**: AI-powered market confirmation before trade execution
+
+## Architecture (v2.0 - Using AI Connection Addon)
+
+### How It Works Now
+1. **AI Connection Addon** stores OpenRouter credentials (encrypted)
+2. **OpenRouter Addon** provides OpenRouter-specific features:
+   - Model marketplace (400+ models catalog)
+   - Model syncing from OpenRouter API
+   - OpenRouter-specific configurations (site URL, site name)
+   - Use case flags (parsing vs analysis)
+3. **API Calls** go through centralized service with automatic rotation
+
+### Migration from v1.0
+- ✅ Old configurations automatically migrated to use AI Connection Addon
+- ✅ Backward compatible - old configs still work during transition
+- ✅ Credentials now centralized and can be reused across features
+- ✅ Automatic failover and rate limiting from AI Connection Addon
 
 ## Installation
 
@@ -47,17 +67,30 @@ OPENROUTER_SITE_NAME=YourAppName
 
 ## Configuration
 
-### Admin Interface
+### NEW: Using AI Connection Addon (Recommended)
 
-Access the admin panel at `/admin/openrouter/configurations`.
+The addon now uses the **AI Connection Addon** for credential management. This is the recommended approach.
 
-#### Create Configuration
+#### Step 1: Create AI Connection (One-time setup)
+1. Navigate to **Admin → AI Connections → Connections → Create**
+2. Fill in:
+   - **Provider**: Select "OpenRouter"
+   - **Name**: e.g., "OpenRouter Production"
+   - **API Key**: Your OpenRouter API key (get from [OpenRouter Keys](https://openrouter.ai/keys))
+   - **Model**: e.g., "openai/gpt-3.5-turbo" (can change per config)
+   - **Priority**: 1 (for primary connection)
+   - **Settings**: Site URL, Site Name (optional)
+3. Click **Test Connection** to verify
+4. Save
 
+**Benefits**: Credentials stored centrally, can be reused across features, automatic rotation on rate limits.
+
+#### Step 2: Create OpenRouter Configuration
 1. Navigate to **OpenRouter > Configurations**
 2. Click **Create Configuration**
 3. Fill in the form:
    - **Name**: Descriptive name for the configuration
-   - **API Key**: Your OpenRouter API key (get from [OpenRouter Keys](https://openrouter.ai/keys))
+   - **AI Connection**: Select the connection you created in Step 1
    - **Model**: Select from synced models
    - **Site URL**: Optional, defaults to your APP_URL
    - **Site Name**: Optional, defaults to your APP_NAME
@@ -68,7 +101,11 @@ Access the admin panel at `/admin/openrouter/configurations`.
    - **Enable for Signal Parsing**: Use for parsing channel messages
    - **Enable for Market Analysis**: Use for signal validation
 
-**Important**: Each configuration has its own API key. You can use different API keys for different purposes or share one key across multiple configurations.
+**Note**: You can create multiple configurations using the same AI connection (shared credentials) but different models or settings.
+
+### OLD: Direct API Key (Deprecated but still supported)
+
+For backward compatibility, you can still store API keys directly in configurations. However, this is deprecated and will be removed in a future version. Please migrate to using AI Connection Addon.
 
 #### Sync Models
 

@@ -36,3 +36,5 @@ access_log
 error.log
 access.log
 MadelineProto.log
+CLAUDE.md
+AGENTS.md

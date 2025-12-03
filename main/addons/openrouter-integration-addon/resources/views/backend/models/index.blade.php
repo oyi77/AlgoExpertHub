@@ -33,9 +33,11 @@
                                 <i class="fa fa-sync"></i> {{ __('Sync Models') }}
                             </button>
                         </form>
-                        <a href="{{ route('admin.openrouter.configurations.index') }}" class="btn btn-sm btn-secondary">
-                            <i class="fa fa-cog"></i> {{ __('Configurations') }}
+                        @if (Route::has('admin.ai-connections.connections.index'))
+                        <a href="{{ route('admin.ai-connections.connections.index') }}" class="btn btn-sm btn-secondary">
+                            <i class="fa fa-link"></i> {{ __('AI Connections') }}
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body p-0">

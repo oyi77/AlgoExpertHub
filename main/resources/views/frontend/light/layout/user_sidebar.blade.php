@@ -28,6 +28,7 @@
     $tradingPresetUserModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'user_ui');
     $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
     $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
+    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
 @endphp
 
 <aside class="user-sidebar">
@@ -113,6 +114,7 @@
         @endif
 
         @if ($aiTradingUserModuleEnabled)
+    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
             @php
                 $aiRoutes = [];
                 if (Route::has('user.ai-model-profiles.index')) $aiRoutes[] = route('user.ai-model-profiles.index');

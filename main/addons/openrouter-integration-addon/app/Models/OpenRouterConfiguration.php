@@ -11,7 +11,8 @@ class OpenRouterConfiguration extends Model
 
     protected $fillable = [
         'name',
-        'api_key',
+        'ai_connection_id', // NEW: Reference to centralized connection
+        'api_key', // DEPRECATED: Kept for backward compatibility
         'model_id',
         'site_url',
         'site_name',
@@ -35,10 +36,24 @@ class OpenRouterConfiguration extends Model
     ];
 
     /**
-     * Get decrypted API key.
+     * Get the AI connection this configuration uses
+     */
+    public function aiConnection()
+    {
+        return $this->belongsTo(\Addons\AiConnectionAddon\App\Models\AiConnection::class, 'ai_connection_id');
+    }
+
+    /**
+     * Get decrypted API key (NEW - uses centralized connection)
      */
     public function getDecryptedApiKey(): ?string
     {
+        // Use centralized connection if available
+        if ($this->ai_connection_id && $this->aiConnection) {
+            return $this->aiConnection->getApiKey();
+        }
+
+        // DEPRECATED: Fallback to local API key for backward compatibility
         if (empty($this->api_key)) {
             return null;
         }
@@ -48,6 +63,37 @@ class OpenRouterConfiguration extends Model
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Check if configuration uses centralized connection
+     */
+    public function usesCentralizedConnection(): bool
+    {
+        return !is_null($this->ai_connection_id);
+    }
+
+    /**
+     * Get effective settings (merge connection + config settings)
+     */
+    public function getEffectiveSettings(): array
+    {
+        $settings = [
+            'model' => $this->model_id,
+            'temperature' => $this->temperature,
+            'max_tokens' => $this->max_tokens,
+            'timeout' => $this->timeout,
+            'site_url' => $this->site_url,
+            'site_name' => $this->site_name,
+        ];
+
+        // Merge with connection settings if using centralized connection
+        if ($this->ai_connection_id && $this->aiConnection) {
+            $connectionSettings = $this->aiConnection->settings ?? [];
+            $settings = array_merge($connectionSettings, array_filter($settings));
+        }
+
+        return $settings;
     }
 
     /**

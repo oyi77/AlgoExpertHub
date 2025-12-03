@@ -33,10 +33,28 @@ class ParsingPipeline
         }
         
         if ($preference === 'ai' || $preference === 'auto') {
-            // Register AI parsers for each active configuration
-            $aiConfigs = \Addons\MultiChannelSignalAddon\App\Models\AiConfiguration::getActive();
-            foreach ($aiConfigs as $config) {
-                $this->register(new AiMessageParser($config));
+            // Register AI parsers for each enabled parsing profile
+            $query = \Addons\MultiChannelSignalAddon\App\Models\AiParsingProfile::with('aiConnection')
+                ->enabled()
+                ->byPriority();
+
+            // If this pipeline is for a specific channel, include both channel-specific and global profiles
+            if ($this->channelSource) {
+                $query->where(function ($q) {
+                    $q->whereNull('channel_source_id') // Global profiles
+                      ->orWhere('channel_source_id', $this->channelSource->id); // Channel-specific profiles
+                });
+            } else {
+                // Only use global profiles if no channel specified
+                $query->whereNull('channel_source_id');
+            }
+
+            $profiles = $query->get();
+            
+            foreach ($profiles as $profile) {
+                if ($profile->isUsable()) {
+                    $this->register(new AiMessageParser($profile));
+                }
             }
         }
     }

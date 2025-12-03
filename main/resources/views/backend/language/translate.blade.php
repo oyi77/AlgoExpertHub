@@ -6,6 +6,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header site-card-header d-flex justify-content-between">
+                    <h5 class="card-title">{{ __('Language Translator') }}</h5>
                     <div class="card-header-right">
                         <a href="{{ route('admin.language.index') }}" class="btn btn-sm btn-primary"> <i
                                 class="fa fa-arrow-left"></i>
@@ -40,6 +41,16 @@
                                     <div class="card-header-left">
                                         <input type="text" name="search" class="form-control form-control-sm" placeholder="Search key" id="search">
                                     </div>
+                                </div>
+                                <div class="col-lg-6 text-right">
+                                    <form method="POST" action="{{ route('admin.language.auto.translate', request()->lang) }}" style="display: inline;">
+                                        @csrf
+                                        <input type="hidden" name="type" value="content">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('This will use AI to auto-translate empty fields. This may take several minutes. Continue?')">
+                                            <i class="fa fa-robot"></i>
+                                            {{ __('Auto Translate with AI') }}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
 
@@ -111,6 +122,16 @@
                                         <input type="text" name="search" class="form-control form-control-sm"
                                             placeholder="Search key" id="searchContent">
                                     </div>
+                                </div>
+                                <div class="col-lg-6 text-right">
+                                    <form method="POST" action="{{ route('admin.language.auto.translate', request()->lang) }}" style="display: inline;">
+                                        @csrf
+                                        <input type="hidden" name="type" value="section">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('This will use AI to auto-translate empty fields. This may take several minutes. Continue?')">
+                                            <i class="fa fa-robot"></i>
+                                            {{ __('Auto Translate with AI') }}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
 

@@ -23,9 +23,10 @@ class AiModelProfile extends Model
         'visibility',
         'clonable',
         'enabled',
-        'provider',
-        'model_name',
-        'api_key_ref',
+        'ai_connection_id', // NEW: Reference to centralized AI connection
+        'provider', // DEPRECATED: Kept for backward compatibility
+        'model_name', // DEPRECATED: Now in connection settings
+        'api_key_ref', // DEPRECATED: Now in connection credentials
         'mode',
         'prompt_template',
         'settings',
@@ -47,6 +48,14 @@ class AiModelProfile extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    /**
+     * Get the AI connection this profile uses
+     */
+    public function aiConnection()
+    {
+        return $this->belongsTo(\Addons\AiConnectionAddon\App\Models\AiConnection::class, 'ai_connection_id');
     }
 
     /**
@@ -113,10 +122,16 @@ class AiModelProfile extends Model
     }
 
     /**
-     * Get API key from reference (from config/env).
+     * Get API key from AI connection (NEW METHOD)
      */
     public function getApiKey(): ?string
     {
+        // Use new centralized connection if available
+        if ($this->ai_connection_id && $this->aiConnection) {
+            return $this->aiConnection->getApiKey();
+        }
+
+        // DEPRECATED: Fallback to old method for backward compatibility
         if (!$this->api_key_ref) {
             return null;
         }
@@ -134,6 +149,42 @@ class AiModelProfile extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Get model name from AI connection or fallback to stored value
+     */
+    public function getModelName(): ?string
+    {
+        // Use connection's model if available
+        if ($this->ai_connection_id && $this->aiConnection) {
+            return $this->aiConnection->getModel();
+        }
+
+        // Fallback to stored model name
+        return $this->model_name;
+    }
+
+    /**
+     * Get provider slug from AI connection or fallback to stored value
+     */
+    public function getProviderSlug(): ?string
+    {
+        // Use connection's provider if available
+        if ($this->ai_connection_id && $this->aiConnection && $this->aiConnection->provider) {
+            return $this->aiConnection->provider->slug;
+        }
+
+        // Fallback to stored provider
+        return $this->provider;
+    }
+
+    /**
+     * Check if profile uses centralized connection
+     */
+    public function usesCentralizedConnection(): bool
+    {
+        return !is_null($this->ai_connection_id);
     }
 
     /**

@@ -9,7 +9,7 @@
                         <h4 class="card-title">{{ __('AI Configuration') }}</h4>
                     </div>
                     <div class="card-header-right">
-                        <a href="{{ route('admin.ai-configuration.create') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('admin.ai-connections.providers.create') }}" class="btn btn-sm btn-primary">
                             <i class="fa fa-plus"></i> {{ __('Add AI Provider') }}
                         </a>
                     </div>
@@ -86,7 +86,7 @@
                                     <tr>
                                         <td colspan="6" class="text-center">
                                             <p class="text-muted mb-0">{{ __('No AI configurations found.') }}</p>
-                                            <a href="{{ route('admin.ai-configuration.create') }}" class="btn btn-sm btn-primary mt-2">
+                                            <a href="{{ route('admin.ai-connections.providers.create') }}" class="btn btn-sm btn-primary mt-2">
                                                 <i class="fa fa-plus"></i> {{ __('Create First Configuration') }}
                                             </a>
                                         </td>

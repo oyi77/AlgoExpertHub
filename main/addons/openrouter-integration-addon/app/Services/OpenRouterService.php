@@ -18,13 +18,15 @@ class OpenRouterService implements OpenRouterServiceInterface
     protected string $modelsEndpoint;
     protected string $chatEndpoint;
     protected int $timeout;
+    protected $aiConnectionService;
 
-    public function __construct()
+    public function __construct(?\Addons\AiConnectionAddon\App\Services\AiConnectionService $aiConnectionService = null)
     {
         $this->apiUrl = config('openrouter.api_url');
         $this->modelsEndpoint = config('openrouter.models_endpoint');
         $this->chatEndpoint = config('openrouter.chat_endpoint');
         $this->timeout = config('openrouter.default_timeout');
+        $this->aiConnectionService = $aiConnectionService ?? app(\Addons\AiConnectionAddon\App\Services\AiConnectionService::class);
     }
 
     /**
@@ -33,7 +35,8 @@ class OpenRouterService implements OpenRouterServiceInterface
     public function sendRequest(OpenRouterRequest $request): OpenRouterResponse
     {
         try {
-            $config = OpenRouterConfiguration::where('model_id', $request->model)
+            $config = OpenRouterConfiguration::with('aiConnection')
+                ->where('model_id', $request->model)
                 ->where('enabled', true)
                 ->first();
 
@@ -41,42 +44,13 @@ class OpenRouterService implements OpenRouterServiceInterface
                 return OpenRouterResponse::error('Configuration not found for model: ' . $request->model);
             }
 
-            $apiKey = $config->getDecryptedApiKey();
-            if (!$apiKey) {
-                return OpenRouterResponse::error('API key not configured or invalid');
+            // Use centralized AI Connection if available
+            if ($config->usesCentralizedConnection()) {
+                return $this->sendRequestViaCentralizedConnection($config, $request);
             }
 
-            $url = $this->apiUrl . $this->chatEndpoint;
-
-            $response = Http::timeout($config->timeout ?? $this->timeout)
-                ->withHeaders($request->getHeaders($apiKey))
-                ->post($url, $request->toArray());
-
-            if ($response->successful()) {
-                $data = $response->json();
-                $content = $data['choices'][0]['message']['content'] ?? null;
-
-                if ($content) {
-                    return OpenRouterResponse::success(
-                        $content,
-                        $data,
-                        $data['model'] ?? null,
-                        $data['usage'] ?? null
-                    );
-                }
-
-                return OpenRouterResponse::error('No content in response', $data);
-            }
-
-            Log::warning('OpenRouter API request failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return OpenRouterResponse::error(
-                'API request failed: ' . $response->status(),
-                $response->json()
-            );
+            // DEPRECATED: Fallback to direct API call for backward compatibility
+            return $this->sendRequestDirect($config, $request);
 
         } catch (\Exception $e) {
             Log::error('OpenRouter API exception: ' . $e->getMessage(), [
@@ -85,6 +59,114 @@ class OpenRouterService implements OpenRouterServiceInterface
 
             return OpenRouterResponse::error('Exception: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Send request using centralized AI Connection Service (NEW METHOD)
+     */
+    protected function sendRequestViaCentralizedConnection(
+        OpenRouterConfiguration $config,
+        OpenRouterRequest $request
+    ): OpenRouterResponse {
+        try {
+            // Build prompt from messages
+            $prompt = $this->buildPromptFromMessages($request->messages);
+
+            // Get effective settings
+            $settings = $config->getEffectiveSettings();
+
+            // Execute through centralized service
+            $result = $this->aiConnectionService->execute(
+                connectionId: $config->ai_connection_id,
+                prompt: $prompt,
+                options: $settings,
+                feature: 'openrouter_api'
+            );
+
+            if ($result['success']) {
+                return OpenRouterResponse::success(
+                    content: $result['response'],
+                    fullResponse: [
+                        'choices' => [
+                            ['message' => ['content' => $result['response']]],
+                        ],
+                        'usage' => [
+                            'total_tokens' => $result['tokens_used'],
+                        ],
+                    ],
+                    model: $result['model'] ?? $config->model_id,
+                    usage: [
+                        'total_tokens' => $result['tokens_used'],
+                        'cost' => $result['cost'],
+                    ]
+                );
+            }
+
+            return OpenRouterResponse::error('AI Connection execution failed');
+
+        } catch (\Exception $e) {
+            Log::error('OpenRouter centralized connection error: ' . $e->getMessage());
+            return OpenRouterResponse::error('Connection error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send request directly to API (DEPRECATED - for backward compatibility)
+     */
+    protected function sendRequestDirect(
+        OpenRouterConfiguration $config,
+        OpenRouterRequest $request
+    ): OpenRouterResponse {
+        $apiKey = $config->getDecryptedApiKey();
+        if (!$apiKey) {
+            return OpenRouterResponse::error('API key not configured or invalid');
+        }
+
+        $url = $this->apiUrl . $this->chatEndpoint;
+
+        $response = Http::timeout($config->timeout ?? $this->timeout)
+            ->withHeaders($request->getHeaders($apiKey))
+            ->post($url, $request->toArray());
+
+        if ($response->successful()) {
+            $data = $response->json();
+            $content = $data['choices'][0]['message']['content'] ?? null;
+
+            if ($content) {
+                return OpenRouterResponse::success(
+                    $content,
+                    $data,
+                    $data['model'] ?? null,
+                    $data['usage'] ?? null
+                );
+            }
+
+            return OpenRouterResponse::error('No content in response', $data);
+        }
+
+        Log::warning('OpenRouter API request failed', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        return OpenRouterResponse::error(
+            'API request failed: ' . $response->status(),
+            $response->json()
+        );
+    }
+
+    /**
+     * Build simple prompt from messages array
+     */
+    protected function buildPromptFromMessages(array $messages): string
+    {
+        $prompt = '';
+        foreach ($messages as $message) {
+            $role = $message['role'] ?? 'user';
+            $content = $message['content'] ?? '';
+            $prompt .= "{$role}: {$content}\n";
+        }
+        return trim($prompt);
     }
 
     /**

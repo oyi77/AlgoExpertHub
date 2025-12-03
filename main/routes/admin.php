@@ -216,7 +216,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('translator/ajax/update/{lang}', [LanguageController::class, 'ajaxUpdate'])->name('ajax');
             Route::post('translator/delete/{lang}', [LanguageController::class, 'deleteKey'])->name('key.delete');
+            Route::post('translator/auto-translate/{lang}', [LanguageController::class, 'autoTranslate'])->name('auto.translate');
 
+            // Translation AI Settings
+            Route::get('translation-settings', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'index'])->name('translation-settings.index');
+            Route::post('translation-settings', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'update'])->name('translation-settings.update');
+            Route::post('translation-settings/test', [\App\Http\Controllers\Backend\TranslationSettingController::class, 'test'])->name('translation-settings.test');
 
         });
 
@@ -251,6 +256,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('theme/upload', [ConfigurationController::class, 'themeUpload'])->name('manage.theme.upload');
             Route::get('theme/download-template', [ConfigurationController::class, 'themeDownloadTemplate'])->name('manage.theme.download.template');
             Route::delete('theme/delete/{theme}', [ConfigurationController::class, 'themeDelete'])->name('manage.theme.delete');
+            Route::post('theme/deactivate-all', [ConfigurationController::class, 'themeDeactivate'])->name('manage.theme.deactivate.all');
         });
 
         Route::middleware('permission:manage-frontend,admin')->group(function () {

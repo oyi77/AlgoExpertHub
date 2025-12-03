@@ -85,26 +85,26 @@
     @endif
 
     @php
-        $content= App\Models\Content::where('name', 'auth')->where('theme', Config::config()->theme)->first();
+        $content= App\Models\Content::where('name', 'auth')->where('theme', optional(Config::config())->theme ?? 'default')->first();
     @endphp
     
 
     <div class="account-page">
         <div class="form-wrapper">
             <div class="logo text-center">
-                <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('logo', Config::config()->logo) }}"
+                <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '') }}"
                         alt="image"></a>
             </div>
             <div class="inner-wrapper">
-                <h3 class="title">{{ $content->content->title }}</h3>
+                <h3 class="title">{{ optional($content)->content->title ?? '' }}</h3>
                 @yield('content')
             </div>
             <div class="copy-right-text">
-                <p>{{__(Config::config()->copyright)}}</p>
+                <p>{{__(optional(Config::config())->copyright ?? '')}}</p>
             </div>
         </div>
         <div class="img-wrapper">
-            <img src="{{ Config::getFile('auth', $content->content->image_one) }}" class="account-line-bg" alt="image">
+            <img src="{{ Config::getFile('auth', optional($content)->content->image_one ?? '') }}" class="account-line-bg" alt="image">
         </div>
     </div>
 

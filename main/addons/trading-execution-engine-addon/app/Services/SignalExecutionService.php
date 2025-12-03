@@ -68,6 +68,46 @@ class SignalExecutionService implements ExecutionServiceInterface
                 }
             }
 
+            // Apply SRM logic (Smart Risk Management Addon)
+            $srmAdjustments = [];
+            if (class_exists(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class)) {
+                try {
+                    $srmService = app(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class);
+                    
+                    // Get current price for slippage check
+                    $adapter = $this->connectionService->getAdapter($connection);
+                    if ($adapter) {
+                        $ticker = $adapter->getTicker($this->getSymbolFromSignal($signal));
+                        $options['current_price'] = $ticker['last'] ?? $signal->open_price;
+                    }
+                    
+                    // Get equity for lot calculation
+                    if ($adapter) {
+                        $balance = $adapter->getBalance();
+                        $options['equity'] = $balance['equity'] ?? $balance['balance'] ?? 10000;
+                    }
+                    
+                    $srmResult = $srmService->applySrmBeforeExecution($signal, $connection, $options);
+                    
+                    if (!$srmResult['proceed']) {
+                        return [
+                            'success' => false,
+                            'execution_log_id' => null,
+                            'position_id' => null,
+                            'message' => $srmResult['reason'] ?? 'SRM rejected signal',
+                        ];
+                    }
+                    
+                    $options = $srmResult['options'];
+                    $srmAdjustments = $srmResult['adjustments'] ?? [];
+                } catch (\Exception $e) {
+                    Log::warning("SignalExecutionService: SRM integration failed, proceeding without SRM", [
+                        'signal_id' => $signal->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // Check if can execute
             $canExecute = $this->canExecute($signal, $connectionId);
             if (!$canExecute['can_execute']) {
@@ -129,13 +169,33 @@ class SignalExecutionService implements ExecutionServiceInterface
                 'direction' => $signal->direction,
                 'quantity' => $quantity,
                 'entry_price' => $result['price'] ?? $signal->open_price,
-                'sl_price' => $signal->sl ?? null,
+                'sl_price' => $options['sl_price'] ?? $signal->sl ?? null,
                 'tp_price' => $signal->tp ?? null,
                 'status' => $result['success'] ? 'executed' : 'failed',
                 'executed_at' => $result['success'] ? now() : null,
                 'error_message' => $result['success'] ? null : ($result['message'] ?? 'Unknown error'),
                 'response_data' => $result['data'] ?? [],
             ]);
+
+            // Store SRM market context and predictions
+            if (!empty($srmAdjustments) && class_exists(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class)) {
+                try {
+                    $srmService = app(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class);
+                    $context = app(\Addons\SmartRiskManagement\App\Services\MarketContextService::class)
+                        ->getMarketContext($symbol);
+                    $srmService->storeMarketContext($executionLog, $signal, $context);
+                    
+                    // Calculate and store slippage
+                    if ($result['success'] && isset($result['price'])) {
+                        $srmService->calculateAndStoreSlippage($executionLog, $signal, $result['price']);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("SignalExecutionService: Failed to store SRM data", [
+                        'execution_log_id' => $executionLog->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             // Update connection last used
             $connection->updateLastUsed();
@@ -153,11 +213,24 @@ class SignalExecutionService implements ExecutionServiceInterface
                     'quantity' => $quantity,
                     'entry_price' => $executionLog->entry_price,
                     'current_price' => $executionLog->entry_price,
-                    'sl_price' => $signal->sl ?? null,
+                    'sl_price' => $executionLog->sl_price ?? $signal->sl ?? null,
                     'tp_price' => $signal->tp ?? null,
                     'status' => 'open',
                 ]);
                 $positionId = $position->id;
+                
+                // Store SRM adjustments in position
+                if (!empty($srmAdjustments) && class_exists(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class)) {
+                    try {
+                        $srmService = app(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class);
+                        $srmService->storeSrmAdjustments($position, $srmAdjustments);
+                    } catch (\Exception $e) {
+                        Log::warning("SignalExecutionService: Failed to store SRM adjustments", [
+                            'position_id' => $position->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 // Send notification
                 $this->notificationService->notifyExecution(
