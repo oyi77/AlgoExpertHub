@@ -4,6 +4,7 @@ namespace Addons\TradingManagement\Modules\TradingBot\Controllers\User;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotService;
+use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,10 +13,12 @@ use Illuminate\View\View;
 class TradingBotController extends Controller
 {
     protected TradingBotService $botService;
+    protected TradingBotWorkerService $workerService;
 
-    public function __construct(TradingBotService $botService)
+    public function __construct(TradingBotService $botService, TradingBotWorkerService $workerService)
     {
         $this->botService = $botService;
+        $this->workerService = $workerService;
     }
 
     /**
@@ -306,6 +309,93 @@ class TradingBotController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', 'Failed to clone bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Start trading bot
+     */
+    public function start($id): RedirectResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $this->botService->start($bot, auth()->id(), null);
+            
+            // Start worker process
+            $this->workerService->startWorker($bot);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot started successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to start bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Stop trading bot
+     */
+    public function stop($id): RedirectResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            // Stop worker first
+            $this->workerService->stopWorker($bot);
+            
+            // Update bot status
+            $this->botService->stop($bot, auth()->id(), null);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot stopped successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to stop bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Pause trading bot
+     */
+    public function pause($id): RedirectResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $this->botService->pause($bot, auth()->id(), null);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot paused successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to pause bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resume trading bot
+     */
+    public function resume($id): RedirectResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $this->botService->resume($bot, auth()->id(), null);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot resumed successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to resume bot: ' . $e->getMessage());
         }
     }
 }

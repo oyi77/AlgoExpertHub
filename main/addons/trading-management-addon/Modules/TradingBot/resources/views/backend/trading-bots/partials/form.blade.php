@@ -215,7 +215,8 @@
             <select class="form-control @error('trading_mode') is-invalid @enderror" 
                     id="trading_mode" 
                     name="trading_mode" 
-                    required>
+                    required
+                    onchange="toggleMarketStreamFields()">
                 <option value="SIGNAL_BASED" {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : 'SIGNAL_BASED') == 'SIGNAL_BASED' ? 'selected' : '' }}>
                     Signal-Based (Execute only on published signals)
                 </option>
@@ -231,8 +232,140 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+
+        {{-- Data Connection (only for MARKET_STREAM_BASED) --}}
+        <div class="form-group" id="data_connection_group" style="display: {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : 'SIGNAL_BASED') == 'MARKET_STREAM_BASED' ? 'block' : 'none' }};">
+            <label for="data_connection_id">{{ __('Data Connection') }} <span class="text-danger">*</span></label>
+            @php
+                $dataConnections = isset($dataConnections) ? $dataConnections : collect();
+            @endphp
+            @if($dataConnections->isEmpty())
+                <div class="alert alert-warning">
+                    <p class="mb-2"><i class="fa fa-exclamation-triangle"></i> No data connections available for this exchange type.</p>
+                    <p class="mb-0">Please create a data connection first.</p>
+                </div>
+                <input type="hidden" name="data_connection_id" value="">
+            @else
+                <select class="form-control @error('data_connection_id') is-invalid @enderror" 
+                        id="data_connection_id" 
+                        name="data_connection_id">
+                    <option value="">-- Select Data Connection --</option>
+                    @foreach($dataConnections as $connection)
+                        <option value="{{ $connection->id }}" 
+                                {{ old('data_connection_id', isset($bot) && $bot ? $bot->data_connection_id : '') == $connection->id ? 'selected' : '' }}>
+                            {{ $connection->name }} ({{ $connection->exchange_name }})
+                        </option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted">
+                    Connection used for streaming OHLCV market data. Must match exchange connection type (crypto/fx).
+                </small>
+            @endif
+            @error('data_connection_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        {{-- Streaming Configuration (only for MARKET_STREAM_BASED) --}}
+        <div id="streaming_config_group" style="display: {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : 'SIGNAL_BASED') == 'MARKET_STREAM_BASED' ? 'block' : 'none' }};">
+            <div class="form-group">
+                <label for="streaming_symbols">{{ __('Trading Symbols') }} <span class="text-danger">*</span></label>
+                <input type="text" 
+                       class="form-control @error('streaming_symbols') is-invalid @enderror" 
+                       id="streaming_symbols" 
+                       name="streaming_symbols" 
+                       value="{{ old('streaming_symbols', isset($bot) && $bot && $bot->streaming_symbols ? implode(', ', $bot->streaming_symbols) : '') }}"
+                       placeholder="BTC/USDT, ETH/USDT, EURUSD">
+                <small class="form-text text-muted">
+                    Comma-separated list of trading pairs to monitor (e.g., BTC/USDT, ETH/USDT for crypto or EURUSD, GBPUSD for FX).
+                </small>
+                @error('streaming_symbols')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label for="streaming_timeframes">{{ __('Timeframes') }} <span class="text-danger">*</span></label>
+                <select class="form-control @error('streaming_timeframes') is-invalid @enderror" 
+                        id="streaming_timeframes" 
+                        name="streaming_timeframes[]" 
+                        multiple
+                        size="5">
+                    @php
+                        $timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1w'];
+                        $selectedTimeframes = old('streaming_timeframes', isset($bot) && $bot && $bot->streaming_timeframes ? $bot->streaming_timeframes : []);
+                    @endphp
+                    @foreach($timeframes as $tf)
+                        <option value="{{ $tf }}" {{ in_array($tf, $selectedTimeframes) ? 'selected' : '' }}>{{ $tf }}</option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted">
+                    Hold Ctrl/Cmd to select multiple timeframes. Bot will analyze all selected timeframes.
+                </small>
+                @error('streaming_timeframes')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="market_analysis_interval">{{ __('Market Analysis Interval (seconds)') }}</label>
+                        <input type="number" 
+                               class="form-control @error('market_analysis_interval') is-invalid @enderror" 
+                               id="market_analysis_interval" 
+                               name="market_analysis_interval" 
+                               value="{{ old('market_analysis_interval', isset($bot) && $bot ? $bot->market_analysis_interval : 60) }}"
+                               min="10"
+                               step="1">
+                        <small class="form-text text-muted">
+                            How often to analyze market and make trading decisions (default: 60 seconds).
+                        </small>
+                        @error('market_analysis_interval')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="position_monitoring_interval">{{ __('Position Monitoring Interval (seconds)') }}</label>
+                        <input type="number" 
+                               class="form-control @error('position_monitoring_interval') is-invalid @enderror" 
+                               id="position_monitoring_interval" 
+                               name="position_monitoring_interval" 
+                               value="{{ old('position_monitoring_interval', isset($bot) && $bot ? $bot->position_monitoring_interval : 5) }}"
+                               min="1"
+                               step="1">
+                        <small class="form-text text-muted">
+                            How often to check stop loss and take profit (default: 5 seconds).
+                        </small>
+                        @error('position_monitoring_interval')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function toggleMarketStreamFields() {
+    const tradingMode = document.getElementById('trading_mode').value;
+    const dataConnectionGroup = document.getElementById('data_connection_group');
+    const streamingConfigGroup = document.getElementById('streaming_config_group');
+    
+    if (tradingMode === 'MARKET_STREAM_BASED') {
+        dataConnectionGroup.style.display = 'block';
+        streamingConfigGroup.style.display = 'block';
+        document.getElementById('data_connection_id').required = true;
+    } else {
+        dataConnectionGroup.style.display = 'none';
+        streamingConfigGroup.style.display = 'none';
+        document.getElementById('data_connection_id').required = false;
+    }
+}
+</script>
 
 {{-- Step 7: Settings --}}
 <div class="card mb-4">

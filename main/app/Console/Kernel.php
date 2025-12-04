@@ -38,6 +38,16 @@ class Kernel extends ConsoleKernel
             // $schedule->command('trading-bot:worker')->everyMinute();
         }
 
+        // Trading Management Addon - Trading Bot Workers
+        if (AddonRegistry::active('trading-management-addon')) {
+            // Monitor trading bot workers every minute
+            if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Jobs\MonitorTradingBotWorkersJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\TradingBot\Jobs\MonitorTradingBotWorkersJob::class)
+                    ->everyMinute()
+                    ->withoutOverlapping();
+            }
+        }
+
         // Trading Execution Engine Addon
         if (AddonRegistry::active('trading-execution-engine-addon') && AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'execution')) {
             // Monitor positions every minute

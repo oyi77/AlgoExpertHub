@@ -62,6 +62,9 @@ class AddonServiceProvider extends ServiceProvider
         // Register observers
         $this->registerObservers();
 
+        // Register event listeners
+        $this->registerEventListeners();
+
         // Register scheduled tasks
         $this->registerScheduledTasks();
 
@@ -93,6 +96,20 @@ class AddonServiceProvider extends ServiceProvider
                 \Addons\TradingManagement\Modules\TradingBot\Observers\BotSignalObserver::class
             );
         }
+    }
+
+    /**
+     * Register event listeners
+     *
+     * @return void
+     */
+    protected function registerEventListeners()
+    {
+        // Register BotStatusChanged event listener
+        \Illuminate\Support\Facades\Event::listen(
+            \Addons\TradingManagement\Modules\TradingBot\Events\BotStatusChanged::class,
+            \Addons\TradingManagement\Modules\TradingBot\Listeners\LogBotStatusChange::class
+        );
     }
 
     /**
@@ -197,12 +214,9 @@ class AddonServiceProvider extends ServiceProvider
      */
     protected function registerCommands()
     {
-        // Commands will be added as modules are implemented
-        // Example:
-        // $this->commands([
-        //     Commands\FetchMarketDataCommand::class,
-        //     Commands\BackfillHistoricalDataCommand::class,
-        // ]);
+        $this->commands([
+            \Addons\TradingManagement\Modules\TradingBot\Console\Commands\TradingBotWorker::class,
+        ]);
     }
 
     /**

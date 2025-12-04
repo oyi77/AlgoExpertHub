@@ -3,6 +3,8 @@
 namespace Addons\TradingManagement\Modules\TradingBot\Services;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
+use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotExecutionLog;
+use Addons\TradingManagement\Modules\TradingBot\Events\BotStatusChanged;
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
@@ -10,6 +12,7 @@ use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * TradingBotService
@@ -369,5 +372,271 @@ class TradingBotService
         }
 
         return $query->orderBy('name')->get();
+    }
+
+    /**
+     * Get available data connections for bot (matching connection type)
+     * 
+     * @param TradingBot $bot
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAvailableDataConnections(TradingBot $bot)
+    {
+        $connectionType = $bot->getConnectionType();
+        
+        if (!$connectionType) {
+            return collect();
+        }
+
+        $query = ExchangeConnection::where('is_active', true)
+            ->where('data_fetching_enabled', true);
+
+        // Match connection type
+        if ($connectionType === 'crypto') {
+            $query->where('connection_type', 'CRYPTO_EXCHANGE');
+        } else {
+            $query->where('connection_type', 'FX_BROKER');
+        }
+
+        if (Auth::guard('admin')->check()) {
+            $adminId = Auth::guard('admin')->id();
+            $query->where(function ($q) use ($adminId) {
+                $q->where('admin_id', $adminId)
+                  ->orWhere('is_admin_owned', true);
+            });
+        } else {
+            $query->where('user_id', Auth::id());
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    /**
+     * Validate bot can be started
+     * 
+     * @param TradingBot $bot
+     * @return array ['valid' => bool, 'message' => string]
+     */
+    public function validateForStart(TradingBot $bot): array
+    {
+        if (!$bot->exchangeConnection) {
+            return ['valid' => false, 'message' => 'Exchange connection is required'];
+        }
+
+        if (!$bot->tradingPreset) {
+            return ['valid' => false, 'message' => 'Trading preset is required'];
+        }
+
+        if ($bot->requiresDataConnection()) {
+            if (!$bot->dataConnection) {
+                return ['valid' => false, 'message' => 'Data connection is required for MARKET_STREAM_BASED mode'];
+            }
+
+            if (empty($bot->getStreamingSymbols())) {
+                return ['valid' => false, 'message' => 'Streaming symbols are required for MARKET_STREAM_BASED mode'];
+            }
+
+            if (empty($bot->getStreamingTimeframes())) {
+                return ['valid' => false, 'message' => 'Streaming timeframes are required for MARKET_STREAM_BASED mode'];
+            }
+
+            // Validate data connection type matches exchange connection type
+            $exchangeType = $bot->getConnectionType();
+            $dataType = $bot->dataConnection->connection_type === 'CRYPTO_EXCHANGE' ? 'crypto' : 'fx';
+            
+            if ($exchangeType !== $dataType) {
+                return ['valid' => false, 'message' => 'Data connection type must match exchange connection type'];
+            }
+        }
+
+        if (!$bot->is_active) {
+            return ['valid' => false, 'message' => 'Bot must be enabled (is_active) before starting'];
+        }
+
+        return ['valid' => true, 'message' => 'Bot is ready to start'];
+    }
+
+    /**
+     * Start trading bot
+     * 
+     * @param TradingBot $bot
+     * @param int|null $executedByUserId
+     * @param int|null $executedByAdminId
+     * @return TradingBot
+     * @throws \Exception
+     */
+    public function start(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
+    {
+        // Validate
+        $validation = $this->validateForStart($bot);
+        if (!$validation['valid']) {
+            throw new \Exception($validation['message']);
+        }
+
+        if ($bot->isRunning()) {
+            throw new \Exception('Bot is already running');
+        }
+
+        return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            $oldStatus = $bot->status;
+            
+            // Update status
+            $bot->update([
+                'status' => 'running',
+                'last_started_at' => now(),
+            ]);
+
+            // Log execution
+            TradingBotExecutionLog::create([
+                'bot_id' => $bot->id,
+                'action' => 'start',
+                'executed_at' => now(),
+                'executed_by_user_id' => $executedByUserId,
+                'executed_by_admin_id' => $executedByAdminId,
+                'notes' => 'Bot started',
+            ]);
+
+            // Fire event
+            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'running', $executedByUserId, $executedByAdminId));
+
+            Log::info('Trading bot started', [
+                'bot_id' => $bot->id,
+                'name' => $bot->name,
+            ]);
+
+            return $bot->fresh();
+        });
+    }
+
+    /**
+     * Stop trading bot
+     * 
+     * @param TradingBot $bot
+     * @param int|null $executedByUserId
+     * @param int|null $executedByAdminId
+     * @return TradingBot
+     */
+    public function stop(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
+    {
+        return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            $oldStatus = $bot->status;
+            
+            // Update status
+            $bot->update([
+                'status' => 'stopped',
+                'last_stopped_at' => now(),
+                'worker_pid' => null,
+            ]);
+
+            // Log execution
+            TradingBotExecutionLog::create([
+                'bot_id' => $bot->id,
+                'action' => 'stop',
+                'executed_at' => now(),
+                'executed_by_user_id' => $executedByUserId,
+                'executed_by_admin_id' => $executedByAdminId,
+                'notes' => 'Bot stopped',
+            ]);
+
+            // Fire event
+            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'stopped', $executedByUserId, $executedByAdminId));
+
+            Log::info('Trading bot stopped', [
+                'bot_id' => $bot->id,
+                'name' => $bot->name,
+            ]);
+
+            return $bot->fresh();
+        });
+    }
+
+    /**
+     * Pause trading bot
+     * 
+     * @param TradingBot $bot
+     * @param int|null $executedByUserId
+     * @param int|null $executedByAdminId
+     * @return TradingBot
+     */
+    public function pause(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
+    {
+        if (!$bot->isRunning()) {
+            throw new \Exception('Bot must be running to pause');
+        }
+
+        return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            $oldStatus = $bot->status;
+            
+            // Update status
+            $bot->update([
+                'status' => 'paused',
+                'last_paused_at' => now(),
+            ]);
+
+            // Log execution
+            TradingBotExecutionLog::create([
+                'bot_id' => $bot->id,
+                'action' => 'pause',
+                'executed_at' => now(),
+                'executed_by_user_id' => $executedByUserId,
+                'executed_by_admin_id' => $executedByAdminId,
+                'notes' => 'Bot paused',
+            ]);
+
+            // Fire event
+            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'paused', $executedByUserId, $executedByAdminId));
+
+            Log::info('Trading bot paused', [
+                'bot_id' => $bot->id,
+                'name' => $bot->name,
+            ]);
+
+            return $bot->fresh();
+        });
+    }
+
+    /**
+     * Resume paused trading bot
+     * 
+     * @param TradingBot $bot
+     * @param int|null $executedByUserId
+     * @param int|null $executedByAdminId
+     * @return TradingBot
+     */
+    public function resume(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
+    {
+        if (!$bot->isPaused()) {
+            throw new \Exception('Bot must be paused to resume');
+        }
+
+        return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            $oldStatus = $bot->status;
+            
+            // Update status
+            $bot->update([
+                'status' => 'running',
+                'last_started_at' => now(),
+            ]);
+
+            // Log execution
+            TradingBotExecutionLog::create([
+                'bot_id' => $bot->id,
+                'action' => 'resume',
+                'executed_at' => now(),
+                'executed_by_user_id' => $executedByUserId,
+                'executed_by_admin_id' => $executedByAdminId,
+                'notes' => 'Bot resumed',
+            ]);
+
+            // Fire event
+            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'running', $executedByUserId, $executedByAdminId));
+
+            Log::info('Trading bot resumed', [
+                'bot_id' => $bot->id,
+                'name' => $bot->name,
+            ]);
+
+            return $bot->fresh();
+        });
     }
 }

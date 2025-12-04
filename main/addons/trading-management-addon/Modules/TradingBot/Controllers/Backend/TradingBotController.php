@@ -4,6 +4,7 @@ namespace Addons\TradingManagement\Modules\TradingBot\Controllers\Backend;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotService;
+use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,10 +13,12 @@ use Illuminate\View\View;
 class TradingBotController extends Controller
 {
     protected TradingBotService $botService;
+    protected TradingBotWorkerService $workerService;
 
-    public function __construct(TradingBotService $botService)
+    public function __construct(TradingBotService $botService, TradingBotWorkerService $workerService)
     {
         $this->botService = $botService;
+        $this->workerService = $workerService;
     }
 
     /**
@@ -85,6 +88,7 @@ class TradingBotController extends Controller
         $data['presets'] = $this->botService->getAvailablePresets();
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
+        $data['dataConnections'] = collect(); // Will be populated based on selected exchange connection
 
         return view('trading-management::backend.trading-bots.create', $data);
     }
@@ -102,8 +106,18 @@ class TradingBotController extends Controller
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
+            'data_connection_id' => 'nullable|exists:exchange_connections,id',
+            'streaming_symbols' => 'nullable|string',
+            'streaming_timeframes' => 'nullable|array',
+            'market_analysis_interval' => 'nullable|integer|min:10',
+            'position_monitoring_interval' => 'nullable|integer|min:1',
             'is_paper_trading' => 'boolean',
         ]);
+
+        // Process streaming symbols (comma-separated to array)
+        if (isset($validated['streaming_symbols']) && $validated['streaming_symbols']) {
+            $validated['streaming_symbols'] = array_map('trim', explode(',', $validated['streaming_symbols']));
+        }
 
         $validated['admin_id'] = auth()->guard('admin')->id();
         $validated['is_active'] = $request->get('is_active', true);
@@ -156,6 +170,7 @@ class TradingBotController extends Controller
         $data['presets'] = $this->botService->getAvailablePresets();
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
+        $data['dataConnections'] = $bot->exchangeConnection ? $this->botService->getAvailableDataConnections($bot) : collect();
 
         return view('trading-management::backend.trading-bots.edit', $data);
     }
@@ -175,8 +190,18 @@ class TradingBotController extends Controller
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
+            'data_connection_id' => 'nullable|exists:exchange_connections,id',
+            'streaming_symbols' => 'nullable|string',
+            'streaming_timeframes' => 'nullable|array',
+            'market_analysis_interval' => 'nullable|integer|min:10',
+            'position_monitoring_interval' => 'nullable|integer|min:1',
             'is_paper_trading' => 'boolean',
         ]);
+
+        // Process streaming symbols (comma-separated to array)
+        if (isset($validated['streaming_symbols']) && $validated['streaming_symbols']) {
+            $validated['streaming_symbols'] = array_map('trim', explode(',', $validated['streaming_symbols']));
+        }
 
         try {
             $this->botService->update($bot, $validated);
@@ -229,6 +254,93 @@ class TradingBotController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Failed to update bot status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Start trading bot
+     */
+    public function start($id): RedirectResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+
+        try {
+            $this->botService->start($bot, null, auth()->guard('admin')->id());
+            
+            // Start worker process
+            $this->workerService->startWorker($bot);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot started successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to start bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Stop trading bot
+     */
+    public function stop($id): RedirectResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+
+        try {
+            // Stop worker first
+            $this->workerService->stopWorker($bot);
+            
+            // Update bot status
+            $this->botService->stop($bot, null, auth()->guard('admin')->id());
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot stopped successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to stop bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Pause trading bot
+     */
+    public function pause($id): RedirectResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+
+        try {
+            $this->botService->pause($bot, null, auth()->guard('admin')->id());
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot paused successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to pause bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resume trading bot
+     */
+    public function resume($id): RedirectResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+
+        try {
+            $this->botService->resume($bot, null, auth()->guard('admin')->id());
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot resumed successfully!');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to resume bot: ' . $e->getMessage());
         }
     }
 }

@@ -52,6 +52,10 @@ Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::put('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'update'])->name('update');
     Route::delete('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/toggle-active', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'toggleActive'])->name('toggle-active');
+    Route::post('/{id}/start', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'start'])->name('start');
+    Route::post('/{id}/stop', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'stop'])->name('stop');
+    Route::post('/{id}/pause', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'pause'])->name('pause');
+    Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'resume'])->name('resume');
 });
 
 // Full routes will be implemented in respective phases

@@ -30,13 +30,17 @@ class TradingBot extends Model
     protected $fillable = [
         'user_id', 'admin_id',
         'name', 'description',
-        'exchange_connection_id', 'trading_preset_id', 'filter_strategy_id', 'ai_model_profile_id',
-        'trading_mode',
+        'exchange_connection_id', 'data_connection_id', 'trading_preset_id', 'filter_strategy_id', 'ai_model_profile_id',
+        'trading_mode', 'status',
         'is_active', 'is_paper_trading',
         'total_executions', 'successful_executions', 'failed_executions',
         'total_profit', 'win_rate',
         'visibility', 'clonable', 'is_default_template', 'created_by_user_id',
         'suggested_connection_type', 'tags',
+        'worker_pid', 'last_started_at', 'last_stopped_at', 'last_paused_at',
+        'worker_started_at', 'last_market_analysis_at', 'last_position_check_at',
+        'streaming_symbols', 'streaming_timeframes',
+        'position_monitoring_interval', 'market_analysis_interval',
     ];
 
     protected $casts = [
@@ -50,6 +54,18 @@ class TradingBot extends Model
         'clonable' => 'boolean',
         'is_default_template' => 'boolean',
         'tags' => 'array',
+        'status' => 'string',
+        'worker_pid' => 'integer',
+        'last_started_at' => 'datetime',
+        'last_stopped_at' => 'datetime',
+        'last_paused_at' => 'datetime',
+        'worker_started_at' => 'datetime',
+        'last_market_analysis_at' => 'datetime',
+        'last_position_check_at' => 'datetime',
+        'streaming_symbols' => 'array',
+        'streaming_timeframes' => 'array',
+        'position_monitoring_interval' => 'integer',
+        'market_analysis_interval' => 'integer',
     ];
 
     /**
@@ -69,6 +85,11 @@ class TradingBot extends Model
     public function exchangeConnection()
     {
         return $this->belongsTo(ExchangeConnection::class, 'exchange_connection_id');
+    }
+
+    public function dataConnection()
+    {
+        return $this->belongsTo(ExchangeConnection::class, 'data_connection_id');
     }
 
     public function tradingPreset()
@@ -146,6 +167,31 @@ class TradingBot extends Model
     public function scopeByCreator($query, int $userId)
     {
         return $query->where('created_by_user_id', $userId);
+    }
+
+    public function scopeRunning($query)
+    {
+        return $query->where('status', 'running');
+    }
+
+    public function scopePaused($query)
+    {
+        return $query->where('status', 'paused');
+    }
+
+    public function scopeStopped($query)
+    {
+        return $query->where('status', 'stopped');
+    }
+
+    public function scopeMarketStreamBased($query)
+    {
+        return $query->where('trading_mode', 'MARKET_STREAM_BASED');
+    }
+
+    public function scopeSignalBased($query)
+    {
+        return $query->where('trading_mode', 'SIGNAL_BASED');
     }
 
     /**
@@ -339,6 +385,63 @@ class TradingBot extends Model
         ]);
 
         return $clonedBot;
+    }
+
+    /**
+     * Helper Methods - Status
+     */
+    
+    public function isRunning(): bool
+    {
+        return $this->status === 'running';
+    }
+
+    public function isPaused(): bool
+    {
+        return $this->status === 'paused';
+    }
+
+    public function isStopped(): bool
+    {
+        return $this->status === 'stopped';
+    }
+
+    /**
+     * Get connection type (crypto or fx)
+     */
+    public function getConnectionType(): ?string
+    {
+        if (!$this->exchangeConnection) {
+            return null;
+        }
+        
+        return $this->exchangeConnection->connection_type === 'CRYPTO_EXCHANGE' 
+            ? 'crypto' 
+            : 'fx';
+    }
+
+    /**
+     * Check if bot requires data connection
+     */
+    public function requiresDataConnection(): bool
+    {
+        return $this->trading_mode === 'MARKET_STREAM_BASED';
+    }
+
+    /**
+     * Get streaming symbols
+     */
+    public function getStreamingSymbols(): array
+    {
+        return $this->streaming_symbols ?? [];
+    }
+
+    /**
+     * Get streaming timeframes
+     */
+    public function getStreamingTimeframes(): array
+    {
+        return $this->streaming_timeframes ?? [];
     }
 
     /**

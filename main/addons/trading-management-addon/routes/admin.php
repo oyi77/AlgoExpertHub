@@ -245,6 +245,10 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::put('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'update'])->name('update');
         Route::delete('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-active', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'toggleActive'])->name('toggle-active');
+        Route::post('/{id}/start', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'start'])->name('start');
+        Route::post('/{id}/stop', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'stop'])->name('stop');
+        Route::post('/{id}/pause', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'pause'])->name('pause');
+        Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'resume'])->name('resume');
     });
 
 // /config is now handled by the config.index route above
