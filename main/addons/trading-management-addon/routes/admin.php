@@ -24,14 +24,29 @@ Route::get('/', function () {
     return view('trading-management::backend.dashboard');
 })->name('dashboard');
 
+// Unified Exchange Connections (replaces separate data + execution connections)
+Route::prefix('exchange-connections')->name('exchange-connections.')->group(function () {
+    Route::get('/', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'index'])->name('index');
+    Route::get('/create', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'create'])->name('create');
+    Route::post('/', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'store'])->name('store');
+    Route::get('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'show'])->name('show');
+    Route::get('/{exchangeConnection}/edit', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'edit'])->name('edit');
+    Route::put('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'update'])->name('update');
+    Route::delete('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'destroy'])->name('destroy');
+    
+    // Testing endpoints
+    Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
+    Route::post('/test-execution', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testExecution'])->name('test-execution');
+});
+
     // 1. Trading Configuration (Page with tabs)
     Route::prefix('config')->name('config.')->group(function () {
         // Config dashboard with tabs - loads actual content
         Route::get('/', function () {
             $title = 'Trading Configuration';
             
-            // Load all data for tabs
-            $connections = \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::with('admin', 'user')
+            // Load Exchange Connections (unified)
+            $connections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::with('admin', 'user', 'preset')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20, ['*'], 'conn_page');
             
@@ -49,25 +64,28 @@ Route::get('/', function () {
             
             $stats = [
                 'total_connections' => $connections->total(),
-                'active_connections' => \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::where('status', 'active')->count(),
+                'data_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('data_fetching_enabled', 1)->count(),
+                'execution_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('trade_execution_enabled', 1)->count(),
                 'total_presets' => $presets->total(),
             ];
             
             return view('trading-management::backend.trading-management.config.index', compact('title', 'stats', 'connections', 'presets', 'smartRiskSettings'));
         })->name('index');
         
-        // Data Connections
-        Route::resource('data-connections', \Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class);
-        Route::post('data-connections/test', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'test'])
-            ->name('data-connections.test');
-        Route::post('data-connections/{dataConnection}/activate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'activate'])
-            ->name('data-connections.activate');
-        Route::post('data-connections/{dataConnection}/deactivate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'deactivate'])
-            ->name('data-connections.deactivate');
-        Route::get('data-connections/{dataConnection}/market-data', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'marketData'])
-            ->name('data-connections.market-data');
-        Route::get('data-connections/{dataConnection}/logs', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'logs'])
-            ->name('data-connections.logs');
+        // Exchange Connections (unified - replaces data-connections)
+        Route::prefix('exchange-connections')->name('exchange-connections.')->group(function () {
+            Route::get('/', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'index'])->name('index');
+            Route::get('/create', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'create'])->name('create');
+            Route::post('/', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'store'])->name('store');
+            Route::get('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'show'])->name('show');
+            Route::get('/{exchangeConnection}/edit', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'edit'])->name('edit');
+            Route::put('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'update'])->name('update');
+            Route::delete('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'destroy'])->name('destroy');
+            
+            // Testing endpoints
+            Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
+            Route::post('/test-execution', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testExecution'])->name('test-execution');
+        });
         
         // Risk Presets
         Route::resource('risk-presets', \Addons\TradingManagement\Modules\RiskManagement\Controllers\Backend\RiskPresetController::class);
@@ -85,13 +103,16 @@ Route::get('/', function () {
         Route::get('/', function () {
             $title = 'Trading Operations';
             $stats = [
-                'active_connections' => \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('is_active', 1)->count(),
+                'active_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->where('trade_execution_enabled', 1)->count(),
                 'open_positions' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'open')->count(),
                 'today_executions' => \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::whereDate('created_at', today())->count(),
                 'today_pnl' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'closed')->whereDate('closed_at', today())->sum('pnl'),
             ];
             return view('trading-management::backend.trading-management.operations.index', compact('title', 'stats'));
         })->name('index');
+        
+        // Manual trade execution
+        Route::post('manual-trade', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'manualTrade'])->name('manual-trade');
         
         // Execution Connections tab
         Route::resource('connections', \Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class);
@@ -199,6 +220,9 @@ Route::get('/', function () {
             
             return view('trading-management::backend.trading-management.test.index', compact('title', 'stats', 'backtests', 'results'));
         })->name('index');
+        
+        // Data Download for ML/AI/Backtesting
+        Route::post('download-data', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'downloadData'])->name('download-data');
         
         // Backtest operations
         Route::get('backtests', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'backtests'])->name('backtests.index');

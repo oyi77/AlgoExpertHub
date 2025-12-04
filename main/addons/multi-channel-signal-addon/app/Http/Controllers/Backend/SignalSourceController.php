@@ -76,7 +76,20 @@ class SignalSourceController extends Controller
     /**
      * Show form to create a new signal source.
      */
-    public function create(string $type = 'telegram_mtproto'): View
+    public function create(): View
+    {
+        $data['title'] = 'Create Signal Source';
+        
+        // Get global configuration
+        $data['globalConfig'] = \Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\GlobalConfigController::getTelegramConfig();
+        
+        return view('multi-channel-signal-addon::backend.signal-source.create-unified', $data);
+    }
+    
+    /**
+     * OLD: Legacy create with type parameter (for backward compatibility)
+     */
+    public function createLegacy(string $type = 'telegram_mtproto'): View
     {
         $allowedTypes = ['telegram_mtproto', 'telegram', 'api', 'web_scrape', 'rss', 'trading_bot'];
         if (!in_array($type, $allowedTypes, true)) {
@@ -91,7 +104,7 @@ class SignalSourceController extends Controller
     }
 
     /**
-     * Store a new signal source.
+     * Store a new signal source (updated to use global Telegram config).
      */
     public function store(Request $request): RedirectResponse
     {
@@ -128,14 +141,22 @@ class SignalSourceController extends Controller
     }
 
     /**
-     * Store Telegram MTProto source.
+     * Store Telegram MTProto source (uses global config).
      */
     protected function storeTelegramMtprotoSource(array $data, Request $request): RedirectResponse
     {
-        $request->validate([
-            'api_id' => 'required|string',
-            'api_hash' => 'required|string',
-        ]);
+        // Get global Telegram config
+        $globalConfig = GlobalConfigController::getTelegramConfig();
+        
+        if (empty($globalConfig['api_id']) || empty($globalConfig['api_hash'])) {
+            return redirect()->back()
+                ->with('error', 'Telegram global configuration not set. Please configure in Global Settings first.');
+        }
+        
+        if (!$globalConfig['enabled']) {
+            return redirect()->back()
+                ->with('error', 'Telegram MTProto is disabled in global settings.');
+        }
 
         if (!empty($data['bot_token'])) {
             return redirect()->back()
@@ -146,8 +167,8 @@ class SignalSourceController extends Controller
         $result = $this->telegramMtprotoService->createChannel([
             'user_id' => null,
             'name' => $data['name'],
-            'api_id' => $data['api_id'],
-            'api_hash' => $data['api_hash'],
+            'api_id' => $globalConfig['api_id'],
+            'api_hash' => $globalConfig['api_hash'],
             'phone_number' => $data['phone_number'] ?? null,
         ]);
 

@@ -9,11 +9,17 @@ use Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\AiConfigurationC
 
 // All multi-channel routes require signal permission
 Route::middleware('permission:signal,admin')->group(function () {
+
+// Global Configuration (Admin Only)
+Route::prefix('multi-channel')->name('multi-channel.')->middleware('permission:manage-addon,admin')->group(function () {
+    Route::get('/global-config', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\GlobalConfigController::class, 'index'])->name('global-config.index');
+    Route::post('/global-config', [\Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\GlobalConfigController::class, 'update'])->name('global-config.update');
+});
     
 // Signal Sources - Connection Management Only
 Route::prefix('signal-sources')->name('signal-sources.')->group(function () {
     Route::get('/', [SignalSourceController::class, 'index'])->name('index');
-    Route::get('/create/{type?}', [SignalSourceController::class, 'create'])->name('create');
+    Route::get('/create', [SignalSourceController::class, 'create'])->name('create');
     Route::post('/', [SignalSourceController::class, 'store'])->name('store');
     Route::get('/{id}/edit', [SignalSourceController::class, 'edit'])->name('edit');
     Route::put('/{id}', [SignalSourceController::class, 'update'])->name('update');

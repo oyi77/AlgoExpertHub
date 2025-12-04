@@ -24,8 +24,8 @@ class AdapterFactory
     {
         return match ($connection->type) {
             'mtapi' => new MtapiAdapter($connection->credentials),
-            // 'ccxt_crypto' => new CcxtAdapter($connection->credentials, $connection->provider),
-            // 'custom_api' => new CustomApiAdapter($connection->credentials),
+            'ccxt_crypto' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter($connection->credentials, $connection->provider),
+            'custom_api' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CustomApiAdapter($connection->credentials),
             default => throw new \Exception("Unsupported data provider type: {$connection->type}"),
         };
     }
@@ -40,15 +40,25 @@ class AdapterFactory
         return [
             'mtapi' => [
                 'name' => 'mtapi.io (MT4/MT5)',
-                'description' => 'Connect to MT4/MT5 brokers via mtapi.io',
+                'description' => 'Connect to MT4/MT5 brokers via mtapi.io for Forex market data',
                 'credentials' => ['api_key', 'account_id'],
+                'exchanges' => ['MT4', 'MT5'],
             ],
-            // Future:
-            // 'ccxt_crypto' => [
-            //     'name' => 'CCXT (Crypto Exchanges)',
-            //     'description' => 'Connect to 100+ crypto exchanges',
-            //     'credentials' => ['api_key', 'api_secret', 'api_passphrase'],
-            // ],
+            'ccxt_crypto' => [
+                'name' => 'CCXT (Crypto Exchanges)',
+                'description' => 'Connect to 100+ crypto exchanges via CCXT library',
+                'credentials' => ['api_key', 'api_secret', 'api_passphrase'],
+                'exchanges' => [
+                    'binance', 'coinbase', 'kraken', 'bitfinex', 'bybit', 'okx', 
+                    'kucoin', 'huobi', 'gate', 'bitget', 'mexc', 'bingx'
+                ],
+            ],
+            'custom_api' => [
+                'name' => 'Custom API',
+                'description' => 'Connect to custom data provider via REST API',
+                'credentials' => ['api_url', 'api_key', 'api_secret'],
+                'exchanges' => [],
+            ],
         ];
     }
 

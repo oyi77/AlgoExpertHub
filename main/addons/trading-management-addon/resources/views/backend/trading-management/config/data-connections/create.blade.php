@@ -45,12 +45,20 @@
                     </div>
 
                     <!-- Provider -->
-                    <div class="form-group">
+                    <div class="form-group" id="providerFieldGroup">
                         <label for="provider">Provider <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('provider') is-invalid @enderror" 
-                               id="provider" name="provider" value="{{ old('provider') }}" 
-                               placeholder="e.g., binance, mt4_account_123" required>
-                        <small class="form-text text-muted">Provider identifier</small>
+                        <div id="providerSelectDiv" style="display:none;">
+                            <select class="form-control" id="providerSelect" name="provider_select">
+                                <option value="">Select Exchange</option>
+                            </select>
+                            <small class="form-text text-muted">Choose a crypto exchange</small>
+                        </div>
+                        <div id="providerInputDiv">
+                            <input type="text" class="form-control @error('provider') is-invalid @enderror" 
+                                   id="provider" name="provider" value="{{ old('provider') }}" 
+                                   placeholder="e.g., binance, mt4_account_123" required>
+                            <small class="form-text text-muted">Provider identifier</small>
+                        </div>
                         @error('provider')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -133,24 +141,57 @@ function updateCredentialFields() {
     const type = document.getElementById('type').value;
     const credentialsDiv = document.getElementById('credentialsFields');
     const typeDescription = document.getElementById('typeDescription');
+    const providerSelectDiv = document.getElementById('providerSelectDiv');
+    const providerInputDiv = document.getElementById('providerInputDiv');
+    const providerInput = document.getElementById('provider');
+    const providerSelect = document.getElementById('providerSelect');
 
     if (!type) {
         credentialsDiv.innerHTML = '<p class="text-muted">Select a connection type to see required credentials</p>';
         typeDescription.textContent = '';
+        providerSelectDiv.style.display = 'none';
+        providerInputDiv.style.display = 'block';
         return;
     }
 
     const typeInfo = supportedTypes[type];
     typeDescription.textContent = typeInfo.description;
 
+    // Update provider field based on type
+    if (type === 'ccxt_crypto' && typeInfo.exchanges) {
+        // Show dropdown for CCXT exchanges
+        providerSelectDiv.style.display = 'block';
+        providerInputDiv.style.display = 'none';
+        providerInput.removeAttribute('required');
+        
+        // Populate exchanges
+        providerSelect.innerHTML = '<option value="">Select Exchange</option>';
+        typeInfo.exchanges.forEach(function(exchange) {
+            providerSelect.innerHTML += `<option value="${exchange}">${exchange.toUpperCase()}</option>`;
+        });
+        
+        // Sync select to input
+        providerSelect.addEventListener('change', function() {
+            providerInput.value = this.value;
+        });
+    } else {
+        // Show text input for other types
+        providerSelectDiv.style.display = 'none';
+        providerInputDiv.style.display = 'block';
+        providerInput.setAttribute('required', 'required');
+    }
+
+    // Update credentials fields
     let html = '';
     typeInfo.credentials.forEach(function(field) {
-        const fieldName = field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const isPassword = field.includes('secret') || field.includes('password') || field.includes('passphrase');
         html += `
             <div class="form-group">
                 <label for="credentials_${field}">${fieldName} <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="credentials_${field}" 
-                       name="credentials[${field}]" value="{{ old('credentials.${field}') }}" required>
+                <input type="${isPassword ? 'password' : 'text'}" class="form-control" id="credentials_${field}" 
+                       name="credentials[${field}]" value="" ${field === 'api_passphrase' ? '' : 'required'}>
+                ${field === 'api_passphrase' ? '<small class="text-muted">Optional - Required for some exchanges (OKX, KuCoin)</small>' : ''}
             </div>
         `;
     });

@@ -127,6 +127,105 @@ class BacktestController extends Controller
         return view('trading-management::backend.trading-management.test.results.index', compact('title', 'results', 'backtests'));
     }
 
+    /**
+     * Download historical data for backtesting/ML/AI
+     */
+    public function downloadData(Request $request)
+    {
+        $validated = $request->validate([
+            'connection_id' => 'required|exists:exchange_connections,id',
+            'symbol' => 'required|string',
+            'timeframe' => 'required|string',
+            'format' => 'required|in:csv,json,pandas,mt4',
+            'limit' => 'nullable|integer|min:100|max:100000',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after:start_date',
+        ]);
+
+        try {
+            $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::findOrFail($validated['connection_id']);
+            
+            // Fetch data using adapter
+            $adapter = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class)
+                ->create($connection);
+            
+            $limit = $validated['limit'] ?? 10000;
+            $result = $adapter->fetchCandles($validated['symbol'], $validated['timeframe'], $limit);
+
+            if (!$result['success']) {
+                return response()->json(['success' => false, 'message' => $result['message']], 400);
+            }
+
+            $data = $result['data'];
+            $filename = sprintf('%s_%s_%s.%s', 
+                $validated['symbol'], 
+                $validated['timeframe'], 
+                date('Y-m-d'),
+                $validated['format'] === 'pandas' ? 'pkl' : $validated['format']
+            );
+
+            // Generate file based on format
+            $content = $this->formatData($data, $validated['format']);
+            
+            return response()->streamDownload(function() use ($content) {
+                echo $content;
+            }, $filename);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Download failed: ' . $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * Format data based on export format
+     */
+    protected function formatData(array $data, string $format): string
+    {
+        switch ($format) {
+            case 'csv':
+                $csv = "timestamp,open,high,low,close,volume\n";
+                foreach ($data as $candle) {
+                    $csv .= sprintf("%s,%s,%s,%s,%s,%s\n",
+                        date('Y-m-d H:i:s', $candle['timestamp'] / 1000),
+                        $candle['open'],
+                        $candle['high'],
+                        $candle['low'],
+                        $candle['close'],
+                        $candle['volume'] ?? 0
+                    );
+                }
+                return $csv;
+
+            case 'json':
+                return json_encode($data, JSON_PRETTY_PRINT);
+
+            case 'pandas':
+                // Export as JSON that pandas can read
+                $formatted = [];
+                foreach ($data as $candle) {
+                    $formatted[] = [
+                        'timestamp' => date('Y-m-d H:i:s', $candle['timestamp'] / 1000),
+                        'open' => $candle['open'],
+                        'high' => $candle['high'],
+                        'low' => $candle['low'],
+                        'close' => $candle['close'],
+                        'volume' => $candle['volume'] ?? 0,
+                    ];
+                }
+                return json_encode($formatted, JSON_PRETTY_PRINT);
+
+            case 'mt4':
+                // MT4 HST format (simplified - actual format is binary)
+                return json_encode($data, JSON_PRETTY_PRINT);
+
+            default:
+                return json_encode($data);
+        }
+    }
+
     protected function calculateProfitFactor(Backtest $backtest)
     {
         $totalProfit = $backtest->results->where('pnl', '>', 0)->sum('pnl');

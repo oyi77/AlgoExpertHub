@@ -133,6 +133,57 @@ class DataConnectionController extends Controller
     }
 
     /**
+     * Fetch sample data (AJAX)
+     */
+    public function fetchSample(Request $request)
+    {
+        $validated = $request->validate([
+            'connection_id' => 'required|exists:data_connections,id',
+            'symbol' => 'required|string',
+            'timeframe' => 'required|string',
+            'limit' => 'nullable|integer|min:1|max:1000',
+        ]);
+
+        $connection = DataConnection::findOrFail($validated['connection_id']);
+        $symbol = $validated['symbol'];
+        $timeframe = $validated['timeframe'];
+        $limit = $validated['limit'] ?? 100;
+
+        try {
+            $adapter = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class)
+                ->create($connection);
+            
+            $result = $adapter->fetchCandles($symbol, $timeframe, $limit);
+
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['success'] ? 'Data fetched successfully' : $result['message'],
+                'data' => $result['data'] ?? [],
+                'count' => isset($result['data']) ? count($result['data']) : 0,
+                'sample' => isset($result['data'][0]) ? $result['data'][0] : null,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Preview connection data
+     */
+    public function preview(DataConnection $dataConnection)
+    {
+        $title = 'Preview Data - ' . $dataConnection->name;
+        
+        return view('trading-management::backend.trading-management.config.data-connections.preview', compact('title', 'dataConnection'))->with([
+            'connection' => $dataConnection,
+            'symbols' => $dataConnection->getSymbolsFromSettings(),
+        ]);
+    }
+
+    /**
      * Activate connection
      */
     public function activate(DataConnection $dataConnection)

@@ -65,6 +65,10 @@
                         </li>
                         @if ($adminUser && ($adminUser->type === 'super' || $adminUser->hasRole('Super Admin')))
                             <li class="nav-label">{{ __('Configuration') }}</li>
+                            @if (Route::has('admin.multi-channel.global-config.index'))
+                            <li><a href="{{ route('admin.multi-channel.global-config.index') }}" aria-expanded="false">{{ __('Global Settings') }}</a>
+                            </li>
+                            @endif
                             <li><a href="{{ route('admin.signal-sources.index') }}" aria-expanded="false">{{ __('Signal Sources') }}</a>
                             </li>
                             <li><a href="{{ route('admin.channel-forwarding.index') }}" aria-expanded="false">{{ __('Channel Forwarding') }}</a>

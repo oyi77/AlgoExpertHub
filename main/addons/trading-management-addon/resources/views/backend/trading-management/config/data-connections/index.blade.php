@@ -82,7 +82,10 @@
                                             </button>
                                             <div class="dropdown-menu">
                                                 <a class="dropdown-item" href="#" onclick="testConnection({{ $connection->id }}); return false;">
-                                                    <i class="fas fa-flask"></i> Test
+                                                    <i class="fas fa-flask"></i> Test Connection
+                                                </a>
+                                                <a class="dropdown-item" href="{{ route('admin.trading-management.config.data-connections.preview', $connection) }}">
+                                                    <i class="fas fa-eye"></i> Preview Data
                                                 </a>
                                                 @if(!$connection->is_active)
                                                     <form action="{{ route('admin.trading-management.config.data-connections.activate', $connection) }}" method="POST" style="display:inline;">

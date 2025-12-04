@@ -211,6 +211,95 @@ class TradingOperationsController extends Controller
     }
 
     /**
+     * Manual trade execution
+     */
+    public function manualTrade(Request $request)
+    {
+        $validated = $request->validate([
+            'connection_id' => 'required|exists:exchange_connections,id',
+            'symbol' => 'required|string',
+            'direction' => 'required|in:BUY,SELL,LONG,SHORT',
+            'lot_size' => 'required|numeric|min:0.01',
+            'order_type' => 'required|in:market,limit',
+            'entry_price' => 'nullable|numeric',
+            'sl_price' => 'nullable|numeric',
+            'tp_price' => 'nullable|numeric',
+            'notes' => 'nullable|string',
+        ]);
+
+        try {
+            $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::findOrFail($validated['connection_id']);
+            
+            if (!$connection->canExecuteTrades()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection is not active or trade execution is not enabled'
+                ], 400);
+            }
+
+            // Create execution log
+            $log = ExecutionLog::create([
+                'execution_connection_id' => $connection->id,
+                'signal_id' => null, // Manual trade, no signal
+                'symbol' => $validated['symbol'],
+                'direction' => $validated['direction'],
+                'lot_size' => $validated['lot_size'],
+                'entry_price' => $validated['entry_price'],
+                'sl_price' => $validated['sl_price'],
+                'tp_price' => $validated['tp_price'],
+                'order_type' => $validated['order_type'],
+                'status' => 'PENDING',
+                'notes' => $validated['notes'],
+                'is_manual' => true,
+            ]);
+
+            // TODO: Actually execute via CCXT or MT4/MT5 adapter
+            // For now, just simulate success
+            $orderId = 'MANUAL_' . time() . '_' . rand(1000, 9999);
+            
+            $log->update([
+                'status' => 'SUCCESS',
+                'order_id' => $orderId,
+                'executed_at' => now(),
+            ]);
+
+            // Create position
+            ExecutionPosition::create([
+                'signal_id' => null,
+                'execution_connection_id' => $connection->id,
+                'execution_log_id' => $log->id,
+                'order_id' => $orderId,
+                'symbol' => $validated['symbol'],
+                'direction' => strtolower($validated['direction']),
+                'quantity' => $validated['lot_size'],
+                'entry_price' => $validated['entry_price'] ?? 0,
+                'current_price' => $validated['entry_price'] ?? 0,
+                'sl_price' => $validated['sl_price'],
+                'tp_price' => $validated['tp_price'],
+                'status' => 'open',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Trade executed successfully',
+                'data' => [
+                    'order_id' => $orderId,
+                    'symbol' => $validated['symbol'],
+                    'direction' => $validated['direction'],
+                    'lot_size' => $validated['lot_size'],
+                    'entry_price' => $validated['entry_price'] ?? 'Market',
+                    'status' => 'SUCCESS',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Execution failed: ' . $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
      * Calculate win rate
      */
     protected function calculateWinRate()

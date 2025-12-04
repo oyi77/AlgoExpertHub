@@ -13,31 +13,37 @@
 
         <!-- Quick Stats -->
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
-                        <h6 class="text-muted">Data Connections</h6>
+                        <h6 class="text-muted">Exchange Connections</h6>
                         <h3>{{ $stats['total_connections'] }}</h3>
-                        <small class="text-success">{{ $stats['active_connections'] }} active</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h6 class="text-muted">Data Enabled</h6>
+                        <h3 class="text-primary">{{ $stats['data_connections'] }}</h3>
+                        <small class="text-muted">Fetching market data</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <h6 class="text-muted">Execution Enabled</h6>
+                        <h3 class="text-success">{{ $stats['execution_connections'] }}</h3>
+                        <small class="text-muted">Trading actively</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Risk Presets</h6>
                         <h3>{{ $stats['total_presets'] }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Smart Risk</h6>
-                        <h3><i class="fas fa-brain text-{{ $smartRiskSettings['enabled'] ? 'success' : 'muted' }}"></i></h3>
-                        <small class="{{ $smartRiskSettings['enabled'] ? 'text-success' : 'text-muted' }}">
-                            {{ $smartRiskSettings['enabled'] ? 'Enabled' : 'Disabled' }}
-                        </small>
                     </div>
                 </div>
             </div>
@@ -48,8 +54,8 @@
             <div class="card-header p-0">
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#tab-data-connections" data-toggle="tab">
-                            <i class="fas fa-plug"></i> Data Connections
+                        <a class="nav-link active" href="#tab-exchange-connections" data-toggle="tab">
+                            <i class="fas fa-exchange-alt"></i> Exchange Connections
                         </a>
                     </li>
                     <li class="nav-item">
@@ -66,11 +72,11 @@
             </div>
             <div class="card-body">
                 <div class="tab-content">
-                    <!-- Data Connections Tab -->
-                    <div class="tab-pane fade show active" id="tab-data-connections">
+                    <!-- Exchange Connections Tab (Unified) -->
+                    <div class="tab-pane fade show active" id="tab-exchange-connections">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0"><i class="fas fa-plug"></i> Data Connections</h5>
-                            <a href="{{ route('admin.trading-management.config.data-connections.create') }}" class="btn btn-primary">
+                            <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Exchange/Broker Connections</h5>
+                            <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create Connection
                             </a>
                         </div>
@@ -83,37 +89,52 @@
                                         <th>Name</th>
                                         <th>Type</th>
                                         <th>Provider</th>
+                                        <th>Purpose</th>
                                         <th>Status</th>
-                                        <th>Last Connected</th>
+                                        <th>Preset</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($connections as $connection)
                                     <tr>
-                                        <td><strong>{{ $connection->name }}</strong></td>
                                         <td>
-                                            @if($connection->type === 'mtapi')
-                                            <span class="badge badge-primary">MT4/MT5</span>
-                                            @elseif($connection->type === 'ccxt_crypto')
-                                            <span class="badge badge-info">Crypto</span>
-                                            @else
-                                            <span class="badge badge-secondary">{{ $connection->type }}</span>
+                                            <strong>{{ $connection->name }}</strong>
+                                            @if($connection->is_admin_owned)
+                                            <span class="badge badge-info badge-sm">Admin</span>
                                             @endif
                                         </td>
-                                        <td>{{ $connection->provider }}</td>
                                         <td>
-                                            @if($connection->status === 'active')
-                                            <span class="badge badge-success">Active</span>
+                                            <span class="badge {{ $connection->connection_type === 'CRYPTO_EXCHANGE' ? 'badge-primary' : 'badge-success' }}">
+                                                {{ $connection->connection_type === 'CRYPTO_EXCHANGE' ? 'Crypto' : 'Forex' }}
+                                            </span>
+                                        </td>
+                                        <td>{{ strtoupper($connection->provider) }}</td>
+                                        <td>
+                                            <span class="badge badge-info">{{ $connection->getPurposeLabel() }}</span>
+                                            <br>
+                                            @if($connection->data_fetching_enabled)
+                                            <small><i class="fas fa-download text-primary"></i> Data</small>
+                                            @endif
+                                            @if($connection->trade_execution_enabled)
+                                            <small><i class="fas fa-bolt text-success"></i> Trading</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($connection->status === 'connected')
+                                            <span class="badge badge-success">Connected</span>
                                             @elseif($connection->status === 'error')
                                             <span class="badge badge-danger">Error</span>
                                             @else
-                                            <span class="badge badge-secondary">{{ ucfirst($connection->status) }}</span>
+                                            <span class="badge badge-warning">{{ ucfirst($connection->status) }}</span>
                                             @endif
                                         </td>
-                                        <td>{{ $connection->last_connected_at ? $connection->last_connected_at->diffForHumans() : 'Never' }}</td>
+                                        <td>{{ $connection->preset->name ?? '-' }}</td>
                                         <td>
-                                            <a href="{{ route('admin.trading-management.config.data-connections.edit', $connection) }}" class="btn btn-sm btn-info">
+                                            <a href="{{ route('admin.trading-management.config.exchange-connections.show', $connection) }}" class="btn btn-sm btn-success" title="Test & Preview">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ route('admin.trading-management.config.exchange-connections.edit', $connection) }}" class="btn btn-sm btn-info" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         </td>
@@ -125,7 +146,7 @@
                         {{ $connections->links() }}
                         @else
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No data connections yet. <a href="{{ route('admin.trading-management.config.data-connections.create') }}">Create your first connection</a>.
+                            <i class="fas fa-info-circle"></i> No exchange connections yet. <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}">Create your first connection</a> to start fetching data and/or executing trades.
                         </div>
                         @endif
                     </div>
