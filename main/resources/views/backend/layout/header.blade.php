@@ -138,7 +138,9 @@
         <p>{{ __('Notification') }}</p>
     </a>
     <a href="{{ route('admin.profile') }}" class="profile-img">
-        <img src="{{ asset('asset/backend/images/' .auth()->guard('admin')->user()->image) }}" alt="image">
+        <img src="{{ auth()->guard('admin')->user()->image ? asset('asset/backend/images/' . auth()->guard('admin')->user()->image) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->guard('admin')->user()->username) . '&background=4e73df&color=fff&size=80' }}" 
+             alt="{{ auth()->guard('admin')->user()->username }}" 
+             onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode(auth()->guard('admin')->user()->username) }}&background=4e73df&color=fff&size=80'; this.onerror=null;">
     </a>
     <a href="{{ route('home') }}">
         <i data-feather="globe"></i>

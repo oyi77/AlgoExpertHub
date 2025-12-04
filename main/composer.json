@@ -64,6 +64,8 @@
             "Addons\\SmartRiskManagement\\App\\": "addons/smart-risk-management-addon/app/",
             "Addons\\AiConnectionAddon\\": "addons/ai-connection-addon/",
             "Addons\\AiConnectionAddon\\App\\": "addons/ai-connection-addon/App/",
+            "Addons\\TradingManagement\\": "addons/trading-management-addon/",
+            "Addons\\TradingManagement\\Modules\\": "addons/trading-management-addon/Modules/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },

@@ -1,0 +1,92 @@
+{
+    "name": "trading-management-addon",
+    "title": "Trading Management",
+    "description": "Unified trading management system with data feeding, filtering, AI analysis, risk management, execution, and backtesting",
+    "version": "2.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\TradingManagement",
+    "status": "active",
+    "requires": {
+        "php": "^8.0",
+        "laravel": "^9.0"
+    },
+    "dependencies": {
+        "ccxt/ccxt": "^4.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "modules": [
+        {
+            "key": "data_provider",
+            "name": "Data Provider",
+            "description": "Data connections and market data fetching from mtapi.io, CCXT exchanges",
+            "targets": ["admin_ui", "user_ui", "jobs"],
+            "enabled": true,
+            "dependencies": []
+        },
+        {
+            "key": "market_data",
+            "name": "Market Data Storage",
+            "description": "Centralized market data storage, caching, and cleanup",
+            "targets": ["admin_ui", "jobs"],
+            "enabled": true,
+            "dependencies": ["data_provider"]
+        },
+        {
+            "key": "filter_strategy",
+            "name": "Filter Strategy",
+            "description": "Technical indicator-based filtering (EMA, RSI, PSAR)",
+            "targets": ["admin_ui", "user_ui"],
+            "enabled": true,
+            "dependencies": ["market_data"]
+        },
+        {
+            "key": "ai_analysis",
+            "name": "AI Analysis",
+            "description": "AI-powered market confirmation using OpenAI, Gemini",
+            "targets": ["admin_ui", "user_ui"],
+            "enabled": true,
+            "dependencies": ["market_data"]
+        },
+        {
+            "key": "risk_management",
+            "name": "Risk Management",
+            "description": "Manual presets and AI adaptive risk (Smart Risk)",
+            "targets": ["admin_ui", "user_ui"],
+            "enabled": true,
+            "dependencies": []
+        },
+        {
+            "key": "execution",
+            "name": "Trade Execution",
+            "description": "Execute trades on exchanges/brokers via CCXT and mtapi.io",
+            "targets": ["admin_ui", "user_ui", "jobs", "listeners"],
+            "enabled": true,
+            "dependencies": ["data_provider", "risk_management"]
+        },
+        {
+            "key": "position_monitoring",
+            "name": "Position Monitoring",
+            "description": "Track positions, SL/TP monitoring, analytics calculation",
+            "targets": ["admin_ui", "user_ui", "jobs"],
+            "enabled": true,
+            "dependencies": ["execution"]
+        },
+        {
+            "key": "copy_trading",
+            "name": "Copy Trading",
+            "description": "Social trading - follow other traders",
+            "targets": ["admin_ui", "user_ui", "jobs", "listeners"],
+            "enabled": true,
+            "dependencies": ["execution", "risk_management"]
+        },
+        {
+            "key": "backtesting",
+            "name": "Backtesting",
+            "description": "Test strategies on historical data",
+            "targets": ["admin_ui", "user_ui", "jobs"],
+            "enabled": false,
+            "dependencies": ["market_data", "filter_strategy", "ai_analysis", "risk_management"]
+        }
+    ]
+}
+

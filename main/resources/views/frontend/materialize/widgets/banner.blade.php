@@ -16,9 +16,9 @@
                 </h2>
                 <ul class="sp_check_list mt-4 wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.5s">
                     @if(isset($banner->content->repeater) && is_array($banner->content->repeater))
-                        @foreach ($banner->content->repeater as $item)
+                    @foreach ($banner->content->repeater as $item)
                             <li><?= Config::trans($item->repeater ?? '') ?> </li>
-                        @endforeach
+                    @endforeach
                     @endif
                 </ul>
                 <a href="{{ $banner->content->button_text_link ?? '#' }}" class="btn sp_theme_btn mt-5 wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.7s">{{ Config::trans($banner->content->button_text ?? '')}}</a>
