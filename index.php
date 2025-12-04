@@ -10,11 +10,53 @@ function installedPath()
     return 'main/storage/LICENCE.txt';
 }
 
+// Check if installer is being accessed
+$requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+$isInstallerRequest = strpos($requestUri, '/install/') !== false;
 
-if (!file_exists(installedPath())) {
-    header('Location:install/index.php');
-    die();
-};
+// If accessing installer, allow it (PHP server will route to installer files)
+if ($isInstallerRequest) {
+    // Let the installer handle the request - don't check for LICENCE.txt
+    // The installer files will be served directly by PHP server
+}
+
+// Only check installation status if not accessing installer
+if (!file_exists(installedPath()) && !$isInstallerRequest) {
+    // Check if we're in Railway or installer is explicitly allowed
+    $isRailway = getenv('RAILWAY_ENVIRONMENT') !== false || getenv('PORT') !== false;
+    $allowInstaller = getenv('ALLOW_INSTALLER') === 'true';
+    
+    if ($isRailway || $allowInstaller) {
+        // In Railway or when installer is allowed, show installation instructions
+        http_response_code(503);
+        header('Content-Type: text/html; charset=utf-8');
+        echo "<!DOCTYPE html><html><head><title>Installation Required</title>";
+        echo "<style>body{font-family:Arial,sans-serif;max-width:800px;margin:50px auto;padding:20px;}</style>";
+        echo "</head><body>";
+        echo "<h1>🚀 Installation Required</h1>";
+        echo "<p>This application needs to be installed before use.</p>";
+        echo "<h2>Installation Options:</h2>";
+        echo "<h3>Option 1: Web Installer (Recommended)</h3>";
+        echo "<ol>";
+        echo "<li>Set environment variable: <code>ALLOW_INSTALLER=true</code></li>";
+        echo "<li>Access the installer at: <a href='/install/index.php'><strong>/install/index.php</strong></a></li>";
+        echo "<li>Fill in the installation form with your database credentials</li>";
+        echo "</ol>";
+        echo "<h3>Option 2: Command Line Installation</h3>";
+        echo "<ol>";
+        echo "<li>Set <code>AUTO_INSTALL=true</code> and ensure database variables are set</li>";
+        echo "<li>Or run manually: <code>php artisan install:database</code></li>";
+        echo "<li>Then create LICENCE.txt: <code>echo 'installed' > main/storage/LICENCE.txt</code></li>";
+        echo "</ol>";
+        echo "<p><strong>Note:</strong> After installation, the LICENCE.txt file will be created automatically.</p>";
+        echo "</body></html>";
+        die();
+    } else {
+        // Traditional hosting - redirect to installer
+        header('Location:install/index.php');
+        die();
+    }
+}
 
 
 

@@ -30,7 +30,15 @@ return [
 
     'compiled' => env(
         'VIEW_COMPILED_PATH',
-        realpath(storage_path('framework/views'))
+        // Ensure directory exists before calling realpath to avoid errors
+        (function() {
+            $path = storage_path('framework/views');
+            if (!is_dir($path)) {
+                @mkdir($path, 0755, true);
+            }
+            $resolved = realpath($path);
+            return $resolved !== false ? $resolved : $path;
+        })()
     ),
 
 ];

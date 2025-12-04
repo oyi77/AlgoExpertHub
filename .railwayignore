@@ -33,8 +33,26 @@ history/
 
 # Development dependencies
 main/vendor/
+main/node_modules/
 main/.env
 main/.env.example
+main/composer.json.backup
+main/composer.lock.backup
+
+# Large asset directories (should be built during deployment)
+asset/backend/
+asset/frontend/
+
+# Large files and directories
+*.log
+# *.sql  # Commented out - needed for installer SQL file
+*.sqlite
+*.sqlite3
+main/storage/app/*
+!main/storage/app/.gitkeep
+main/storage/debugbar/
+main/bootstrap/cache/*.php
+!main/bootstrap/cache/.gitkeep
 
 # Cache and temporary files
 main/storage/logs/*
@@ -54,5 +72,5 @@ main/public/storage
 .DS_Store
 Thumbs.db
 
-# Installation files (not needed in production)
-install/
+# Installation files - KEEP for Railway (needed for web installer)
+# install/  # Commented out - needed for Railway installation
