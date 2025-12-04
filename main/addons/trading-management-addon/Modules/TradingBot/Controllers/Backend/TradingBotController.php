@@ -101,6 +101,7 @@ class TradingBotController extends Controller
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
+            'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
             'is_paper_trading' => 'boolean',
         ]);
 
@@ -173,6 +174,7 @@ class TradingBotController extends Controller
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
+            'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
             'is_paper_trading' => 'boolean',
         ]);
 

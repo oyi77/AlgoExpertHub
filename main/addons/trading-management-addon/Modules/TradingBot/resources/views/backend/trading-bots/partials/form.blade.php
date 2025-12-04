@@ -14,7 +14,7 @@
                    class="form-control @error('name') is-invalid @enderror" 
                    id="name" 
                    name="name" 
-                   value="{{ old('name', $bot->name ?? '') }}" 
+                   value="{{ old('name', isset($bot) && $bot ? $bot->name : '') }}" 
                    required>
             @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -44,18 +44,45 @@
     <div class="card-body">
         <div class="form-group">
             <label for="exchange_connection_id">{{ __('Select Exchange/Broker') }} <span class="text-danger">*</span></label>
-            <select class="form-control @error('exchange_connection_id') is-invalid @enderror" 
-                    id="exchange_connection_id" 
-                    name="exchange_connection_id" 
-                    required>
-                <option value="">-- Select Exchange --</option>
-                @foreach($connections as $connection)
-                    <option value="{{ $connection->id }}" 
-                            {{ old('exchange_connection_id', $bot->exchange_connection_id ?? '') == $connection->id ? 'selected' : '' }}>
-                        {{ $connection->name }} ({{ $connection->exchange_name }})
-                    </option>
-                @endforeach
-            </select>
+            @if($connections->isEmpty())
+                <div class="alert alert-info">
+                    <p class="mb-2"><i class="fa fa-info-circle"></i> No exchange connections available.</p>
+                    @if(Route::has('admin.trading-management.config.exchange-connections.create'))
+                        <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fa fa-plus"></i> Create New Exchange Connection
+                        </a>
+                    @elseif(Route::has('admin.trading-management.exchange-connections.create'))
+                        <a href="{{ route('admin.trading-management.exchange-connections.create') }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fa fa-plus"></i> Create New Exchange Connection
+                        </a>
+                    @endif
+                </div>
+                <input type="hidden" name="exchange_connection_id" value="">
+            @else
+                <select class="form-control @error('exchange_connection_id') is-invalid @enderror" 
+                        id="exchange_connection_id" 
+                        name="exchange_connection_id" 
+                        required>
+                    <option value="">-- Select Exchange --</option>
+                    @foreach($connections as $connection)
+                        <option value="{{ $connection->id }}" 
+                                {{ old('exchange_connection_id', isset($bot) && $bot ? $bot->exchange_connection_id : '') == $connection->id ? 'selected' : '' }}>
+                            {{ $connection->name }} ({{ $connection->exchange_name }})
+                        </option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted mt-1">
+                    @if(Route::has('admin.trading-management.config.exchange-connections.create'))
+                        <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" target="_blank" class="text-primary">
+                            <i class="fa fa-plus"></i> Add New Connection
+                        </a>
+                    @elseif(Route::has('admin.trading-management.exchange-connections.create'))
+                        <a href="{{ route('admin.trading-management.exchange-connections.create') }}" target="_blank" class="text-primary">
+                            <i class="fa fa-plus"></i> Add New Connection
+                        </a>
+                    @endif
+                </small>
+            @endif
             @error('exchange_connection_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -130,17 +157,44 @@
     <div class="card-body">
         <div class="form-group">
             <label for="ai_model_profile_id">{{ __('Select AI Model Profile') }}</label>
-            <select class="form-control @error('ai_model_profile_id') is-invalid @enderror" 
-                    id="ai_model_profile_id" 
-                    name="ai_model_profile_id">
-                <option value="">-- No AI Confirmation --</option>
-                @foreach($aiProfiles as $profile)
-                    <option value="{{ $profile->id }}" 
-                            {{ old('ai_model_profile_id', $bot->ai_model_profile_id ?? '') == $profile->id ? 'selected' : '' }}>
-                        {{ $profile->name }}
-                    </option>
-                @endforeach
-            </select>
+            @if($aiProfiles->isEmpty())
+                <div class="alert alert-info">
+                    <p class="mb-2"><i class="fa fa-info-circle"></i> No AI model profiles available.</p>
+                    @if(Route::has('admin.ai-model-profiles.create'))
+                        <a href="{{ route('admin.ai-model-profiles.create') }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fa fa-plus"></i> Create New AI Model Profile
+                        </a>
+                    @elseif(Route::has('admin.trading-management.strategy.ai-models.create'))
+                        <a href="{{ route('admin.trading-management.strategy.ai-models.create') }}" class="btn btn-primary btn-sm" target="_blank">
+                            <i class="fa fa-plus"></i> Create New AI Model Profile
+                        </a>
+                    @endif
+                </div>
+                <input type="hidden" name="ai_model_profile_id" value="">
+            @else
+                <select class="form-control @error('ai_model_profile_id') is-invalid @enderror" 
+                        id="ai_model_profile_id" 
+                        name="ai_model_profile_id">
+                    <option value="">-- No AI Confirmation --</option>
+                    @foreach($aiProfiles as $profile)
+                        <option value="{{ $profile->id }}" 
+                                {{ old('ai_model_profile_id', isset($bot) && $bot ? $bot->ai_model_profile_id : '') == $profile->id ? 'selected' : '' }}>
+                            {{ $profile->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted mt-1">
+                    @if(Route::has('admin.ai-model-profiles.create'))
+                        <a href="{{ route('admin.ai-model-profiles.create') }}" target="_blank" class="text-primary">
+                            <i class="fa fa-plus"></i> Add New AI Model Profile
+                        </a>
+                    @elseif(Route::has('admin.trading-management.strategy.ai-models.create'))
+                        <a href="{{ route('admin.trading-management.strategy.ai-models.create') }}" target="_blank" class="text-primary">
+                            <i class="fa fa-plus"></i> Add New AI Model Profile
+                        </a>
+                    @endif
+                </small>
+            @endif
             @error('ai_model_profile_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -148,11 +202,43 @@
     </div>
 </div>
 
-{{-- Step 6: Settings --}}
+{{-- Step 6: Trading Mode --}}
 <div class="card mb-4">
     <div class="card-header">
         <h5 class="mb-0">
-            <i class="fa fa-cog"></i> Step 6: Bot Settings
+            <i class="fa fa-cogs"></i> Step 6: Trading Mode
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="form-group">
+            <label for="trading_mode">{{ __('Trading Mode') }} <span class="text-danger">*</span></label>
+            <select class="form-control @error('trading_mode') is-invalid @enderror" 
+                    id="trading_mode" 
+                    name="trading_mode" 
+                    required>
+                <option value="SIGNAL_BASED" {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : 'SIGNAL_BASED') == 'SIGNAL_BASED' ? 'selected' : '' }}>
+                    Signal-Based (Execute only on published signals)
+                </option>
+                <option value="MARKET_STREAM_BASED" {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : '') == 'MARKET_STREAM_BASED' ? 'selected' : '' }}>
+                    Market Stream-Based (Stream OHLCV data and apply technical indicators)
+                </option>
+            </select>
+            <small class="form-text text-muted">
+                <strong>Signal-Based:</strong> Bot executes trades only when signals are published.<br>
+                <strong>Market Stream-Based:</strong> Bot continuously streams OHLCV data, applies technical indicators, and makes trading decisions based on market conditions.
+            </small>
+            @error('trading_mode')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+    </div>
+</div>
+
+{{-- Step 7: Settings --}}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fa fa-cog"></i> Step 7: Bot Settings
         </h5>
     </div>
     <div class="card-body">
@@ -162,9 +248,9 @@
                    id="is_active" 
                    name="is_active" 
                    value="1" 
-                   {{ old('is_active', $bot->is_active ?? true) ? 'checked' : '' }}>
+                   {{ old('is_active', isset($bot) && $bot ? $bot->is_active : true) ? 'checked' : '' }}>
             <label class="form-check-label" for="is_active">
-                <strong>Active</strong> (Bot will execute trades when signals are published)
+                <strong>Active</strong> (Bot will execute trades when signals are published or market conditions are met)
             </label>
         </div>
 
@@ -174,7 +260,7 @@
                    id="is_paper_trading" 
                    name="is_paper_trading" 
                    value="1" 
-                   {{ old('is_paper_trading', $bot->is_paper_trading ?? true) ? 'checked' : '' }}>
+                   {{ old('is_paper_trading', isset($bot) && $bot ? $bot->is_paper_trading : true) ? 'checked' : '' }}>
             <label class="form-check-label" for="is_paper_trading">
                 <strong>Paper Trading Mode (Demo)</strong> (Simulate trades without real money)
             </label>

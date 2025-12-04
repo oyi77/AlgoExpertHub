@@ -31,6 +31,7 @@ class TradingBot extends Model
         'user_id', 'admin_id',
         'name', 'description',
         'exchange_connection_id', 'trading_preset_id', 'filter_strategy_id', 'ai_model_profile_id',
+        'trading_mode',
         'is_active', 'is_paper_trading',
         'total_executions', 'successful_executions', 'failed_executions',
         'total_profit', 'win_rate',
