@@ -23,6 +23,9 @@
                 $aiConnectionAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-connection-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-connection-addon', 'admin_ui');
                 $openRouterAdminModuleEnabled = \App\Support\AddonRegistry::active('openrouter-integration-addon') && \App\Support\AddonRegistry::moduleEnabled('openrouter-integration-addon', 'admin_ui');
                 $srmAdminModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'admin_ui');
+                
+                // NEW: Trading Management Addon (Unified)
+                $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
             @endphp
 
             @if ($adminUser && $adminUser->can('manage-plan'))
@@ -73,7 +76,35 @@
                 </li>
             @endif
 
-            @if ($adminUser && $executionEngineAdminModuleEnabled)
+            {{-- NEW: Unified Trading Management Addon --}}
+            @if ($adminUser && $tradingManagementEnabled)
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span></a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.trading-management.dashboard') }}" aria-expanded="false">
+                            <i data-feather="home"></i> {{ __('Dashboard') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.trading-management.config.data-connections.index') }}" aria-expanded="false">
+                            <i data-feather="settings"></i> {{ __('Trading Configuration') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">
+                            <i data-feather="zap"></i> {{ __('Trading Operations') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">
+                            <i data-feather="target"></i> {{ __('Trading Strategy') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">
+                            <i data-feather="users"></i> {{ __('Copy Trading') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">
+                            <i data-feather="activity"></i> {{ __('Trading Test') }}</a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+
+            {{-- OLD: Keep for backward compatibility during migration (can be hidden if trading-management-addon active) --}}
+            @if ($adminUser && $executionEngineAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Execution') }}</span></a>
                     <ul aria-expanded="false">
@@ -96,13 +127,13 @@
                 </li>
             @endif
 
-            @if ($adminUser && $tradingPresetAdminModuleEnabled)
+            @if ($adminUser && $tradingPresetAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a href="{{ route('admin.trading-presets.index') }}" aria-expanded="false"><i
                             data-feather="settings"></i><span class="nav-text">{{ __('Trading Presets') }}</span></a>
                 </li>
             @endif
 
-            @if ($adminUser && $filterStrategyAdminModuleEnabled)
+            @if ($adminUser && $filterStrategyAdminModuleEnabled && !$tradingManagementEnabled)
                 @if (Route::has('admin.filter-strategies.index'))
                 <li><a href="{{ route('admin.filter-strategies.index') }}" aria-expanded="false"><i
                             data-feather="filter"></i><span class="nav-text">{{ __('Filter Strategies') }}</span></a>
@@ -110,7 +141,7 @@
                 @endif
             @endif
 
-            @if ($adminUser && $aiTradingAdminModuleEnabled)
+            @if ($adminUser && $aiTradingAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="cpu"></i><span class="nav-text">{{ __('AI Trading') }}</span></a>
                     <ul aria-expanded="false">
@@ -144,7 +175,8 @@
                 </li>
             @endif
 
-            @if ($adminUser && $copyTradingAdminModuleEnabled)
+            {{-- OLD: Hidden when new Trading Management active --}}
+            @if ($adminUser && $copyTradingAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="copy"></i><span class="nav-text">{{ __('Copy Trading') }}</span></a>
                     <ul aria-expanded="false">
@@ -158,7 +190,7 @@
                 </li>
             @endif
 
-            @if ($adminUser && $srmAdminModuleEnabled)
+            @if ($adminUser && $srmAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="shield"></i><span class="nav-text">{{ __('Smart Risk Management') }}</span></a>
                     <ul aria-expanded="false">
