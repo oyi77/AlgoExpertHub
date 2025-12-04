@@ -23,25 +23,64 @@ echo -e "${YELLOW}========================================${NC}"
 echo -e "${YELLOW}Switching to branch: ${GREEN}$BRANCH_NAME${NC}"
 echo -e "${YELLOW}========================================${NC}"
 
-# Check if branch exists
+# Check if branch exists locally
+echo -e "\n${YELLOW}[1/4] Checking and switching branch...${NC}"
+
 if ! git rev-parse --verify "$BRANCH_NAME" > /dev/null 2>&1; then
-    echo -e "${RED}Error: Branch '$BRANCH_NAME' does not exist${NC}"
-    echo ""
-    echo "Available branches:"
-    git branch -a
-    exit 1
+    echo -e "${YELLOW}Branch '$BRANCH_NAME' not found locally. Checking remote...${NC}"
+    
+    # Fetch latest from remote
+    echo -e "${YELLOW}Fetching latest from remote...${NC}"
+    git fetch --all --prune
+    
+    # Check if branch exists on remote
+    REMOTE_BRANCH=""
+    for remote in $(git remote); do
+        if git ls-remote --heads "$remote" "$BRANCH_NAME" > /dev/null 2>&1; then
+            REMOTE_BRANCH="$remote/$BRANCH_NAME"
+            echo -e "${GREEN}✓ Found branch on remote: $REMOTE_BRANCH${NC}"
+            break
+        fi
+    done
+    
+    if [ -z "$REMOTE_BRANCH" ]; then
+        echo -e "${RED}Error: Branch '$BRANCH_NAME' does not exist locally or on remote${NC}"
+        echo ""
+        echo "Available local branches:"
+        git branch
+        echo ""
+        echo "Available remote branches:"
+        git branch -r
+        exit 1
+    fi
+    
+    # Create local branch tracking remote branch
+    echo -e "${YELLOW}Creating local branch tracking $REMOTE_BRANCH...${NC}"
+    git checkout -b "$BRANCH_NAME" "$REMOTE_BRANCH"
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to create and checkout branch${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Created and switched to $BRANCH_NAME (tracking $REMOTE_BRANCH)${NC}"
+else
+    # Branch exists locally, just switch to it
+    git checkout "$BRANCH_NAME"
+    
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to switch branch${NC}"
+        exit 1
+    fi
+    
+    # Pull latest changes if tracking remote branch
+    if git rev-parse --abbrev-ref --symbolic-full-name "$BRANCH_NAME@{u}" > /dev/null 2>&1; then
+        echo -e "${YELLOW}Pulling latest changes...${NC}"
+        git pull --ff-only
+    fi
+    
+    echo -e "${GREEN}✓ Switched to $BRANCH_NAME${NC}"
 fi
-
-# Switch branch
-echo -e "\n${YELLOW}[1/4] Switching branch...${NC}"
-git checkout "$BRANCH_NAME"
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to switch branch${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✓ Switched to $BRANCH_NAME${NC}"
 
 # Clear application cache
 echo -e "\n${YELLOW}[2/4] Clearing application cache...${NC}"
