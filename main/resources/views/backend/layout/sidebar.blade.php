@@ -81,24 +81,11 @@
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span></a>
                     <ul aria-expanded="false">
-                        <li><a href="{{ route('admin.trading-management.dashboard') }}" aria-expanded="false">
-                            <i data-feather="home"></i> {{ __('Dashboard') }}</a>
-                        </li>
-                        <li><a href="{{ route('admin.trading-management.config.data-connections.index') }}" aria-expanded="false">
-                            <i data-feather="settings"></i> {{ __('Trading Configuration') }}</a>
-                        </li>
-                        <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">
-                            <i data-feather="zap"></i> {{ __('Trading Operations') }}</a>
-                        </li>
-                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">
-                            <i data-feather="target"></i> {{ __('Trading Strategy') }}</a>
-                        </li>
-                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">
-                            <i data-feather="users"></i> {{ __('Copy Trading') }}</a>
-                        </li>
-                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">
-                            <i data-feather="activity"></i> {{ __('Trading Test') }}</a>
-                        </li>
+                        <li><a href="{{ route('admin.trading-management.config.data-connections.index') }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('Trading Strategy') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">{{ __('Copy Trading') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Trading Test') }}</a></li>
                     </ul>
                 </li>
             @endif
