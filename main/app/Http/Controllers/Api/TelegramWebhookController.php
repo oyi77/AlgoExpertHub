@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @group Webhooks
+ * Telegram ingestion endpoint.
+ *
+ * @urlParam channelSourceId integer required The channel source ID. Example: 1
+ * @response 200 {"status":"ok"}
+ * @response 404 {"status":"error","message":"Invalid channel"}
+ */
 class TelegramWebhookController extends Controller
 {
     public function handle(Request $request, $channelSourceId)

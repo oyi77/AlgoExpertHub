@@ -9,6 +9,10 @@ use App\Models\ChannelSource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @group Webhooks
+ * Ingestion endpoints for external providers.
+ */
 class ApiWebhookController extends Controller
 {
     /**
@@ -17,12 +21,21 @@ class ApiWebhookController extends Controller
      * @param Request $request
      * @param int $channelSourceId
      * @return \Illuminate\Http\JsonResponse
+     * @urlParam channelSourceId integer required The channel source ID. Example: 1
+     * @header X-Signature A signature header used to verify payload integrity.
+     * @bodyParam message mixed The signal message; if JSON, the whole payload will be parsed for common fields.
+     * @response 200 {"ok": true}
+     * @response 400 {"error": "Invalid channel type"}
+     * @response 401 {"error": "Invalid signature"}
      */
     public function handle(Request $request, $channelSourceId)
     {
         try {
             // Find channel source
-            $channelSource = ChannelSource::findOrFail($channelSourceId);
+            $channelSource = ChannelSource::find($channelSourceId);
+            if (!$channelSource) {
+                return response()->json(['error' => 'Channel not found'], 404);
+            }
 
             // Verify it's an API channel
             if ($channelSource->type !== 'api') {
@@ -139,4 +152,3 @@ class ApiWebhookController extends Controller
         return null;
     }
 }
-

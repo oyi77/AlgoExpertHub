@@ -1,0 +1,358 @@
+name: 'AI Connections'
+description: 'Endpoints for managing and using AI connections.'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/ai-connections/providers/{provider}/connections'
+    metadata:
+      custom: []
+      groupName: 'AI Connections'
+      groupDescription: 'Endpoints for managing and using AI connections.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get available connections for a provider'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      provider:
+        custom: []
+        name: provider
+        description: 'The provider key.'
+        required: true
+        example: openai
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      provider: openai
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "provider": "openai",
+            "connections": [
+              {"id": 1, "name": "Primary OpenAI", "priority": 10, "status": "active", "health_status": "healthy", "success_rate": 0.99}
+            ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/ai-connections/execute
+    metadata:
+      custom: []
+      groupName: 'AI Connections'
+      groupDescription: 'Endpoints for managing and using AI connections.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Execute AI call'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The connection ID to use.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      prompt:
+        custom: []
+        name: prompt
+        description: 'The prompt to send to the model.'
+        required: true
+        example: 'Write a haiku about markets'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      options:
+        custom: []
+        name: options
+        description: 'Optional options such as model or temperature.'
+        required: false
+        example:
+          model: gpt-4o-mini
+          temperature: 0.2
+        type: object
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      feature:
+        custom: []
+        name: feature
+        description: 'Optional feature tag for tracking.'
+        required: false
+        example: api_call
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      connection_id: 1
+      prompt: 'Write a haiku about markets'
+      options:
+        model: gpt-4o-mini
+        temperature: 0.2
+      feature: api_call
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "output": "Calm waves of trade\nCharts whisper in silent code\nProfit blooms or fades"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: '{"message":"The given data was invalid.","errors":{"connection_id":["The connection id field is required."]}}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/ai-connections/test/{connection_id}'
+    metadata:
+      custom: []
+      groupName: 'AI Connections'
+      groupDescription: 'Endpoints for managing and using AI connections.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Test a connection'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The ID of the connection.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      connection:
+        custom: []
+        name: connection
+        description: 'The connection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      connection_id: 17
+      connection: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status":"ok","latency_ms":120,"healthy":true}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/ai-connections/track-usage
+    metadata:
+      custom: []
+      groupName: 'AI Connections'
+      groupDescription: 'Endpoints for managing and using AI connections.'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Track usage (manual tracking if needed)'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The connection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      feature:
+        custom: []
+        name: feature
+        description: 'Feature tag.'
+        required: true
+        example: api_call
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      tokens_used:
+        custom: []
+        name: tokens_used
+        description: 'Tokens used.'
+        required: true
+        example: 153
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      cost:
+        custom: []
+        name: cost
+        description: 'Cost in USD.'
+        required: true
+        example: 0.0025
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      success:
+        custom: []
+        name: success
+        description: 'Whether the call succeeded.'
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      response_time_ms:
+        custom: []
+        name: response_time_ms
+        description: 'Response time in ms.'
+        required: false
+        example: 120
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      error_message:
+        custom: []
+        name: error_message
+        description: 'Error message if any.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      connection_id: 1
+      feature: api_call
+      tokens_used: 153
+      cost: 0.0025
+      success: true
+      response_time_ms: 120
+      error_message: consequatur
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"message":"Usage tracked successfully"}'
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null

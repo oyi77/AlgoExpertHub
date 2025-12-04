@@ -193,6 +193,10 @@ Route::name('user.')->group(function () {
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
 
+Route::get('/swagger', function () {
+    return view('swagger');
+})->name('swagger');
+
 Route::get('current-price', [CryptoTradeController::class, 'currentPrice'])->name('user.current-price');
 
 Route::get('get-ticker', [CryptoTradeController::class, 'latestTicker'])->name('ticker');
