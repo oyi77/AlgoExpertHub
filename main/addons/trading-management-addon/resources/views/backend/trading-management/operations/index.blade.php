@@ -17,7 +17,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Active Connections</h6>
-                        <h3>{{ \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('is_active', 1)->count() }}</h3>
+                        <h3>{{ $stats['active_connections'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -25,7 +25,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Open Positions</h6>
-                        <h3>{{ \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'open')->count() }}</h3>
+                        <h3>{{ $stats['open_positions'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -33,7 +33,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Today's Executions</h6>
-                        <h3>{{ \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::whereDate('created_at', today())->count() }}</h3>
+                        <h3>{{ $stats['today_executions'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -41,39 +41,98 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Today's P&L</h6>
-                        <h3>${{ number_format(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'closed')->whereDate('closed_at', today())->sum('pnl'), 2) }}</h3>
+                        <h3>${{ number_format($stats['today_pnl'], 2) }}</h3>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Buttons -->
+        <!-- Tab Navigation -->
         <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#tab-connections" data-toggle="tab">
+                            <i class="fas fa-plug"></i> Execution Connections
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-executions" data-toggle="tab">
+                            <i class="fas fa-list"></i> Execution Log
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-positions-open" data-toggle="tab">
+                            <i class="fas fa-chart-area"></i> Open Positions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-positions-closed" data-toggle="tab">
+                            <i class="fas fa-history"></i> Closed Positions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-analytics" data-toggle="tab">
+                            <i class="fas fa-chart-pie"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 col-lg-3 mb-3">
-                        <a href="{{ route('admin.trading-management.operations.connections.index') }}" class="btn btn-primary btn-block btn-lg">
-                            <i class="fas fa-plug"></i>
-                            <div class="mt-2">Execution Connections</div>
-                        </a>
+                <div class="tab-content">
+                    <!-- Execution Connections Tab -->
+                    <div class="tab-pane fade show active" id="tab-connections">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Execution Connections</h5>
+                            <a href="{{ route('admin.trading-management.operations.connections.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Manage Connections
+                            </a>
+                        </div>
+                        <p class="text-muted">Configure and manage execution connections to crypto exchanges and FX brokers for automated trading.</p>
                     </div>
-                    <div class="col-md-6 col-lg-3 mb-3">
-                        <a href="{{ route('admin.trading-management.operations.executions') }}" class="btn btn-info btn-block btn-lg">
-                            <i class="fas fa-list"></i>
-                            <div class="mt-2">Execution Log</div>
-                        </a>
+
+                    <!-- Execution Log Tab -->
+                    <div class="tab-pane fade" id="tab-executions">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Execution Log</h5>
+                            <a href="{{ route('admin.trading-management.operations.executions') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> View Executions
+                            </a>
+                        </div>
+                        <p class="text-muted">Complete history of all trade executions with success/failure status and error details.</p>
                     </div>
-                    <div class="col-md-6 col-lg-3 mb-3">
-                        <a href="{{ route('admin.trading-management.operations.positions.open') }}" class="btn btn-success btn-block btn-lg">
-                            <i class="fas fa-chart-area"></i>
-                            <div class="mt-2">Open Positions</div>
-                        </a>
+
+                    <!-- Open Positions Tab -->
+                    <div class="tab-pane fade" id="tab-positions-open">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Open Positions</h5>
+                            <a href="{{ route('admin.trading-management.operations.positions.open') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Monitor Positions
+                            </a>
+                        </div>
+                        <p class="text-muted">Real-time monitoring of all open trading positions with current P&L and status.</p>
                     </div>
-                    <div class="col-md-6 col-lg-3 mb-3">
-                        <a href="{{ route('admin.trading-management.operations.analytics') }}" class="btn btn-warning btn-block btn-lg">
-                            <i class="fas fa-chart-pie"></i>
-                            <div class="mt-2">Analytics</div>
-                        </a>
+
+                    <!-- Closed Positions Tab -->
+                    <div class="tab-pane fade" id="tab-positions-closed">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Closed Positions</h5>
+                            <a href="{{ route('admin.trading-management.operations.positions.closed') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> View History
+                            </a>
+                        </div>
+                        <p class="text-muted">Historical record of all closed positions with final P&L and close reasons (TP/SL/Manual).</p>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div class="tab-pane fade" id="tab-analytics">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Analytics</h5>
+                            <a href="{{ route('admin.trading-management.operations.analytics') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> View Analytics
+                            </a>
+                        </div>
+                        <p class="text-muted">Performance metrics including win rate, profit factor, drawdown, and daily P&L charts.</p>
                     </div>
                 </div>
             </div>

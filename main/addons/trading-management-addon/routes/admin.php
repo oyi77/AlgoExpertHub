@@ -26,15 +26,34 @@ Route::get('/', function () {
 
     // 1. Trading Configuration (Page with tabs)
     Route::prefix('config')->name('config.')->group(function () {
-        // Config dashboard with tabs
+        // Config dashboard with tabs - loads actual content
         Route::get('/', function () {
             $title = 'Trading Configuration';
+            
+            // Load all data for tabs
+            $connections = \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::with('admin', 'user')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'conn_page');
+            
+            $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'preset_page');
+            
+            $smartRiskSettings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings', [
+                'enabled' => false,
+                'min_provider_score' => 70,
+                'slippage_buffer_enabled' => false,
+                'dynamic_lot_enabled' => false,
+                'max_risk_multiplier' => 2.0,
+                'min_risk_multiplier' => 0.5,
+            ]);
+            
             $stats = [
-                'total_connections' => \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::count(),
+                'total_connections' => $connections->total(),
                 'active_connections' => \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::where('status', 'active')->count(),
-                'total_presets' => \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::count(),
+                'total_presets' => $presets->total(),
             ];
-            return view('trading-management::backend.trading-management.config.index', compact('title', 'stats'));
+            
+            return view('trading-management::backend.trading-management.config.index', compact('title', 'stats', 'connections', 'presets', 'smartRiskSettings'));
         })->name('index');
         
         // Data Connections
@@ -60,11 +79,18 @@ Route::get('/', function () {
             ->name('smart-risk.update');
     });
 
-    // 2. Trading Operations (Submenu with tabs)
+    // 2. Trading Operations (Page with tabs)
     Route::prefix('operations')->name('operations.')->group(function () {
-        // Operations dashboard
+        // Operations dashboard with tabs
         Route::get('/', function () {
-            return view('trading-management::backend.trading-management.operations.index');
+            $title = 'Trading Operations';
+            $stats = [
+                'active_connections' => \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('is_active', 1)->count(),
+                'open_positions' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'open')->count(),
+                'today_executions' => \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::whereDate('created_at', today())->count(),
+                'today_pnl' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'closed')->whereDate('closed_at', today())->sum('pnl'),
+            ];
+            return view('trading-management::backend.trading-management.operations.index', compact('title', 'stats'));
         })->name('index');
         
         // Execution Connections tab
@@ -87,11 +113,21 @@ Route::get('/', function () {
         Route::get('analytics', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'analytics'])->name('analytics');
     });
 
-    // 3. Trading Strategy (Submenu with tabs)
+    // 3. Trading Strategy (Page with tabs)
     Route::prefix('strategy')->name('strategy.')->group(function () {
-        // Strategy dashboard with tabs
+        // Strategy dashboard with tabs - loads actual content
         Route::get('/', function () {
-            return view('trading-management::backend.trading-management.strategy.index');
+            $title = 'Strategy Management';
+            
+            $filterStrategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::with('owner')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'filter_page');
+            
+            $aiProfiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::with('owner')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'ai_page');
+            
+            return view('trading-management::backend.trading-management.strategy.index', compact('title', 'filterStrategies', 'aiProfiles'));
         })->name('index');
         
         // Filter Strategies tab
@@ -101,10 +137,31 @@ Route::get('/', function () {
         Route::resource('ai-models', \Addons\TradingManagement\Modules\AiAnalysis\Controllers\Backend\AiModelProfileController::class);
     });
 
-    // 4. Copy Trading (Submenu with tabs)
+    // 4. Copy Trading (Page with tabs)
     Route::prefix('copy-trading')->name('copy-trading.')->group(function () {
-        // Copy Trading dashboard
-        Route::get('/', [\Addons\TradingManagement\Modules\CopyTrading\Controllers\Backend\CopyTradingController::class, 'index'])->name('index');
+        // Copy Trading dashboard with tabs - loads actual content
+        Route::get('/', function () {
+            $title = 'Copy Trading';
+            
+            $traders = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::select('trader_id')
+                ->selectRaw('COUNT(DISTINCT follower_id) as follower_count')
+                ->with('trader')
+                ->groupBy('trader_id')
+                ->orderBy('follower_count', 'desc')
+                ->paginate(20, ['*'], 'trader_page');
+            
+            $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::with(['trader', 'follower'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'sub_page');
+            
+            $stats = [
+                'total_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::count(),
+                'active_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('is_active', true)->count(),
+                'total_traders' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::distinct('trader_id')->count('trader_id'),
+            ];
+            
+            return view('trading-management::backend.trading-management.copy-trading.index', compact('title', 'stats', 'traders', 'subscriptions'));
+        })->name('index');
         
         // Subscriptions
         Route::get('subscriptions', [\Addons\TradingManagement\Modules\CopyTrading\Controllers\Backend\CopyTradingController::class, 'subscriptions'])->name('subscriptions');
@@ -120,10 +177,28 @@ Route::get('/', function () {
         Route::get('analytics', [\Addons\TradingManagement\Modules\CopyTrading\Controllers\Backend\CopyTradingController::class, 'analytics'])->name('analytics');
     });
 
-    // 5. Trading Test (Submenu with tabs)
+    // 5. Trading Test (Page with tabs)
     Route::prefix('test')->name('test.')->group(function () {
-        // Backtesting dashboard
-        Route::get('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'index'])->name('index');
+        // Backtesting dashboard with tabs - loads actual content
+        Route::get('/', function () {
+            $title = 'Trading Test & Backtesting';
+            
+            $backtests = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::with(['admin', 'filterStrategy', 'aiModelProfile', 'preset'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20, ['*'], 'bt_page');
+            
+            $results = \Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult::with('backtest')
+                ->orderBy('entry_time', 'desc')
+                ->paginate(50, ['*'], 'result_page');
+            
+            $stats = [
+                'total_backtests' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::count(),
+                'completed' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'completed')->count(),
+                'running' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'running')->count(),
+            ];
+            
+            return view('trading-management::backend.trading-management.test.index', compact('title', 'stats', 'backtests', 'results'));
+        })->name('index');
         
         // Backtest operations
         Route::get('backtests', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'backtests'])->name('backtests.index');

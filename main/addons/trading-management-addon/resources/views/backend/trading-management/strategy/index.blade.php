@@ -17,7 +17,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Filter Strategies</h6>
-                        <h3>{{ \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::count() }}</h3>
+                        <h3>{{ $filterStrategies->total() }}</h3>
                     </div>
                 </div>
             </div>
@@ -25,7 +25,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">AI Model Profiles</h6>
-                        <h3>{{ \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::count() }}</h3>
+                        <h3>{{ $aiProfiles->total() }}</h3>
                     </div>
                 </div>
             </div>
@@ -52,23 +52,119 @@
                     <!-- Filter Strategies Tab -->
                     <div class="tab-pane fade show active" id="tab-filters">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Filter Strategies</h5>
-                            <a href="{{ route('admin.trading-management.strategy.filters.index') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> Manage Filter Strategies
+                            <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Strategies</h5>
+                            <a href="{{ route('admin.trading-management.strategy.filters.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Filter Strategy
                             </a>
                         </div>
-                        <p class="text-muted">Technical indicator filters (EMA, RSI, PSAR) to validate trading signals before execution.</p>
+
+                        @if($filterStrategies->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Visibility</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($filterStrategies as $strategy)
+                                    <tr>
+                                        <td><strong>{{ $strategy->name }}</strong></td>
+                                        <td>{{ Str::limit($strategy->description, 50) }}</td>
+                                        <td>
+                                            <span class="badge {{ $strategy->visibility === 'PUBLIC_MARKETPLACE' ? 'badge-info' : 'badge-secondary' }}">
+                                                {{ $strategy->visibility }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($strategy->enabled)
+                                            <span class="badge badge-success">Enabled</span>
+                                            @else
+                                            <span class="badge badge-secondary">Disabled</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.trading-management.strategy.filters.edit', $strategy) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ $filterStrategies->links() }}
+                        @else
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No filter strategies found. <a href="{{ route('admin.trading-management.strategy.filters.create') }}">Create one now</a>.
+                        </div>
+                        @endif
                     </div>
 
                     <!-- AI Model Profiles Tab -->
                     <div class="tab-pane fade" id="tab-ai-models">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">AI Model Profiles</h5>
-                            <a href="{{ route('admin.trading-management.strategy.ai-models.index') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> Manage AI Models
+                            <h5 class="mb-0"><i class="fas fa-robot"></i> AI Model Profiles</h5>
+                            <a href="{{ route('admin.trading-management.strategy.ai-models.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create AI Profile
                             </a>
                         </div>
-                        <p class="text-muted">AI-powered market confirmation using OpenAI, Gemini, or other providers to analyze signal quality.</p>
+
+                        @if($aiProfiles->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Mode</th>
+                                        <th>Visibility</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($aiProfiles as $profile)
+                                    <tr>
+                                        <td><strong>{{ $profile->name }}</strong></td>
+                                        <td>{{ Str::limit($profile->description, 40) }}</td>
+                                        <td>
+                                            <span class="badge badge-{{ $profile->mode === 'CONFIRM' ? 'success' : 'info' }}">
+                                                {{ $profile->mode }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $profile->visibility === 'PUBLIC_MARKETPLACE' ? 'badge-info' : 'badge-secondary' }}">
+                                                {{ $profile->visibility }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($profile->enabled)
+                                            <span class="badge badge-success">Enabled</span>
+                                            @else
+                                            <span class="badge badge-secondary">Disabled</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.trading-management.strategy.ai-models.edit', $profile) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ $aiProfiles->links() }}
+                        @else
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No AI model profiles found. <a href="{{ route('admin.trading-management.strategy.ai-models.create') }}">Create one now</a>.
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
