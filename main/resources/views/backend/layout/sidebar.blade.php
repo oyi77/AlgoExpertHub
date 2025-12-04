@@ -76,16 +76,26 @@
                 </li>
             @endif
 
-            {{-- NEW: Unified Trading Management Addon --}}
+            {{-- Trading Management Addon (Parent Menu) --}}
             @if ($adminUser && $tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span></a>
                     <ul aria-expanded="false">
-                        <li><a href="{{ route('admin.trading-management.config.data-connections.index') }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
+                        @if (Route::has('admin.trading-management.config.index'))
+                        <li><a href="{{ route('admin.trading-management.config.index') }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.trading-management.strategy.index'))
+                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('Strategy Management') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.trading-management.operations.index'))
                         <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
-                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('Trading Strategy') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.trading-management.copy-trading.index'))
                         <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">{{ __('Copy Trading') }}</a></li>
-                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Trading Test') }}</a></li>
+                        @endif
+                        @if (Route::has('admin.trading-management.test.index'))
+                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif

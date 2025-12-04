@@ -1,88 +1,86 @@
-@extends('trading-management::backend.trading-management.layout')
+@extends('backend.layout.master')
 
-@section('submenu-content')
-<div class="card">
-    <div class="card-header">
-        <h4>🔍 Filter Strategies</h4>
-        <div class="card-header-action">
-            <a href="{{ route('admin.trading-management.strategy.filters.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create Filter
-            </a>
-        </div>
-    </div>
-    <div class="card-body">
-        @if($strategies->isEmpty())
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No filter strategies yet. Create technical indicator filters (EMA, Stochastic, PSAR).
+@section('element')
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0"><i class="fas fa-filter"></i> Filter Strategies</h4>
+                    <a href="{{ route('admin.trading-management.strategy.filters.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Filter Strategy
+                    </a>
+                </div>
             </div>
-        @else
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Owner</th>
-                            <th>Visibility</th>
-                            <th>Clonable</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($strategies as $strategy)
-                        <tr>
-                            <td>
-                                <strong>{{ $strategy->name }}</strong><br>
-                                <small class="text-muted">{{ $strategy->description }}</small>
-                            </td>
-                            <td>
-                                @if($strategy->owner)
-                                    {{ $strategy->owner->username }}
-                                @else
-                                    <span class="badge badge-success">Admin</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($strategy->isPublic())
+            <div class="card-body">
+                @if($strategies->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Visibility</th>
+                                <th>Enabled</th>
+                                <th>Clonable</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($strategies as $strategy)
+                            <tr>
+                                <td><strong>{{ $strategy->name }}</strong></td>
+                                <td>{{ Str::limit($strategy->description, 50) }}</td>
+                                <td>
+                                    @if($strategy->visibility === 'PUBLIC_MARKETPLACE')
                                     <span class="badge badge-info">Public</span>
-                                @else
+                                    @else
                                     <span class="badge badge-secondary">Private</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($strategy->isClonable())
-                                    <span class="badge badge-success"><i class="fas fa-check"></i></span>
-                                @else
-                                    <span class="badge badge-secondary"><i class="fas fa-times"></i></span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($strategy->enabled)
-                                    <span class="badge badge-success">Active</span>
-                                @else
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($strategy->enabled)
+                                    <span class="badge badge-success">Enabled</span>
+                                    @else
                                     <span class="badge badge-secondary">Disabled</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('admin.trading-management.strategy.filters.edit', $strategy) }}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('admin.trading-management.strategy.filters.destroy', $strategy) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($strategy->clonable)
+                                    <i class="fas fa-check text-success"></i>
+                                    @else
+                                    <i class="fas fa-times text-muted"></i>
+                                    @endif
+                                </td>
+                                <td>{{ $strategy->created_at->format('Y-m-d') }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ route('admin.trading-management.strategy.filters.edit', $strategy) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('admin.trading-management.strategy.filters.destroy', $strategy) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                {{ $strategies->links() }}
+                @else
+                <div class="alert alert-info">
+                    No filter strategies found. <a href="{{ route('admin.trading-management.strategy.filters.create') }}">Create one now</a>.
+                </div>
+                @endif
             </div>
-            {{ $strategies->links() }}
-        @endif
+        </div>
     </div>
 </div>
 @endsection
-

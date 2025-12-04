@@ -244,11 +244,6 @@ Menu saat ini terlalu kompleks dan tidak terorganisir dengan baik:
       ├─ Transactions
       └─ Commissions
 
-📋 ACCOUNT
-  ├─ Plans & Subscriptions
-  ├─ Referral Program
-  ├─ Profile Settings
-  └─ Support Tickets
 ```
 
 **Key Improvements:**

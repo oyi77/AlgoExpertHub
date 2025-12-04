@@ -65,12 +65,12 @@
                         <h5 class="sp_footer_item_title">{{ __('Links') }}</h5>
                         <ul class="sp_footer_menu">
                             @if($links && is_array($links))
-                                @foreach ($links as $item)
+                            @foreach ($links as $item)
                                     @if($item && isset($item->content) && isset($item->content->page_title))
-                                    <li><a href="{{ route('links', [$item->id, Str::slug($item->content->page_title)]) }}">{{ Config::trans($item->content->page_title) }}</a>
-                                    </li>
+                                <li><a href="{{ route('links', [$item->id, Str::slug($item->content->page_title)]) }}">{{ Config::trans($item->content->page_title) }}</a>
+                                </li>
                                     @endif
-                                @endforeach
+                            @endforeach
                             @endif
 
                         </ul>
@@ -88,12 +88,12 @@
                         <h5 class="mt-4">{{ __('Social Links') }}</h5>
                         <ul class="sp_social_links mt-2">
                             @if($socials && is_array($socials))
-                                @foreach ($socials as $social)
+                            @foreach ($socials as $social)
                                     @if($social && isset($social->content))
                                     <li><a href="{{ $social->content->link ?? '#' }}"><i class="{{ $social->content->icon ?? '' }}"></i></a>
-                                    </li>
+                                </li>
                                     @endif
-                                @endforeach
+                            @endforeach
                             @endif
                         </ul>
                     </div>

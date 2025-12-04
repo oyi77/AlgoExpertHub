@@ -2,73 +2,102 @@
 
 @section('element')
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3><i class="fas fa-cog"></i> Trading Configuration</h3>
+                <p class="text-muted mb-0">Setup and configure data connections, risk presets, and smart risk settings</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Data Connections</h6>
+                        <h3>{{ $stats['total_connections'] }}</h3>
+                        <small class="text-success">{{ $stats['active_connections'] }} active</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Risk Presets</h6>
+                        <h3>{{ $stats['total_presets'] }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Smart Risk</h6>
+                        <h3><i class="fas fa-brain text-info"></i></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
         <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">Trading Configuration</h4>
-                <p class="text-muted">Manage data connections, risk presets, and smart risk settings</p>
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#tab-data-connections" data-toggle="tab">
+                            <i class="fas fa-plug"></i> Data Connections
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-risk-presets" data-toggle="tab">
+                            <i class="fas fa-shield-alt"></i> Risk Presets
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-smart-risk" data-toggle="tab">
+                            <i class="fas fa-brain"></i> Smart Risk Settings
+                        </a>
+                    </li>
+                </ul>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Phase 7 - UI Consolidation</strong>
-                    <p class="mb-0 mt-2">Trading configuration features are currently being migrated. This section will include:</p>
-                    <ul class="mt-2 mb-0">
-                        <li><strong>Data Connections</strong> - Connect to mtapi.io and CCXT exchanges for market data</li>
-                        <li><strong>Risk Presets</strong> - Configure position sizing and risk management presets</li>
-                        <li><strong>Smart Risk Settings</strong> - AI-powered adaptive risk management</li>
-                    </ul>
-                </div>
+                <div class="tab-content">
+                    <!-- Data Connections Tab -->
+                    <div class="tab-pane fade show active" id="tab-data-connections">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Data Connections</h5>
+                            <a href="{{ route('admin.trading-management.config.data-connections.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Manage Data Connections
+                            </a>
+                        </div>
+                        <p class="text-muted">Configure connections to mtapi.io and CCXT exchanges for real-time market data.</p>
+                    </div>
 
-                <div class="row mt-4">
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body text-center">
-                                <i class="fas fa-database fa-3x text-primary mb-3"></i>
-                                <h5>Data Connections</h5>
-                                <p class="text-muted">Connect to market data sources</p>
-                                <button class="btn btn-secondary btn-sm" disabled>
-                                    <i class="fas fa-lock"></i> Coming in Phase 7
-                                </button>
-                            </div>
+                    <!-- Risk Presets Tab -->
+                    <div class="tab-pane fade" id="tab-risk-presets">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Risk Presets</h5>
+                            <a href="{{ route('admin.trading-management.config.risk-presets.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Manage Risk Presets
+                            </a>
                         </div>
+                        <p class="text-muted">Create and manage manual risk management presets with position sizing rules.</p>
                     </div>
-                    
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body text-center">
-                                <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
-                                <h5>Risk Presets</h5>
-                                <p class="text-muted">Configure risk management presets</p>
-                                <button class="btn btn-secondary btn-sm" disabled>
-                                    <i class="fas fa-lock"></i> Coming in Phase 7
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body text-center">
-                                <i class="fas fa-brain fa-3x text-warning mb-3"></i>
-                                <h5>Smart Risk</h5>
-                                <p class="text-muted">AI-powered adaptive risk</p>
-                                <button class="btn btn-secondary btn-sm" disabled>
-                                    <i class="fas fa-lock"></i> Coming in Phase 7
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="alert alert-warning mt-4">
-                    <i class="fas fa-wrench"></i>
-                    <strong>Development Status:</strong> These features are functional at the backend but UI migration is pending.
-                    For now, please use the existing execution and preset management interfaces.
+                    <!-- Smart Risk Tab -->
+                    <div class="tab-pane fade" id="tab-smart-risk">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Smart Risk Settings</h5>
+                            <a href="{{ route('admin.trading-management.config.smart-risk.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Configure Smart Risk
+                            </a>
+                        </div>
+                        <p class="text-muted">AI-powered adaptive risk management based on signal provider performance.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
-

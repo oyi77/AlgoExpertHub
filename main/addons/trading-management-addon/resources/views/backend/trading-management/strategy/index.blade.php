@@ -1,56 +1,78 @@
-@extends('trading-management::backend.trading-management.layout')
+@extends('backend.layout.master')
 
-@section('submenu-content')
-<div class="card">
-    <div class="card-header">
-        <h4>🎯 Trading Strategy</h4>
-    </div>
-    <div class="card-body">
+@section('element')
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3><i class="fas fa-bullseye"></i> Strategy Management</h3>
+                <p class="text-muted mb-0">Configure filters, AI models, and strategy parameters</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Filter Strategies</h6>
+                        <h3>{{ \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::count() }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">AI Model Profiles</h6>
+                        <h3>{{ \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::count() }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab Navigation -->
-        <ul class="nav nav-tabs mb-4" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link {{ !request()->has('tab') || request()->get('tab') === 'filters' ? 'active' : '' }}" 
-                   href="{{ route('admin.trading-management.strategy.index') }}?tab=filters">
-                    <i class="fas fa-filter"></i> Filter Strategies
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->get('tab') === 'ai-models' ? 'active' : '' }}" 
-                   href="{{ route('admin.trading-management.strategy.index') }}?tab=ai-models">
-                    <i class="fas fa-brain"></i> AI Model Profiles
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->get('tab') === 'logs' ? 'active' : '' }}" 
-                   href="{{ route('admin.trading-management.strategy.index') }}?tab=logs">
-                    <i class="fas fa-list"></i> Decision Logs
-                </a>
-            </li>
-        </ul>
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#tab-filters" data-toggle="tab">
+                            <i class="fas fa-filter"></i> Filter Strategies
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-ai-models" data-toggle="tab">
+                            <i class="fas fa-robot"></i> AI Model Profiles
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Filter Strategies Tab -->
+                    <div class="tab-pane fade show active" id="tab-filters">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Filter Strategies</h5>
+                            <a href="{{ route('admin.trading-management.strategy.filters.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Manage Filter Strategies
+                            </a>
+                        </div>
+                        <p class="text-muted">Technical indicator filters (EMA, RSI, PSAR) to validate trading signals before execution.</p>
+                    </div>
 
-        <!-- Tab Content -->
-        @php $currentTab = request()->get('tab', 'filters'); @endphp
-
-        @if($currentTab === 'filters')
-            <div class="alert alert-info">
-                <h5><i class="fas fa-filter"></i> Filter Strategies</h5>
-                <p>Technical indicator-based filtering (EMA, Stochastic, PSAR).</p>
-                <p class="mb-0"><strong>Phase 3 Complete</strong>: FilterStrategy model operational.</p>
+                    <!-- AI Model Profiles Tab -->
+                    <div class="tab-pane fade" id="tab-ai-models">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">AI Model Profiles</h5>
+                            <a href="{{ route('admin.trading-management.strategy.ai-models.index') }}" class="btn btn-primary">
+                                <i class="fas fa-external-link-alt"></i> Manage AI Models
+                            </a>
+                        </div>
+                        <p class="text-muted">AI-powered market confirmation using OpenAI, Gemini, or other providers to analyze signal quality.</p>
+                    </div>
+                </div>
             </div>
-        @elseif($currentTab === 'ai-models')
-            <div class="alert alert-primary">
-                <h5><i class="fas fa-brain"></i> AI Model Profiles</h5>
-                <p>AI-powered market confirmation using OpenAI, Gemini.</p>
-                <p class="mb-0"><strong>Phase 3 Complete</strong>: AiModelProfile model operational.</p>
-            </div>
-        @elseif($currentTab === 'logs')
-            <div class="alert alert-secondary">
-                <h5><i class="fas fa-list"></i> Decision Logs</h5>
-                <p>AI and filter decision history for debugging.</p>
-                <p class="mb-0"><strong>Phase 7+</strong>: To be implemented.</p>
-            </div>
-        @endif
+        </div>
     </div>
 </div>
 @endsection
-
