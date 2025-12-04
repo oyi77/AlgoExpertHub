@@ -7,6 +7,7 @@ use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnectio
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -117,7 +118,7 @@ class TradingBotService
     }
 
     /**
-     * Get bots for current user/admin
+     * Get bots for current user/admin (excludes templates)
      * 
      * @param array $filters
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
@@ -137,6 +138,12 @@ class TradingBotService
             $query->where('user_id', Auth::id());
         }
 
+        // Exclude templates (only show user bots)
+        $query->where(function ($q) {
+            $q->whereNotNull('user_id')
+              ->where('is_default_template', false);
+        });
+
         // Apply filters
         if (isset($filters['is_active'])) {
             $query->where('is_active', $filters['is_active']);
@@ -154,6 +161,71 @@ class TradingBotService
         }
 
         return $query->orderBy('created_at', 'desc')->paginate($filters['per_page'] ?? 15);
+    }
+
+    /**
+     * Get prebuilt bot templates for marketplace
+     * 
+     * @param array $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getPrebuiltTemplates(array $filters = [])
+    {
+        $query = TradingBot::with(['tradingPreset', 'filterStrategy', 'aiModelProfile'])
+            ->where(function ($q) {
+                $q->where('is_default_template', true)
+                  ->orWhereNull('created_by_user_id');
+            })
+            ->where('visibility', 'PUBLIC_MARKETPLACE');
+        
+        // Filter by market type
+        if (isset($filters['connection_type'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('suggested_connection_type', $filters['connection_type'])
+                  ->orWhere('suggested_connection_type', 'both');
+            });
+        }
+        
+        // Filter by tags
+        if (isset($filters['tags']) && is_array($filters['tags'])) {
+            foreach ($filters['tags'] as $tag) {
+                $query->whereJsonContains('tags', $tag);
+            }
+        }
+        
+        // Search
+        if (isset($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['search'] . '%')
+                  ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+            });
+        }
+        
+        return $query->orderBy('name')->paginate($filters['per_page'] ?? 12);
+    }
+
+    /**
+     * Clone a template for user
+     * 
+     * @param int $templateId
+     * @param int $userId
+     * @param int $connectionId
+     * @param array $options
+     * @return TradingBot
+     * @throws \Exception
+     */
+    public function cloneTemplate(int $templateId, int $userId, int $connectionId, array $options = [])
+    {
+        $user = \App\Models\User::findOrFail($userId);
+        $template = TradingBot::findOrFail($templateId);
+        
+        // Validate template is clonable
+        if (!$template->isTemplate()) {
+            throw new \Exception('This bot is not a template');
+        }
+        
+        // Clone using model method
+        return $template->cloneForUser($user, $connectionId, $options);
     }
 
     /**

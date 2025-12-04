@@ -204,4 +204,106 @@ class TradingBotController extends Controller
                 ->with('error', 'Failed to toggle bot status: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Browse prebuilt bot templates (marketplace)
+     */
+    public function marketplace(Request $request): View
+    {
+        $data['title'] = 'Bot Templates Marketplace';
+
+        $filters = [
+            'connection_type' => $request->get('type'),
+            'tags' => $request->get('tags', []),
+            'search' => $request->get('search'),
+            'per_page' => 12,
+        ];
+
+        $data['templates'] = $this->botService->getPrebuiltTemplates($filters);
+        $data['filters'] = $filters;
+
+        return view('trading-management::user.trading-bots.marketplace', $data);
+    }
+
+    /**
+     * Show clone template form
+     */
+    public function clone(TradingBot $template): View
+    {
+        // Validate template
+        if (!$template->isTemplate()) {
+            abort(404, 'This bot is not a template');
+        }
+
+        if (!$template->canBeClonedBy(auth()->user())) {
+            abort(403, 'You do not have permission to clone this template');
+        }
+
+        $data['title'] = 'Clone Bot Template: ' . $template->name;
+        $data['template'] = $template;
+
+        // Get user's connections (filtered by template's suggested type)
+        $connections = $this->botService->getAvailableConnections();
+        if ($template->suggested_connection_type) {
+            $connections = $connections->filter(function ($conn) use ($template) {
+                if ($template->suggested_connection_type === 'both') {
+                    return true;
+                }
+                // Map connection_type enum to suggested type
+                $connType = null;
+                if ($conn->connection_type === 'CRYPTO_EXCHANGE') {
+                    $connType = 'crypto';
+                } elseif ($conn->connection_type === 'FX_BROKER') {
+                    $connType = 'fx';
+                }
+                return $connType === $template->suggested_connection_type;
+            });
+        }
+        $data['connections'] = $connections;
+
+        if ($connections->isEmpty()) {
+            $data['error'] = 'You need to create an exchange connection first.';
+        }
+
+        return view('trading-management::user.trading-bots.clone', $data);
+    }
+
+    /**
+     * Process clone template
+     */
+    public function storeClone(Request $request, TradingBot $template): RedirectResponse
+    {
+        // Validate template
+        if (!$template->isTemplate()) {
+            return redirect()->route('user.trading-bots.marketplace')
+                ->with('error', 'This bot is not a template');
+        }
+
+        $request->validate([
+            'exchange_connection_id' => 'required|exists:exchange_connections,id',
+            'name' => 'nullable|string|max:255',
+            'is_paper_trading' => 'boolean',
+        ]);
+
+        try {
+            $bot = $this->botService->cloneTemplate(
+                $template->id,
+                auth()->id(),
+                $request->exchange_connection_id,
+                [
+                    'name' => $request->name,
+                    'is_paper_trading' => $request->boolean('is_paper_trading', true),
+                ]
+            );
+
+            return redirect()
+                ->route('user.trading-bots.show', $bot->id)
+                ->with('success', 'Bot cloned successfully! You can now activate it when ready.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to clone bot: ' . $e->getMessage());
+        }
+    }
 }

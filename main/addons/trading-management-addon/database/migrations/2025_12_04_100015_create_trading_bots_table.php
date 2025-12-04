@@ -26,7 +26,7 @@ class CreateTradingBotsTable extends Migration
             $table->text('description')->nullable();
             
             // Bot Configuration (combines all components)
-            $table->unsignedBigInteger('exchange_connection_id')->comment('FK to exchange_connections');
+            $table->unsignedBigInteger('exchange_connection_id')->nullable()->comment('FK to exchange_connections (nullable for templates)');
             $table->unsignedBigInteger('trading_preset_id')->comment('FK to trading_presets');
             $table->unsignedBigInteger('filter_strategy_id')->nullable()->comment('FK to filter_strategies (optional)');
             $table->unsignedBigInteger('ai_model_profile_id')->nullable()->comment('FK to ai_model_profiles (optional)');

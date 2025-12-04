@@ -155,6 +155,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('index', [ConfigurationController::class, 'index'])->name('index');
 
             Route::post('setting', [ConfigurationController::class, 'ConfigurationUpdate'])->name('basic');
+
+            // Performance Settings
+            Route::post('performance/optimize', [ConfigurationController::class, 'performanceOptimize'])->name('performance.optimize');
+            Route::post('performance/clear', [ConfigurationController::class, 'performanceClear'])->name('performance.clear');
         });
 
         // End General Settings

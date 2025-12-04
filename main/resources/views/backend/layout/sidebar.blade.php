@@ -424,10 +424,6 @@
                         data-feather="feather"></i><span class="nav-text">{{ __('All Notification') }}</span></a>
             </li>
 
-            <li><a href="{{ route('admin.general.cacheclear') }}" aria-expanded="false"><i
-                        data-feather="feather"></i><span class="nav-text">{{ __('Clear Cache') }}</span></a>
-            </li>
-
             <li class="nav-label">{{__('Current Version') .' - '. Config::APP_VERSION }}</li>
         </ul>
     </div>

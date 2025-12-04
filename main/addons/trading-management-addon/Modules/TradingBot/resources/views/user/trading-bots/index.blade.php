@@ -9,9 +9,14 @@
     <div class="card-header">
         <div class="d-flex flex-wrap align-items-center justify-content-between">
             <h4>{{ __($title) }}</h4>
-            <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
-                <i class="fa fa-plus"></i> {{ __('Create Trading Bot') }}
-            </a>
+            <div>
+                <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-info me-2">
+                    <i class="fa fa-store"></i> {{ __('Browse Templates') }}
+                </a>
+                <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> {{ __('Create Trading Bot') }}
+                </a>
+            </div>
         </div>
     </div>
     <div class="card-body">
@@ -163,10 +168,15 @@
             <div class="text-center py-5">
                 <i class="fa fa-robot fa-3x text-muted mb-3"></i>
                 <h5>No Trading Bots Yet</h5>
-                <p class="text-muted">Create your first trading bot to start automated trading!</p>
-                <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
-                    <i class="fa fa-plus"></i> Create Your First Bot
-                </a>
+                <p class="text-muted">Start by browsing prebuilt templates or create your own bot from scratch!</p>
+                <div>
+                    <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-info me-2">
+                        <i class="fa fa-store"></i> Browse Templates
+                    </a>
+                    <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> Create Your Own Bot
+                    </a>
+                </div>
             </div>
         @endif
     </div>

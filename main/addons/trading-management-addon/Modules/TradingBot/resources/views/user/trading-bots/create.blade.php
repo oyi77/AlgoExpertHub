@@ -9,12 +9,24 @@
     <div class="card-header">
         <div class="d-flex flex-wrap align-items-center justify-content-between">
             <h4>{{ __($title) }}</h4>
-            <a href="{{ route('user.trading-bots.index') }}" class="btn btn-sm btn-secondary">
-                <i class="fa fa-arrow-left"></i> {{ __('Go Back') }}
-            </a>
+            <div>
+                <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-sm btn-info me-2">
+                    <i class="fa fa-store"></i> {{ __('Browse Templates') }}
+                </a>
+                <a href="{{ route('user.trading-bots.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="fa fa-arrow-left"></i> {{ __('Go Back') }}
+                </a>
+            </div>
         </div>
     </div>
     <div class="card-body">
+        {{-- Browse Templates Alert --}}
+        <div class="alert alert-info mb-4">
+            <i class="fa fa-lightbulb"></i> 
+            <strong>Tip:</strong> Start from a prebuilt template with MA100, MA10, and PSAR indicators! 
+            <a href="{{ route('user.trading-bots.marketplace') }}" class="alert-link">Browse Templates →</a>
+        </div>
+
         {{-- Demo Mode Badge --}}
         <div class="alert alert-warning mb-4">
             <i class="fa fa-exclamation-triangle"></i> <strong>Demo Mode:</strong> This bot will run in paper trading mode. No real money will be used.

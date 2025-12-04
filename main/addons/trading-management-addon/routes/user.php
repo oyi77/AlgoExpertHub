@@ -42,6 +42,9 @@ Route::get('/test', function () {
 // Trading Bots (Coinrule-like bot builder)
 Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::get('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'index'])->name('index');
+    Route::get('/marketplace', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'marketplace'])->name('marketplace');
+    Route::get('/clone/{template}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'clone'])->name('clone');
+    Route::post('/clone/{template}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'storeClone'])->name('clone.store');
     Route::get('/create', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'create'])->name('create');
     Route::post('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'store'])->name('store');
     Route::get('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'show'])->name('show');
