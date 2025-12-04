@@ -56,7 +56,7 @@
                         <tbody>
                             @foreach($positions as $position)
                             <tr>
-                                <td>{{ $position->opened_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ $position->created_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ $position->connection->name ?? 'N/A' }}</td>
                                 <td>{{ $position->symbol }}</td>
                                 <td>

@@ -83,7 +83,7 @@
                         <tbody>
                             @foreach($positions as $position)
                             <tr>
-                                <td>{{ $position->opened_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ $position->created_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ $position->closed_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ $position->symbol }}</td>
                                 <td>
@@ -94,9 +94,9 @@
                                     @endif
                                 </td>
                                 <td>{{ $position->entry_price }}</td>
-                                <td>{{ $position->exit_price }}</td>
+                                <td>{{ $position->current_price }}</td>
                                 <td>{{ $position->lot_size }}</td>
-                                <td>{{ $position->opened_at->diffForHumans($position->closed_at, true) }}</td>
+                                <td>{{ $position->closed_at->diffForHumans($position->created_at, true) }}</td>
                                 <td class="{{ $position->pnl >= 0 ? 'text-success' : 'text-danger' }}">
                                     <strong>${{ number_format($position->pnl, 2) }}</strong>
                                 </td>

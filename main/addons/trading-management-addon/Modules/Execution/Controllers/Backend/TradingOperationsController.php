@@ -72,7 +72,7 @@ class TradingOperationsController extends Controller
             $query->where('symbol', 'like', '%' . $request->symbol . '%');
         }
 
-        $positions = $query->orderBy('opened_at', 'desc')->paginate(50);
+        $positions = $query->orderBy('created_at', 'desc')->paginate(50);
 
         // Stats
         $stats = [

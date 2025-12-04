@@ -83,56 +83,257 @@
                     <!-- Execution Connections Tab -->
                     <div class="tab-pane fade show active" id="tab-connections">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Execution Connections</h5>
-                            <a href="{{ route('admin.trading-management.operations.connections.index') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> Manage Connections
+                            <h5 class="mb-0"><i class="fas fa-plug"></i> Execution Connections</h5>
+                            <a href="{{ route('admin.trading-management.operations.connections.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Connection
                             </a>
                         </div>
-                        <p class="text-muted">Configure and manage execution connections to crypto exchanges and FX brokers for automated trading.</p>
+
+                        @php
+                            $connections = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::with(['preset', 'dataConnection'])
+                                ->orderBy('created_at', 'desc')
+                                ->paginate(10, ['*'], 'conn_page');
+                        @endphp
+
+                        @if($connections->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Exchange</th>
+                                        <th>Status</th>
+                                        <th>Preset</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($connections as $conn)
+                                    <tr>
+                                        <td><strong>{{ $conn->name }}</strong></td>
+                                        <td>
+                                            <span class="badge {{ $conn->type === 'CRYPTO_EXCHANGE' ? 'badge-primary' : 'badge-success' }}">
+                                                {{ $conn->type === 'CRYPTO_EXCHANGE' ? 'Crypto' : 'Forex' }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $conn->exchange_name }}</td>
+                                        <td>
+                                            @if($conn->is_active)
+                                            <span class="badge badge-success">Active</span>
+                                            @else
+                                            <span class="badge badge-secondary">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $conn->preset->name ?? 'None' }}</td>
+                                        <td>
+                                            <a href="{{ route('admin.trading-management.operations.connections.edit', $conn) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ $connections->links() }}
+                        @else
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No execution connections. <a href="{{ route('admin.trading-management.operations.connections.create') }}">Create one now</a>.
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Execution Log Tab -->
                     <div class="tab-pane fade" id="tab-executions">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Execution Log</h5>
+                        <h5 class="mb-3"><i class="fas fa-list"></i> Recent Executions</h5>
+
+                        @php
+                            $executions = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::with('connection')
+                                ->orderBy('created_at', 'desc')
+                                ->limit(20)
+                                ->get();
+                        @endphp
+
+                        @if($executions->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Connection</th>
+                                        <th>Symbol</th>
+                                        <th>Direction</th>
+                                        <th>Lot Size</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($executions as $exec)
+                                    <tr>
+                                        <td>{{ $exec->created_at->format('Y-m-d H:i') }}</td>
+                                        <td>{{ $exec->connection->name ?? 'N/A' }}</td>
+                                        <td>{{ $exec->symbol }}</td>
+                                        <td>
+                                            <span class="badge {{ in_array($exec->direction, ['BUY', 'LONG']) ? 'badge-success' : 'badge-danger' }}">
+                                                {{ $exec->direction }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $exec->lot_size }}</td>
+                                        <td>
+                                            @if($exec->status === 'SUCCESS')
+                                            <span class="badge badge-success">Success</span>
+                                            @elseif($exec->status === 'FAILED')
+                                            <span class="badge badge-danger">Failed</span>
+                                            @else
+                                            <span class="badge badge-warning">Pending</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
                             <a href="{{ route('admin.trading-management.operations.executions') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> View Executions
+                                <i class="fas fa-external-link-alt"></i> View All Executions
                             </a>
                         </div>
-                        <p class="text-muted">Complete history of all trade executions with success/failure status and error details.</p>
+                        @else
+                        <div class="alert alert-info">No executions yet.</div>
+                        @endif
                     </div>
 
                     <!-- Open Positions Tab -->
                     <div class="tab-pane fade" id="tab-positions-open">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Open Positions</h5>
+                        <h5 class="mb-3"><i class="fas fa-chart-area"></i> Open Positions</h5>
+
+                        @php
+                            $openPositions = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::with('connection')
+                                ->where('status', 'open')
+                                ->orderBy('created_at', 'desc')
+                                ->limit(20)
+                                ->get();
+                        @endphp
+
+                        @if($openPositions->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Direction</th>
+                                        <th>Entry</th>
+                                        <th>Current</th>
+                                        <th>Lot Size</th>
+                                        <th>P&L</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($openPositions as $pos)
+                                    <tr>
+                                        <td>{{ $pos->symbol }}</td>
+                                        <td>
+                                            <span class="badge {{ in_array($pos->direction, ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
+                                                {{ strtoupper($pos->direction) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $pos->entry_price }}</td>
+                                        <td>{{ $pos->current_price }}</td>
+                                        <td>{{ $pos->quantity }}</td>
+                                        <td class="{{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}">
+                                            ${{ number_format($pos->pnl, 2) }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
                             <a href="{{ route('admin.trading-management.operations.positions.open') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> Monitor Positions
+                                <i class="fas fa-external-link-alt"></i> View All Positions
                             </a>
                         </div>
-                        <p class="text-muted">Real-time monitoring of all open trading positions with current P&L and status.</p>
+                        @else
+                        <div class="alert alert-info">No open positions.</div>
+                        @endif
                     </div>
 
                     <!-- Closed Positions Tab -->
                     <div class="tab-pane fade" id="tab-positions-closed">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Closed Positions</h5>
+                        <h5 class="mb-3"><i class="fas fa-history"></i> Recent Closed Positions</h5>
+
+                        @php
+                            $closedPositions = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::with('connection')
+                                ->where('status', 'closed')
+                                ->orderBy('closed_at', 'desc')
+                                ->limit(20)
+                                ->get();
+                        @endphp
+
+                        @if($closedPositions->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Closed</th>
+                                        <th>Symbol</th>
+                                        <th>Direction</th>
+                                        <th>Entry</th>
+                                        <th>Exit</th>
+                                        <th>P&L</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($closedPositions as $pos)
+                                    <tr>
+                                        <td>{{ $pos->closed_at->format('Y-m-d H:i') }}</td>
+                                        <td>{{ $pos->symbol }}</td>
+                                        <td>
+                                            <span class="badge {{ in_array($pos->direction, ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
+                                                {{ strtoupper($pos->direction) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $pos->entry_price }}</td>
+                                        <td>{{ $pos->current_price }}</td>
+                                        <td class="{{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}">
+                                            <strong>${{ number_format($pos->pnl, 2) }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($pos->closed_reason === 'tp')
+                                            <span class="badge badge-success">TP</span>
+                                            @elseif($pos->closed_reason === 'sl')
+                                            <span class="badge badge-danger">SL</span>
+                                            @else
+                                            <span class="badge badge-info">{{ strtoupper($pos->closed_reason) }}</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
                             <a href="{{ route('admin.trading-management.operations.positions.closed') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> View History
+                                <i class="fas fa-external-link-alt"></i> View All Closed Positions
                             </a>
                         </div>
-                        <p class="text-muted">Historical record of all closed positions with final P&L and close reasons (TP/SL/Manual).</p>
+                        @else
+                        <div class="alert alert-info">No closed positions yet.</div>
+                        @endif
                     </div>
 
                     <!-- Analytics Tab -->
                     <div class="tab-pane fade" id="tab-analytics">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Analytics</h5>
-                            <a href="{{ route('admin.trading-management.operations.analytics') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> View Analytics
+                        <h5 class="mb-3"><i class="fas fa-chart-pie"></i> Performance Analytics</h5>
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">View detailed performance analytics with charts and metrics</p>
+                            <a href="{{ route('admin.trading-management.operations.analytics') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-external-link-alt"></i> Open Analytics Dashboard
                             </a>
                         </div>
-                        <p class="text-muted">Performance metrics including win rate, profit factor, drawdown, and daily P&L charts.</p>
                     </div>
                 </div>
             </div>
