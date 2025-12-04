@@ -20,6 +20,7 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SignalController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\User\ExternalSignalController;
 use App\Http\Controllers\WithdrawController;
 use Illuminate\Support\Facades\Route;
 
@@ -90,6 +91,9 @@ Route::name('user.')->group(function () {
         Route::middleware('2fa', 'kyc')->group(function () {
 
             Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+
+            // External Signal (multi-tab wrapper for Signal Sources, Channel Forwarding, Pattern Templates)
+            Route::get('external-signals', [ExternalSignalController::class, 'index'])->name('external-signals.index');
 
             Route::get('profile/setting', [UserController::class, 'profile'])->name('profile');
             Route::post('profile/setting', [UserController::class, 'profileUpdate'])->name('profileupdate');
