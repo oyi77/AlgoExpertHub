@@ -17,14 +17,16 @@ class ExecuteSignalJob implements ShouldQueue
 
     protected Signal $signal;
     protected int $connectionId;
+    protected array $options;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Signal $signal, int $connectionId)
+    public function __construct(Signal $signal, int $connectionId, array $options = [])
     {
         $this->signal = $signal;
         $this->connectionId = $connectionId;
+        $this->options = $options;
     }
 
     /**
@@ -33,8 +35,9 @@ class ExecuteSignalJob implements ShouldQueue
     public function handle(SignalExecutionService $executionService): void
     {
         try {
-            // Get AI decision from channel message (if auto-created signal)
-            $options = $this->getExecutionOptions();
+            // Merge job options with AI decision from channel message (if auto-created signal)
+            $aiOptions = $this->getExecutionOptions();
+            $options = array_merge($this->options, $aiOptions);
 
             $result = $executionService->executeSignal($this->signal, $this->connectionId, $options);
 

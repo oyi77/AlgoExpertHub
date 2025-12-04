@@ -49,9 +49,18 @@ class AddonServiceProvider extends ServiceProvider
 
         // Load views with namespace
         $this->loadViewsFrom(__DIR__ . '/resources/views', 'trading-management');
+        
+        // Load TradingBot module views (they're in Modules/TradingBot/resources/views)
+        // This allows views like 'trading-management::backend.trading-bots.index' to work
+        if (is_dir(__DIR__ . '/Modules/TradingBot/resources/views')) {
+            $this->loadViewsFrom(__DIR__ . '/Modules/TradingBot/resources/views', 'trading-management');
+        }
 
         // Load routes conditionally based on enabled modules
         $this->loadRoutes();
+
+        // Register observers
+        $this->registerObservers();
 
         // Register scheduled tasks
         $this->registerScheduledTasks();
@@ -69,6 +78,21 @@ class AddonServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/config/trading-management.php' => config_path('trading-management.php'),
         ], 'trading-management-config');
+    }
+
+    /**
+     * Register model observers
+     *
+     * @return void
+     */
+    protected function registerObservers()
+    {
+        // Register BotSignalObserver for trading bot execution
+        if ($this->isModuleEnabled('execution') && class_exists(\App\Models\Signal::class)) {
+            \App\Models\Signal::observe(
+                \Addons\TradingManagement\Modules\TradingBot\Observers\BotSignalObserver::class
+            );
+        }
     }
 
     /**

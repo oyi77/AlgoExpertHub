@@ -39,5 +39,17 @@ Route::get('/test', function () {
     return '<h1>Backtesting</h1><p>Test my strategies on historical data</p>';
 })->name('test.index');
 
+// Trading Bots (Coinrule-like bot builder)
+Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
+    Route::get('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'index'])->name('index');
+    Route::get('/create', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'create'])->name('create');
+    Route::post('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'store'])->name('store');
+    Route::get('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'update'])->name('update');
+    Route::delete('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/toggle-active', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'toggleActive'])->name('toggle-active');
+});
+
 // Full routes will be implemented in respective phases
 

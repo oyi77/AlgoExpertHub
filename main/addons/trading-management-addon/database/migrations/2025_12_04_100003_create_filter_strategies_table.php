@@ -19,6 +19,11 @@ class CreateFilterStrategiesTable extends Migration
      */
     public function up()
     {
+        // Skip if table already exists (created by filter-strategy-addon migration)
+        if (Schema::hasTable('filter_strategies')) {
+            return;
+        }
+
         Schema::create('filter_strategies', function (Blueprint $table) {
             $table->id();
             $table->string('name');

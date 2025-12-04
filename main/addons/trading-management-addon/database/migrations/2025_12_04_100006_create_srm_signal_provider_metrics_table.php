@@ -14,6 +14,11 @@ class CreateSrmSignalProviderMetricsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists
+        if (Schema::hasTable('srm_signal_provider_metrics')) {
+            return;
+        }
+
         Schema::create('srm_signal_provider_metrics', function (Blueprint $table) {
             $table->id();
             $table->string('provider_id')->comment('Signal source identifier');

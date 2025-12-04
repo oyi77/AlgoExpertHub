@@ -29,6 +29,17 @@
     $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
     $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
     $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
+    // Trading Management: Check if addon is active and has any enabled module with user_ui target
+    $tradingManagementUserModuleEnabled = false;
+    if (\App\Support\AddonRegistry::active('trading-management-addon')) {
+        $manifest = \App\Support\AddonRegistry::get('trading-management-addon');
+        if ($manifest) {
+            $modules = collect($manifest['modules'] ?? []);
+            $tradingManagementUserModuleEnabled = $modules->where('enabled', true)->filter(function ($module) {
+                return in_array('user_ui', $module['targets'] ?? []);
+            })->isNotEmpty();
+        }
+    }
 @endphp
 
 <aside class="user-sidebar">
@@ -195,6 +206,36 @@
                     @if (Route::has('user.srm.insights.index'))
                     <li class="{{ Config::singleMenu('user.srm.insights.index') }}">
                         <a href="{{ route('user.srm.insights.index') }}">{{ __('Insights') }}</a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+        @endif
+
+        @if ($tradingManagementUserModuleEnabled)
+            @php
+                $tradingBotRoutes = [];
+                if (Route::has('user.trading-management.trading-bots.index')) $tradingBotRoutes[] = route('user.trading-management.trading-bots.index');
+                if (Route::has('user.trading-management.trading-bots.create')) $tradingBotRoutes[] = route('user.trading-management.trading-bots.create');
+                if (Route::has('user.trading-management.trading-bots.show')) {
+                    // Check if current route matches trading-bots.show pattern
+                    $currentRoute = request()->route();
+                    if ($currentRoute && str_contains($currentRoute->getName(), 'trading-management.trading-bots')) {
+                        $tradingBotRoutes[] = url()->current();
+                    }
+                }
+            @endphp
+            <li class="has_submenu {{ in_array(url()->current(), $tradingBotRoutes) ? 'open' : '' }}">
+                <a href="#0"><i class="fas fa-robot"></i> {{ __('Trading Bots') }}</a>
+                <ul class="submenu">
+                    @if (Route::has('user.trading-management.trading-bots.index'))
+                    <li class="{{ Config::singleMenu('user.trading-management.trading-bots.index') }}">
+                        <a href="{{ route('user.trading-management.trading-bots.index') }}">{{ __('My Bots') }}</a>
+                    </li>
+                    @endif
+                    @if (Route::has('user.trading-management.trading-bots.create'))
+                    <li class="{{ Config::singleMenu('user.trading-management.trading-bots.create') }}">
+                        <a href="{{ route('user.trading-management.trading-bots.create') }}">{{ __('Create Bot') }}</a>
                     </li>
                     @endif
                 </ul>

@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table already exists
+        if (Schema::hasTable('ai_parsing_profiles')) {
+            return;
+        }
+
         Schema::create('ai_parsing_profiles', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('channel_source_id')->nullable(); // Nullable for global/default profiles
@@ -27,17 +32,21 @@ return new class extends Migration
             $table->index('ai_connection_id');
             $table->index(['enabled', 'priority']);
 
-            // Foreign key to channel_sources
-            $table->foreign('channel_source_id')
-                  ->references('id')
-                  ->on('channel_sources')
-                  ->onDelete('cascade');
+            // Foreign key to channel_sources (if exists)
+            if (Schema::hasTable('channel_sources')) {
+                $table->foreign('channel_source_id')
+                      ->references('id')
+                      ->on('channel_sources')
+                      ->onDelete('cascade');
+            }
 
-            // Foreign key to ai_connections (in AI Connection Addon)
-            $table->foreign('ai_connection_id')
-                  ->references('id')
-                  ->on('ai_connections')
-                  ->onDelete('restrict'); // Don't allow deleting connection if profiles use it
+            // Foreign key to ai_connections (only if table exists)
+            if (Schema::hasTable('ai_connections')) {
+                $table->foreign('ai_connection_id')
+                      ->references('id')
+                      ->on('ai_connections')
+                      ->onDelete('restrict'); // Don't allow deleting connection if profiles use it
+            }
         });
     }
 

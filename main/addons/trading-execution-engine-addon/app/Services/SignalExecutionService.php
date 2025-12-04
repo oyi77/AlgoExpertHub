@@ -10,6 +10,7 @@ use App\Models\Plan;
 use App\Models\Signal;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class SignalExecutionService implements ExecutionServiceInterface
 {
@@ -159,8 +160,26 @@ class SignalExecutionService implements ExecutionServiceInterface
                 ? $adapter->placeLimitOrder($symbol, $signal->direction, $quantity, $options['limit_price'], $orderOptions)
                 : $adapter->placeMarketOrder($symbol, $signal->direction, $quantity, $orderOptions);
 
+            // Check if paper trading mode
+            $isPaperTrading = $options['is_paper_trading'] ?? false;
+            
+            // For paper trading, simulate order (don't actually place)
+            if ($isPaperTrading) {
+                $result['order_id'] = 'PAPER_' . time() . '_' . rand(1000, 9999);
+                $result['price'] = $signal->open_price;
+                $result['success'] = true;
+                $result['message'] = 'Paper trading execution simulated';
+                
+                Log::info('Paper trading execution', [
+                    'signal_id' => $signal->id,
+                    'connection_id' => $connectionId,
+                    'bot_id' => $options['trading_bot_id'] ?? null,
+                    'order_id' => $result['order_id'],
+                ]);
+            }
+
             // Create execution log
-            $executionLog = ExecutionLog::create([
+            $executionLogData = [
                 'signal_id' => $signal->id,
                 'connection_id' => $connectionId,
                 'execution_type' => $executionType,
@@ -175,7 +194,14 @@ class SignalExecutionService implements ExecutionServiceInterface
                 'executed_at' => $result['success'] ? now() : null,
                 'error_message' => $result['success'] ? null : ($result['message'] ?? 'Unknown error'),
                 'response_data' => $result['data'] ?? [],
-            ]);
+            ];
+
+            // Add trading_bot_id if provided
+            if (isset($options['trading_bot_id']) && Schema::hasColumn('execution_logs', 'trading_bot_id')) {
+                $executionLogData['trading_bot_id'] = $options['trading_bot_id'];
+            }
+
+            $executionLog = ExecutionLog::create($executionLogData);
 
             // Store SRM market context and predictions
             if (!empty($srmAdjustments) && class_exists(\Addons\SmartRiskManagement\App\Services\SrmIntegrationService::class)) {
@@ -197,8 +223,28 @@ class SignalExecutionService implements ExecutionServiceInterface
                 }
             }
 
-            // Update connection last used
-            $connection->updateLastUsed();
+            // Update connection last used (skip for paper trading)
+            if (!$isPaperTrading) {
+                $connection->updateLastUsed();
+            }
+
+            // Update bot statistics if executed through bot
+            if (isset($options['trading_bot_id']) && $result['success']) {
+                try {
+                    if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\BotExecutionService::class)) {
+                        $botService = app(\Addons\TradingManagement\Modules\TradingBot\Services\BotExecutionService::class);
+                        $bot = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::find($options['trading_bot_id']);
+                        if ($bot) {
+                            $botService->updateBotStatistics($bot, true);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to update bot statistics', [
+                        'bot_id' => $options['trading_bot_id'] ?? null,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             // Create position if order was successful
             $positionId = null;

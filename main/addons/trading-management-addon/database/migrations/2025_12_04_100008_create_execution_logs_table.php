@@ -8,6 +8,11 @@ class CreateExecutionLogsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists (created by trading-execution-engine-addon migration)
+        if (Schema::hasTable('execution_logs')) {
+            return;
+        }
+
         Schema::create('execution_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('execution_connection_id');

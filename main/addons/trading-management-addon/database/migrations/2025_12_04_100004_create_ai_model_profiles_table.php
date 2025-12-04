@@ -19,6 +19,11 @@ class CreateAiModelProfilesTable extends Migration
      */
     public function up()
     {
+        // Skip if table already exists (created by ai-trading-addon migration)
+        if (Schema::hasTable('ai_model_profiles')) {
+            return;
+        }
+
         Schema::create('ai_model_profiles', function (Blueprint $table) {
             $table->id();
             

@@ -100,6 +100,9 @@
                         @if (Route::has('admin.trading-management.test.index'))
                         <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
                         @endif
+                        @if (Route::has('admin.trading-management.trading-bots.index'))
+                        <li><a href="{{ route('admin.trading-management.trading-bots.index') }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
