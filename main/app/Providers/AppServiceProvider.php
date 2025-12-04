@@ -39,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
                 'ai-trading-addon' => \Addons\AiTradingAddon\AddonServiceProvider::class,
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
                 'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
+                'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // NEW: Consolidated trading management
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {
