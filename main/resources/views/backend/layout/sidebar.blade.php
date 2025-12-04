@@ -307,13 +307,6 @@
                 </li>
             @endif
 
-
-            @if ($adminUser && $adminUser->can('manage-setting'))
-                <li><a href="{{ route('admin.general.index') }}" aria-expanded="false"><i
-                            data-feather="settings"></i><span class="nav-text">{{ __('Manage Settings') }}</span></a>
-                </li>
-            @endif
-
             @if ($adminUser && $adminUser->can('manage-email'))
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i data-feather="mail"></i><span
                             class="nav-text">{{ __('Email Config') }}</span></a>
@@ -326,15 +319,22 @@
                 </li>
             @endif
 
-            @if ($adminUser && $adminUser->can('manage-theme'))
-                <li><a href="{{ route('admin.manage.theme') }}" aria-expanded="false"><i
-                            data-feather="layers"></i><span class="nav-text">{{ __('Manage Theme') }}</span></a>
+
+            @if ($adminUser && $adminUser->can('manage-setting'))
+                <li><a href="{{ route('admin.general.index') }}" aria-expanded="false"><i
+                            data-feather="settings"></i><span class="nav-text">{{ __('Manage Settings') }}</span></a>
                 </li>
             @endif
 
             @if ($adminUser && ($adminUser->can('manage-frontend') ||
                     $adminUser->can('manage-language')))
                 <li class="nav-label">{{ __('Theme Settings') }}</li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-theme'))
+                <li><a href="{{ route('admin.manage.theme') }}" aria-expanded="false"><i
+                            data-feather="layers"></i><span class="nav-text">{{ __('Manage Theme') }}</span></a>
+                </li>
             @endif
 
             @if ($adminUser && $adminUser->can('manage-frontend'))
