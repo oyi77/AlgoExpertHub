@@ -17,7 +17,7 @@
                 <ul class="nav nav-pills nav-fill">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('*/config*') ? 'active' : '' }}" 
-                           href="{{ route('admin.trading-management.config.data-connections.index') }}">
+                           href="{{ route('admin.trading-management.config.index') }}">
                             <i class="fas fa-cog"></i><br>
                             <small>Trading Configuration</small>
                         </a>

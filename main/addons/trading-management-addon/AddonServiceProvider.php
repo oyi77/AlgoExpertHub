@@ -109,16 +109,24 @@ class AddonServiceProvider extends ServiceProvider
         $manifest = json_decode(file_get_contents(__DIR__ . '/addon.json'), true);
         $modules = collect($manifest['modules'] ?? []);
 
-        // Admin routes (if any module with admin_ui is enabled)
-        if ($modules->where('enabled', true)->whereIn('targets', [['admin_ui']])->isNotEmpty()) {
+        // Admin routes (if any enabled module has 'admin_ui' in targets)
+        $hasAdminUI = $modules->where('enabled', true)->filter(function ($module) {
+            return in_array('admin_ui', $module['targets'] ?? []);
+        })->isNotEmpty();
+
+        if ($hasAdminUI) {
             Route::middleware(['web', 'admin', 'demo'])
                 ->prefix('admin/trading-management')
                 ->name('admin.trading-management.')
                 ->group(__DIR__ . '/routes/admin.php');
         }
 
-        // User routes (if any module with user_ui is enabled)
-        if ($modules->where('enabled', true)->whereIn('targets', [['user_ui']])->isNotEmpty()) {
+        // User routes (if any enabled module has 'user_ui' in targets)
+        $hasUserUI = $modules->where('enabled', true)->filter(function ($module) {
+            return in_array('user_ui', $module['targets'] ?? []);
+        })->isNotEmpty();
+
+        if ($hasUserUI) {
             Route::middleware(['web', 'auth', 'inactive', 'is_email_verified', '2fa', 'kyc'])
                 ->prefix('user/trading-management')
                 ->name('user.trading-management.')
@@ -139,22 +147,23 @@ class AddonServiceProvider extends ServiceProvider
      */
     protected function registerScheduledTasks()
     {
-        if ($this->isModuleEnabled('market_data')) {
-            $this->app->booted(function () {
-                $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        // Temporarily disabled - will be enabled in Phase 7
+        // if ($this->isModuleEnabled('market_data')) {
+        //     $this->app->booted(function () {
+        //         $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
 
-                // Fetch market data every 5 minutes
-                $schedule->job(new \Addons\TradingManagement\Modules\MarketData\Jobs\FetchAllActiveConnectionsJob())
-                    ->everyFiveMinutes()
-                    ->name('trading-management:fetch-market-data')
-                    ->withoutOverlapping();
+        //         // Fetch market data every 5 minutes
+        //         $schedule->job(new \Addons\TradingManagement\Modules\MarketData\Jobs\FetchAllActiveConnectionsJob())
+        //             ->everyFiveMinutes()
+        //             ->name('trading-management:fetch-market-data')
+        //             ->withoutOverlapping();
 
-                // Cleanup old data daily at 2 AM
-                $schedule->job(new \Addons\TradingManagement\Modules\MarketData\Jobs\CleanOldMarketDataJob())
-                    ->dailyAt('02:00')
-                    ->name('trading-management:cleanup-market-data');
-            });
-        }
+        //         // Cleanup old data daily at 2 AM
+        //         $schedule->job(new \Addons\TradingManagement\Modules\MarketData\Jobs\CleanOldMarketDataJob())
+        //             ->dailyAt('02:00')
+        //             ->name('trading-management:cleanup-market-data');
+        //     });
+        // }
     }
 
     /**

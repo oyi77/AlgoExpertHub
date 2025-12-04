@@ -26,18 +26,23 @@ Route::get('/', function () {
 
     // 1. Trading Configuration (Submenu)
     Route::prefix('config')->name('config.')->group(function () {
-        // Data Connections tab (Phase 2) - ACTIVE
-        Route::resource('data-connections', \Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class);
-        Route::post('data-connections/test', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'test'])
-            ->name('data-connections.test');
-        Route::post('data-connections/{dataConnection}/activate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'activate'])
-            ->name('data-connections.activate');
-        Route::post('data-connections/{dataConnection}/deactivate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'deactivate'])
-            ->name('data-connections.deactivate');
-        Route::get('data-connections/{dataConnection}/market-data', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'marketData'])
-            ->name('data-connections.market-data');
-        Route::get('data-connections/{dataConnection}/logs', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'logs'])
-            ->name('data-connections.logs');
+        // Config dashboard (placeholder for Phase 7)
+        Route::get('/', function () {
+            return view('trading-management::backend.trading-management.config.index');
+        })->name('index');
+        
+        // Data Connections tab (Phase 2) - DISABLED UNTIL CONTROLLERS CREATED
+        // Route::resource('data-connections', \Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class);
+        // Route::post('data-connections/test', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'test'])
+        //     ->name('data-connections.test');
+        // Route::post('data-connections/{dataConnection}/activate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'activate'])
+        //     ->name('data-connections.activate');
+        // Route::post('data-connections/{dataConnection}/deactivate', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'deactivate'])
+        //     ->name('data-connections.deactivate');
+        // Route::get('data-connections/{dataConnection}/market-data', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'marketData'])
+        //     ->name('data-connections.market-data');
+        // Route::get('data-connections/{dataConnection}/logs', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\DataConnectionController::class, 'logs'])
+        //     ->name('data-connections.logs');
         
         // Risk Presets tab (Phase 4)
         // Route::resource('risk-presets', Backend\RiskPresetController::class);
@@ -106,10 +111,7 @@ Route::get('/', function () {
         // Route::resource('backtests', Backend\BacktestController::class);
     });
 
-// Redirect /config to data-connections
-Route::get('/config', function () {
-    return redirect()->route('admin.trading-management.config.data-connections.index');
-});
+// /config is now handled by the config.index route above
 
 // Removed - now in operations prefix group above
 

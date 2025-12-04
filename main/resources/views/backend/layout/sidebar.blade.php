@@ -84,7 +84,7 @@
                         <li><a href="{{ route('admin.trading-management.dashboard') }}" aria-expanded="false">
                             <i data-feather="home"></i> {{ __('Dashboard') }}</a>
                         </li>
-                        <li><a href="{{ route('admin.trading-management.config.data-connections.index') }}" aria-expanded="false">
+                        <li><a href="{{ route('admin.trading-management.config.index') }}" aria-expanded="false">
                             <i data-feather="settings"></i> {{ __('Trading Configuration') }}</a>
                         </li>
                         <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">
