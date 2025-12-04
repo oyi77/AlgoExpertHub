@@ -18,6 +18,11 @@ class CreateExecutionConnectionsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists (created by trading-execution-engine-addon migration)
+        if (Schema::hasTable('execution_connections')) {
+            return;
+        }
+
         Schema::create('execution_connections', function (Blueprint $table) {
             $table->id();
             

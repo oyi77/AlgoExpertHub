@@ -100,6 +100,9 @@
                         @if (Route::has('admin.trading-management.test.index'))
                         <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
                         @endif
+                        @if (Route::has('admin.trading-management.trading-bots.index'))
+                        <li><a href="{{ route('admin.trading-management.trading-bots.index') }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
+                        @endif
                     </ul>
                 </li>
             @endif
@@ -419,10 +422,6 @@
 
             <li><a href="{{ route('admin.notifications') }}" aria-expanded="false"><i
                         data-feather="feather"></i><span class="nav-text">{{ __('All Notification') }}</span></a>
-            </li>
-
-            <li><a href="{{ route('admin.general.cacheclear') }}" aria-expanded="false"><i
-                        data-feather="feather"></i><span class="nav-text">{{ __('Clear Cache') }}</span></a>
             </li>
 
             <li class="nav-label">{{__('Current Version') .' - '. Config::APP_VERSION }}</li>

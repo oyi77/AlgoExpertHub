@@ -13,6 +13,11 @@ class AddPresetIdToCopyTradingSubscriptions extends Migration
      */
     public function up()
     {
+        // Check if table exists before altering
+        if (!Schema::hasTable('copy_trading_subscriptions')) {
+            return; // Table will be created by copy-trading-addon migration
+        }
+        
         Schema::table('copy_trading_subscriptions', function (Blueprint $table) {
             $table->unsignedBigInteger('preset_id')->nullable()->after('copy_settings');
             $table->index('preset_id');

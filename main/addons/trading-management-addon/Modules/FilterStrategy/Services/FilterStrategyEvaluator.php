@@ -286,6 +286,11 @@ class FilterStrategyEvaluator
 
     protected function getIndicatorValue(string $name, array $indicators, float $currentPrice): ?float
     {
+        // Handle "price" as special case - return current price
+        if (strtolower($name) === 'price' || strtolower($name) === 'current_price') {
+            return $currentPrice;
+        }
+
         if (!isset($indicators[$name])) return null;
 
         $values = $indicators[$name];
@@ -306,10 +311,18 @@ class FilterStrategyEvaluator
             return (float) $right;
         }
 
-        if (is_string($right) && isset($indicators[$right])) {
-            $value = $this->getIndicatorValue($right, $indicators, $currentPrice);
-            if ($value !== null) {
-                return $value;
+        if (is_string($right)) {
+            // Handle "price" as special case
+            if (strtolower($right) === 'price' || strtolower($right) === 'current_price') {
+                return $currentPrice;
+            }
+
+            // Check if it's an indicator name
+            if (isset($indicators[$right])) {
+                $value = $this->getIndicatorValue($right, $indicators, $currentPrice);
+                if ($value !== null) {
+                    return $value;
+                }
             }
         }
 

@@ -14,8 +14,17 @@ return new class extends Migration
     public function up()
     {
         Schema::table('trading_presets', function (Blueprint $table) {
+            // Determine position - after filter_strategy_id if exists, otherwise at end
+            $afterColumn = Schema::hasColumn('trading_presets', 'filter_strategy_id') 
+                ? 'filter_strategy_id' 
+                : null;
+            
             // AI Model Profile reference
-            $table->unsignedBigInteger('ai_model_profile_id')->nullable()->after('filter_strategy_id');
+            if ($afterColumn) {
+                $table->unsignedBigInteger('ai_model_profile_id')->nullable()->after($afterColumn);
+            } else {
+                $table->unsignedBigInteger('ai_model_profile_id')->nullable();
+            }
             
             // AI Confirmation Settings
             $table->enum('ai_confirmation_mode', ['NONE', 'REQUIRED', 'ADVISORY'])->default('NONE')->after('ai_model_profile_id');
@@ -28,11 +37,13 @@ return new class extends Migration
             $table->index('ai_model_profile_id');
             $table->index('ai_confirmation_mode');
             
-            // Foreign Key
-            $table->foreign('ai_model_profile_id')
-                ->references('id')
-                ->on('ai_model_profiles')
-                ->onDelete('set null');
+            // Foreign Key (only if ai_model_profiles table exists)
+            if (Schema::hasTable('ai_model_profiles')) {
+                $table->foreign('ai_model_profile_id')
+                    ->references('id')
+                    ->on('ai_model_profiles')
+                    ->onDelete('set null');
+            }
         });
     }
 

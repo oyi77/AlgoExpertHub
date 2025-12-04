@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if table already exists
+        if (Schema::hasTable('translation_settings')) {
+            return;
+        }
+
         Schema::create('translation_settings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ai_connection_id'); // Primary AI connection for translations
@@ -20,31 +25,35 @@ return new class extends Migration
             $table->json('settings')->nullable(); // Additional settings (temperature, max_tokens overrides)
             $table->timestamps();
 
-            // Foreign keys to AI Connection Addon
-            $table->foreign('ai_connection_id')
-                  ->references('id')
-                  ->on('ai_connections')
-                  ->onDelete('restrict');
+            // Foreign keys to AI Connection Addon (only if table exists)
+            if (Schema::hasTable('ai_connections')) {
+                $table->foreign('ai_connection_id')
+                      ->references('id')
+                      ->on('ai_connections')
+                      ->onDelete('restrict');
 
-            $table->foreign('fallback_connection_id')
-                  ->references('id')
-                  ->on('ai_connections')
-                  ->onDelete('set null');
+                $table->foreign('fallback_connection_id')
+                      ->references('id')
+                      ->on('ai_connections')
+                      ->onDelete('set null');
+            }
 
             // Indexes
             $table->index('ai_connection_id');
         });
 
         // Insert default settings if an AI connection exists
-        $defaultConnection = DB::table('ai_connections')->first();
-        if ($defaultConnection) {
-            DB::table('translation_settings')->insert([
-                'ai_connection_id' => $defaultConnection->id,
-                'batch_size' => 10,
-                'delay_between_requests_ms' => 100,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        if (Schema::hasTable('ai_connections')) {
+            $defaultConnection = DB::table('ai_connections')->first();
+            if ($defaultConnection) {
+                DB::table('translation_settings')->insert([
+                    'ai_connection_id' => $defaultConnection->id,
+                    'batch_size' => 10,
+                    'delay_between_requests_ms' => 100,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
     }
 

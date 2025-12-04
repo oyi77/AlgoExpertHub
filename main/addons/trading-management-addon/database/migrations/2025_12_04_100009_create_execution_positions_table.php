@@ -8,6 +8,11 @@ class CreateExecutionPositionsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists (created by trading-execution-engine-addon migration)
+        if (Schema::hasTable('execution_positions')) {
+            return;
+        }
+
         Schema::create('execution_positions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('signal_id');

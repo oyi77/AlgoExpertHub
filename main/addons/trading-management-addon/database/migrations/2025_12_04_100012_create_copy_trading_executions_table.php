@@ -8,6 +8,11 @@ class CreateCopyTradingExecutionsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists (created by copy-trading-addon migration)
+        if (Schema::hasTable('copy_trading_executions')) {
+            return;
+        }
+
         Schema::create('copy_trading_executions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('subscription_id');

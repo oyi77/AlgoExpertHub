@@ -18,6 +18,11 @@ class CreateTradingPresetsTable extends Migration
 {
     public function up()
     {
+        // Skip if table already exists (created by trading-preset-addon migration)
+        if (Schema::hasTable('trading_presets')) {
+            return;
+        }
+
         Schema::create('trading_presets', function (Blueprint $table) {
             $table->id();
             

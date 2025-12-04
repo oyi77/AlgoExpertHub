@@ -7,7 +7,7 @@
                 <div class="card-body">
                     <ul class="nav nav-tabs page-link-list border-bottom-0" role="tablist">
                         <li>
-                            <a class=" active" data-toggle="tab" href="#general">
+                            <a class="active" data-toggle="tab" href="#general">
                                 <i class="las la-home"></i>
                                 {{ __('General Settings') }}
                             </a>
@@ -36,10 +36,15 @@
                                 {{ __('Preferences') }}
                             </a>
                         </li>
-
+                        <li>
+                            <a data-toggle="tab" href="#performance">
+                                <i class="las la-tachometer-alt"></i>
+                                {{ __('Performance Settings') }}
+                            </a>
+                        </li>
                         <li>
                             <a data-toggle="tab" href="#cron">
-                                <i class="las la-cookie-bite"></i>
+                                <i class="las la-clock"></i>
                                 {{ __('Cron Job Settings') }}
                             </a>
                         </li>
@@ -81,6 +86,11 @@
 
                 </div>
 
+                <div class="tab-pane fade" id="performance" role="tabpanel">
+
+                    @include('backend.setting.performance')
+
+                </div>
 
                 <div class="tab-pane fade" id="cron" role="tabpanel">
 
@@ -235,27 +245,43 @@
             })
 
 
-            var copyButton = document.querySelector('.copy');
-            var copyInput = document.querySelector('.copy-text');
-            copyButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                var text = copyInput.select();
-                document.execCommand('copy');
-            });
-            copyInput.addEventListener('click', function() {
-                this.select();
-            });
+            // Copy functionality for all copy buttons
+            function setupCopyButton(buttonSelector, inputSelector) {
+                const button = document.querySelector(buttonSelector);
+                const input = document.querySelector(inputSelector);
+                
+                if (button && input) {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        input.select();
+                        input.setSelectionRange(0, 99999); // For mobile devices
+                        try {
+                            document.execCommand('copy');
+                            // Visual feedback
+                            const originalText = button.textContent;
+                            button.textContent = '{{ __('Copied!') }}';
+                            button.classList.add('btn-success');
+                            button.classList.remove('sp_bg_base');
+                            setTimeout(function() {
+                                button.textContent = originalText;
+                                button.classList.remove('btn-success');
+                                button.classList.add('sp_bg_base');
+                            }, 2000);
+                        } catch (err) {
+                            console.error('Failed to copy:', err);
+                        }
+                    });
+                    
+                    input.addEventListener('click', function() {
+                        this.select();
+                        this.setSelectionRange(0, 99999);
+                    });
+                }
+            }
 
-            var copyButton3 = document.querySelector('.copy3');
-            var copyInput3 = document.querySelector('.copy-text3');
-            copyButton3.addEventListener('click', function(e) {
-                e.preventDefault();
-                var text = copyInput3.select();
-                document.execCommand('copy');
-            });
-            copyInput3.addEventListener('click', function() {
-                this.select();
-            });
+            // Setup copy buttons
+            setupCopyButton('.copy', '.copy-text');
+            setupCopyButton('.copy3', '.copy-text3');
 
 
 

@@ -235,6 +235,18 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('results', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'results'])->name('results.index');
     });
 
+    // 6. Trading Bots (Coinrule-like bot builder)
+    Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
+        Route::get('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'index'])->name('index');
+        Route::get('/create', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'create'])->name('create');
+        Route::post('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'store'])->name('store');
+        Route::get('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle-active', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'toggleActive'])->name('toggle-active');
+    });
+
 // /config is now handled by the config.index route above
 
 // Removed - now in operations prefix group above
