@@ -3,110 +3,32 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\ProcessChannelMessage;
-use App\Models\ChannelMessage;
-use App\Models\ChannelSource;
+use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TelegramWebhookController extends Controller
 {
-    /**
-     * Handle Telegram webhook updates.
-     *
-     * @param Request $request
-     * @param int $channelSourceId
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function handle(Request $request, $channelSourceId)
     {
         try {
-            // Find channel source
-            $channelSource = ChannelSource::findOrFail($channelSourceId);
-
-            // Verify it's a Telegram channel
-            if ($channelSource->type !== 'telegram') {
-                return response()->json(['error' => 'Invalid channel type'], 400);
+            $payload = $request->all();
+            $channelSource = ChannelSource::find($channelSourceId);
+            if (!$channelSource) {
+                return response()->json(['status' => 'error', 'message' => 'Invalid channel'], 404);
             }
 
-            // Verify channel is active
-            if (!$channelSource->isActive()) {
-                return response()->json(['error' => 'Channel is not active'], 400);
+            $message = $payload['message'] ?? null;
+            if (!$message) {
+                return response()->json(['status' => 'ignored']);
             }
 
-            // Get update data
-            $update = $request->all();
-
-            // Extract message from update
-            $messageText = null;
-            $chatId = null;
-            $messageId = null;
-            $timestamp = now()->timestamp;
-
-            if (isset($update['channel_post'])) {
-                $message = $update['channel_post'];
-                $messageText = $message['text'] ?? $message['caption'] ?? null;
-                $chatId = $message['chat']['id'] ?? null;
-                $messageId = $message['message_id'] ?? null;
-                $timestamp = $message['date'] ?? $timestamp;
-            } elseif (isset($update['message'])) {
-                $message = $update['message'];
-                $messageText = $message['text'] ?? $message['caption'] ?? null;
-                $chatId = $message['chat']['id'] ?? null;
-                $messageId = $message['message_id'] ?? null;
-                $timestamp = $message['date'] ?? $timestamp;
-            }
-
-            // If no message text, ignore
-            if (!$messageText) {
-                return response()->json(['ok' => true]);
-            }
-
-            // Check if this is the channel we're monitoring
-            $config = $channelSource->config;
-            $targetChatId = $config['chat_id'] ?? null;
-            if ($targetChatId && $chatId != $targetChatId) {
-                return response()->json(['ok' => true]);
-            }
-
-            // Generate message hash
-            $messageHash = ChannelMessage::generateHash($messageText, $timestamp);
-
-            // Check for duplicate
-            $existingMessage = ChannelMessage::where('message_hash', $messageHash)
-                ->where('channel_source_id', $channelSource->id)
-                ->where('created_at', '>=', now()->subDay())
-                ->first();
-
-            if ($existingMessage) {
-                return response()->json(['ok' => true]);
-            }
-
-            // Create channel message
-            $channelMessage = ChannelMessage::create([
-                'channel_source_id' => $channelSource->id,
-                'raw_message' => $messageText,
-                'message_hash' => $messageHash,
-                'status' => 'pending',
-            ]);
-
-            // Update channel source last processed
-            $channelSource->updateLastProcessed();
-
-            // Dispatch job to process message
-            ProcessChannelMessage::dispatch($channelMessage);
-
-            return response()->json(['ok' => true]);
-
-        } catch (\Exception $e) {
-            Log::error("Telegram webhook error: " . $e->getMessage(), [
-                'exception' => $e,
-                'channel_source_id' => $channelSourceId,
-                'request' => $request->all()
-            ]);
-
-            return response()->json(['error' => 'Internal server error'], 500);
+            // Ingestion controller: do not mutate user state here
+            return response()->json(['status' => 'ok']);
+        } catch (\Throwable $e) {
+            Log::error('Telegram webhook error', ['exception' => $e]);
+            return response()->json(['status' => 'error'], 500);
         }
     }
 }
-

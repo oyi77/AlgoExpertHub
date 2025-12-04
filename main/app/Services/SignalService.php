@@ -234,10 +234,9 @@ class SignalService
         }
 
         $signal->is_published = 1;
-
+        $signal->published_date = now();
         $signal->save();
-
-        $this->sendSignalToUser($signal);
+        \App\Jobs\DistributeSignalJob::dispatch($signal->id)->onQueue('notifications');
 
         return ['type' => 'success', 'message' => 'Successfully sent Signal'];
     }
@@ -246,7 +245,7 @@ class SignalService
     public function sendSignalToUser($signal)
     {
 
-        $general = Configuration::first();
+        $general = Helper::config();
 
         $plans = $signal->plans()->where('status', 1)->with('subscriptions')->get();
 
@@ -263,61 +262,19 @@ class SignalService
 
                     if ($isNotExpired) {
 
-                        if ($plan->dashboard) {
-
-
-                            $isSignalFound = $subscription->user->dashboardSignal()->where('signal_id', $signal->id)->first();
-
-                            if (!$isSignalFound) {
-
-                                DashboardSignal::create([
-                                    'user_id' => $subscription->user->id,
-                                    'plan_id' => $plan->id,
-                                    'signal_id' => $signal->id
-                                ]);
-                            }
-                        }
+                        // Distribution moved to queue; keep minimal persistence here if needed
+                        \App\Jobs\SendChannelMessageJob::dispatch('dashboard', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                         if ($plan->whatsapp) {
-                            self::whatsappSend($signal, $subscription->user);
+                            \App\Jobs\SendChannelMessageJob::dispatch('whatsapp', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                         }
-
                         if ($plan->telegram) {
-                            self::telegramSend($signal, $subscription->user);
+                            \App\Jobs\SendChannelMessageJob::dispatch('telegram', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                         }
-
                         if ($plan->email) {
-                            $data = [
-                                'app_name' => Helper::config()->appname,
-                                'email' => $subscription->user->email,
-                                'username' => $subscription->user->username,
-                                'title' => $signal->title,
-                                'market' => $signal->market->name,
-                                'pair' => $signal->pair->name,
-                                'frame' => $signal->time->name,
-                                'open' => $signal->open_price,
-                                'sl' => $signal->sl,
-                                'tp' => $signal->tp,
-                                'direction' => $signal->direction,
-                                'description' => clean($signal->description)
-                            ];
-
-
-                            $template = Template::where('name', 'signal')->where('status', 1)->first();
-
-                            if ($template) {
-                                Helper::fireMail($data, $template);
-                            }
+                            \App\Jobs\SendChannelMessageJob::dispatch('email', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                         }
-
                         if ($plan->sms) {
-                            self::sendText($signal, $subscription->user);
-                        }
-
-                        if (!UserSignal::where('user_id', $subscription->user->id)->where('signal_id', $signal->id)->first()) {
-                            UserSignal::create([
-                                'user_id' => $subscription->user->id,
-                                'signal_id' => $signal->id
-                            ]);
+                            \App\Jobs\SendChannelMessageJob::dispatch('sms', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                         }
                     }
                 }
@@ -329,7 +286,7 @@ class SignalService
     private function sendText($signal, $user)
     {
 
-        $general = Configuration::first();
+        $general = Helper::config();
 
         $message = '';
         $message .= 'Title : ' . $signal->title . '\n';
@@ -341,18 +298,15 @@ class SignalService
         $message .= 'tp : ' . $signal->tp . '\n';
         $message .= 'direction : ' . $signal->direction;
 
-        $calling_code = rtrim(file_get_contents('https://ipapi.co/103.100.232.0/country_calling_code/'), "0");
-
-        $basic  = new \Nexmo\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
-        $client = new \Nexmo\Client($basic);
-
-        $receiverNumber = $calling_code . $user->phone;
-
-        $message = $client->message()->send([
-            'to' => $receiverNumber,
-            'from' => $general->appname,
-            'text' => strip_tags($message)
-        ]);
+        try {
+            $basic  = new \Nexmo\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+            $client = new \Nexmo\Client($basic);
+            $client->message()->send([
+                'to' => $user->phone,
+                'from' => $general->appname,
+                'text' => strip_tags($message)
+            ]);
+        } catch (\Throwable $e) {}
     }
 
 
@@ -372,27 +326,15 @@ class SignalService
             $message .= 'tp : ' . $signal->tp . '             ';
             $message .= 'direction : ' . $signal->direction . '               ';
 
-            $web = 'https://api.telegram.org/bot' . $general->telegram_token;
-            $update = file_get_contents($web . "/getUpdates");
-            $updateArray = json_decode($update, true);
-
-
-            foreach ($updateArray['result'] as $chat) {
-
-                if(array_key_exists('message', $chat)){
-
-                    $chatId = $chat["message"]['chat']['id'];
-    
-                    $text = $message;
-                    $url = ($web . "/sendMessage?chat_id=" . $chatId . "&text=" . $text);
-                    $ch = curl_init();
-                    curl_setopt($ch, CURLOPT_URL, $url);
-                    curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13");
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_exec($ch);
-                    curl_close($ch);
-                }
-
+            // Prefer chat_id stored per user via webhook; if missing, no-op here
+            if (property_exists($user, 'telegram_chat_id') && $user->telegram_chat_id) {
+                $web = 'https://api.telegram.org/bot' . $general->telegram_token;
+                $url = $web . "/sendMessage?chat_id=" . $user->telegram_chat_id . "&text=" . urlencode($message);
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_exec($ch);
+                curl_close($ch);
             }
 
         }

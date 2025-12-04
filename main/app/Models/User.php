@@ -86,6 +86,12 @@ class User extends Authenticatable
         return $this->hasMany(DashboardSignal::class);
     }
 
+    // Telegram chat id for direct messaging
+    protected $fillable = [
+        'telegram_chat_id',
+        'phone_country_code',
+    ];
+
     public function trades()
     {
         return $this->hasMany(Trade::class,'user_id');

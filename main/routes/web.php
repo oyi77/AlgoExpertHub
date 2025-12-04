@@ -63,7 +63,7 @@ Route::name('user.')->group(function () {
         Route::post('reset/password', [ForgotPasswordController::class, 'resetPassword']);
 
         Route::get('verify/email', [LoginController::class, 'emailVerify'])->name('email.verify');
-        Route::post('verify/email', [LoginController::class, 'emailVerifyConfirm'])->name('email.verify');
+        Route::post('verify/email', [LoginController::class, 'emailVerifyConfirm'])->name('email.verify.confirm');
     });
 
     Route::middleware(['auth', 'inactive', 'is_email_verified'])->group(function () {

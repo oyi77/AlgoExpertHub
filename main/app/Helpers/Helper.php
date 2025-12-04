@@ -62,7 +62,7 @@ class Helper
 
     public static function config()
     {
-        return Configuration::first();
+        return \App\Repositories\ConfigurationRepository::get();
     }
 
     public static function imagePath($folder, $default = false)
