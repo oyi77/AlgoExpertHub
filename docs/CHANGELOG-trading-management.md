@@ -100,10 +100,16 @@ Consolidate 7 fragmented trading addons into one unified **Trading Management Ad
 - [x] Routes updated to support tab navigation
 - [x] UI follows approved structure: 1 main menu → 5 submenus → tabs
 
-### Phase 8: Backtesting (Week 15-16) - 🟡 Planned
-- [ ] Implement backtesting module (NEW)
-- [ ] Historical data testing
-- [ ] Performance reports
+### Phase 8: Backtesting (Week 15-16) - 🟢 COMPLETE (2025-12-04)
+- [x] Created Backtest and BacktestResult models
+- [x] Implemented BacktestEngine service
+- [x] Created RunBacktestJob (async processing)
+- [x] Migrations (backtests, backtest_results tables)
+- [x] Performance metrics (win rate, profit factor, drawdown, Sharpe ratio)
+- [x] Grade system (A-F) for strategy evaluation
+- [x] Equity curve tracking
+- [x] Trade-by-trade details
+- [x] Integration with filter-strategy, AI, and risk-management modules
 
 ### Phase 9: Testing (Week 17-18) - 🟡 Planned
 - [ ] Unit tests
