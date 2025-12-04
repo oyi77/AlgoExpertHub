@@ -4,6 +4,7 @@ namespace Addons\TradingManagement\Modules\TradingBot\Services;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -175,10 +176,24 @@ class PositionMonitoringService
      */
     protected function fetchCurrentPrice($connection, string $symbol): ?float
     {
-        // Placeholder - will be implemented with exchange adapters
-        // This would use CCXT or MT4/MT5 API to get current price
         try {
-            // TODO: Implement actual price fetching
+            $credentials = $connection->credentials ?? [];
+            $provider = $connection->provider;
+            $adapter = new CcxtAdapter($credentials, $provider);
+            $result = $adapter->fetchCurrentPrice($symbol);
+            if (!isset($result['success']) || !$result['success']) {
+                return null;
+            }
+            $data = $result['data'] ?? [];
+            if (isset($data['last'])) {
+                return (float) $data['last'];
+            }
+            if (isset($data['bid'])) {
+                return (float) $data['bid'];
+            }
+            if (isset($data['ask'])) {
+                return (float) $data['ask'];
+            }
             return null;
         } catch (\Exception $e) {
             Log::error('Failed to fetch current price', [

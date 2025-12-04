@@ -3,9 +3,11 @@
 namespace Addons\TradingManagement\Modules\TradingBot\Workers;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
+use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
 use Addons\TradingManagement\Modules\TradingBot\Services\TechnicalAnalysisService;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradeDecisionEngine;
 use Addons\TradingManagement\Modules\TradingBot\Services\PositionMonitoringService;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -143,10 +145,15 @@ class ProcessMarketStreamBotWorker
         $timeframe = $timeframes[0];
 
         try {
-            // TODO: Implement actual OHLCV fetching from exchange
-            // This would use the exchange connection adapter
-            // For now, return empty array
-            return [];
+            $connection = $this->bot->dataConnection;
+            $credentials = $connection->credentials ?? [];
+            $provider = $connection->provider;
+            $adapter = new CcxtAdapter($credentials, $provider);
+            $result = $adapter->fetchCandles($symbol, $timeframe, 100);
+            if (!isset($result['success']) || !$result['success']) {
+                return [];
+            }
+            return $result['data'] ?? [];
         } catch (\Exception $e) {
             Log::error('Failed to stream market data', [
                 'bot_id' => $this->bot->id,
@@ -179,9 +186,23 @@ class ProcessMarketStreamBotWorker
             // Apply risk management
             $decision = $this->decisionEngine->applyRiskManagement($decision, $this->bot, $currentPrice);
 
-            // Place order via exchange connection
-            // TODO: Implement actual order placement
-            // This would use the execution engine or exchange adapter
+            $symbol = $this->bot->getStreamingSymbols()[0] ?? null;
+            if (!$symbol) {
+                return;
+            }
+
+            TradingBotPosition::create([
+                'bot_id' => $this->bot->id,
+                'symbol' => $symbol,
+                'direction' => $decision['direction'],
+                'entry_price' => $currentPrice,
+                'current_price' => $currentPrice,
+                'stop_loss' => $decision['stop_loss'] ?? null,
+                'take_profit' => $decision['take_profit'] ?? null,
+                'quantity' => $quantity,
+                'status' => 'open',
+                'opened_at' => now(),
+            ]);
 
             Log::info('Trading bot trade executed', [
                 'bot_id' => $this->bot->id,
