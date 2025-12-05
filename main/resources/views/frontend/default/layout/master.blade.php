@@ -105,7 +105,17 @@
 
     <div class="body-content-area">
         @if (request()->routeIs('home'))
-            @include(Config::theme() . 'widgets.banner')
+            @php
+                $hasBannerInWidgets = false;
+                if (isset($page) && $page && $page->widgets) {
+                    $hasBannerInWidgets = $page->widgets->contains(function($widget) {
+                        return $widget->sections === 'banner';
+                    });
+                }
+            @endphp
+            @if (!$hasBannerInWidgets)
+                @include(Config::theme() . 'widgets.banner')
+            @endif
         @endif
 
         @include(Config::theme() . 'layout.header')

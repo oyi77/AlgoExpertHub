@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
                 'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
                 'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // NEW: Consolidated trading management
+                'advanced-theme-addon' => \Addons\AdvancedThemeAddon\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {
