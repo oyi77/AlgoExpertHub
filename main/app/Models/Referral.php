@@ -13,6 +13,9 @@ class Referral extends Model
 
     public function getLevelAttribute($value)
     {
+        if ($value === null) {
+            return [];
+        }
         if (is_string($value)) {
             $decoded = json_decode($value, true);
             return is_array($decoded) ? $decoded : [];
@@ -31,6 +34,9 @@ class Referral extends Model
 
     public function getCommissionAttribute($value)
     {
+        if ($value === null) {
+            return [];
+        }
         if (is_string($value)) {
             $decoded = json_decode($value, true);
             return is_array($decoded) ? $decoded : [];

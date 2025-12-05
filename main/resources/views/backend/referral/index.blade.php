@@ -27,8 +27,8 @@
                     </div>
 
                     @php
-                        $payment = count($invest_referral->level) + 1;
-                        $referral = count($interest_referral->level) + 1;
+                        $payment = ($invest_referral && is_array($invest_referral->level)) ? count($invest_referral->level) + 1 : 1;
+                        $referral = ($interest_referral && is_array($interest_referral->level)) ? count($interest_referral->level) + 1 : 1;
                     @endphp
 
                     <div class="append_table">
