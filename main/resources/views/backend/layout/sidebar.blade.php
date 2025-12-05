@@ -346,6 +346,7 @@
             @endif
 
             @if ($adminUser && $adminUser->can('manage-language'))
+                <li class="nav-label">{{ __('Theme Settings') }}</li>
                 <li><a href="{{ route('admin.language.index') }}" aria-expanded="false"><i
                             data-feather="globe"></i><span class="nav-text">{{ __('Manage Language') }}</span></a>
                 </li>

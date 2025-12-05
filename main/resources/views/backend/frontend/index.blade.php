@@ -12,8 +12,20 @@
                         <div class="nav flex-column nav-pills d-nav-pills" id="v-pills-tab" role="tablist"
                             aria-orientation="vertical">
                             @foreach ($sections as $key)
-                                <a class="nav-link {{ request()->name == $key ? 'active' : '' }}"
-                                    href="{{ route('admin.frontend.section.manage', ['name' => $key]) }}">{{ str_replace('_', ' ', ucwords($key)) }}</a>
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <a class="nav-link flex-grow-1 {{ request()->name == $key ? 'active' : '' }}"
+                                        href="{{ route('admin.frontend.section.manage', ['name' => $key]) }}">{{ str_replace('_', ' ', ucwords($key)) }}</a>
+                                    @php
+                                        $pageBuilderEnabled = \App\Support\AddonRegistry::active('page-builder-addon') 
+                                            && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
+                                    @endphp
+                                    @if ($pageBuilderEnabled)
+                                        <a href="{{ route('admin.page-builder.sections.edit', $key) }}" 
+                                           class="btn btn-sm btn-success ml-2" title="{{ __('Edit in Page Builder') }}">
+                                            <i data-feather="edit-3"></i>
+                                        </a>
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
                     </div>

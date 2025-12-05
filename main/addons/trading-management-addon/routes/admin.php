@@ -105,10 +105,12 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             ->name('smart-risk.update');
         
         // Global Settings
-        Route::get('global-settings', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\GlobalSettingsController::class, 'index'])
+        Route::get('global-settings', [\Addons\TradingManagement\Modules\GlobalSettings\Controllers\Backend\GlobalSettingsController::class, 'index'])
             ->name('global-settings.index');
-        Route::post('global-settings', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\GlobalSettingsController::class, 'update'])
+        Route::post('global-settings', [\Addons\TradingManagement\Modules\GlobalSettings\Controllers\Backend\GlobalSettingsController::class, 'update'])
             ->name('global-settings.update');
+        Route::post('global-settings/test-demo', [\Addons\TradingManagement\Modules\GlobalSettings\Controllers\Backend\GlobalSettingsController::class, 'testDemoConnection'])
+            ->name('global-settings.test-demo');
     });
 
     // 2. Trading Operations (Page with tabs)
