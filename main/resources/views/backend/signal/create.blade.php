@@ -70,8 +70,22 @@
                                     </div>
 
                                     <div class="col-md-4 mb-4">
-                                        <label for="">{{ __('Take profit') }}</label>
-                                        <input type="text" class="form-control" name="tp">
+                                        <label for="">{{ __('Take profit') }} <small class="text-muted">(Primary/Default)</small></label>
+                                        <input type="text" class="form-control" name="tp" id="primary_tp">
+                                        <small class="text-muted">Used if no multiple TPs defined</small>
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-4">
+                                        <label>
+                                            {{ __('Multiple Take Profits') }}
+                                            <button type="button" class="btn btn-sm btn-info ml-2" id="add-tp-btn">
+                                                <i class="fa fa-plus"></i> Add TP Level
+                                            </button>
+                                        </label>
+                                        <div id="multiple-tps-container" class="mt-2">
+                                            <!-- Dynamic TP fields will be added here -->
+                                        </div>
+                                        <small class="text-muted">Add multiple TP levels for partial closes. If multiple TPs are defined, they will be used instead of the primary TP above.</small>
                                     </div>
 
                                     <div class="col-md-4 mb-4">
@@ -140,6 +154,51 @@
                 }
 
 
+            });
+
+            // Multiple TP management
+            let tpCounter = 0;
+            
+            $('#add-tp-btn').on('click', function() {
+                tpCounter++;
+                const tpHtml = `
+                    <div class="row mb-2 tp-row" data-tp-index="${tpCounter}">
+                        <div class="col-md-3">
+                            <label>TP Level ${tpCounter} Price</label>
+                            <input type="text" class="form-control" name="take_profits[${tpCounter}][tp_price]" placeholder="TP Price" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Lot Percentage (%)</label>
+                            <input type="text" class="form-control" name="take_profits[${tpCounter}][lot_percentage]" placeholder="e.g., 33.33" value="${100 / (tpCounter + 1)}">
+                            <small class="text-muted">% of position to close at this TP</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label>TP Percentage (%)</label>
+                            <input type="text" class="form-control" name="take_profits[${tpCounter}][tp_percentage]" placeholder="Optional">
+                            <small class="text-muted">Alternative to lot percentage</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-sm btn-danger form-control remove-tp-btn">
+                                <i class="fa fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                `;
+                $('#multiple-tps-container').append(tpHtml);
+            });
+            
+            $(document).on('click', '.remove-tp-btn', function() {
+                $(this).closest('.tp-row').remove();
+                // Renumber remaining TPs
+                $('#multiple-tps-container .tp-row').each(function(index) {
+                    $(this).find('label').first().text(`TP Level ${index + 1} Price`);
+                    $(this).attr('data-tp-index', index + 1);
+                    const inputs = $(this).find('input');
+                    inputs.eq(0).attr('name', `take_profits[${index + 1}][tp_price]`);
+                    inputs.eq(1).attr('name', `take_profits[${index + 1}][lot_percentage]`);
+                    inputs.eq(2).attr('name', `take_profits[${index + 1}][tp_percentage]`);
+                });
             });
 
             $.uploadPreview({

@@ -142,5 +142,129 @@ class CopyTradingAnalyticsService
             'total_executions' => $totalExecutions,
         ];
     }
+
+    /**
+     * Get system-wide statistics for admin dashboard.
+     */
+    public function getSystemStats(): array
+    {
+        $totalTraders = CopyTradingSetting::enabled()->count();
+        $totalSubscriptions = CopyTradingSubscription::count();
+        $activeSubscriptions = CopyTradingSubscription::active()->count();
+        $totalExecutions = CopyTradingExecution::count();
+        $successfulExecutions = CopyTradingExecution::executed()->count();
+        $failedExecutions = CopyTradingExecution::where('status', 'failed')->count();
+
+        // Calculate unique followers
+        $activeFollowers = CopyTradingSubscription::active()->distinct('follower_id')->count('follower_id');
+
+        return [
+            'total_traders' => $totalTraders,
+            'total_subscriptions' => $totalSubscriptions,
+            'active_subscriptions' => $activeSubscriptions,
+            'total_executions' => $totalExecutions,
+            'successful_executions' => $successfulExecutions,
+            'failed_executions' => $failedExecutions,
+            'active_followers' => $activeFollowers,
+        ];
+    }
+
+    /**
+     * Get execution chart data for analytics.
+     */
+    public function getExecutionChartData(int $days = 30): array
+    {
+        $startDate = now()->subDays($days);
+        
+        $executionsByDay = CopyTradingExecution::where('created_at', '>=', $startDate)
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "executed" THEN 1 ELSE 0 END) as successful'),
+                DB::raw('SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed')
+            )
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $labels = [];
+        $totalData = [];
+        $successData = [];
+        $failedData = [];
+
+        foreach ($executionsByDay as $row) {
+            $labels[] = date('M d', strtotime($row->date));
+            $totalData[] = $row->total;
+            $successData[] = $row->successful;
+            $failedData[] = $row->failed;
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Total Executions',
+                    'data' => $totalData,
+                    'borderColor' => 'rgb(75, 192, 192)',
+                    'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
+                ],
+                [
+                    'label' => 'Successful',
+                    'data' => $successData,
+                    'borderColor' => 'rgb(34, 197, 94)',
+                    'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
+                ],
+                [
+                    'label' => 'Failed',
+                    'data' => $failedData,
+                    'borderColor' => 'rgb(239, 68, 68)',
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get top traders by follower count.
+     */
+    public function getTopTraders(int $limit = 10)
+    {
+        $traders = CopyTradingSetting::enabled()
+            ->with(['user', 'admin'])
+            ->get();
+
+        $tradersWithStats = $traders->map(function ($trader) {
+            $followerCount = 0;
+            $traderId = null;
+            $traderName = 'Unknown';
+
+            if ($trader->is_admin_owned) {
+                $adminId = $trader->admin_id;
+                $admin = $trader->admin;
+                $traderName = $admin ? ($admin->name ?? $admin->username ?? $admin->email ?? 'Admin #' . $adminId) : 'Admin #' . $adminId;
+                // For admin traders, count subscriptions is complex, skip for now
+            } else {
+                $traderId = $trader->user_id;
+                $user = $trader->user;
+                $traderName = $user ? ($user->username ?? $user->email ?? 'User #' . $traderId) : 'User #' . $traderId;
+                $followerCount = CopyTradingSubscription::byTrader($traderId)->active()->count();
+            }
+
+            $stats = $this->getTraderStats($traderId, $trader->is_admin_owned ? $trader->admin_id : null);
+
+            return (object) [
+                'id' => $trader->id,
+                'trader_id' => $traderId ?? $trader->admin_id,
+                'trader_name' => $traderName,
+                'trader_type' => $trader->is_admin_owned ? 'admin' : 'user',
+                'follower_count' => $followerCount,
+                'win_rate' => $stats['win_rate'],
+                'total_pnl' => $stats['total_pnl'],
+                'total_trades' => $stats['total_trades'],
+            ];
+        });
+
+        return $tradersWithStats->sortByDesc('follower_count')->take($limit)->values();
+    }
 }
 

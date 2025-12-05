@@ -7,7 +7,19 @@
 @section('content')
     <div class="sp_site_card">
         <div class="card-header">
-            <h4>{{ __($title) }}</h4>
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ __($title) }}</h4>
+                @if(isset($connection))
+                <div>
+                    <a href="{{ route('user.execution-analytics.export.csv', ['connection_id' => $connection->id, 'days' => request('days', 30)]) }}" class="btn btn-sm btn-success">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </a>
+                    <a href="{{ route('user.execution-analytics.export.json', ['connection_id' => $connection->id, 'days' => request('days', 30)]) }}" class="btn btn-sm btn-info">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </a>
+                </div>
+                @endif
+            </div>
         </div>
         <div class="card-body">
                         @if(isset($connection) && isset($summary))

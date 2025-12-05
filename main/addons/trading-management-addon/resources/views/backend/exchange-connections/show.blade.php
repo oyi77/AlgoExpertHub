@@ -9,10 +9,10 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-exchange-alt"></i> {{ $connection->name }}</h4>
                     <div>
-                        <a href="{{ route('admin.exchange-connections.edit', $connection) }}" class="btn btn-info">
+                        <a href="{{ route('admin.trading-management.config.exchange-connections.edit', $connection) }}" class="btn btn-info">
                             <i class="fas fa-edit"></i> Edit
                         </a>
-                        <a href="{{ route('admin.exchange-connections.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('admin.trading-management.config.exchange-connections.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>
                     </div>
@@ -242,7 +242,7 @@ function testDataFetch() {
 
     resultDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Fetching data...</div>';
 
-    fetch('{{ route("admin.exchange-connections.test-data-fetch") }}', {
+    fetch('{{ route("admin.trading-management.config.exchange-connections.test-data-fetch") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -316,7 +316,7 @@ function testExecution(testType) {
     
     resultDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> ${labels[testType]}...</div>`;
 
-    fetch('{{ route("admin.exchange-connections.test-execution") }}', {
+    fetch('{{ route("admin.trading-management.config.exchange-connections.test-execution") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

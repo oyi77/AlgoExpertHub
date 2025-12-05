@@ -126,21 +126,47 @@ return [
             'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
         ],
 
-        'default' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'password' => env('REDIS_PASSWORD', null),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '0'),
-        ],
+        'default' => (function() {
+            $host = env('REDIS_HOST', '127.0.0.1');
+            $config = ['database' => (int) env('REDIS_DB', '0')];
+            
+            if (str_starts_with($host, '/')) {
+                // Unix socket for Predis
+                $config['scheme'] = 'unix';
+                $config['path'] = $host;
+            } else {
+                // TCP connection
+                $config['host'] = $host;
+                $config['port'] = (int) env('REDIS_PORT', '6379');
+            }
+            
+            if ($password = env('REDIS_PASSWORD')) {
+                $config['password'] = $password;
+            }
+            
+            return $config;
+        })(),
 
-        'cache' => [
-            'url' => env('REDIS_URL'),
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'password' => env('REDIS_PASSWORD', null),
-            'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_CACHE_DB', '1'),
-        ],
+        'cache' => (function() {
+            $host = env('REDIS_HOST', '127.0.0.1');
+            $config = ['database' => (int) env('REDIS_CACHE_DB', '1')];
+            
+            if (str_starts_with($host, '/')) {
+                // Unix socket for Predis
+                $config['scheme'] = 'unix';
+                $config['path'] = $host;
+            } else {
+                // TCP connection
+                $config['host'] = $host;
+                $config['port'] = (int) env('REDIS_PORT', '6379');
+            }
+            
+            if ($password = env('REDIS_PASSWORD')) {
+                $config['password'] = $password;
+            }
+            
+            return $config;
+        })(),
 
     ],
 

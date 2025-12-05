@@ -10,7 +10,22 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">{{ $title }}</h4>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">{{ $title }}</h4>
+                            @if(isset($connection))
+                            <div>
+                                <a href="{{ route('admin.execution-analytics.export.csv', ['connection_id' => $connection->id, 'days' => request('days', 30)]) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </a>
+                                <a href="{{ route('admin.execution-analytics.export.json', ['connection_id' => $connection->id, 'days' => request('days', 30)]) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-file-code"></i> Export JSON
+                                </a>
+                                <a href="{{ route('admin.execution-analytics.compare', ['connection_ids' => [$connection->id], 'days' => request('days', 30)]) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-bar"></i> Compare Channels
+                                </a>
+                            </div>
+                            @endif
+                        </div>
                     </div>
                     <div class="card-body">
                         <form method="GET" action="{{ route('admin.execution-analytics.index') }}" class="mb-4">
@@ -38,6 +53,14 @@
                                             <option value="90" {{ request('days', 30) == 90 ? 'selected' : '' }}>Last 90 Days</option>
                                             <option value="365" {{ request('days', 30) == 365 ? 'selected' : '' }}>Last Year</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <a href="{{ route('admin.execution-analytics.compare') }}" class="btn btn-primary form-control">
+                                            <i class="fas fa-chart-bar"></i> Compare
+                                        </a>
                                     </div>
                                 </div>
                                 @endif
@@ -75,6 +98,45 @@
                                         <div class="card-body">
                                             <h5>Profit Factor</h5>
                                             <h3>{{ number_format($summary['profit_factor'] ?? 0, 2) }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card bg-secondary text-white">
+                                        <div class="card-body">
+                                            <h5>Max Drawdown</h5>
+                                            <h3>{{ number_format($summary['max_drawdown'] ?? 0, 2) }}%</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                @php
+                                    $sharpeRatio = app(\Addons\TradingExecutionEngine\App\Services\AnalyticsService::class)
+                                        ->calculateSharpeRatio($connection, \Carbon\Carbon::today());
+                                @endphp
+                                <div class="col-md-3">
+                                    <div class="card bg-dark text-white">
+                                        <div class="card-body">
+                                            <h5>Sharpe Ratio</h5>
+                                            <h3>{{ number_format($sharpeRatio, 4) }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body">
+                                            <h5>Balance</h5>
+                                            <h3>{{ number_format($summary['balance'] ?? 0, 2) }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body">
+                                            <h5>Equity</h5>
+                                            <h3>{{ number_format($summary['equity'] ?? 0, 2) }}</h3>
                                         </div>
                                     </div>
                                 </div>

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use App\Models\Referral;
-use App\Models\RefferedCommission;
 use App\Models\User;
 use Carbon\Carbon;
 

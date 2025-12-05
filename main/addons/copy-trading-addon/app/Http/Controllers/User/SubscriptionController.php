@@ -66,7 +66,7 @@ class SubscriptionController extends Controller
 
         $data['title'] = 'Subscribe to Trader';
         $data['trader'] = $trader;
-        $data['trader_setting'] = $traderSetting;
+        $data['setting'] = $traderSetting;
         $data['connections'] = $connections;
 
         return view('copy-trading::user.subscriptions.create', $data);

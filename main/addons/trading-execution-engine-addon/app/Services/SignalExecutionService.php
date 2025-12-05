@@ -249,6 +249,9 @@ class SignalExecutionService implements ExecutionServiceInterface
             // Create position if order was successful
             $positionId = null;
             if ($result['success'] && $executionLog->isExecuted()) {
+                // Get primary TP (first level if multiple TPs exist, otherwise signal.tp)
+                $primaryTp = $signal->primary_tp ?? $signal->tp ?? null;
+                
                 $position = ExecutionPosition::create([
                     'signal_id' => $signal->id,
                     'connection_id' => $connectionId,
@@ -260,7 +263,7 @@ class SignalExecutionService implements ExecutionServiceInterface
                     'entry_price' => $executionLog->entry_price,
                     'current_price' => $executionLog->entry_price,
                     'sl_price' => $executionLog->sl_price ?? $signal->sl ?? null,
-                    'tp_price' => $signal->tp ?? null,
+                    'tp_price' => $primaryTp,
                     'status' => 'open',
                 ]);
                 $positionId = $position->id;
