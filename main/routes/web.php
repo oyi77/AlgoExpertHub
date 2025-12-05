@@ -141,9 +141,7 @@ Route::name('user.')->group(function () {
 
             Route::get('ticket/attachement/{id}', [TicketController::class, 'ticketDownload'])->name('ticket.download');
 
-            // Route::get('investmentplan', [SiteController::class, 'investmentPlan'])->name('investmentplan');
-            // Route::post('investmentplan/invest', [SiteController::class, 'investmentUsingBalannce'])->name('investmentplan.submit');
-            // TODO: SiteController does not exist - need to create or use correct controller
+            
 
             Route::get('gateways/{id}', [PaymentController::class, 'gateways'])->name('gateways');
 
@@ -157,8 +155,8 @@ Route::name('user.')->group(function () {
 
             Route::match(['get', 'post'], '/payments/crypto/pay', Victorybiz\LaravelCryptoPaymentGateway\Http\Controllers\CryptoPaymentController::class)
                 ->name('payments.crypto.pay');
-            // Route::post('/payments/crypto/callback', [GourlProcessController::class, 'callback'])->withoutMiddleware(['web', 'auth']);
-            // TODO: GourlProcessController does not exist - need to create or use correct controller
+            
+            Route::post('/payments/crypto/callback', [\App\Services\Gateway\Gourl::class, 'callback'])->withoutMiddleware(['web', 'auth'])->name('payments.crypto.callback');
 
 
             Route::get('transfer-money', [MoneyTransferController::class, 'transfer'])->name('transfer_money');
@@ -196,6 +194,30 @@ Route::get('/', [FrontendController::class, 'index'])->name('home');
 Route::get('/swagger', function () {
     return view('swagger');
 })->name('swagger');
+
+Route::get('/docs', function () {
+    return view('swagger');
+})->name('docs');
+
+Route::get('/docs.openapi', function () {
+    $path = storage_path('app/scribe/openapi.yaml');
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/yaml'
+    ]);
+})->name('scribe.openapi');
+
+Route::get('/docs.postman', function () {
+    $path = storage_path('app/scribe/collection.json');
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/json'
+    ]);
+})->name('scribe.postman');
 
 Route::get('current-price', [CryptoTradeController::class, 'currentPrice'])->name('user.current-price');
 

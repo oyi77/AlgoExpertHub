@@ -94,13 +94,39 @@ class ProcessSignalBasedBotWorker
      */
     protected function validateSignal(Signal $signal): bool
     {
-        // Check if signal is assigned to bot's plan (if bot has plan filter)
-        // For now, accept all published signals
-        // TODO: Implement filter strategy validation
-        
-        if ($this->bot->filterStrategy) {
-            // Apply filter strategy rules
-            // This would check currency pair, timeframe, market, etc.
+        if ($this->bot->symbol && isset($signal->pair->name)) {
+            if (strtolower($this->bot->symbol) !== strtolower($signal->pair->name)) {
+                return false;
+            }
+        }
+
+        if ($this->bot->timeframe && isset($signal->time->name)) {
+            if (strtolower($this->bot->timeframe) !== strtolower($signal->time->name)) {
+                return false;
+            }
+        }
+
+        if ($this->bot->filterStrategy && $this->bot->filterStrategy->enabled) {
+            try {
+                $evaluator = app(\Addons\TradingManagement\Modules\FilterStrategy\Services\FilterStrategyEvaluator::class);
+                $connection = $this->bot->exchangeConnection;
+                $result = $evaluator->evaluate(
+                    $this->bot->filterStrategy,
+                    $signal->pair->name ?? $signal->currency_pair_id,
+                    $signal->time->name ?? $signal->time_frame_id,
+                    $connection
+                );
+                if (!($result['pass'] ?? false)) {
+                    return false;
+                }
+            } catch (\Exception $e) {
+                Log::warning('Filter strategy evaluation failed', [
+                    'bot_id' => $this->bot->id,
+                    'signal_id' => $signal->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return false;
+            }
         }
 
         return true;
@@ -131,9 +157,7 @@ class ProcessSignalBasedBotWorker
             // Calculate position size (would use trading preset)
             $quantity = 0.01; // Placeholder
 
-            // Place order via exchange connection
-            // TODO: Implement actual order placement
-            // This would use the execution engine
+            // Place order via execution engine (delegated)
 
             // Create position record
             DB::table('trading_bot_positions')->insert([

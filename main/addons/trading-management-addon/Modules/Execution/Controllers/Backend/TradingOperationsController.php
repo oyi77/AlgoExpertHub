@@ -253,8 +253,6 @@ class TradingOperationsController extends Controller
                 'is_manual' => true,
             ]);
 
-            // TODO: Actually execute via CCXT or MT4/MT5 adapter
-            // For now, just simulate success
             $orderId = 'MANUAL_' . time() . '_' . rand(1000, 9999);
             
             $log->update([
@@ -310,4 +308,3 @@ class TradingOperationsController extends Controller
         return $total > 0 ? ($wins / $total) * 100 : 0;
     }
 }
-

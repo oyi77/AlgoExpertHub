@@ -42,8 +42,31 @@ class MarketContextService
      */
     protected function calculateATRFromHistory(string $symbol, Carbon $timestamp): float
     {
-        // TODO: Implement proper ATR calculation from historical price data
-        // For now, return default based on symbol
+        // Simple ATR approximation using last N closes if available via cache/API
+        try {
+            if (function_exists('app') && app()->bound('market.price.history')) {
+                $history = app('market.price.history')->get($symbol, 14);
+                if (is_array($history) && count($history) >= 2) {
+                    $trs = [];
+                    for ($i = 1; $i < count($history); $i++) {
+                        $prev = $history[$i - 1];
+                        $curr = $history[$i];
+                        $tr = max(
+                            $curr['high'] - $curr['low'],
+                            abs($curr['high'] - $prev['close']),
+                            abs($curr['low'] - $prev['close'])
+                        );
+                        $trs[] = $tr;
+                    }
+                    if (!empty($trs)) {
+                        return array_sum($trs) / count($trs);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('ATR history approximation failed', ['error' => $e->getMessage()]);
+        }
+
         return $this->getDefaultATR($symbol);
     }
 
@@ -169,4 +192,3 @@ class MarketContextService
         ];
     }
 }
-

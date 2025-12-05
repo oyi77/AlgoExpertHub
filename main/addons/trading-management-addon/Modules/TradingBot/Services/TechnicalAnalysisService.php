@@ -226,17 +226,33 @@ class TechnicalAnalysisService
         $slowPeriod = $params['slow'] ?? 26;
         $signalPeriod = $params['signal'] ?? 9;
 
-        $fastEMA = $this->calculateEMA($ohlcv, $fastPeriod);
-        $slowEMA = $this->calculateEMA($ohlcv, $slowPeriod);
-
-        if ($fastEMA === null || $slowEMA === null) {
+        $closes = array_column($ohlcv, 'close');
+        if (count($closes) < max($fastPeriod, $slowPeriod) + $signalPeriod) {
             return null;
         }
 
-        $macd = $fastEMA - $slowEMA;
+        $fastSeries = $this->emaSeries($closes, $fastPeriod);
+        $slowSeries = $this->emaSeries($closes, $slowPeriod);
 
-        // Signal line (EMA of MACD) - simplified
-        $signal = $macd; // TODO: Calculate proper signal line
+        // Align series by index
+        $alignStart = max($fastPeriod, $slowPeriod) - 1;
+        $macdSeries = [];
+        for ($i = $alignStart; $i < count($closes); $i++) {
+            $fastIdx = $i - ($fastPeriod - 1);
+            $slowIdx = $i - ($slowPeriod - 1);
+            if (!isset($fastSeries[$fastIdx]) || !isset($slowSeries[$slowIdx])) {
+                continue;
+            }
+            $macdSeries[] = $fastSeries[$fastIdx] - $slowSeries[$slowIdx];
+        }
+
+        if (count($macdSeries) < $signalPeriod) {
+            return null;
+        }
+
+        $signalSeries = $this->emaSeries($macdSeries, $signalPeriod);
+        $macd = end($macdSeries);
+        $signal = end($signalSeries);
 
         return [
             'macd' => $macd,
@@ -304,5 +320,26 @@ class TechnicalAnalysisService
             'k' => $k,
             'd' => $d,
         ];
+    }
+
+    /**
+     * Compute EMA series for an array of closes.
+     * Returns array of EMA values starting at index (period-1).
+     */
+    protected function emaSeries(array $values, int $period): array
+    {
+        $series = [];
+        if (count($values) < $period) {
+            return $series;
+        }
+        $multiplier = 2 / ($period + 1);
+        $sma = array_sum(array_slice($values, 0, $period)) / $period;
+        $ema = $sma;
+        $series[] = $ema;
+        for ($i = $period; $i < count($values); $i++) {
+            $ema = ($values[$i] - $ema) * $multiplier + $ema;
+            $series[] = $ema;
+        }
+        return $series;
     }
 }

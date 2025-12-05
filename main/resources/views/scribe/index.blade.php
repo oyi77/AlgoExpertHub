@@ -28,9 +28,9 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "https://www.algoexperthub.com/";
-        var useCsrf = Boolean(1);
-        var csrfUrl = "/sanctum/csrf-cookie";
+        var tryItOutBaseUrl = @json(config('app.url'));
+        var useCsrf = @json(config('scribe.try_it_out.use_csrf'));
+        var csrfUrl = @json(config('scribe.try_it_out.csrf_url'));
     </script>
     <script src="{{ asset("/vendor/scribe/js/tryitout-5.6.0.js") }}"></script>
 

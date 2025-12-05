@@ -57,8 +57,38 @@ class BotSignalObserver
                     continue;
                 }
 
-                // TODO: AI confirmation check (if bot has AI profile)
-                // For now, skip if filter passes
+                if ($bot->aiModelProfile && $bot->aiModelProfile->enabled) {
+                    try {
+                        $aiAnalysisService = app(\Addons\AiTradingAddon\App\Services\MarketAnalysisAiService::class);
+                        $decisionEngine = app(\Addons\AiTradingAddon\App\Services\AiDecisionEngine::class);
+
+                        $aiResult = $aiAnalysisService->analyzeSignal([
+                            'pair' => $signal->pair->name ?? null,
+                            'timeframe' => $signal->time->name ?? null,
+                            'direction' => $signal->direction ?? null,
+                            'open_price' => $signal->open_price ?? null,
+                            'take_profit' => $signal->tp ?? null,
+                            'stop_loss' => $signal->sl ?? null,
+                        ], $bot->aiModelProfile);
+
+                        $decision = $decisionEngine->makeDecision($aiResult, $bot->tradingPreset);
+
+                        if (!($decision['execute'] ?? false)) {
+                            Log::info('AI decision rejected signal', [
+                                'bot_id' => $bot->id,
+                                'signal_id' => $signal->id,
+                                'reason' => $decision['reason'] ?? 'AI reject',
+                            ]);
+                            continue;
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('AI decision check failed, proceeding', [
+                            'bot_id' => $bot->id,
+                            'signal_id' => $signal->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 // Execute through bot
                 // Use existing ExecuteSignalJob but pass bot_id in options

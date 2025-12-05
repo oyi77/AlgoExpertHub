@@ -63,8 +63,17 @@ class BotExecutionService
                 return false;
             }
 
-            // TODO: Check if signal matches bot's symbol/timeframe filters (if any)
-            // For now, all active bots are eligible
+            if ($bot->symbol && isset($signal->pair->name)) {
+                if (strtolower($bot->symbol) !== strtolower($signal->pair->name)) {
+                    return false;
+                }
+            }
+
+            if ($bot->timeframe && isset($signal->time->name)) {
+                if (strtolower($bot->timeframe) !== strtolower($signal->time->name)) {
+                    return false;
+                }
+            }
 
             return true;
         });
