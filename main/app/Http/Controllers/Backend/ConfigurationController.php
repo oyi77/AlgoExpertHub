@@ -604,6 +604,15 @@ class ConfigurationController extends Controller
     }
 
     /**
+     * Access page builder from Manage Theme (backward compatibility)
+     */
+    public function themePageBuilder()
+    {
+        // Redirect to theme builder edit route
+        return redirect()->route('admin.page-builder.themes.edit');
+    }
+
+    /**
      * Download theme template
      */
     public function themeDownloadTemplate()

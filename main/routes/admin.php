@@ -272,6 +272,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('theme/download-template', [ConfigurationController::class, 'themeDownloadTemplate'])->name('manage.theme.download.template');
             Route::delete('theme/delete/{theme}', [ConfigurationController::class, 'themeDelete'])->name('manage.theme.delete');
             Route::post('theme/deactivate-all', [ConfigurationController::class, 'themeDeactivate'])->name('manage.theme.deactivate.all');
+            
+            // Backward compatibility: Access pagebuilder from Manage Theme
+            Route::get('manage-theme/page-builder', [ConfigurationController::class, 'themePageBuilder'])->name('manage.theme.page-builder');
         });
 
         Route::middleware('permission:manage-frontend,admin')->group(function () {
@@ -296,8 +299,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('frontend/translate/{name}/{element}', [ManageSectionController::class,'translate'])->name('frontend.translate');
             Route::post('frontend/translate/{name}/{element}', [ManageSectionController::class,'translateUpdate']);
 
-
-            
+            // Backward compatibility: Access pagebuilder from Manage Pages
+            Route::get('pages/{id}/page-builder', [PagesController::class, 'pageBuilder'])->name('pages.page-builder');
+            Route::get('manage/section/{name}/page-builder', [ManageSectionController::class, 'pageBuilder'])->name('frontend.section.page-builder');
         });
 
         Route::middleware('permission:manage-deposit,admin')->group(function () {

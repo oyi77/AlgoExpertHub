@@ -68,6 +68,11 @@
                             <i class="fas fa-brain"></i> Smart Risk Settings
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-global-settings" data-toggle="tab">
+                            <i class="fas fa-globe"></i> Global Settings
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="card-body">
@@ -291,6 +296,35 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- Global Settings Tab -->
+                    <div class="tab-pane fade" id="tab-global-settings">
+                        @php
+                            $globalConfig = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', [
+                                'api_key' => '',
+                                'base_url' => 'mt5grpc.mtapi.io:443',
+                                'timeout' => 30,
+                                'default_host' => '78.140.180.198',
+                                'default_port' => 443,
+                                'demo_account' => [
+                                    'user' => '62333850',
+                                    'password' => 'tecimil4',
+                                    'host' => '78.140.180.198',
+                                    'port' => 443,
+                                ],
+                            ]);
+                            
+                            // Decrypt API key if present
+                            if (!empty($globalConfig['api_key'])) {
+                                try {
+                                    $globalConfig['api_key'] = \Illuminate\Support\Facades\Crypt::decryptString($globalConfig['api_key']);
+                                } catch (\Exception $e) {
+                                    $globalConfig['api_key'] = '';
+                                }
+                            }
+                        @endphp
+                        @include('trading-management::backend.trading-management.config.global-settings', ['config' => $globalConfig])
                     </div>
                 </div>
             </div>

@@ -150,9 +150,26 @@ class ExchangeConnectionController extends Controller
                 $connection->provider
             );
         } else {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
-                $connection->credentials
-            );
+            // Check if using gRPC provider
+            if ($connection->provider === 'mtapi_grpc' || 
+                (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+                // Merge global settings if available
+                $credentials = $connection->credentials;
+                $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
+                
+                if (!empty($globalSettings['base_url'])) {
+                    $credentials['base_url'] = $globalSettings['base_url'];
+                }
+                if (!empty($globalSettings['timeout'])) {
+                    $credentials['timeout'] = $globalSettings['timeout'];
+                }
+                
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
+            } else {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
+                    $connection->credentials
+                );
+            }
         }
     }
 

@@ -326,30 +326,81 @@
                 </li>
             @endif
 
-            @if ($adminUser && ($adminUser->can('manage-frontend') ||
-                    $adminUser->can('manage-language')))
-                <li class="nav-label">{{ __('Theme Settings') }}</li>
-            @endif
+            @php
+                $pageBuilderEnabled = \App\Support\AddonRegistry::active('page-builder-addon') 
+                    && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
+            @endphp
 
-            @if ($adminUser && $adminUser->can('manage-theme'))
-                <li><a href="{{ route('admin.manage.theme') }}" aria-expanded="false"><i
-                            data-feather="layers"></i><span class="nav-text">{{ __('Manage Theme') }}</span></a>
-                </li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-frontend'))
-                <li><a href="{{ route('admin.frontend.pages') }}" aria-expanded="false"><i
-                            data-feather="book-open"></i><span class="nav-text">{{ __('Manage Pages') }}</span></a>
-                </li>
-
+            @if ($adminUser && ($adminUser->can('manage-theme') || 
+                 $adminUser->can('manage-frontend') || 
+                 $pageBuilderEnabled))
+                <li class="nav-label">{{ __('UI Manager') }}</li>
                 
-
-                <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}" aria-expanded="false"><i
-                            data-feather="layout"></i><span class="nav-text">{{ __('Manage Frontend') }}</span></a>
-                </li>
+                {{-- Manage Pages (Backward Compatible) --}}
+                @if ($adminUser->can('manage-frontend'))
+                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                        <i data-feather="book-open"></i>
+                        <span class="nav-text">{{ __('Manage Pages') }}</span>
+                    </a>
+                        <ul aria-expanded="false">
+                            <li><a href="{{ route('admin.frontend.pages') }}">{{ __('All Pages') }}</a></li>
+                            <li><a href="{{ route('admin.frontend.pages.create') }}">{{ __('Create Page') }}</a></li>
+                            @if ($pageBuilderEnabled)
+                                <li><a href="{{ route('admin.page-builder.index') }}">{{ __('Page Builder') }}</a></li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+                
+                {{-- Manage Theme (Backward Compatible) --}}
+                @if ($adminUser->can('manage-theme'))
+                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                        <i data-feather="layers"></i>
+                        <span class="nav-text">{{ __('Manage Theme') }}</span>
+                    </a>
+                        <ul aria-expanded="false">
+                            <li><a href="{{ route('admin.manage.theme') }}">{{ __('Themes') }}</a></li>
+                            @if ($pageBuilderEnabled)
+                                <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+                
+                {{-- Manage Frontend (Backward Compatible) --}}
+                @if ($adminUser->can('manage-frontend'))
+                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                        <i data-feather="layout"></i>
+                        <span class="nav-text">{{ __('Manage Frontend') }}</span>
+                    </a>
+                        <ul aria-expanded="false">
+                            <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}">{{ __('Sections') }}</a></li>
+                            @if ($pageBuilderEnabled)
+                                <li><a href="{{ route('admin.page-builder.sections.index') }}">{{ __('Section Builder') }}</a></li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
+                
+                {{-- Page Builder (New) --}}
+                @if ($pageBuilderEnabled && ($adminUser->can('manage-frontend') || $adminUser->can('manage-theme')))
+                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                        <i data-feather="edit-3"></i>
+                        <span class="nav-text">{{ __('Page Builder') }}</span>
+                    </a>
+                        <ul aria-expanded="false">
+                            <li><a href="{{ route('admin.page-builder.index') }}">{{ __('All Pages') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.create') }}">{{ __('Create Page') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.templates.index') }}">{{ __('Templates') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.themes.edit') }}">{{ __('Edit Theme') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.menus.index') }}">{{ __('Manage Menus') }}</a></li>
+                        </ul>
+                    </li>
+                @endif
             @endif
 
             @if ($adminUser && $adminUser->can('manage-language'))
+                <li class="nav-label">{{ __('Theme Settings') }}</li>
                 <li><a href="{{ route('admin.language.index') }}" aria-expanded="false"><i
                             data-feather="globe"></i><span class="nav-text">{{ __('Manage Language') }}</span></a>
                 </li>

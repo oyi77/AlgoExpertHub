@@ -4,6 +4,7 @@ namespace Addons\TradingManagement\Modules\DataProvider\Services;
 
 use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
 use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter;
 use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
 
 /**
@@ -24,6 +25,7 @@ class AdapterFactory
     {
         return match ($connection->type) {
             'mtapi' => new MtapiAdapter($connection->credentials),
+            'mtapi_grpc' => new MtapiGrpcAdapter($connection->credentials),
             'ccxt_crypto' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter($connection->credentials, $connection->provider),
             'custom_api' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CustomApiAdapter($connection->credentials),
             default => throw new \Exception("Unsupported data provider type: {$connection->type}"),
@@ -39,9 +41,15 @@ class AdapterFactory
     {
         return [
             'mtapi' => [
-                'name' => 'mtapi.io (MT4/MT5)',
-                'description' => 'Connect to MT4/MT5 brokers via mtapi.io for Forex market data',
+                'name' => 'mtapi.io (MT4/MT5) REST',
+                'description' => 'Connect to MT4/MT5 brokers via mtapi.io REST API for Forex market data',
                 'credentials' => ['api_key', 'account_id'],
+                'exchanges' => ['MT4', 'MT5'],
+            ],
+            'mtapi_grpc' => [
+                'name' => 'mtapi.io (MT4/MT5) gRPC',
+                'description' => 'Connect to MT4/MT5 brokers via mtapi.io gRPC for Forex market data (faster, real-time)',
+                'credentials' => ['user', 'password', 'host', 'port'],
                 'exchanges' => ['MT4', 'MT5'],
             ],
             'ccxt_crypto' => [
@@ -73,6 +81,7 @@ class AdapterFactory
     {
         $required = match ($type) {
             'mtapi' => ['api_key', 'account_id'],
+            'mtapi_grpc' => ['user', 'password', 'host', 'port'],
             'ccxt_crypto' => ['api_key', 'api_secret'],
             default => [],
         };

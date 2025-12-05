@@ -77,4 +77,13 @@ class PagesController extends Controller
 
         return back()->with('success', 'Page Deleted Successfully');
     }
+
+    /**
+     * Access page builder from Manage Pages (backward compatibility)
+     */
+    public function pageBuilder($id)
+    {
+        // Redirect to page builder edit route
+        return redirect()->route('admin.page-builder.pages.builder', ['pageId' => $id]);
+    }
 }

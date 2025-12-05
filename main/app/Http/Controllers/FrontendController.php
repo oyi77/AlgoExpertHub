@@ -39,6 +39,21 @@ class FrontendController extends Controller
 
         $data['title'] = "{$data['page']->name}";
 
+        // Check if page has pagebuilder content
+        $pageBuilderContent = null;
+        if ($data['page']->pagebuilder_page_id) {
+            try {
+                $pagebuilderPage = \Addons\PageBuilderAddon\App\Models\PageBuilderPage::find($data['page']->pagebuilder_page_id);
+                if ($pagebuilderPage && $pagebuilderPage->data) {
+                    $pageBuilderContent = $pagebuilderPage->data;
+                }
+            } catch (\Exception $e) {
+                // Pagebuilder page doesn't exist
+            }
+        }
+
+        $data['pageBuilderContent'] = $pageBuilderContent;
+
         return view(Helper::theme() . 'pages')->with($data);
     }
 
