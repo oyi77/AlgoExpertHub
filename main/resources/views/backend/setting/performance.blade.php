@@ -724,12 +724,17 @@
             const formData = new FormData(form[0]);
             const url = form.attr('action');
             
+            // Set longer timeout for long-running operations (like seeding)
+            const isLongOperation = form.hasClass('reseed-form') || form.hasClass('reset-form') || form.hasClass('factory-restore-form') || form.hasClass('backup-restore-form');
+            const timeout = isLongOperation ? 300000 : 30000; // 5 minutes for long ops, 30s for others
+            
             $.ajax({
                 url: url,
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
+                timeout: timeout,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
@@ -762,7 +767,9 @@
                     restoreButtonState(btn);
                     
                     let errorMessage = '{{ __("An error occurred") }}';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                    if (xhr.status === 0 || xhr.statusText === 'timeout') {
+                        errorMessage = '{{ __("Request timed out. The operation may still be processing. Please wait and refresh the page.") }}';
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
                     } else if (xhr.statusText) {
                         errorMessage = xhr.statusText;

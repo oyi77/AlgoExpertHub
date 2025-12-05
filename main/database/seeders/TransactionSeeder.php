@@ -24,13 +24,11 @@ class TransactionSeeder extends Seeder
 
         $transactions = [];
         $types = ['deposit', 'withdraw', 'referral_commission', 'subscription', 'refund', 'bonus'];
-        $statuses = [0 => 'pending', 1 => 'completed', 2 => 'failed'];
 
         // Create 40 demo transactions
         for ($i = 0; $i < 40; $i++) {
             $user = $users->random();
             $type = $types[array_rand($types)];
-            $status = array_rand($statuses);
             
             $amount = rand(10, 2000);
             $charge = rand(0, 50);
@@ -47,13 +45,12 @@ class TransactionSeeder extends Seeder
             $createdAt = Carbon::now()->subDays(rand(0, 90))->subHours(rand(0, 23));
 
             $transaction = Transaction::create([
+                'trx' => strtoupper(uniqid('TRX')),
                 'user_id' => $user->id,
-                'type' => $type,
                 'amount' => $amount,
                 'charge' => $charge,
-                'description' => $descriptions[$type] ?? 'Transaction',
-                'status' => $status,
-                'trx' => strtoupper(uniqid('TRX')),
+                'details' => $descriptions[$type] ?? 'Transaction',
+                'type' => $type,
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ]);

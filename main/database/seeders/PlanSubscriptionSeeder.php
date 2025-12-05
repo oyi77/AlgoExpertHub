@@ -41,8 +41,7 @@ class PlanSubscriptionSeeder extends Seeder
                     'is_current' => 1,
                 ],
                 [
-                    'expired_at' => $endDate,
-                    'status' => $isCurrent ? 1 : 0,
+                    'plan_expired_at' => $endDate,
                     'created_at' => $startDate,
                     'updated_at' => Carbon::now(),
                 ]
@@ -62,9 +61,8 @@ class PlanSubscriptionSeeder extends Seeder
             $subscription = PlanSubscription::create([
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
-                'expired_at' => $endDate,
+                'plan_expired_at' => $endDate,
                 'is_current' => 0,
-                'status' => 0,
                 'created_at' => $startDate,
                 'updated_at' => $endDate,
             ]);

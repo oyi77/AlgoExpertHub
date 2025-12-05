@@ -42,12 +42,14 @@ class WithdrawSeeder extends Seeder
 
             $withdraw = Withdraw::create([
                 'user_id' => $user->id,
-                'withdraw_gateway_id' => $gateway->id,
-                'amount' => $amount,
-                'charge' => $charge,
-                'net_amount' => $netAmount,
+                'withdraw_method_id' => $gateway->id,
+                'trx' => strtoupper(uniqid('WD')),
+                'withdraw_amount' => $amount,
+                'withdraw_charge' => $charge,
+                'total' => $netAmount,
                 'status' => $status,
-                'detail' => $status === 1 ? 'Demo withdrawal processed successfully' : null,
+                'proof' => $status === 1 ? json_encode(['note' => 'Demo withdrawal processed successfully']) : null,
+                'reject_reason' => $status === 2 ? 'Demo rejection reason' : null,
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ]);

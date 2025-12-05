@@ -52,7 +52,17 @@ class DatabaseSeeder extends Seeder
             // AI & Addons
             AIProviderSeeder::class,
             ParsingPatternSeeder::class,
-            \Addons\TradingManagement\Database\Seeders\PrebuiltTradingBotSeeder::class,
         ]);
+
+        // Conditional addon seeders (only if addon is active and class exists)
+        try {
+            $seederClass = \Addons\TradingManagement\Database\Seeders\PrebuiltTradingBotSeeder::class;
+            if (class_exists($seederClass) && \App\Support\AddonRegistry::active('trading-management-addon')) {
+                $this->call($seederClass);
+            }
+        } catch (\Exception $e) {
+            // Silently skip if addon is not active, class doesn't exist, or registry fails
+            // This prevents seeding from failing when addon is not installed/active
+        }
     }
 }

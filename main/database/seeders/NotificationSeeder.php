@@ -22,7 +22,7 @@ class NotificationSeeder extends Seeder
             return;
         }
 
-        $notifications = [];
+        $notificationsCount = 0;
         $types = [
             'payment_approved' => 'Your payment has been approved!',
             'payment_rejected' => 'Your payment was rejected. Please contact support.',
@@ -58,14 +58,13 @@ class NotificationSeeder extends Seeder
                     'created_at' => $createdAt,
                     'updated_at' => $createdAt,
                 ]);
+                $notificationsCount++;
             } catch (\Exception $e) {
                 // Skip if unique constraint fails (migration has wrong unique constraints)
                 continue;
             }
-
-            $notifications[] = $notification;
         }
 
-        $this->command->info('Created ' . count($notifications) . ' demo notifications successfully!');
+        $this->command->info('Created ' . $notificationsCount . ' demo notifications successfully!');
     }
 }
