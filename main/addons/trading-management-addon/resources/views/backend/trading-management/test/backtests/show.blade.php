@@ -57,6 +57,17 @@
         <!-- Performance Summary -->
         <div class="row mb-3">
             <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h6 class="text-muted">Final Balance</h6>
+                        <h3 class="{{ $summary['final_balance'] >= $backtest->initial_balance ? 'text-success' : 'text-danger' }}">
+                            ${{ number_format($summary['final_balance'], 2) }}
+                        </h3>
+                        <small>Return: {{ number_format($summary['return_percent'], 2) }}%</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
                         <h6 class="text-muted">Total Trades</h6>
@@ -90,7 +101,74 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Sharpe Ratio</h6>
+                        <h3>{{ number_format($summary['sharpe_ratio'] ?? 0, 2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Max Drawdown</h6>
+                        <h3 class="text-danger">{{ number_format($summary['max_drawdown_percent'] ?? 0, 2) }}%</h3>
+                        <small>${{ number_format($summary['max_drawdown'] ?? 0, 2) }}</small>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Grade</h6>
+                        <h3>{{ $summary['grade'] ?? 'N/A' }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Largest Win</h6>
+                        <h3 class="text-success">${{ number_format($summary['largest_win'] ?? 0, 2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Largest Loss</h6>
+                        <h3 class="text-danger">${{ number_format($summary['largest_loss'] ?? 0, 2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-muted">Consecutive</h6>
+                        <h3>
+                            <span class="text-success">W: {{ $summary['consecutive_wins'] ?? 0 }}</span> / 
+                            <span class="text-danger">L: {{ $summary['consecutive_losses'] ?? 0 }}</span>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equity Curve Chart -->
+        @if(!empty($equityCurve))
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Equity Curve</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="equityCurveChart" height="100"></canvas>
+            </div>
+        </div>
+        @endif
 
         <div class="row mb-3">
             <div class="col-md-4">
@@ -124,10 +202,10 @@
         <!-- Trade Results Table -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-list"></i> Trade Results ({{ $backtest->results->count() }} trades)</h5>
+                <h5><i class="fas fa-list"></i> Trade Results ({{ $summary['total_trades'] ?? 0 }} trades)</h5>
             </div>
             <div class="card-body">
-                @if($backtest->results->count() > 0)
+                @if(!empty($tradeDetails) && count($tradeDetails) > 0)
                 <div class="table-responsive">
                     <table class="table table-hover table-sm">
                         <thead>
@@ -135,38 +213,48 @@
                                 <th>Entry Time</th>
                                 <th>Exit Time</th>
                                 <th>Direction</th>
-                                <th>Entry</th>
-                                <th>Exit</th>
+                                <th>Entry Price</th>
+                                <th>Exit Price</th>
+                                <th>SL</th>
+                                <th>TP</th>
                                 <th>Lot Size</th>
                                 <th>P&L</th>
+                                <th>Exit Reason</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($backtest->results->take(100) as $result)
+                            @foreach(array_slice($tradeDetails, 0, 100) as $trade)
                             <tr>
-                                <td>{{ $result->entry_time->format('Y-m-d H:i') }}</td>
-                                <td>{{ $result->exit_time ? $result->exit_time->format('Y-m-d H:i') : 'N/A' }}</td>
+                                <td>{{ isset($trade['entry_time']) ? date('Y-m-d H:i', $trade['entry_time']) : 'N/A' }}</td>
+                                <td>{{ isset($trade['exit_time']) ? date('Y-m-d H:i', $trade['exit_time']) : 'N/A' }}</td>
                                 <td>
-                                    <span class="badge {{ $result->direction === 'buy' ? 'badge-success' : 'badge-danger' }}">
-                                        {{ strtoupper($result->direction) }}
+                                    <span class="badge {{ ($trade['direction'] ?? 'buy') === 'buy' ? 'badge-success' : 'badge-danger' }}">
+                                        {{ strtoupper($trade['direction'] ?? 'BUY') }}
                                     </span>
                                 </td>
-                                <td>{{ $result->entry_price }}</td>
-                                <td>{{ $result->exit_price }}</td>
-                                <td>{{ $result->lot_size }}</td>
-                                <td class="{{ $result->pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                    <strong>${{ number_format($result->pnl, 2) }}</strong>
+                                <td>{{ number_format($trade['entry_price'] ?? 0, 5) }}</td>
+                                <td>{{ number_format($trade['exit_price'] ?? 0, 5) }}</td>
+                                <td>{{ number_format($trade['sl'] ?? 0, 5) }}</td>
+                                <td>{{ number_format($trade['tp'] ?? 0, 5) }}</td>
+                                <td>{{ number_format($trade['lot_size'] ?? 0, 2) }}</td>
+                                <td class="{{ ($trade['pnl'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                                    <strong>${{ number_format($trade['pnl'] ?? 0, 2) }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge {{ ($trade['exit_reason'] ?? '') === 'TP' ? 'badge-success' : 'badge-danger' }}">
+                                        {{ $trade['exit_reason'] ?? 'N/A' }}
+                                    </span>
                                 </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-                @if($backtest->results->count() > 100)
-                <p class="text-muted mt-2">Showing first 100 trades. View all in <a href="{{ route('admin.trading-management.test.results.index', ['backtest_id' => $backtest->id]) }}">Results</a>.</p>
+                @if(count($tradeDetails) > 100)
+                <p class="text-muted mt-2">Showing first 100 trades of {{ count($tradeDetails) }} total.</p>
                 @endif
                 @else
-                <div class="alert alert-info">No results yet. Backtest is {{ $backtest->status }}.</div>
+                <div class="alert alert-info">No trade details available. Backtest is {{ $backtest->status }}.</div>
                 @endif
             </div>
         </div>
@@ -177,5 +265,64 @@
         @endif
     </div>
 </div>
+
+@if(!empty($equityCurve))
+@push('script')
+<script src="{{ Config::jsLib('backend', 'chartjs.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('equityCurveChart');
+        if (ctx) {
+            const equityData = @json($equityCurve);
+            const labels = equityData.map(item => new Date(item.timestamp * 1000).toLocaleDateString());
+            const equityValues = equityData.map(item => parseFloat(item.equity));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Equity',
+                        data: equityValues,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Equity ($)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+@endpush
+@endif
 @endsection
 

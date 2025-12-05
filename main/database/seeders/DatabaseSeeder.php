@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             AIProviderSeeder::class,
             ParsingPatternSeeder::class,
             TradingPresetSeeder::class,
+            \Addons\TradingManagement\Database\Seeders\PrebuiltTradingBotSeeder::class,
         ]);
     }
 }

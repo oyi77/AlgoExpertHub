@@ -22,6 +22,137 @@ class CopyTradingController extends Controller
     }
 
     /**
+     * Show copy trading dashboard.
+     */
+    public function index(): View
+    {
+        try {
+            // Check if trading execution engine is required and available
+            if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
+                return view('copy-trading::backend.dashboard', [
+                    'title' => 'Copy Trading Dashboard',
+                    'error' => 'Trading execution engine is required for copy trading. Please enable it first.',
+                    'stats' => [
+                        'total_traders' => 0,
+                        'total_subscriptions' => 0,
+                        'total_executions' => 0,
+                        'active_followers' => 0,
+                    ],
+                ]);
+            }
+
+            $stats = $this->analyticsService->getSystemStats();
+
+            return view('copy-trading::backend.dashboard', [
+                'title' => 'Copy Trading Dashboard',
+                'stats' => $stats,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Fatal error in copy trading dashboard', ['error' => $e->getMessage()]);
+            return view('copy-trading::backend.dashboard', [
+                'title' => 'Copy Trading Dashboard',
+                'error' => 'An error occurred while loading dashboard. Please check the logs.',
+                'stats' => [
+                    'total_traders' => 0,
+                    'total_subscriptions' => 0,
+                    'total_executions' => 0,
+                    'active_followers' => 0,
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * Show copy trading analytics.
+     */
+    public function analytics(): View
+    {
+        try {
+            // Check if trading execution engine is required and available
+            if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
+                return view('copy-trading::backend.analytics', [
+                    'title' => 'Copy Trading Analytics',
+                    'error' => 'Trading execution engine is required for copy trading. Please enable it first.',
+                    'chartData' => [],
+                    'topTraders' => collect([]),
+                ]);
+            }
+
+            $chartData = $this->analyticsService->getExecutionChartData();
+            $topTraders = $this->analyticsService->getTopTraders(10);
+
+            return view('copy-trading::backend.analytics', [
+                'title' => 'Copy Trading Analytics',
+                'chartData' => $chartData,
+                'topTraders' => $topTraders,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Fatal error in copy trading analytics', ['error' => $e->getMessage()]);
+            return view('copy-trading::backend.analytics', [
+                'title' => 'Copy Trading Analytics',
+                'error' => 'An error occurred while loading analytics. Please check the logs.',
+                'chartData' => [],
+                'topTraders' => collect([]),
+            ]);
+        }
+    }
+
+    /**
+     * Show all subscriptions.
+     */
+    public function subscriptions(Request $request): View
+    {
+        try {
+            // Check if trading execution engine is required and available
+            if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
+                $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                    collect([]), 
+                    0, 
+                    Helper::pagination(), 
+                    1,
+                    ['path' => request()->url(), 'pageName' => 'page']
+                );
+                return view('copy-trading::backend.subscriptions.index', [
+                    'title' => 'Manage Subscriptions',
+                    'subscriptions' => $emptyPaginator,
+                    'error' => 'Trading execution engine is required for copy trading. Please enable it first.',
+                ]);
+            }
+
+            $query = \Addons\CopyTrading\App\Models\CopyTradingSubscription::with(['trader', 'follower', 'connection']);
+
+            if ($request->has('status')) {
+                if ($request->status === 'active') {
+                    $query->active();
+                } elseif ($request->status === 'inactive') {
+                    $query->where('is_active', false);
+                }
+            }
+
+            $subscriptions = $query->latest()->paginate(Helper::pagination());
+
+            return view('copy-trading::backend.subscriptions.index', [
+                'title' => 'Manage Subscriptions',
+                'subscriptions' => $subscriptions,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Fatal error in subscriptions index', ['error' => $e->getMessage()]);
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]), 
+                0, 
+                Helper::pagination(), 
+                1,
+                ['path' => request()->url(), 'pageName' => 'page']
+            );
+            return view('copy-trading::backend.subscriptions.index', [
+                'title' => 'Manage Subscriptions',
+                'subscriptions' => $emptyPaginator,
+                'error' => 'An error occurred while loading subscriptions. Please check the logs.',
+            ]);
+        }
+    }
+
+    /**
      * Show copy trading settings for admin.
      */
     public function settings(): View

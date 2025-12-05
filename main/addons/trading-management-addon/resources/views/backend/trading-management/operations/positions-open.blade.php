@@ -50,6 +50,7 @@
                                 <th>Current</th>
                                 <th>SL</th>
                                 <th>TP</th>
+                                <th>TP Progress</th>
                                 <th>P&L</th>
                             </tr>
                         </thead>
@@ -71,6 +72,33 @@
                                 <td>{{ $position->current_price }}</td>
                                 <td>{{ $position->sl_price }}</td>
                                 <td>{{ $position->tp_price }}</td>
+                                <td>
+                                    @php
+                                        $signal = $position->signal;
+                                        $openTps = $signal ? $signal->openTakeProfits()->orderBy('tp_level')->get() : collect();
+                                        $closedTps = $signal ? $signal->closedTakeProfits()->orderBy('tp_level')->get() : collect();
+                                    @endphp
+                                    @if($openTps->count() > 0)
+                                        <div class="progress" style="height: 20px;">
+                                            @foreach($openTps as $tp)
+                                                @php
+                                                    $distance = abs($position->current_price - $tp->tp_price);
+                                                    $totalDistance = abs($position->entry_price - $tp->tp_price);
+                                                    $progress = $totalDistance > 0 ? (1 - ($distance / $totalDistance)) * 100 : 0;
+                                                    $progress = max(0, min(100, $progress));
+                                                @endphp
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: {{ $progress }}%" title="TP{{ $tp->tp_level }}: {{ $tp->tp_price }}">
+                                                    TP{{ $tp->tp_level }}
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <small class="text-muted">
+                                            Closed: {{ $closedTps->count() }}/{{ $openTps->count() + $closedTps->count() }}
+                                        </small>
+                                    @else
+                                        <span class="text-muted">Single TP</span>
+                                    @endif
+                                </td>
                                 <td class="{{ $position->pnl >= 0 ? 'text-success' : 'text-danger' }}">
                                     ${{ number_format($position->pnl, 2) }}
                                 </td>

@@ -8,6 +8,7 @@ use Addons\TradingExecutionEngine\App\Models\ExecutionPosition;
 use Addons\TradingExecutionEngine\App\Services\AnalyticsService;
 use App\Helpers\Helper\Helper;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class AnalyticsController extends Controller
@@ -83,6 +84,90 @@ class AnalyticsController extends Controller
         $data['days'] = $days;
 
         return view('trading-execution-engine::backend.analytics.index', $data);
+    }
+
+    /**
+     * Compare multiple channels/connections.
+     */
+    public function compare(Request $request): View
+    {
+        $data['title'] = 'Channel Comparison';
+
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            abort(403, 'Unauthorized');
+        }
+
+        $connectionIds = $request->get('connection_ids', []);
+        $days = $request->get('days', 30);
+
+        $connections = ExecutionConnection::adminOwned()
+            ->where('admin_id', $admin->id)
+            ->get();
+
+        $comparison = [];
+        if (!empty($connectionIds)) {
+            $comparison = $this->analyticsService->compareChannels($connectionIds, $days);
+        }
+
+        $data['connections'] = $connections;
+        $data['comparison'] = $comparison;
+        $data['days'] = $days;
+
+        return view('trading-execution-engine::backend.analytics.compare', $data);
+    }
+
+    /**
+     * Export analytics to CSV.
+     */
+    public function exportCsv(Request $request): Response
+    {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            abort(403, 'Unauthorized');
+        }
+
+        $connectionId = $request->get('connection_id');
+        $days = $request->get('days', 30);
+
+        $connection = ExecutionConnection::adminOwned()
+            ->where('admin_id', $admin->id)
+            ->findOrFail($connectionId);
+
+        $csv = $this->analyticsService->exportToCsv($connection, $days);
+
+        $filename = "analytics_{$connection->name}_{$days}days_" . date('Y-m-d') . ".csv";
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    /**
+     * Export analytics to JSON.
+     */
+    public function exportJson(Request $request): Response
+    {
+        $admin = auth()->guard('admin')->user();
+        if (!$admin) {
+            abort(403, 'Unauthorized');
+        }
+
+        $connectionId = $request->get('connection_id');
+        $days = $request->get('days', 30);
+
+        $connection = ExecutionConnection::adminOwned()
+            ->where('admin_id', $admin->id)
+            ->findOrFail($connectionId);
+
+        $json = $this->analyticsService->exportToJson($connection, $days);
+
+        $filename = "analytics_{$connection->name}_{$days}days_" . date('Y-m-d') . ".json";
+
+        return response()->json($json, 200, [
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }
 

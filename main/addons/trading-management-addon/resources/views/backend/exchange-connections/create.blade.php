@@ -7,13 +7,13 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Create Exchange Connection</h4>
-                    <a href="{{ route('admin.exchange-connections.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.trading-management.config.exchange-connections.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back
                     </a>
                 </div>
             </div>
             <div class="card-body">
-                <form action="{{ route('admin.exchange-connections.store') }}" method="POST">
+                <form action="{{ route('admin.trading-management.config.exchange-connections.store') }}" method="POST">
                     @csrf
 
                     <!-- Connection Name -->
@@ -136,7 +136,7 @@
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-save"></i> Create Connection
                         </button>
-                        <a href="{{ route('admin.exchange-connections.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ route('admin.trading-management.config.exchange-connections.index') }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

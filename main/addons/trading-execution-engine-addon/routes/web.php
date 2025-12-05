@@ -13,5 +13,7 @@ Route::prefix('execution')->name('execution-')->group(function () {
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('analytics/export/csv', [AnalyticsController::class, 'exportCsv'])->name('analytics.export.csv');
+    Route::get('analytics/export/json', [AnalyticsController::class, 'exportJson'])->name('analytics.export.json');
 });
 

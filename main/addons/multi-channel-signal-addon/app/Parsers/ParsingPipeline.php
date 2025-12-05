@@ -57,6 +57,11 @@ class ParsingPipeline
                 }
             }
         }
+        
+        // Register OCR parser for image-based signals (always enabled)
+        if (config('multi-channel-signal-addon.ocr_enabled', true)) {
+            $this->register(new OcrMessageParser());
+        }
     }
 
     public function register(MessageParserInterface $parser): void

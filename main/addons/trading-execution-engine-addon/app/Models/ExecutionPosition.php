@@ -43,6 +43,15 @@ class ExecutionPosition extends Model
         'tp1_closed_qty',
         'tp2_closed_qty',
         'tp3_closed_qty',
+        // Trailing stop fields
+        'trailing_stop_enabled',
+        'trailing_stop_distance',
+        'trailing_stop_percentage',
+        'highest_price',
+        'lowest_price',
+        'breakeven_enabled',
+        'breakeven_trigger_price',
+        'sl_moved_to_breakeven',
     ];
 
     protected $casts = [
@@ -68,6 +77,15 @@ class ExecutionPosition extends Model
         'tp1_closed_qty' => 'decimal:8',
         'tp2_closed_qty' => 'decimal:8',
         'tp3_closed_qty' => 'decimal:8',
+        // Trailing stop casts
+        'trailing_stop_enabled' => 'boolean',
+        'trailing_stop_distance' => 'decimal:4',
+        'trailing_stop_percentage' => 'decimal:2',
+        'highest_price' => 'decimal:8',
+        'lowest_price' => 'decimal:8',
+        'breakeven_enabled' => 'boolean',
+        'breakeven_trigger_price' => 'decimal:8',
+        'sl_moved_to_breakeven' => 'boolean',
     ];
 
     public function signal()

@@ -77,6 +77,41 @@ class Signal extends Model
         return $this->channelSource;
     }
 
+    /**
+     * Multiple Take Profit support
+     */
+    public function takeProfits()
+    {
+        return $this->hasMany(SignalTakeProfit::class);
+    }
+
+    public function openTakeProfits()
+    {
+        return $this->hasMany(SignalTakeProfit::class)->where('is_closed', false);
+    }
+
+    public function closedTakeProfits()
+    {
+        return $this->hasMany(SignalTakeProfit::class)->where('is_closed', true);
+    }
+
+    /**
+     * Get primary TP (first level or fallback to signal.tp)
+     */
+    public function getPrimaryTpAttribute()
+    {
+        $firstTp = $this->takeProfits()->orderBy('tp_level')->first();
+        return $firstTp ? $firstTp->tp_price : $this->tp;
+    }
+
+    /**
+     * Check if signal has multiple TPs
+     */
+    public function hasMultipleTps(): bool
+    {
+        return $this->takeProfits()->count() > 0;
+    }
+
     protected static function booted()
     {
         static::creating(function ($model) {

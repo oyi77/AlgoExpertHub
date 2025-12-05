@@ -8,6 +8,7 @@ use Addons\TradingExecutionEngine\App\Models\ExecutionPosition;
 use Addons\TradingExecutionEngine\App\Services\AnalyticsService;
 use App\Helpers\Helper\Helper;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class AnalyticsController extends Controller
@@ -69,6 +70,59 @@ class AnalyticsController extends Controller
         $data['days'] = $days;
 
         return view('trading-execution-engine::user.analytics.index', $data);
+    }
+
+    /**
+     * Export analytics to CSV.
+     */
+    public function exportCsv(Request $request): Response
+    {
+        if (!$this->checkPermission()) {
+            abort(403, 'Auto trading is not available for your plan');
+        }
+
+        $user = auth()->user();
+        $connectionId = $request->get('connection_id');
+        $days = $request->get('days', 30);
+
+        $connection = ExecutionConnection::userOwned()
+            ->where('user_id', $user->id)
+            ->findOrFail($connectionId);
+
+        $csv = $this->analyticsService->exportToCsv($connection, $days);
+
+        $filename = "analytics_{$connection->name}_{$days}days_" . date('Y-m-d') . ".csv";
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    /**
+     * Export analytics to JSON.
+     */
+    public function exportJson(Request $request): Response
+    {
+        if (!$this->checkPermission()) {
+            abort(403, 'Auto trading is not available for your plan');
+        }
+
+        $user = auth()->user();
+        $connectionId = $request->get('connection_id');
+        $days = $request->get('days', 30);
+
+        $connection = ExecutionConnection::userOwned()
+            ->where('user_id', $user->id)
+            ->findOrFail($connectionId);
+
+        $json = $this->analyticsService->exportToJson($connection, $days);
+
+        $filename = "analytics_{$connection->name}_{$days}days_" . date('Y-m-d') . ".json";
+
+        return response()->json($json, 200, [
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }
 
