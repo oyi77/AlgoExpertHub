@@ -3,10 +3,10 @@
 @section('element')
 <div class="row">
     <div class="col-12">
-        <!-- Page Header -->
+        <!-- Page Header with Tabs -->
         <div class="card mb-3">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h3><i class="fas fa-robot"></i> {{ $title }}</h3>
                         <p class="text-muted mb-0">Manage trading bots (admin and user bots)</p>
@@ -15,8 +15,26 @@
                         <i class="fa fa-plus"></i> Create Trading Bot
                     </a>
                 </div>
+                
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#tab-bots" role="tab">
+                            <i class="fas fa-robot"></i> All Bots
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.trading-management.marketplace.bots.index') }}">
+                            <i class="fas fa-store"></i> Bot Marketplace
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
+        
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-bots" role="tabpanel">
 
         <!-- Statistics Cards -->
         <div class="row mb-3">
@@ -184,6 +202,8 @@
                 @endif
             </div>
         </div>
+            </div><!-- End tab-bots -->
+        </div><!-- End tab-content -->
     </div>
 </div>
 @endsection

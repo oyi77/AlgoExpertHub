@@ -49,6 +49,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.trading-management.marketplace.traders.index') }}">
+                            <i class="fas fa-store"></i> Trader Marketplace
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#tab-subscriptions" data-toggle="tab">
                             <i class="fas fa-link"></i> Subscriptions
                         </a>

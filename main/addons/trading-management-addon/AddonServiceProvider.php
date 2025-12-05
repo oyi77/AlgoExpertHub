@@ -55,6 +55,11 @@ class AddonServiceProvider extends ServiceProvider
         if (is_dir(__DIR__ . '/Modules/TradingBot/resources/views')) {
             $this->loadViewsFrom(__DIR__ . '/Modules/TradingBot/resources/views', 'trading-management');
         }
+        
+        // Load Marketplace module views
+        if (is_dir(__DIR__ . '/Modules/Marketplace/resources/views')) {
+            $this->loadViewsFrom(__DIR__ . '/Modules/Marketplace/resources/views', 'trading-management');
+        }
 
         // Load routes conditionally based on enabled modules
         $this->loadRoutes();
