@@ -159,6 +159,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Performance Settings
             Route::post('performance/optimize', [ConfigurationController::class, 'performanceOptimize'])->name('performance.optimize');
             Route::post('performance/clear', [ConfigurationController::class, 'performanceClear'])->name('performance.clear');
+
+            // Database Management
+            Route::post('reseed-database', [ConfigurationController::class, 'reseedDatabase'])->name('reseed-database');
+            Route::post('reset-database', [ConfigurationController::class, 'resetDatabase'])->name('reset-database');
+            
+            // Database Backup/Restore
+            Route::post('backup-create', [ConfigurationController::class, 'createBackup'])->name('backup-create');
+            Route::post('backup-load', [ConfigurationController::class, 'loadBackup'])->name('backup-load');
+            Route::post('backup-delete', [ConfigurationController::class, 'deleteBackup'])->name('backup-delete');
+            Route::post('backup-save-factory', [ConfigurationController::class, 'saveAsFactoryState'])->name('backup-save-factory');
+            Route::post('backup-load-factory', [ConfigurationController::class, 'loadFactoryState'])->name('backup-load-factory');
         });
 
         // End General Settings

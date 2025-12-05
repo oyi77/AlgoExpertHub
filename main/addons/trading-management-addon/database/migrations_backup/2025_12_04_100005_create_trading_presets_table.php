@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * - Filter strategy integration
  * - AI model profile integration
  */
-class CreateTradingPresetsTable extends Migration
+class CreateTradingPresetsTableInTradingManagement extends Migration
 {
     public function up()
     {

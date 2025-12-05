@@ -64,8 +64,8 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             
             $stats = [
                 'total_connections' => $connections->total(),
-                'data_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('data_fetching_enabled', 1)->count(),
-                'execution_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('trade_execution_enabled', 1)->count(),
+                'data_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
+                'execution_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
                 'total_presets' => $presets->total(),
             ];
             
@@ -251,9 +251,20 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'resume'])->name('resume');
     });
 
-// /config is now handled by the config.index route above
-
-// Removed - now in operations prefix group above
-
-// Removed - now handled in respective prefix groups above
+    // 7. Marketplace (Bot Templates & Trader Profiles)
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        // Bot Templates
+        Route::get('bots', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'index'])->name('bots.index');
+        Route::get('bots/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'show'])->name('bots.show');
+        Route::post('bots/{id}/approve', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'approve'])->name('bots.approve');
+        Route::post('bots/{id}/feature', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'feature'])->name('bots.feature');
+        Route::delete('bots/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'destroy'])->name('bots.destroy');
+        
+        // Trader Profiles
+        Route::get('traders', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'index'])->name('traders.index');
+        Route::get('traders/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'show'])->name('traders.show');
+        Route::post('traders/{id}/verify', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'verify'])->name('traders.verify');
+        Route::delete('traders/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'destroy'])->name('traders.destroy');
+        Route::post('traders/recalculate-leaderboard', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'recalculateLeaderboard'])->name('traders.recalculate');
+    });
 

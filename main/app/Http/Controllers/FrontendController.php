@@ -16,6 +16,14 @@ class FrontendController extends Controller
     {
         $data['page'] = Page::where('name', 'home')->first();
 
+        if (!$data['page']) {
+            $data['page'] = (object)[
+                'name' => 'Home',
+                'seo_description' => Configuration::first()->seo_description ?? 'AlgoExpertHub Trading Signal Platform',
+                'seo_keywords' => Configuration::first()->seo_tags ?? []
+            ];
+        }
+
         $data['title'] = $data['page']->name;
 
         return view(Helper::theme() . 'home')->with($data);
@@ -48,6 +56,7 @@ class FrontendController extends Controller
         $theme = Configuration::first()->theme;
 
         $data['title'] = "Recent Blog";
+        $data['page'] = null;
         $data['blog'] = Content::where('theme', $theme)->where('name', 'blog')->where('id', $id)->first();
 
         $data['recentblog'] = Content::where('theme', $theme)->where('name', 'blog')->where('type', 'iteratable')->latest()->limit(6)->paginate(Helper::pagination());
@@ -104,6 +113,7 @@ class FrontendController extends Controller
         $details = Content::findOrFail($id);
 
         $data['title'] = $details->content->page_title;
+        $data['page'] = null;
         $data['details'] = $details;
 
         return view(Helper::theme(). 'link_details')->with($data);

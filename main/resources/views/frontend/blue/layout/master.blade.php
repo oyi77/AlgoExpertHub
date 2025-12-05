@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="description" content="{{ $page->seo_description ?? Config::config()->seo_description }}" />
-    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? Config::config()->seo_tags) }} ">
+    <meta name="keywords" content="{{ implode(",", is_array($page->seo_keywords ?? Config::config()->seo_tags ?? []) ? ($page->seo_keywords ?? Config::config()->seo_tags ?? []) : []) }} ">
     <title>{{ Config::config()->appname }}</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">

@@ -8,8 +8,12 @@
 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <meta name="description" content="{{ $page->seo_description ?? Config::config()->seo_description }}" />
-    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? Config::config()->seo_tags) }} ">
+    <meta name="description" content="{{ optional($page)->seo_description ?? Config::config()->seo_description }}" />
+    @php
+        $keywords = optional($page)->seo_keywords ?? Config::config()->seo_tags ?? [];
+        $keywordsString = is_array($keywords) ? implode(',', $keywords) : $keywords;
+    @endphp
+    <meta name="keywords" content="{{ $keywordsString }}" />
 
     <title>{{ Config::config()->appname }}</title>
 

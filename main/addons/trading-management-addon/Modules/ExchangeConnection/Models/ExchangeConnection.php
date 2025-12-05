@@ -19,7 +19,7 @@ class ExchangeConnection extends Model
 {
     use HasFactory, Searchable;
 
-    protected $table = 'exchange_connections';
+    protected $table = 'execution_connections';
 
     public $searchable = ['name', 'provider'];
 

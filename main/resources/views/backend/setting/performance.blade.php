@@ -301,6 +301,211 @@
             </div>
         </div>
 
+        <!-- Database Management -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h5 class="mb-3"><i class="las la-database"></i> {{ __('Database Management') }}</h5>
+                <div class="alert alert-warning">
+                    <i class="las la-exclamation-triangle"></i> <strong>{{ __('Warning:') }}</strong>
+                    {{ __('Database operations can take time and may affect site availability. Use with caution in production.') }}
+                </div>
+
+                <!-- Database Backups List -->
+                <div class="card border border-primary mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="las la-save"></i> {{ __('Database Backups') }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Backup Name') }}</th>
+                                        <th>{{ __('Size') }}</th>
+                                        <th>{{ __('Created At') }}</th>
+                                        <th class="text-right">{{ __('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($backups ?? [] as $backup)
+                                        <tr class="{{ $backup['is_factory'] ? 'table-success' : '' }}">
+                                            <td>
+                                                {{ $backup['filename'] }}
+                                                @if($backup['is_factory'])
+                                                    <span class="badge badge-success ml-2">{{ __('Factory Default') }}</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $backup['size_human'] }}</td>
+                                            <td>{{ $backup['created_at'] }}</td>
+                                            <td class="text-right">
+                                                <div class="btn-group btn-group-sm">
+                                                    <!-- Load Backup -->
+                                                    <form action="{{ route('admin.general.backup-load') }}" method="POST" class="d-inline load-backup-form" data-name="{{ $backup['filename'] }}">
+                                                        @csrf
+                                                        <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
+                                                        <button type="submit" class="btn btn-primary btn-sm" title="{{ __('Load this backup') }}">
+                                                            <i class="las la-upload"></i> {{ __('Load') }}
+                                                        </button>
+                                                    </form>
+
+                                                    @if(!$backup['is_factory'])
+                                                        <!-- Save as Factory -->
+                                                        <form action="{{ route('admin.general.backup-save-factory') }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
+                                                            <button type="submit" class="btn btn-warning btn-sm" title="{{ __('Set as factory default') }}" onclick="return confirm('{{ __('Set this backup as factory default state?') }}')">
+                                                                <i class="las la-star"></i> {{ __('Set Default') }}
+                                                            </button>
+                                                        </form>
+
+                                                        <!-- Delete Backup -->
+                                                        <form action="{{ route('admin.general.backup-delete') }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
+                                                            <button type="submit" class="btn btn-danger btn-sm" title="{{ __('Delete backup') }}" onclick="return confirm('{{ __('Delete this backup? This cannot be undone.') }}')">
+                                                                <i class="las la-trash"></i> {{ __('Delete') }}
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">
+                                                <i class="las la-info-circle"></i> {{ __('No backups found. Create your first backup below.') }}
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Create New Backup -->
+                        <div class="border-top pt-3 mt-3">
+                            <form action="{{ route('admin.general.backup-create') }}" method="POST" class="form-inline">
+                                @csrf
+                                <div class="form-group mr-2">
+                                    <input type="text" name="backup_name" class="form-control" placeholder="{{ __('Backup name (optional)') }}" value="backup_{{ date('Y-m-d_H-i-s') }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="las la-save"></i> {{ __('Create New Backup') }}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card border border-info">
+                            <div class="card-body">
+                                <h6 class="card-title text-info">
+                                    <i class="las la-sync-alt"></i> {{ __('Re-seed / Restore State') }}
+                                </h6>
+                                <p class="card-text text-muted small">
+                                    {{ __('Restore database from factory state or a backup. Choose your source below.') }}
+                                </p>
+                                
+                                <!-- Factory State Option -->
+                                <div class="mb-3">
+                                    <strong class="d-block mb-2">{{ __('Option 1: Factory State (Seeders)') }}</strong>
+                                    <ul class="small text-muted mb-2">
+                                        <li>✅ {{ __('Fresh install with demo data') }}</li>
+                                        <li>✅ {{ __('Uses DatabaseSeeder (17 seeders)') }}</li>
+                                        <li>⚠️ {{ __('Wipes ALL data, re-migrates, seeds') }}</li>
+                                    </ul>
+                                    <form action="{{ route('admin.general.backup-load-factory') }}" method="POST" class="factory-restore-form">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-info">
+                                            <i class="las la-industry"></i> {{ __('Restore Factory State') }}
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <!-- Backup State Option -->
+                                <div>
+                                    <strong class="d-block mb-2">{{ __('Option 2: Load Backup State') }}</strong>
+                                    <ul class="small text-muted mb-2">
+                                        <li>✅ {{ __('Restore from specific backup') }}</li>
+                                        <li>✅ {{ __('Preserves exact state at backup time') }}</li>
+                                        <li>⚠️ {{ __('Wipes current data') }}</li>
+                                    </ul>
+                                    @if(count($backups ?? []) > 0)
+                                        <form action="{{ route('admin.general.backup-load') }}" method="POST" class="backup-restore-form">
+                                            @csrf
+                                            <div class="form-group">
+                                                <select name="backup_file" class="form-control form-control-sm" required>
+                                                    <option value="">{{ __('Select backup...') }}</option>
+                                                    @foreach($backups ?? [] as $backup)
+                                                        <option value="{{ $backup['filename'] }}">
+                                                            {{ $backup['filename'] }} ({{ $backup['size_human'] }}) - {{ $backup['created_at'] }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="las la-upload"></i> {{ __('Load Selected Backup') }}
+                                            </button>
+                                        </form>
+                                    @else
+                                        <p class="text-muted small">{{ __('No backups available. Create one first.') }}</p>
+                                    @endif
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <!-- Safe Reseed (Add Data Only) -->
+                                <div>
+                                    <strong class="d-block mb-2">{{ __('Option 3: Safe Re-seed (Add Data)') }}</strong>
+                                    <ul class="small text-muted mb-2">
+                                        <li>✅ {{ __('Adds demo data WITHOUT deleting') }}</li>
+                                        <li>✅ {{ __('Idempotent (safe to run multiple times)') }}</li>
+                                        <li>✅ {{ __('No data loss') }}</li>
+                                    </ul>
+                                    <form action="{{ route('admin.general.reseed-database') }}" method="POST" class="reseed-form">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="las la-seedling"></i> {{ __('Add Demo Data (Safe)') }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card border border-danger">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger">
+                                    <i class="las la-exclamation-triangle"></i> {{ __('Full Database Reset') }}
+                                </h6>
+                                <p class="card-text text-muted small">
+                                    {{ __('⚠️ DANGEROUS: Completely wipe database, re-run migrations, and seed fresh data. ALL DATA WILL BE LOST!') }}
+                                </p>
+                                <ul class="small text-muted mb-3">
+                                    <li>❌ {{ __('Deletes ALL users, signals, payments, subscriptions') }}</li>
+                                    <li>❌ {{ __('Cannot be undone') }}</li>
+                                    <li>✅ {{ __('Only use for testing/development') }}</li>
+                                </ul>
+                                <div class="form-group">
+                                    <label class="text-danger">{{ __('Type "RESET" to confirm:') }}</label>
+                                    <input type="text" class="form-control reset-confirm" placeholder="RESET" required>
+                                </div>
+                                <form action="{{ route('admin.general.reset-database') }}" method="POST" class="reset-form">
+                                    @csrf
+                                    <input type="hidden" name="confirm" value="">
+                                    <button type="submit" class="btn btn-danger" disabled>
+                                        <i class="las la-trash-restore"></i> {{ __('Reset Entire Database') }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Performance Tips (Dynamic) -->
         <div class="row">
             <div class="col-md-12">
@@ -431,8 +636,70 @@
 @push('script')
 <script>
     $(document).ready(function() {
+        // Reset form confirmation
+        $('.reset-confirm').on('input', function() {
+            const val = $(this).val();
+            const form = $(this).closest('.card').find('.reset-form');
+            const btn = form.find('button[type="submit"]');
+            
+            if (val === 'RESET') {
+                btn.prop('disabled', false);
+                form.find('input[name="confirm"]').val('RESET');
+            } else {
+                btn.prop('disabled', true);
+                form.find('input[name="confirm"]').val('');
+            }
+        });
+
+        // Reseed form confirmation
+        $('.reseed-form').on('submit', function(e) {
+            if (!confirm('{{ __("Add demo data to database? This is safe and won\'t delete existing data.") }}')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Reset form confirmation
+        $('.reset-form').on('submit', function(e) {
+            if (!confirm('{{ __("⚠️ FINAL WARNING: This will DELETE ALL DATA! Are you absolutely sure?") }}')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Factory restore confirmation
+        $('.factory-restore-form').on('submit', function(e) {
+            if (!confirm('{{ __("⚠️ WARNING: This will WIPE current database and restore factory state. Continue?") }}')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Backup restore confirmation
+        $('.backup-restore-form').on('submit', function(e) {
+            const backupName = $(this).find('select[name="backup_file"]').val();
+            if (!backupName) {
+                alert('{{ __("Please select a backup to restore") }}');
+                e.preventDefault();
+                return false;
+            }
+            if (!confirm('{{ __("⚠️ WARNING: This will WIPE current database and restore from backup. Continue?") }}\n\n{{ __("Backup:") }} ' + backupName)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Load backup form in table (individual load buttons)
+        $('.load-backup-form').on('submit', function(e) {
+            const backupName = $(this).data('name');
+            if (!confirm('{{ __("⚠️ Restore from this backup? Current data will be WIPED.") }}\n\n{{ __("Backup:") }} ' + backupName)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
         // Enhanced loading state with progress feedback (WordPress-style)
-        $('form[action*="performance"]').on('submit', function(e) {
+        $('form[action*="performance"], .reseed-form, .reset-form').on('submit', function(e) {
             const form = $(this);
             const btn = form.find('button[type="submit"]');
             const originalText = btn.html();

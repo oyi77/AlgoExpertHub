@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 class MarketDataService
 {
     protected int $cacheTtl;
+    protected int $realtimeCacheTtl = 60; // 1 min for live trading
+    protected int $backtestCacheTtl = 86400; // 24 hours for backtesting
 
     public function __construct()
     {
@@ -256,6 +258,90 @@ class MarketDataService
         } catch (\Exception $e) {
             return 0;
         }
+    }
+
+    /**
+     * Get cached data with tiered caching strategy
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @param string $mode realtime|backtest|permanent
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
+    public function getCached(string $symbol, string $timeframe, string $mode = 'realtime', int $limit = 100)
+    {
+        $ttl = match($mode) {
+            'realtime' => $this->realtimeCacheTtl,
+            'backtest' => $this->backtestCacheTtl,
+            'permanent' => 0, // No cache, always from DB
+            default => $this->cacheTtl,
+        };
+
+        if ($mode === 'permanent') {
+            return $this->getLatestFromDB($symbol, $timeframe, $limit);
+        }
+
+        $cacheKey = $this->getCacheKey($symbol, $timeframe, $mode, $limit);
+
+        $data = Cache::remember($cacheKey, $ttl, function () use ($symbol, $timeframe, $limit) {
+            return $this->getLatestFromDB($symbol, $timeframe, $limit);
+        });
+
+        // Update access metadata
+        $this->recordAccess($symbol, $timeframe);
+
+        return $data;
+    }
+
+    /**
+     * Get latest candles from database (no cache)
+     */
+    protected function getLatestFromDB(string $symbol, string $timeframe, int $limit)
+    {
+        $data = MarketData::where('symbol', $symbol)
+            ->where('timeframe', $timeframe)
+            ->orderBy('timestamp', 'desc')
+            ->limit($limit)
+            ->get();
+
+        // Update access count
+        if ($data->isNotEmpty()) {
+            MarketData::where('symbol', $symbol)
+                ->where('timeframe', $timeframe)
+                ->increment('access_count');
+                
+            MarketData::where('symbol', $symbol)
+                ->where('timeframe', $timeframe)
+                ->update(['last_accessed_at' => now()]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Record access for subscription tracking
+     */
+    protected function recordAccess(string $symbol, string $timeframe): void
+    {
+        // This would integrate with MarketDataSubscription model
+        // For now, just increment DB access count
+    }
+
+    /**
+     * Get cache statistics
+     */
+    public function getCacheStats(): array
+    {
+        $totalKeys = 0;
+        $hitRate = 0; // This would need Redis/Memcached stats
+
+        return [
+            'total_cached_keys' => $totalKeys,
+            'cache_hit_rate' => $hitRate,
+            'realtime_ttl' => $this->realtimeCacheTtl,
+            'backtest_ttl' => $this->backtestCacheTtl,
+        ];
     }
 }
 

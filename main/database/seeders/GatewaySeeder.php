@@ -14,36 +14,21 @@ class GatewaySeeder extends Seeder
      */
     public function run()
     {
-        DB::table('gateways')->insert([
-            [
-                'name' => 'stripe',
-            ],[
-                'name' => 'paypal'
-            ],[
-                'name' => 'vougepay'
-            ],[
-                'name' => 'razorpay'
-            ],[
-                'name' => 'coinpayments'
-            ],[
-                'name' => 'mollie'
-            ],[
-                'name' => 'nowpayments'
-            ],[
-                'name' => 'flutterwave'
-            ],[
-                'name' => 'paystack'
-            ],[
-                'name' => 'paghiper'
-            ],[
-                'name' => 'gourl_BTC'
-            ],[
-                'name' => 'perfectmoney'
-            ],[
-                'name' => 'mercadopago'
-            ],[
-                'name' => 'paytm'
-            ]
-        ]);
+        $gateways = ['stripe', 'paypal', 'vougepay', 'razorpay', 'coinpayments', 'mollie', 'nowpayments', 'flutterwave', 'paystack', 'paghiper', 'gourl_BTC', 'perfectmoney', 'mercadopago', 'paytm'];
+        
+        foreach ($gateways as $gateway) {
+            DB::table('gateways')->updateOrInsert(
+                ['name' => $gateway],
+                [
+                    'name' => $gateway,
+                    'type' => 1,
+                    'status' => 1,
+                    'rate' => 1.00000000,
+                    'charge' => 0.00000000,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            );
+        }
     }
 }

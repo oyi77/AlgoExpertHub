@@ -14,12 +14,23 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            // AdminSeeder::class,
-            // ConfigurationSeeder::class,
-            // GatewaySeeder::class,
-            // WithdrawGatewaySeeder::class,
-            // RolePermission::class,
-            EmailTemplateSeeder::class
+            ConfigurationSeeder::class,
+            AdminSeeder::class,
+            RolePermission::class,  // After AdminSeeder so admin exists
+            LanguageSeeder::class,
+            GatewaySeeder::class,
+            WithdrawGatewaySeeder::class,
+            EmailTemplateSeeder::class,
+            CurrencyPairSeeder::class,
+            TimeFrameSeeder::class,
+            MarketSeeder::class,
+            PlanSeeder::class,
+            PageSeeder::class,
+            ContentSeeder::class,
+            ReferralSeeder::class,
+            AIProviderSeeder::class,
+            ParsingPatternSeeder::class,
+            TradingPresetSeeder::class,
         ]);
     }
 }

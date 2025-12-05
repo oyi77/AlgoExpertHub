@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <meta name="description" content="{{ $page->seo_description ?? optional(Config::config())->seo_description }}" />
-    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? optional(Config::config())->seo_tags ?? []) }} ">
+    <meta name="keywords" content="{{ implode(",", is_array($page->seo_keywords ?? Config::config()->seo_tags ?? []) ? ($page->seo_keywords ?? Config::config()->seo_tags ?? []) : []) }} ">
 
     <title>{{ optional(Config::config())->appname ?? 'AlgoExpert Hub' }}</title>
 

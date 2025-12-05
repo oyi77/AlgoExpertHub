@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
 use App\Services\ConfigurationService;
+use App\Services\DatabaseBackupService;
 use App\Services\ThemeManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -17,11 +18,13 @@ class ConfigurationController extends Controller
 {
     protected $config;
     protected $themeManager;
+    protected $backupService;
 
-    public function __construct(ConfigurationService $config, ThemeManager $themeManager)
+    public function __construct(ConfigurationService $config, ThemeManager $themeManager, DatabaseBackupService $backupService)
     {
         $this->config = $config;
         $this->themeManager = $themeManager;
+        $this->backupService = $backupService;
     }
 
     public function index()
@@ -37,6 +40,9 @@ class ConfigurationController extends Controller
         
         // Get dynamic performance tips based on codebase analysis
         $data['performanceTips'] = $this->getPerformanceTips();
+        
+        // Get database backups
+        $data['backups'] = $this->backupService->listBackups();
         
         return view('backend.setting.index')->with($data);
     }
@@ -674,6 +680,162 @@ class ConfigurationController extends Controller
             return redirect()->back()->with('success', 'All frontend themes have been deactivated successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to deactivate themes: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Re-seed database with demo data
+     */
+    public function reseedDatabase(Request $request)
+    {
+        try {
+            set_time_limit(300); // 5 minutes timeout
+
+            $output = [];
+            
+            // Run database seeder
+            Artisan::call('db:seed', [
+                '--force' => true
+            ]);
+            
+            $output[] = Artisan::output();
+            
+            // Clear all caches
+            Artisan::call('optimize:clear');
+            
+            return redirect()->back()->with('success', 'Database re-seeded successfully! All demo data has been restored.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to re-seed database: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Full database reset and reseed (DANGEROUS)
+     */
+    public function resetDatabase(Request $request)
+    {
+        try {
+            if ($request->confirm !== 'RESET') {
+                return redirect()->back()->with('error', 'Please type RESET to confirm database reset.');
+            }
+
+            set_time_limit(600); // 10 minutes timeout
+
+            // Wipe database
+            Artisan::call('db:wipe', ['--force' => true]);
+            
+            // Run migrations
+            Artisan::call('migrate', ['--force' => true]);
+            
+            // Seed database
+            Artisan::call('db:seed', ['--force' => true]);
+            
+            // Clear caches
+            Artisan::call('optimize:clear');
+
+            return redirect()->route('admin.login')->with('success', 'Database reset complete! Please login again.');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to reset database: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create database backup
+     */
+    public function createBackup(Request $request)
+    {
+        try {
+            set_time_limit(300);
+            
+            $name = $request->backup_name ?? 'backup_' . date('Y-m-d_H-i-s');
+            $result = $this->backupService->createBackup($name);
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Backup failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Load backup state
+     */
+    public function loadBackup(Request $request)
+    {
+        try {
+            if (empty($request->backup_file)) {
+                return redirect()->back()->with('error', 'Please select a backup file');
+            }
+
+            set_time_limit(600);
+            
+            $result = $this->backupService->loadBackup($request->backup_file);
+            
+            if ($result['type'] === 'success') {
+                return redirect()->route('admin.login')->with('success', 'Database restored successfully! Please login again.');
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Restore failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete backup
+     */
+    public function deleteBackup(Request $request)
+    {
+        try {
+            if (empty($request->backup_file)) {
+                return redirect()->back()->with('error', 'Please select a backup file');
+            }
+
+            $result = $this->backupService->deleteBackup($request->backup_file);
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Save backup as factory state
+     */
+    public function saveAsFactoryState(Request $request)
+    {
+        try {
+            $result = $this->backupService->saveAsFactoryState($request->backup_file ?? null);
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Save failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Load factory state
+     */
+    public function loadFactoryState(Request $request)
+    {
+        try {
+            set_time_limit(600);
+            
+            $result = $this->backupService->loadFactoryState();
+            
+            if ($result['type'] === 'success') {
+                return redirect()->route('admin.login')->with('success', 'Restored to factory state! Please login again.');
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Factory restore failed: ' . $e->getMessage());
         }
     }
 }

@@ -32,13 +32,13 @@
                     </div>
                     <div class="col-md-6">
                         <p><strong>Data Fetching:</strong> 
-                            <i class="fas {{ $connection->data_fetching_enabled ? 'fa-check text-success' : 'fa-times text-muted' }}"></i>
+                            <i class="fas {{ $connection->is_active ? 'fa-check text-success' : 'fa-times text-muted' }}"></i>
                             @if($connection->last_data_fetch_at)
                             <small class="text-muted">(Last: {{ $connection->last_data_fetch_at->diffForHumans() }})</small>
                             @endif
                         </p>
                         <p><strong>Trade Execution:</strong> 
-                            <i class="fas {{ $connection->trade_execution_enabled ? 'fa-check text-success' : 'fa-times text-muted' }}"></i>
+                            <i class="fas {{ $connection->is_active ? 'fa-check text-success' : 'fa-times text-muted' }}"></i>
                             @if($connection->last_trade_execution_at)
                             <small class="text-muted">(Last: {{ $connection->last_trade_execution_at->diffForHumans() }})</small>
                             @endif
@@ -58,9 +58,9 @@
                 <div class="row text-center">
                     <!-- Step 1: Fetch Data -->
                     <div class="col-md-2">
-                        <div class="card {{ $connection->data_fetching_enabled ? 'border-success' : 'border-secondary' }}">
+                        <div class="card {{ $connection->is_active ? 'border-success' : 'border-secondary' }}">
                             <div class="card-body">
-                                <i class="fas fa-download fa-2x {{ $connection->data_fetching_enabled ? 'text-success' : 'text-muted' }}"></i>
+                                <i class="fas fa-download fa-2x {{ $connection->is_active ? 'text-success' : 'text-muted' }}"></i>
                                 <p class="mt-2 mb-0"><strong>1. Fetch Data</strong></p>
                                 <small class="text-muted">Get market data</small>
                             </div>
@@ -146,9 +146,9 @@
 
                     <!-- Step 7: Execute Trade -->
                     <div class="col-md-2">
-                        <div class="card {{ $connection->trade_execution_enabled ? 'border-success' : 'border-secondary' }}">
+                        <div class="card {{ $connection->is_active ? 'border-success' : 'border-secondary' }}">
                             <div class="card-body">
-                                <i class="fas fa-bolt fa-2x {{ $connection->trade_execution_enabled ? 'text-success' : 'text-muted' }}"></i>
+                                <i class="fas fa-bolt fa-2x {{ $connection->is_active ? 'text-success' : 'text-muted' }}"></i>
                                 <p class="mt-2 mb-0"><strong>7. Execute</strong></p>
                                 <small class="text-muted">Place trade</small>
                             </div>
@@ -160,7 +160,7 @@
 
         <div class="row">
             <!-- Data Fetching Tests -->
-            @if($connection->data_fetching_enabled)
+            @if($connection->is_active)
             <div class="col-md-6">
                 <div class="card border-primary">
                     <div class="card-header bg-primary text-white">
@@ -205,7 +205,7 @@
             @endif
 
             <!-- Trade Execution Tests -->
-            @if($connection->trade_execution_enabled)
+            @if($connection->is_active)
             <div class="col-md-6">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">

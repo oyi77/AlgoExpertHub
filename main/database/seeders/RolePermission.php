@@ -39,9 +39,11 @@ class RolePermission extends Seeder
             ['name' => 'manage-report', 'guard_name' => 'admin'],
         ];
 
-        DB::table('permissions')->insert($permission);
+        foreach ($permission as $perm) {
+            \Spatie\Permission\Models\Permission::firstOrCreate($perm);
+        }
 
-        $adminRole = Role::create(['name' => 'Admin','guard_name' => 'admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'admin']);
 
         $adminRole->givePermissionTo([
             'manage-admin',

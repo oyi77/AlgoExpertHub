@@ -76,7 +76,7 @@
                         </div>
 
                         @php
-                            $dataConnections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('data_fetching_enabled', 1)
+                            $dataConnections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)
                                 ->where('is_active', 1)
                                 ->where('status', 'connected')
                                 ->get();

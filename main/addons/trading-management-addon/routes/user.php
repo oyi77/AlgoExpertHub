@@ -39,6 +39,23 @@ Route::get('/test', function () {
     return '<h1>Backtesting</h1><p>Test my strategies on historical data</p>';
 })->name('test.index');
 
+// Marketplace
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+    // Bot Templates
+    Route::get('bots', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\BotMarketplaceController::class, 'index'])->name('bots.index');
+    Route::get('bots/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\BotMarketplaceController::class, 'show'])->name('bots.show');
+    Route::post('bots/{id}/clone', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\BotMarketplaceController::class, 'clone'])->name('bots.clone');
+    Route::post('bots/{id}/rate', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\BotMarketplaceController::class, 'rate'])->name('bots.rate');
+    Route::get('my-clones', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\BotMarketplaceController::class, 'myClones'])->name('my-clones');
+    
+    // Trader Profiles  
+    Route::get('traders', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\TraderMarketplaceController::class, 'index'])->name('traders.index');
+    Route::get('traders/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\TraderMarketplaceController::class, 'show'])->name('traders.show');
+    Route::post('traders/{id}/follow', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\TraderMarketplaceController::class, 'follow'])->name('traders.follow');
+    Route::post('traders/{id}/unfollow', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\TraderMarketplaceController::class, 'unfollow'])->name('traders.unfollow');
+    Route::post('traders/{id}/rate', [\Addons\TradingManagement\Modules\Marketplace\Controllers\User\TraderMarketplaceController::class, 'rate'])->name('traders.rate');
+});
+
 // Trading Bots (Coinrule-like bot builder)
 Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::get('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'index'])->name('index');

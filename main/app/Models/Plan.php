@@ -12,7 +12,33 @@ class Plan extends Model
 
     public $searchable = ['plan_name'];
 
-    protected $casts = ['feature' => 'array'];
+    protected $casts = [];
+
+    /**
+     * Accessor: Decode feature JSON string to array
+     */
+    public function getFeatureAttribute($value)
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true); // true = return array
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * Mutator: Encode feature array to JSON string
+     */
+    public function setFeatureAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['feature'] = json_encode($value);
+        } else {
+            $this->attributes['feature'] = $value;
+        }
+    }
 
     public function subscriptions()
     {

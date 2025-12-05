@@ -113,10 +113,10 @@
                                         <td>
                                             <span class="badge badge-info">{{ $connection->getPurposeLabel() }}</span>
                                             <br>
-                                            @if($connection->data_fetching_enabled)
+                                            @if($connection->is_active)
                                             <small><i class="fas fa-download text-primary"></i> Data</small>
                                             @endif
-                                            @if($connection->trade_execution_enabled)
+                                            @if($connection->is_active)
                                             <small><i class="fas fa-bolt text-success"></i> Trading</small>
                                             @endif
                                         </td>

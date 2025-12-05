@@ -9,8 +9,41 @@ class Referral extends Model
 {
     use HasFactory;
 
-    protected $casts = [
-        'level' => 'array',
-        'commission' => 'array'
-    ];
+    protected $casts = [];
+
+    public function getLevelAttribute($value)
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return is_array($value) ? $value : [];
+    }
+
+    public function setLevelAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['level'] = json_encode($value);
+        } else {
+            $this->attributes['level'] = $value;
+        }
+    }
+
+    public function getCommissionAttribute($value)
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return is_array($value) ? $value : [];
+    }
+
+    public function setCommissionAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['commission'] = json_encode($value);
+        } else {
+            $this->attributes['commission'] = $value;
+        }
+    }
 }

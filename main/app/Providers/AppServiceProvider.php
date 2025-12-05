@@ -72,5 +72,13 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
 
         Paginator::useBootstrap();
+
+        // Global view composer to ensure $page is always available
+        view()->composer('*', function ($view) {
+            $data = $view->getData();
+            if (!isset($data['page'])) {
+                $view->with('page', null);
+            }
+        });
     }
 }

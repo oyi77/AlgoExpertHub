@@ -72,8 +72,8 @@
                         <div class="card-body">
                             <div class="form-group">
                                 <div class="custom-control custom-checkbox">
-                                    <input type="hidden" name="data_fetching_enabled" value="0">
-                                    <input type="checkbox" class="custom-control-input" id="dataFetching" name="data_fetching_enabled" value="1" checked>
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" class="custom-control-input" id="dataFetching" name="is_active" value="1" checked>
                                     <label class="custom-control-label" for="dataFetching">
                                         <strong>Enable Data Fetching</strong>
                                         <br><small class="text-muted">Use this connection to fetch market data (candles, prices)</small>
@@ -82,8 +82,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="custom-control custom-checkbox">
-                                    <input type="hidden" name="trade_execution_enabled" value="0">
-                                    <input type="checkbox" class="custom-control-input" id="tradeExecution" name="trade_execution_enabled" value="1">
+                                    <input type="hidden" name="is_active" value="0">
+                                    <input type="checkbox" class="custom-control-input" id="tradeExecution" name="is_active" value="1">
                                     <label class="custom-control-label" for="tradeExecution">
                                         <strong>Enable Trade Execution</strong>
                                         <br><small class="text-muted">Use this connection to execute trades automatically</small>

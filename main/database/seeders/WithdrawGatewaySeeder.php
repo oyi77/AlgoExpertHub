@@ -14,13 +14,15 @@ class WithdrawGatewaySeeder extends Seeder
      */
     public function run()
     {
-        WithdrawGateway::create([
-            'name' => 'Bank',
-            'min_withdraw_amount' => 5,
-            'max_withdraw_amount' => 500,
-            'charge' => 1,
-            'type' => 'fixed',
-            'status' => true
-        ]);
+        WithdrawGateway::firstOrCreate(
+            ['name' => 'Bank'],
+            [
+                'min_withdraw_amount' => 5,
+                'max_withdraw_amount' => 500,
+                'charge' => 1,
+                'type' => 'fixed',
+                'status' => true
+            ]
+        );
     }
 }

@@ -42,7 +42,9 @@ class ConfigurationSeeder extends Seeder
 
             'tdio_allow' => false,
 
-            'seo_description' => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci delectus deleniti temporibus quas veritatis eaque quae iste excepturi natus unde magnam nostrum, officiis tenetur ipsam ratione accusamus nulla esse ab, cumque maxime fugiat modi. Unde dolore nisi nostrum, accusamus eum perferendis distinctio molestiae quam possimus cupiditate, velit ut consequatur eius?"
+            'seo_description' => "Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci delectus deleniti temporibus quas veritatis eaque quae iste excepturi natus unde magnam nostrum, officiis tenetur ipsam ratione accusamus nulla esse ab, cumque maxime fugiat modi. Unde dolore nisi nostrum, accusamus eum perferendis distinctio molestiae quam possimus cupiditate, velit ut consequatur eius?",
+            
+            'seo_tags' => ['trading', 'signals', 'forex', 'crypto', 'stocks']
 
         ]);
     }
