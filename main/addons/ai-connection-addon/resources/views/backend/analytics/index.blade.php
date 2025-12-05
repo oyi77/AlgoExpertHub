@@ -168,9 +168,6 @@
     </div>
 @endsection
 
-@push('external-style')
-<link href="{{ Config::cssLib('backend', 'apexcharts.css') }}" rel="stylesheet">
-@endpush
 
 @push('script')
 <script src="{{ asset('asset/backend/js/apexcharts.min.js') }}"></script>
