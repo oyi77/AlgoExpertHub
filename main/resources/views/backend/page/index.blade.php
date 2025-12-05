@@ -57,13 +57,17 @@
                                         </td>
 
                                         <td>
+                                            <a href="{{ route('admin.page-builder.index', $page->id) }}"
+                                                class="btn btn-sm btn-outline-success" title="{{ __('Page Builder') }}">
+                                                <i class="fa fa-magic"></i>
+                                            </a>
                                             <a href="{{ route('admin.frontend.pages.edit', $page) }}"
-                                                class="btn btn-sm btn-outline-primary edit">
+                                                class="btn btn-sm btn-outline-primary edit" title="{{ __('Edit') }}">
                                                 <i class="fa fa-pen"></i>
                                             </a>
                                             @if (!$loop->first)
                                                 <a href="#" class="btn btn-sm btn-outline-danger delete"
-                                                    data-url="{{ route('admin.frontend.pages.delete', $page) }}"><i
+                                                    data-url="{{ route('admin.frontend.pages.delete', $page) }}" title="{{ __('Delete') }}"><i
                                                         class="fa fa-trash"></i></a>
                                             @endif
                                         </td>

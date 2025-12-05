@@ -326,26 +326,22 @@
                 </li>
             @endif
 
-            @if ($adminUser && ($adminUser->can('manage-frontend') ||
-                    $adminUser->can('manage-language')))
-                <li class="nav-label">{{ __('Theme Settings') }}</li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-theme'))
-                <li><a href="{{ route('admin.manage.theme') }}" aria-expanded="false"><i
-                            data-feather="layers"></i><span class="nav-text">{{ __('Manage Theme') }}</span></a>
-                </li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-frontend'))
-                <li><a href="{{ route('admin.frontend.pages') }}" aria-expanded="false"><i
-                            data-feather="book-open"></i><span class="nav-text">{{ __('Manage Pages') }}</span></a>
-                </li>
-
-                
-
-                <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}" aria-expanded="false"><i
-                            data-feather="layout"></i><span class="nav-text">{{ __('Manage Frontend') }}</span></a>
+            {{-- UI Manager Section --}}
+            @if ($adminUser && ($adminUser->can('manage-theme') || $adminUser->can('manage-frontend')))
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="edit-3"></i><span class="nav-text">{{ __('UI Manager') }}</span></a>
+                    <ul aria-expanded="false">
+                        @if ($adminUser->can('manage-frontend'))
+                            <li><a href="{{ route('admin.frontend.pages') }}" aria-expanded="false">{{ __('Manage Pages') }}</a></li>
+                        @endif
+                        @if ($adminUser->can('manage-theme'))
+                            <li><a href="{{ route('admin.manage.theme') }}" aria-expanded="false">{{ __('Manage Theme') }}</a></li>
+                        @endif
+                        @if ($adminUser->can('manage-frontend'))
+                            <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}" aria-expanded="false">{{ __('Manage Frontend') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.index') }}" aria-expanded="false">{{ __('Page Builder') }}</a></li>
+                        @endif
+                    </ul>
                 </li>
             @endif
 

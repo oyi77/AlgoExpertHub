@@ -77,4 +77,20 @@ class PagesController extends Controller
 
         return back()->with('success', 'Page Deleted Successfully');
     }
+
+    public function pageBuilder(Request $request, $id = null)
+    {
+        $data['title'] = 'Page Builder';
+        
+        if ($id) {
+            $page = Page::findOrFail($id);
+            $data['page'] = $page;
+            $data['sections'] = \App\Helpers\Helper\Helper::sectionConfig();
+            return view('backend.page.builder')->with($data);
+        } else {
+            // Show page selector if no page selected
+            $data['pages'] = Page::orderBy('order', 'ASC')->get();
+            return view('backend.page.builder-select')->with($data);
+        }
+    }
 }

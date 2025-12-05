@@ -282,6 +282,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('pages/edit/{id}', [PagesController::class, 'pageUpdate']);
             Route::get('pages/search', [PagesController::class, 'index'])->name('frontend.search');
             Route::post('pages/delete/{id}', [PagesController::class, 'pageDelete'])->name('frontend.pages.delete');
+            Route::get('page-builder/{id?}', [PagesController::class, 'pageBuilder'])->name('page-builder.index');
 
             Route::get('manage/section/{name}', [ManageSectionController::class, 'section'])->name('frontend.section.manage');
             Route::post('manage/section/{name}', [ManageSectionController::class, 'sectionContentUpdate']);
