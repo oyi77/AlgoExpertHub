@@ -4,12 +4,13 @@
     <div class="row withdraw-all-row">
         <div class="col-12 col-md-12 col-lg-12">
             <div class="card">
-                <div class="card-header text-right">
-                    <form action="">
-                        <div class="input-group">
+                <div class="card-header d-flex justify-content-end">
+                    <form action="" class="w-100">
+                        <div class="input-group ml-auto" style="max-width: 600px;">
                             <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Trx">
                             <a href="javascript:void(0)"
-                                class="btn btn-sm btn-outline-secondary daterange-btn btn-d icon-left btn-icon filterData"><i class="fas fa-calendar"></i> {{ __('Filter By Date') }}
+                                class="btn btn-sm btn-outline-secondary daterange-btn btn-d icon-left btn-icon filterData">
+                                <i class="fas fa-calendar"></i> <span>{{ __('Filter By Date') }}</span>
                             </a>
                             <div class="input-group-append">
                                 <button class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
@@ -338,6 +339,13 @@
 
         .is-hide {
             display: none;
+        }
+
+        /* Fix for Filter By Date button - prevent text wrapping */
+        .daterange-btn.btn-icon {
+            width: auto !important;
+            min-width: auto;
+            white-space: nowrap;
         }
     </style>
 @endpush

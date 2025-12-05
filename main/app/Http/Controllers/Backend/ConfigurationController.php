@@ -388,12 +388,13 @@ class ConfigurationController extends Controller
     }
 
     /**
-     * Performance optimization actions (WordPress-style automatic execution)
+     * Performance optimization actions
      */
     public function performanceOptimize(Request $request)
     {
         $action = $request->input('action');
         $results = [];
+        $isAjax = $request->expectsJson() || $request->ajax();
 
         try {
             switch ($action) {
@@ -455,10 +456,22 @@ class ConfigurationController extends Controller
                     break;
 
                 case 'optimize':
-                    // WordPress-style: Optimize everything automatically
                     $results[] = ['type' => 'info', 'message' => __('Starting full optimization...')];
                     
-                    // 1. Cache Laravel components
+                    // 1. Clear all caches first
+                    Artisan::call('cache:clear');
+                    $results[] = ['type' => 'success', 'message' => __('✓ Application cache cleared')];
+                    
+                    Artisan::call('config:clear');
+                    $results[] = ['type' => 'success', 'message' => __('✓ Config cache cleared')];
+                    
+                    Artisan::call('route:clear');
+                    $results[] = ['type' => 'success', 'message' => __('✓ Route cache cleared')];
+                    
+                    Artisan::call('view:clear');
+                    $results[] = ['type' => 'success', 'message' => __('✓ View cache cleared')];
+                    
+                    // 2. Cache Laravel components
                     Artisan::call('config:cache');
                     $results[] = ['type' => 'success', 'message' => __('✓ Configuration cached')];
                     
@@ -468,7 +481,7 @@ class ConfigurationController extends Controller
                     Artisan::call('view:cache');
                     $results[] = ['type' => 'success', 'message' => __('✓ Views cached')];
                     
-                    // 2. Optimize Composer autoloader
+                    // 3. Optimize Composer autoloader
                     $composerPath = base_path('composer.json');
                     if (file_exists($composerPath) && function_exists('shell_exec') && !in_array('shell_exec', explode(',', ini_get('disable_functions')))) {
                         $phpPath = defined('PHP_BINARY') ? PHP_BINARY : 'php';
@@ -479,7 +492,7 @@ class ConfigurationController extends Controller
                         }
                     }
                     
-                    // 3. Reset OPcache if available
+                    // 4. Reset OPcache if available
                     if (function_exists('opcache_reset')) {
                         opcache_reset();
                         $results[] = ['type' => 'success', 'message' => __('✓ OPcache reset')];
@@ -489,6 +502,9 @@ class ConfigurationController extends Controller
                     break;
 
                 default:
+                    if ($isAjax) {
+                        return response()->json(['success' => false, 'message' => __('Invalid action specified.')], 400);
+                    }
                     return back()->with('error', __('Invalid action specified.'));
             }
 
@@ -500,8 +516,22 @@ class ConfigurationController extends Controller
             $message = implode('<br>', $messages);
             $type = collect($results)->contains('type', 'error') ? 'error' : 'success';
 
+            if ($isAjax) {
+                return response()->json([
+                    'success' => $type === 'success',
+                    'message' => $message,
+                    'type' => $type
+                ]);
+            }
+
             return back()->with($type, $message);
         } catch (\Exception $e) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Optimization failed: :error', ['error' => $e->getMessage()])
+                ], 500);
+            }
             return back()->with('error', __('Optimization failed: :error', ['error' => $e->getMessage()]));
         }
     }
@@ -512,6 +542,7 @@ class ConfigurationController extends Controller
     public function performanceClear(Request $request)
     {
         $action = $request->input('action');
+        $isAjax = $request->expectsJson() || $request->ajax();
 
         try {
             switch ($action) {
@@ -529,11 +560,24 @@ class ConfigurationController extends Controller
                     break;
 
                 default:
+                    if ($isAjax) {
+                        return response()->json(['success' => false, 'message' => __('Invalid action specified.')], 400);
+                    }
                     return back()->with('error', __('Invalid action specified.'));
+            }
+
+            if ($isAjax) {
+                return response()->json(['success' => true, 'message' => $message]);
             }
 
             return back()->with('success', $message);
         } catch (\Exception $e) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Cache clearing failed: :error', ['error' => $e->getMessage()])
+                ], 500);
+            }
             return back()->with('error', __('Cache clearing failed: :error', ['error' => $e->getMessage()]));
         }
     }
@@ -688,6 +732,8 @@ class ConfigurationController extends Controller
      */
     public function reseedDatabase(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             set_time_limit(300); // 5 minutes timeout
 
@@ -703,10 +749,29 @@ class ConfigurationController extends Controller
             // Clear all caches
             Artisan::call('optimize:clear');
             
-            return redirect()->back()->with('success', 'Database re-seeded successfully! All demo data has been restored.');
+            $message = 'Database re-seeded successfully! All demo data has been restored.';
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'refresh' => true
+                ]);
+            }
+            
+            return redirect()->back()->with('success', $message);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to re-seed database: ' . $e->getMessage());
+            $errorMessage = 'Failed to re-seed database: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -715,9 +780,15 @@ class ConfigurationController extends Controller
      */
     public function resetDatabase(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             if ($request->confirm !== 'RESET') {
-                return redirect()->back()->with('error', 'Please type RESET to confirm database reset.');
+                $errorMessage = 'Please type RESET to confirm database reset.';
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 400);
+                }
+                return redirect()->back()->with('error', $errorMessage);
             }
 
             set_time_limit(600); // 10 minutes timeout
@@ -734,10 +805,29 @@ class ConfigurationController extends Controller
             // Clear caches
             Artisan::call('optimize:clear');
 
-            return redirect()->route('admin.login')->with('success', 'Database reset complete! Please login again.');
+            $message = 'Database reset complete! Please login again.';
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'redirect' => route('admin.login')
+                ]);
+            }
+
+            return redirect()->route('admin.login')->with('success', $message);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to reset database: ' . $e->getMessage());
+            $errorMessage = 'Failed to reset database: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -746,16 +836,35 @@ class ConfigurationController extends Controller
      */
     public function createBackup(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             set_time_limit(300);
             
             $name = $request->backup_name ?? 'backup_' . date('Y-m-d_H-i-s');
             $result = $this->backupService->createBackup($name);
             
+            if ($isAjax) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
+            
             return redirect()->back()->with($result['type'], $result['message']);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Backup failed: ' . $e->getMessage());
+            $errorMessage = 'Backup failed: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -764,9 +873,15 @@ class ConfigurationController extends Controller
      */
     public function loadBackup(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             if (empty($request->backup_file)) {
-                return redirect()->back()->with('error', 'Please select a backup file');
+                $errorMessage = 'Please select a backup file';
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 400);
+                }
+                return redirect()->back()->with('error', $errorMessage);
             }
 
             set_time_limit(600);
@@ -774,13 +889,37 @@ class ConfigurationController extends Controller
             $result = $this->backupService->loadBackup($request->backup_file);
             
             if ($result['type'] === 'success') {
-                return redirect()->route('admin.login')->with('success', 'Database restored successfully! Please login again.');
+                $message = 'Database restored successfully! Please login again.';
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message,
+                        'redirect' => route('admin.login')
+                    ]);
+                }
+                return redirect()->route('admin.login')->with('success', $message);
+            }
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
             }
             
             return redirect()->back()->with($result['type'], $result['message']);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Restore failed: ' . $e->getMessage());
+            $errorMessage = 'Restore failed: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -789,17 +928,40 @@ class ConfigurationController extends Controller
      */
     public function deleteBackup(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             if (empty($request->backup_file)) {
-                return redirect()->back()->with('error', 'Please select a backup file');
+                $errorMessage = 'Please select a backup file';
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 400);
+                }
+                return redirect()->back()->with('error', $errorMessage);
             }
 
             $result = $this->backupService->deleteBackup($request->backup_file);
             
+            if ($isAjax) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
+            
             return redirect()->back()->with($result['type'], $result['message']);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Delete failed: ' . $e->getMessage());
+            $errorMessage = 'Delete failed: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -808,13 +970,32 @@ class ConfigurationController extends Controller
      */
     public function saveAsFactoryState(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             $result = $this->backupService->saveAsFactoryState($request->backup_file ?? null);
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
             
             return redirect()->back()->with($result['type'], $result['message']);
             
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Save failed: ' . $e->getMessage());
+            $errorMessage = 'Save failed: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -823,19 +1004,45 @@ class ConfigurationController extends Controller
      */
     public function loadFactoryState(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax();
+
         try {
             set_time_limit(600);
-            
+
             $result = $this->backupService->loadFactoryState();
-            
+
             if ($result['type'] === 'success') {
-                return redirect()->route('admin.login')->with('success', 'Restored to factory state! Please login again.');
+                $message = 'Restored to factory state! Please login again.';
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message,
+                        'redirect' => route('admin.login')
+                    ]);
+                }
+                return redirect()->route('admin.login')->with('success', $message);
+            }
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
+            }
+
+            return redirect()->back()->with($result['type'], $result['message']);
+
+        } catch (\Exception $e) {
+            $errorMessage = 'Factory restore failed: ' . $e->getMessage();
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Factory restore failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 }

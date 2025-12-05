@@ -104,6 +104,10 @@
             <div class="col-md-12">
                 <h5 class="mb-3"><i class="las la-rocket"></i> {{ __('Laravel Optimization') }}</h5>
                 <div class="row">
+                    <!-- Individual Optimization Actions -->
+                    <div class="col-md-12 mb-3">
+                        <h6 class="text-muted mb-2"><i class="las la-cog"></i> {{ __('Individual Optimization') }}</h6>
+                    </div>
                     <div class="col-md-6 mb-3">
                         <div class="card border">
                             <div class="card-body">
@@ -189,36 +193,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-12 mb-3">
-                        <div class="card border border-success">
-                            <div class="card-body">
-                                <h6 class="card-title text-success">
-                                    <i class="las la-magic"></i> {{ __('Optimize All (WordPress-Style)') }}
-                                </h6>
-                                <p class="card-text text-muted small">
-                                    {{ __('Automatically optimize everything: Laravel caches, Composer autoloader, and OPcache. Just like WordPress optimization plugins!') }}
-                                </p>
-                                <form action="{{ route('admin.general.performance.optimize') }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="action" value="optimize">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="las la-rocket"></i> {{ __('Optimize Everything Now') }}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Cache Management -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h5 class="mb-3"><i class="las la-database"></i> {{ __('Cache Management') }}</h5>
-                <div class="row">
+                    <!-- Individual Clearing Actions -->
+                    <div class="col-md-12 mb-3 mt-3">
+                        <h6 class="text-muted mb-2"><i class="las la-broom"></i> {{ __('Individual Cache Clearing') }}</h6>
+                    </div>
                     <div class="col-md-6 mb-3">
-                        <div class="card border">
+                        <div class="card border border-warning">
                             <div class="card-body">
                                 <h6 class="card-title">{{ __('Clear Application Cache') }}</h6>
                                 <p class="card-text text-muted small">
@@ -235,7 +216,7 @@
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <div class="card border">
+                        <div class="card border border-danger">
                             <div class="card-body">
                                 <h6 class="card-title">{{ __('Clear All Caches') }}</h6>
                                 <p class="card-text text-muted small">
@@ -246,6 +227,27 @@
                                     <input type="hidden" name="action" value="optimize:clear">
                                     <button type="submit" class="btn btn-sm btn-danger">
                                         <i class="las la-broom"></i> {{ __('Clear All') }}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optimize All Button -->
+                    <div class="col-md-12 mb-3 mt-3">
+                        <div class="card border border-success">
+                            <div class="card-body">
+                                <h6 class="card-title text-success">
+                                    <i class="las la-magic"></i> {{ __('Optimize All') }}
+                                </h6>
+                                <p class="card-text text-muted small">
+                                    {{ __('Automatically clear all caches, then optimize everything: Laravel caches, Composer autoloader, and OPcache.') }}
+                                </p>
+                                <form action="{{ route('admin.general.performance.optimize') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="action" value="optimize">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="las la-rocket"></i> {{ __('Optimize Everything Now') }}
                                     </button>
                                 </form>
                             </div>
@@ -353,7 +355,7 @@
                                                         <form action="{{ route('admin.general.backup-save-factory') }}" method="POST" class="d-inline">
                                                             @csrf
                                                             <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
-                                                            <button type="submit" class="btn btn-warning btn-sm" title="{{ __('Set as factory default') }}" onclick="return confirm('{{ __('Set this backup as factory default state?') }}')">
+                                                            <button type="submit" class="btn btn-warning btn-sm" title="{{ __('Set as factory default') }}">
                                                                 <i class="las la-star"></i> {{ __('Set Default') }}
                                                             </button>
                                                         </form>
@@ -362,7 +364,7 @@
                                                         <form action="{{ route('admin.general.backup-delete') }}" method="POST" class="d-inline">
                                                             @csrf
                                                             <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
-                                                            <button type="submit" class="btn btn-danger btn-sm" title="{{ __('Delete backup') }}" onclick="return confirm('{{ __('Delete this backup? This cannot be undone.') }}')">
+                                                            <button type="submit" class="btn btn-danger btn-sm" title="{{ __('Delete backup') }}">
                                                                 <i class="las la-trash"></i> {{ __('Delete') }}
                                                             </button>
                                                         </form>
@@ -651,81 +653,341 @@
             }
         });
 
-        // Reseed form confirmation
-        $('.reseed-form').on('submit', function(e) {
-            if (!confirm('{{ __("Add demo data to database? This is safe and won\'t delete existing data.") }}')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Reset form confirmation
-        $('.reset-form').on('submit', function(e) {
-            if (!confirm('{{ __("⚠️ FINAL WARNING: This will DELETE ALL DATA! Are you absolutely sure?") }}')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Factory restore confirmation
-        $('.factory-restore-form').on('submit', function(e) {
-            if (!confirm('{{ __("⚠️ WARNING: This will WIPE current database and restore factory state. Continue?") }}')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Backup restore confirmation
-        $('.backup-restore-form').on('submit', function(e) {
-            const backupName = $(this).find('select[name="backup_file"]').val();
-            if (!backupName) {
-                alert('{{ __("Please select a backup to restore") }}');
-                e.preventDefault();
-                return false;
-            }
-            if (!confirm('{{ __("⚠️ WARNING: This will WIPE current database and restore from backup. Continue?") }}\n\n{{ __("Backup:") }} ' + backupName)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Load backup form in table (individual load buttons)
-        $('.load-backup-form').on('submit', function(e) {
-            const backupName = $(this).data('name');
-            if (!confirm('{{ __("⚠️ Restore from this backup? Current data will be WIPED.") }}\n\n{{ __("Backup:") }} ' + backupName)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // Enhanced loading state with progress feedback (WordPress-style)
-        $('form[action*="performance"], .reseed-form, .reset-form').on('submit', function(e) {
-            const form = $(this);
-            const btn = form.find('button[type="submit"]');
+        // Helper function to show loading state
+        function showLoadingState(btn) {
             const originalText = btn.html();
+            btn.data('original-text', originalText);
             
             // Disable button and show loading
             btn.prop('disabled', true)
-               .html('<i class="las la-spinner la-spin"></i> {{ __('Optimizing...') }}')
+               .html('<i class="las la-spinner la-spin"></i> {{ __('Processing...') }}')
                .addClass('processing');
             
             // Add processing overlay to card
-            const card = form.closest('.card');
+            const card = btn.closest('.card');
             if (card.length) {
                 card.addClass('processing');
             }
+        }
+
+        // Helper function to restore button state
+        function restoreButtonState(btn) {
+            const originalText = btn.data('original-text') || btn.html();
+            btn.prop('disabled', false)
+               .html(originalText)
+               .removeClass('processing');
             
-            // Re-enable after 10 seconds as fallback (optimizations can take time)
-            setTimeout(function() {
-                if (btn.hasClass('processing')) {
-                    btn.prop('disabled', false)
-                       .html(originalText)
-                       .removeClass('processing');
-                    if (card.length) {
-                        card.removeClass('processing');
-                    }
+            const card = btn.closest('.card');
+            if (card.length) {
+                card.removeClass('processing');
+            }
+        }
+
+        // Helper function to show toastr notification
+        function showNotification(success, message) {
+            if (typeof toastr !== 'undefined') {
+                if (success) {
+                    toastr.success(message, '', {
+                        positionClass: "toast-top-right",
+                        timeOut: 5000
+                    });
+                } else {
+                    toastr.error(message, '', {
+                        positionClass: "toast-top-right",
+                        timeOut: 5000
+                    });
                 }
-            }, 10000);
+            } else {
+                // Fallback to alert if toastr not available
+                alert(message);
+            }
+        }
+
+        // Helper function to handle AJAX form submission
+        function handleAjaxForm(e, form, confirmMessage) {
+            // CRITICAL: Prevent default FIRST, before anything else
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Show confirmation if needed - this is blocking, so execution stops here if cancelled
+            if (confirmMessage) {
+                if (!confirm(confirmMessage)) {
+                    return false;
+                }
+            }
+            
+            // Only proceed if confirmed (or no confirmation needed)
+            const btn = form.find('button[type="submit"]');
+            showLoadingState(btn);
+            
+            const formData = new FormData(form[0]);
+            const url = form.attr('action');
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    restoreButtonState(btn);
+                    
+                    if (response.success) {
+                        showNotification(true, response.message);
+                        
+                        // Handle redirect if needed
+                        if (response.redirect) {
+                            setTimeout(function() {
+                                window.location.href = response.redirect;
+                            }, 1500);
+                            return;
+                        }
+                        
+                        // Refresh backup list if needed
+                        if (response.refresh) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                    } else {
+                        showNotification(false, response.message || '{{ __("Operation failed") }}');
+                    }
+                },
+                error: function(xhr) {
+                    restoreButtonState(btn);
+                    
+                    let errorMessage = '{{ __("An error occurred") }}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.statusText) {
+                        errorMessage = xhr.statusText;
+                    }
+                    
+                    showNotification(false, errorMessage);
+                }
+            });
+            
+            return false;
+        }
+
+        // Performance optimization forms (AJAX)
+        $('form[action*="performance"]').off('submit').on('submit', function(e) {
+            // CRITICAL: Prevent default FIRST
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const btn = form.find('button[type="submit"]');
+            showLoadingState(btn);
+            
+            const formData = new FormData(form[0]);
+            const url = form.attr('action');
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    restoreButtonState(btn);
+                    if (response.success) {
+                        showNotification(true, response.message);
+                    } else {
+                        showNotification(false, response.message || '{{ __("Operation failed") }}');
+                    }
+                },
+                error: function(xhr) {
+                    restoreButtonState(btn);
+                    let errorMessage = '{{ __("An error occurred") }}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification(false, errorMessage);
+                }
+            });
+            
+            return false;
+        });
+
+        // Reseed form (AJAX)
+        $('.reseed-form').off('submit').on('submit', function(e) {
+            return handleAjaxForm(e, $(this), '{{ __("Add demo data to database? This is safe and won\'t delete existing data.") }}');
+        });
+
+        // Reset form (AJAX)
+        $('.reset-form').off('submit').on('submit', function(e) {
+            return handleAjaxForm(e, $(this), '{{ __("⚠️ FINAL WARNING: This will DELETE ALL DATA! Are you absolutely sure?") }}');
+        });
+
+        // Factory restore form (AJAX)
+        $('.factory-restore-form').off('submit').on('submit', function(e) {
+            return handleAjaxForm(e, $(this), '{{ __("⚠️ WARNING: This will WIPE current database and restore factory state. Continue?") }}');
+        });
+
+        // Backup restore form (AJAX)
+        $('.backup-restore-form').off('submit').on('submit', function(e) {
+            // CRITICAL: Prevent default FIRST
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const backupName = form.find('select[name="backup_file"]').val();
+            
+            if (!backupName) {
+                alert('{{ __("Please select a backup to restore") }}');
+                return false;
+            }
+            
+            return handleAjaxForm(e, form, '{{ __("⚠️ WARNING: This will WIPE current database and restore from backup. Continue?") }}\n\n{{ __("Backup:") }} ' + backupName);
+        });
+
+        // Load backup form in table (AJAX)
+        $('.load-backup-form').off('submit').on('submit', function(e) {
+            // CRITICAL: Prevent default FIRST
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const backupName = form.data('name');
+            return handleAjaxForm(e, form, '{{ __("⚠️ Restore from this backup? Current data will be WIPED.") }}\n\n{{ __("Backup:") }} ' + backupName);
+        });
+
+        // Create backup form (AJAX)
+        $('form[action*="backup-create"]').off('submit').on('submit', function(e) {
+            // CRITICAL: Prevent default FIRST
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const btn = form.find('button[type="submit"]');
+            showLoadingState(btn);
+            
+            const formData = new FormData(form[0]);
+            const url = form.attr('action');
+            
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    restoreButtonState(btn);
+                    if (response.success) {
+                        showNotification(true, response.message);
+                        if (response.refresh) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                    } else {
+                        showNotification(false, response.message || '{{ __("Operation failed") }}');
+                    }
+                },
+                error: function(xhr) {
+                    restoreButtonState(btn);
+                    let errorMessage = '{{ __("An error occurred") }}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification(false, errorMessage);
+                }
+            });
+            
+            return false;
+        });
+
+        // Delete backup and set factory buttons (AJAX with inline confirm)
+        $('form[action*="backup-delete"], form[action*="backup-save-factory"]').off('submit').on('submit', function(e) {
+            // CRITICAL: Prevent default FIRST
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const btn = form.find('button[type="submit"]');
+            const action = form.attr('action');
+            
+            // Get confirmation message from button onclick or default
+            let confirmMsg = btn.attr('onclick');
+            if (confirmMsg) {
+                // Extract message from onclick="return confirm('message')"
+                const match = confirmMsg.match(/confirm\(['"]([^'"]+)['"]\)/);
+                if (match) {
+                    confirmMsg = match[1];
+                } else {
+                    confirmMsg = action.includes('delete') 
+                        ? '{{ __("Delete this backup? This cannot be undone.") }}'
+                        : '{{ __("Set this backup as factory default state?") }}';
+                }
+            } else {
+                confirmMsg = action.includes('delete') 
+                    ? '{{ __("Delete this backup? This cannot be undone.") }}'
+                    : '{{ __("Set this backup as factory default state?") }}';
+            }
+            
+            // Show confirmation - this is blocking, execution stops here if cancelled
+            if (!confirm(confirmMsg)) {
+                return false;
+            }
+            
+            // Only proceed if confirmed
+            showLoadingState(btn);
+            
+            const formData = new FormData(form[0]);
+            
+            $.ajax({
+                url: action,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    restoreButtonState(btn);
+                    if (response.success) {
+                        showNotification(true, response.message);
+                        if (response.refresh) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                    } else {
+                        showNotification(false, response.message || '{{ __("Operation failed") }}');
+                    }
+                },
+                error: function(xhr) {
+                    restoreButtonState(btn);
+                    let errorMessage = '{{ __("An error occurred") }}';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification(false, errorMessage);
+                }
+            });
+            
+            return false;
         });
         
         // Auto-refresh OPcache stats every 30 seconds if on performance tab

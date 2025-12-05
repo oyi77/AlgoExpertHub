@@ -14,6 +14,7 @@ Welcome to the AlgoExpertHub Trading Signal Platform documentation. This wiki co
 - [Filter Strategy Guide](./filter-strategy-guide.md) - Technical indicator filtering documentation
 - [Theme Development](./theme-development.md) - Creating custom themes guide
 - [Deployment Guide](./deployment-guide.md) - Production deployment and optimization steps
+- [Performance Optimization Implementation](./performance-optimization-implementation.md) - PHP async optimization, Octane, Redis, and performance tuning
 - [Troubleshooting Guide](./troubleshooting-guide.md) - Common issues and solutions
 - [API Reference](./api-reference.md) - Complete REST API documentation
 - [Database Schema Reference](./database-schema-reference.md) - Complete database documentation
