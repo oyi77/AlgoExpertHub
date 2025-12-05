@@ -31,8 +31,6 @@
 
     <link href="{{ Config::cssLib('backend', 'summernote-bs4.min.css') }}" rel="stylesheet">
 
-    <link href="{{ Config::cssLib('backend', 'apexcharts.css') }}" rel="stylesheet">
-
     @php
         $alertType = optional(Config::config())->alert ?? 'sweetalert';
     @endphp

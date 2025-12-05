@@ -368,6 +368,108 @@ INSERT INTO `sp_ai_providers` VALUES (1,'OpenAI','openai','active',NULL,'2025-12
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sp_backtest_results`
+--
+
+DROP TABLE IF EXISTS `sp_backtest_results`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_backtest_results` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `backtest_id` bigint(20) unsigned NOT NULL,
+  `total_trades` int(11) NOT NULL DEFAULT 0,
+  `winning_trades` int(11) NOT NULL DEFAULT 0,
+  `losing_trades` int(11) NOT NULL DEFAULT 0,
+  `win_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `total_profit` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `total_loss` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `net_profit` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `final_balance` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `return_percent` decimal(10,4) NOT NULL DEFAULT 0.0000,
+  `profit_factor` decimal(10,4) NOT NULL DEFAULT 0.0000,
+  `sharpe_ratio` decimal(10,4) DEFAULT NULL,
+  `max_drawdown` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `max_drawdown_percent` decimal(10,4) NOT NULL DEFAULT 0.0000,
+  `avg_win` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `avg_loss` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `largest_win` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `largest_loss` decimal(20,8) NOT NULL DEFAULT 0.00000000,
+  `consecutive_wins` int(11) NOT NULL DEFAULT 0,
+  `consecutive_losses` int(11) NOT NULL DEFAULT 0,
+  `equity_curve` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of balance over time' CHECK (json_valid(`equity_curve`)),
+  `trade_details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Individual trade results' CHECK (json_valid(`trade_details`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sp_backtest_results_backtest_id_unique` (`backtest_id`),
+  KEY `sp_backtest_results_backtest_id_index` (`backtest_id`),
+  CONSTRAINT `sp_backtest_results_backtest_id_foreign` FOREIGN KEY (`backtest_id`) REFERENCES `sp_backtests` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_backtest_results`
+--
+
+LOCK TABLES `sp_backtest_results` WRITE;
+/*!40000 ALTER TABLE `sp_backtest_results` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_backtest_results` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sp_backtests`
+--
+
+DROP TABLE IF EXISTS `sp_backtests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_backtests` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `admin_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `filter_strategy_id` bigint(20) unsigned DEFAULT NULL,
+  `ai_model_profile_id` bigint(20) unsigned DEFAULT NULL,
+  `preset_id` bigint(20) unsigned NOT NULL COMMENT 'Trading preset for position sizing',
+  `symbol` varchar(255) NOT NULL,
+  `timeframe` varchar(255) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `initial_balance` decimal(20,8) NOT NULL DEFAULT 10000.00000000,
+  `status` enum('pending','running','completed','failed') NOT NULL DEFAULT 'pending',
+  `progress_percent` int(11) NOT NULL DEFAULT 0,
+  `started_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `error_message` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sp_backtests_filter_strategy_id_foreign` (`filter_strategy_id`),
+  KEY `sp_backtests_ai_model_profile_id_foreign` (`ai_model_profile_id`),
+  KEY `sp_backtests_preset_id_foreign` (`preset_id`),
+  KEY `sp_backtests_user_id_index` (`user_id`),
+  KEY `sp_backtests_admin_id_index` (`admin_id`),
+  KEY `sp_backtests_status_index` (`status`),
+  KEY `sp_backtests_symbol_index` (`symbol`),
+  CONSTRAINT `sp_backtests_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `sp_admins` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_backtests_ai_model_profile_id_foreign` FOREIGN KEY (`ai_model_profile_id`) REFERENCES `sp_ai_model_profiles` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_backtests_filter_strategy_id_foreign` FOREIGN KEY (`filter_strategy_id`) REFERENCES `sp_filter_strategies` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_backtests_preset_id_foreign` FOREIGN KEY (`preset_id`) REFERENCES `sp_trading_presets` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_backtests_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `sp_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_backtests`
+--
+
+LOCK TABLES `sp_backtests` WRITE;
+/*!40000 ALTER TABLE `sp_backtests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_backtests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sp_bot_templates`
 --
 
@@ -691,7 +793,7 @@ CREATE TABLE `sp_contents` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -700,7 +802,7 @@ CREATE TABLE `sp_contents` (
 
 LOCK TABLES `sp_contents` WRITE;
 /*!40000 ALTER TABLE `sp_contents` DISABLE KEYS */;
-INSERT INTO `sp_contents` VALUES (1,'non_iteratable','banner','{\"title\":\"Automate, Copy, or Lead \\u2013 Your Trading\",\"color_text_for_title\":\"Ecosystem Awaits\",\"button_text\":\"Get Started\",\"button_text_link\":\"register\",\"repeater\":[{\"repeater\":\"Let our AI engine forecast and execute across all markets\"},{\"repeater\":\"Make smarter decisions and build a profile others pay to copy\"},{\"repeater\":\"Discover seamless autotrading tailored to your risk, on any market\"}],\"image_one\":\"693264e8a02e41764910312.png\",\"image_two\":\"693264e8ac81e1764910312.png\",\"image_three\":null}','default',0,'2025-12-04 21:09:39','2025-12-04 21:51:52'),(2,'non_iteratable','about','{\"title\":\"Unlock Your Edge in Algorithmic Trading\",\"color_text_for_title\":\"AlgoExperthub\",\"button_text\":\"Launch Your Edge\",\"button_link\":\"\\/register\",\"repeater\":[{\"repeater\":\"Your Trading Signals Are Already Obsolete. Evolve Your Edge.\"},{\"repeater\":\"From Manual Trading to Automated Strategy Architect.\"},{\"repeater\":\"Trade with Conviction, Backed by AI & Institutional Tools.\"}],\"description\":\"AlgoExperthub is your all-in-one platform to automate, analyze, and amplify your trading. Leverage AI, institutional strategies, and a mastermind community.\",\"image_one\":\"6932650a780531764910346.png\",\"image_two\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:52:26'),(3,'non_iteratable','benefits','{\"section_header\":\"Summary of Benefits\",\"title\":\"Everything You Need to Fast Track Your Trading\",\"color_text_for_title\":\"Track Your Trading\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(4,'non_iteratable','how_works','{\"section_header\":\"How it Works\",\"title\":\"Started Trading With Algoexperthub\",\"color_text_for_title\":\"With Algoexperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(5,'non_iteratable','plans','{\"section_header\":\"Packages\",\"title\":\"Our Best Packages\",\"color_text_for_title\":\"Packages\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(6,'non_iteratable','contact','{\"section_header\":\"Contact\",\"title\":\"We\'d Love to Hear From You\",\"color_text_for_title\":\"Hear From You\",\"email\":\"support@algoexperthub.com\",\"phone\":\"+1 (800) 123-4567\",\"address\":\"Visit our office HQ, Trading Center, New York\",\"form_header\":\"Love to hear from you, Get in touch\",\"color_text_for_form_header\":\"Get in touch\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(7,'non_iteratable','footer','{\"footer_short_details\":\"AlgoExpertHub - Advanced trading signals platform powered by AI and institutional-grade strategies.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(8,'non_iteratable','trade','{\"section_header\":\"Live Trading\",\"title\":\"Join the Algoexperthub community\",\"color_text_for_title\":\"Algoexperthub community\",\"button_text\":\"Start Trading\",\"button_link\":\"register\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(9,'non_iteratable','why_choose_us','{\"section_header\":\"Choose Us\",\"title\":\"Why Choose AlgoExperthub\",\"color_text_for_title\":\"AlgoExperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(10,'non_iteratable','referral','{\"section_header\":\"Referral\",\"title\":\"Our Forex Trading Referral\",\"color_text_for_title\":\"Trading Referral\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(11,'non_iteratable','team','{\"section_header\":\"Our Team\",\"title\":\"Our Forex Trading Specialist\",\"color_text_for_title\":\"Forex Trading\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(12,'non_iteratable','testimonial','{\"section_header\":\"Testimonials\",\"title\":\"What Our Customer Says\",\"color_text_for_title\":\"Our Customer\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(13,'non_iteratable','blog','{\"section_header\":\"Blog Post\",\"title\":\"Our Latest News\",\"color_text_for_title\":\"News\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(14,'non_iteratable','auth','{\"title\":\"Welcome to AlgoExpertHub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(15,'iteratable','benefits','{\"title\":\"20+ Proven Trading Strategies\",\"icon\":\"fab fa-searchengin\",\"description\":\"Access a curated library of institutional-grade strategies ready to deploy or customize.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(16,'iteratable','benefits','{\"title\":\"VIP Insights & Direct Support\",\"icon\":\"far fa-user\",\"description\":\"Get exclusive market analysis from our pros and real-time signals via VIP Telegram groups.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(17,'iteratable','benefits','{\"title\":\"AI-Powered Market Forecasting\",\"icon\":\"far fa-thumbs-up\",\"description\":\"Let our advanced AI analyze sentiment, patterns, and correlations across markets.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(18,'iteratable','benefits','{\"title\":\"Seamless Autotrading Execution\",\"icon\":\"far fa-chart-bar\",\"description\":\"Set your rules once. Our system executes trades 24\\/7 with precision speed.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(19,'iteratable','benefits','{\"title\":\"Multi-Channel Alert System\",\"icon\":\"far fa-envelope\",\"description\":\"Receive critical trade signals via Telegram. Never miss a key market movement.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(20,'iteratable','benefits','{\"title\":\"Join a Growing Community\",\"icon\":\"fas fa-users\",\"description\":\"Connect with traders worldwide and share strategies.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:09:39'),(21,'iteratable','how_works','{\"title\":\"Create Account\",\"description\":\"Simple registration process. No credit card required for trial.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(22,'iteratable','how_works','{\"title\":\"Select Package\",\"description\":\"Choose your subscription plan. Flexible monthly or yearly options.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(23,'iteratable','how_works','{\"title\":\"Start Trading\",\"description\":\"Activate autotrading and let the algo work for you.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(24,'iteratable','socials','{\"icon\":\"fab fa-facebook-f\",\"link\":\"https:\\/\\/facebook.com\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(25,'iteratable','socials','{\"icon\":\"fab fa-twitter\",\"link\":\"https:\\/\\/twitter.com\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(26,'iteratable','socials','{\"icon\":\"fab fa-telegram-plane\",\"link\":\"https:\\/\\/t.me\\/algoexperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48');
+INSERT INTO `sp_contents` VALUES (1,'non_iteratable','banner','{\"title\":\"Automate, Copy, or Lead \\u2013 Your Trading\",\"color_text_for_title\":\"Ecosystem Awaits\",\"button_text\":\"Get Started\",\"button_text_link\":\"register\",\"repeater\":[{\"repeater\":\"Let our AI engine forecast and execute across all markets\"},{\"repeater\":\"Make smarter decisions and build a profile others pay to copy\"},{\"repeater\":\"Discover seamless autotrading tailored to your risk, on any market\"}],\"image_two\":\"69326cfda1eb91764912381.png\",\"image_one\":\"69326cdc0239e1764912348.png\",\"image_three\":null}','default',0,'2025-12-04 21:09:39','2025-12-04 22:26:21'),(2,'non_iteratable','about','{\"title\":\"Unlock Your Edge in Algorithmic Trading\",\"color_text_for_title\":\"AlgoExperthub\",\"button_text\":\"Launch Your Edge\",\"button_link\":\"\\/register\",\"repeater\":[{\"repeater\":\"Your Trading Signals Are Already Obsolete. Evolve Your Edge.\"},{\"repeater\":\"From Manual Trading to Automated Strategy Architect.\"},{\"repeater\":\"Trade with Conviction, Backed by AI & Institutional Tools.\"}],\"description\":\"AlgoExperthub is your all-in-one platform to automate, analyze, and amplify your trading. Leverage AI, institutional strategies, and a mastermind community.\",\"image_one\":\"69326dd0aa18a1764912592.png\",\"image_two\":\"69326dd0c39591764912592.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:29:52'),(3,'non_iteratable','benefits','{\"section_header\":\"Summary of Benefits\",\"title\":\"Everything You Need to Fast Track Your Trading\",\"color_text_for_title\":\"Track Your Trading\",\"image_one\":\"693272dde9bf61764913885.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:51:26'),(4,'non_iteratable','how_works','{\"section_header\":\"How it Works\",\"title\":\"Started Trading With Algoexperthub\",\"color_text_for_title\":\"With Algoexperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(5,'non_iteratable','plans','{\"section_header\":\"Packages\",\"title\":\"Our Best Packages\",\"color_text_for_title\":\"Packages\",\"image_one\":\"69326e5ddd38b1764912733.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:32:14'),(6,'non_iteratable','contact','{\"section_header\":\"Contact\",\"title\":\"We\",\"color_text_for_title\":\"Hear From You\",\"email\":\"support@algoexperthub.com\",\"phone\":\"+6282247006969\",\"address\":\"Visit our office HQ, Trading Center, New York\",\"form_header\":\"Love to hear from you, Get in touch\",\"color_text_for_form_header\":\"Get in touch\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:59:13'),(7,'non_iteratable','footer','{\"footer_short_details\":\"AlgoExpertHub - Advanced trading signals platform powered by AI and institutional-grade strategies.\",\"image_one\":\"69327360696421764914016.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:53:36'),(8,'non_iteratable','trade','{\"section_header\":\"Live Trading\",\"title\":\"Join the Algoexperthub community\",\"color_text_for_title\":\"Algoexperthub community\",\"button_text\":\"Start Trading\",\"button_link\":\"register\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(9,'non_iteratable','why_choose_us','{\"section_header\":\"Choose Us\",\"title\":\"Why Choose AlgoExperthub\",\"color_text_for_title\":\"AlgoExperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(10,'non_iteratable','referral','{\"section_header\":\"Referral\",\"title\":\"Our Forex Trading Referral\",\"color_text_for_title\":\"Trading Referral\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(11,'non_iteratable','team','{\"section_header\":\"Our Team\",\"title\":\"Our Forex Trading Specialist\",\"color_text_for_title\":\"Forex Trading\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(12,'non_iteratable','testimonial','{\"section_header\":\"Testimonials\",\"title\":\"What Our Customer Says\",\"color_text_for_title\":\"Our Customer\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(13,'non_iteratable','blog','{\"section_header\":\"Blog Post\",\"title\":\"Our Latest News\",\"color_text_for_title\":\"News\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(14,'non_iteratable','auth','{\"title\":\"Welcome to AlgoExpertHub\",\"image_one\":\"6932749236e581764914322.jpg\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:58:42'),(15,'iteratable','benefits','{\"title\":\"20+ Proven Trading Strategies\",\"icon\":\"fab fa-searchengin\",\"description\":\"Access a curated library of institutional-grade strategies ready to deploy or customize.\",\"image_one\":\"69326ea889b5f1764912808.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:33:28'),(16,'iteratable','benefits','{\"title\":\"VIP Insights & Direct Support\",\"icon\":\"far fa-user\",\"description\":\"Get exclusive market analysis from our pros and real-time signals via VIP Telegram groups.\",\"image_one\":\"69326eb7e649f1764912823.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:33:43'),(17,'iteratable','benefits','{\"title\":\"AI-Powered Market Forecasting\",\"icon\":\"far fa-thumbs-up\",\"description\":\"Let our advanced AI analyze sentiment, patterns, and correlations across markets.\",\"image_one\":\"69326ec22023e1764912834.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:33:54'),(18,'iteratable','benefits','{\"title\":\"Seamless Autotrading Execution\",\"icon\":\"far fa-chart-bar\",\"description\":\"Set your rules once. Our system executes trades 24\\/7 with precision speed.\",\"image_one\":\"69326ed233d361764912850.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:34:10'),(19,'iteratable','benefits','{\"title\":\"Multi-Channel Alert System\",\"icon\":\"far fa-envelope\",\"description\":\"Receive critical trade signals via Telegram. Never miss a key market movement.\",\"image_one\":\"69326effddd451764912895.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:34:55'),(20,'iteratable','benefits','{\"title\":\"Join a Growing Community\",\"icon\":\"fas fa-users\",\"description\":\"Connect with traders worldwide and share strategies.\",\"image_one\":\"69326f0be023e1764912907.png\"}','default',0,'2025-12-04 21:09:39','2025-12-04 22:35:07'),(21,'iteratable','how_works','{\"title\":\"Create Account\",\"description\":\"Simple registration process. No credit card required for trial.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(22,'iteratable','how_works','{\"title\":\"Select Package\",\"description\":\"Choose your subscription plan. Flexible monthly or yearly options.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(23,'iteratable','how_works','{\"title\":\"Start Trading\",\"description\":\"Activate autotrading and let the algo work for you.\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(26,'iteratable','socials','{\"icon\":\"fab fa-telegram-plane\",\"link\":\"https:\\/\\/t.me\\/algoexperthub\",\"image_one\":\"\"}','default',0,'2025-12-04 21:09:39','2025-12-04 21:15:48'),(27,'iteratable','brand','{\"image_one\":\"6932700a91e771764913162.jpg\"}','default',0,'2025-12-04 22:39:22','2025-12-04 22:39:22');
 /*!40000 ALTER TABLE `sp_contents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -882,7 +984,8 @@ CREATE TABLE `sp_dashboard_signals` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `sp_dashboard_signals_user_id_signal_id_unique` (`user_id`,`signal_id`)
+  UNIQUE KEY `sp_dashboard_signals_user_id_signal_id_unique` (`user_id`,`signal_id`),
+  UNIQUE KEY `dashboard_signals_user_id_signal_id_unique` (`user_id`,`signal_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1144,6 +1247,14 @@ CREATE TABLE `sp_execution_positions` (
   `performance_score_at_entry` decimal(5,2) DEFAULT NULL COMMENT 'SP performance score at entry',
   `current_price` decimal(20,8) DEFAULT NULL,
   `sl_price` decimal(20,8) DEFAULT NULL,
+  `trailing_stop_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `trailing_stop_distance` decimal(10,4) DEFAULT NULL COMMENT 'Distance in price units or pips',
+  `trailing_stop_percentage` decimal(5,2) DEFAULT NULL COMMENT 'Distance as percentage',
+  `highest_price` decimal(20,8) DEFAULT NULL COMMENT 'Highest price reached (for buy)',
+  `lowest_price` decimal(20,8) DEFAULT NULL COMMENT 'Lowest price reached (for sell)',
+  `breakeven_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `breakeven_trigger_price` decimal(20,8) DEFAULT NULL COMMENT 'Price at which to move SL to breakeven',
+  `sl_moved_to_breakeven` tinyint(1) NOT NULL DEFAULT 0,
   `srm_sl_buffer` decimal(8,4) DEFAULT NULL COMMENT 'SRM-added SL buffer in pips',
   `srm_adjustment_reason` text DEFAULT NULL COMMENT 'Reason for SRM adjustment (JSON)',
   `tp_price` decimal(20,8) DEFAULT NULL,
@@ -1187,6 +1298,35 @@ CREATE TABLE `sp_execution_positions` (
 LOCK TABLES `sp_execution_positions` WRITE;
 /*!40000 ALTER TABLE `sp_execution_positions` DISABLE KEYS */;
 /*!40000 ALTER TABLE `sp_execution_positions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sp_failed_jobs`
+--
+
+DROP TABLE IF EXISTS `sp_failed_jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sp_failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_failed_jobs`
+--
+
+LOCK TABLES `sp_failed_jobs` WRITE;
+/*!40000 ALTER TABLE `sp_failed_jobs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_failed_jobs` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1512,7 +1652,7 @@ CREATE TABLE `sp_migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=114 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1521,7 +1661,7 @@ CREATE TABLE `sp_migrations` (
 
 LOCK TABLES `sp_migrations` WRITE;
 /*!40000 ALTER TABLE `sp_migrations` DISABLE KEYS */;
-INSERT INTO `sp_migrations` VALUES (1,'2019_12_14_000001_create_personal_access_tokens_table',1),(2,'2021_08_15_113006_create_crypto_payments_table',1),(3,'2023_02_22_104311_create_admins_table',1),(4,'2023_02_22_111101_create_configurations_table',1),(5,'2023_02_22_121218_create_gateways_table',1),(6,'2023_02_25_120246_create_users_table',1),(7,'2023_02_26_063704_create_admin_password_resets_table',1),(8,'2023_02_26_081605_create_deposits_table',1),(9,'2023_02_26_082931_create_withdraw_gateways_table',1),(10,'2023_02_26_084519_create_withdraws_table',1),(11,'2023_02_26_085002_create_tickets_table',1),(12,'2023_02_26_085317_create_ticket_replies_table',1),(13,'2023_02_26_085758_create_payments_table',1),(14,'2023_02_26_090322_create_user_logs_table',1),(15,'2023_02_26_091028_create_languages_table',1),(16,'2023_02_26_092247_create_notifications_table',1),(17,'2023_02_26_094347_create_permission_tables',1),(18,'2023_02_26_105957_create_pages_table',1),(19,'2023_02_26_110308_create_page_sections_table',1),(20,'2023_02_28_064341_create_contents_table',1),(21,'2023_02_28_104449_create_frontend_components_table',1),(22,'2023_03_07_113921_create_referrals_table',1),(23,'2023_03_11_064120_create_subscribers_table',1),(24,'2023_03_11_101143_create_templates_table',1),(25,'2023_03_16_054806_create_plan_subscriptions_table',1),(26,'2023_03_16_055015_create_login_securities_table',1),(27,'2023_03_16_055208_create_transactions_table',1),(28,'2023_03_16_055624_create_plans_table',1),(29,'2023_03_16_072610_create_markets_table',1),(30,'2023_03_16_080329_create_currency_pairs_table',1),(31,'2023_03_16_080524_create_time_frames_table',1),(32,'2023_03_16_080747_create_signals_table',1),(33,'2023_03_16_081326_create_plan_signals_table',1),(34,'2023_03_18_052943_create_dashboard_signals_table',1),(35,'2023_03_18_053717_create_user_signals_table',1),(36,'2023_03_20_091115_create_money_transfers_table',1),(37,'2023_03_20_095030_create_referral_commissions_table',1),(38,'2023_03_22_060754_create_jobs_table',1),(39,'2023_04_02_045912_create_frontend_media_table',1),(40,'2025_01_19_100000_add_parser_preference_to_channel_sources',1),(41,'2025_01_27_100000_create_channel_sources_table',1),(42,'2025_01_27_100001_create_channel_messages_table',1),(43,'2025_01_27_100002_add_channel_source_fields_to_signals_table',1),(44,'2025_01_28_100000_create_ai_configurations_table',1),(45,'2025_01_29_100000_create_execution_connections_table',1),(46,'2025_01_29_100000_create_trading_presets_table',1),(47,'2025_01_29_100001_add_preset_id_to_execution_connections',1),(48,'2025_01_29_100001_create_execution_logs_table',1),(49,'2025_01_29_100002_add_preset_id_to_copy_trading_subscriptions',1),(50,'2025_01_29_100002_create_execution_positions_table',1),(51,'2025_01_29_100003_add_default_preset_id_to_users',1),(52,'2025_01_29_100003_create_execution_analytics_table',1),(53,'2025_01_29_100004_add_multi_tp_to_execution_positions',1),(54,'2025_01_29_100004_create_execution_notifications_table',1),(55,'2025_01_29_100005_add_structure_sl_to_signals',1),(56,'2025_01_29_100006_add_preset_id_to_trading_bots',1),(57,'2025_01_30_100000_create_copy_trading_settings_table',1),(58,'2025_01_30_100001_create_copy_trading_subscriptions_table',1),(59,'2025_01_30_100002_create_copy_trading_executions_table',1),(60,'2025_01_30_100003_add_admin_support_to_copy_trading_settings',1),(61,'2025_11_07_000000_add_manage_addon_permission',1),(62,'2025_11_11_100000_extend_channel_sources_for_admin_ownership',1),(63,'2025_11_11_100001_create_channel_source_users_table',1),(64,'2025_11_11_100002_create_channel_source_plans_table',1),(65,'2025_11_11_100003_create_message_parsing_patterns_table',1),(66,'2025_11_11_100004_create_signal_analytics_table',1),(67,'2025_11_13_160910_make_user_id_nullable_in_channel_sources_table',1),(68,'2025_11_13_161451_change_config_column_to_text_in_channel_sources_table',1),(69,'2025_12_02_105002_create_filter_strategies_table',1),(70,'2025_12_02_105100_add_filter_strategy_to_trading_presets',1),(71,'2025_12_02_111940_create_ai_model_profiles_table',1),(72,'2025_12_02_111949_add_ai_fields_to_trading_presets',1),(73,'2025_12_02_120000_create_srm_signal_provider_metrics_table',1),(74,'2025_12_02_120001_create_srm_predictions_table',1),(75,'2025_12_02_120002_create_srm_model_versions_table',1),(76,'2025_12_02_120003_create_srm_ab_tests_table',1),(77,'2025_12_02_120004_create_srm_ab_test_assignments_table',1),(78,'2025_12_02_120005_add_srm_fields_to_execution_logs_table',1),(79,'2025_12_02_120006_add_srm_fields_to_execution_positions_table',1),(80,'2025_12_03_020013_add_backend_theme_to_configurations_table',1),(81,'2025_12_03_100000_create_ai_providers_table',1),(82,'2025_12_03_100001_create_ai_connections_table',1),(83,'2025_12_03_100002_create_ai_connection_usage_table',1),(84,'2025_12_03_100003_add_default_connection_foreign_key',1),(85,'2025_12_03_120000_create_ai_parsing_profiles_table',1),(86,'2025_12_03_120001_migrate_ai_configurations_to_connections',1),(87,'2025_12_03_130000_create_translation_settings_table',1),(88,'2025_12_03_140000_refactor_ai_model_profiles_to_use_connections',1),(89,'2025_12_04_000001_add_telegram_chat_id_to_users_and_indexes',1),(90,'2025_12_05_015138_create_bot_templates_table',1),(91,'2025_12_05_015159_create_signal_source_templates_table',1),(92,'2025_12_05_015204_create_complete_bots_table',1),(93,'2025_12_05_015209_create_template_backtests_table',1),(94,'2025_12_05_015213_create_template_ratings_table',1),(95,'2025_12_05_015218_create_template_clones_table',1),(96,'2025_12_05_015223_create_trader_profiles_table',1),(97,'2025_12_05_015228_create_trader_leaderboard_table',1),(98,'2025_12_05_015233_create_trader_ratings_table',1),(99,'2025_12_05_015237_create_market_data_subscriptions_table',1),(100,'2025_12_05_015242_add_cache_metadata_to_market_data_table',1);
+INSERT INTO `sp_migrations` VALUES (1,'2019_12_14_000001_create_personal_access_tokens_table',1),(2,'2021_08_15_113006_create_crypto_payments_table',1),(3,'2023_02_22_104311_create_admins_table',1),(4,'2023_02_22_111101_create_configurations_table',1),(5,'2023_02_22_121218_create_gateways_table',1),(6,'2023_02_25_120246_create_users_table',1),(7,'2023_02_26_063704_create_admin_password_resets_table',1),(8,'2023_02_26_081605_create_deposits_table',1),(9,'2023_02_26_082931_create_withdraw_gateways_table',1),(10,'2023_02_26_084519_create_withdraws_table',1),(11,'2023_02_26_085002_create_tickets_table',1),(12,'2023_02_26_085317_create_ticket_replies_table',1),(13,'2023_02_26_085758_create_payments_table',1),(14,'2023_02_26_090322_create_user_logs_table',1),(15,'2023_02_26_091028_create_languages_table',1),(16,'2023_02_26_092247_create_notifications_table',1),(17,'2023_02_26_094347_create_permission_tables',1),(18,'2023_02_26_105957_create_pages_table',1),(19,'2023_02_26_110308_create_page_sections_table',1),(20,'2023_02_28_064341_create_contents_table',1),(21,'2023_02_28_104449_create_frontend_components_table',1),(22,'2023_03_07_113921_create_referrals_table',1),(23,'2023_03_11_064120_create_subscribers_table',1),(24,'2023_03_11_101143_create_templates_table',1),(25,'2023_03_16_054806_create_plan_subscriptions_table',1),(26,'2023_03_16_055015_create_login_securities_table',1),(27,'2023_03_16_055208_create_transactions_table',1),(28,'2023_03_16_055624_create_plans_table',1),(29,'2023_03_16_072610_create_markets_table',1),(30,'2023_03_16_080329_create_currency_pairs_table',1),(31,'2023_03_16_080524_create_time_frames_table',1),(32,'2023_03_16_080747_create_signals_table',1),(33,'2023_03_16_081326_create_plan_signals_table',1),(34,'2023_03_18_052943_create_dashboard_signals_table',1),(35,'2023_03_18_053717_create_user_signals_table',1),(36,'2023_03_20_091115_create_money_transfers_table',1),(37,'2023_03_20_095030_create_referral_commissions_table',1),(38,'2023_03_22_060754_create_jobs_table',1),(39,'2023_04_02_045912_create_frontend_media_table',1),(40,'2025_01_19_100000_add_parser_preference_to_channel_sources',1),(41,'2025_01_27_100000_create_channel_sources_table',1),(42,'2025_01_27_100001_create_channel_messages_table',1),(43,'2025_01_27_100002_add_channel_source_fields_to_signals_table',1),(44,'2025_01_28_100000_create_ai_configurations_table',1),(45,'2025_01_29_100000_create_execution_connections_table',1),(46,'2025_01_29_100000_create_trading_presets_table',1),(47,'2025_01_29_100001_add_preset_id_to_execution_connections',1),(48,'2025_01_29_100001_create_execution_logs_table',1),(49,'2025_01_29_100002_add_preset_id_to_copy_trading_subscriptions',1),(50,'2025_01_29_100002_create_execution_positions_table',1),(51,'2025_01_29_100003_add_default_preset_id_to_users',1),(52,'2025_01_29_100003_create_execution_analytics_table',1),(53,'2025_01_29_100004_add_multi_tp_to_execution_positions',1),(54,'2025_01_29_100004_create_execution_notifications_table',1),(55,'2025_01_29_100005_add_structure_sl_to_signals',1),(56,'2025_01_29_100006_add_preset_id_to_trading_bots',1),(57,'2025_01_30_100000_create_copy_trading_settings_table',1),(58,'2025_01_30_100001_create_copy_trading_subscriptions_table',1),(59,'2025_01_30_100002_create_copy_trading_executions_table',1),(60,'2025_01_30_100003_add_admin_support_to_copy_trading_settings',1),(61,'2025_11_07_000000_add_manage_addon_permission',1),(62,'2025_11_11_100000_extend_channel_sources_for_admin_ownership',1),(63,'2025_11_11_100001_create_channel_source_users_table',1),(64,'2025_11_11_100002_create_channel_source_plans_table',1),(65,'2025_11_11_100003_create_message_parsing_patterns_table',1),(66,'2025_11_11_100004_create_signal_analytics_table',1),(67,'2025_11_13_160910_make_user_id_nullable_in_channel_sources_table',1),(68,'2025_11_13_161451_change_config_column_to_text_in_channel_sources_table',1),(69,'2025_12_02_105002_create_filter_strategies_table',1),(70,'2025_12_02_105100_add_filter_strategy_to_trading_presets',1),(71,'2025_12_02_111940_create_ai_model_profiles_table',1),(72,'2025_12_02_111949_add_ai_fields_to_trading_presets',1),(73,'2025_12_02_120000_create_srm_signal_provider_metrics_table',1),(74,'2025_12_02_120001_create_srm_predictions_table',1),(75,'2025_12_02_120002_create_srm_model_versions_table',1),(76,'2025_12_02_120003_create_srm_ab_tests_table',1),(77,'2025_12_02_120004_create_srm_ab_test_assignments_table',1),(78,'2025_12_02_120005_add_srm_fields_to_execution_logs_table',1),(79,'2025_12_02_120006_add_srm_fields_to_execution_positions_table',1),(80,'2025_12_03_020013_add_backend_theme_to_configurations_table',1),(81,'2025_12_03_100000_create_ai_providers_table',1),(82,'2025_12_03_100001_create_ai_connections_table',1),(83,'2025_12_03_100002_create_ai_connection_usage_table',1),(84,'2025_12_03_100003_add_default_connection_foreign_key',1),(85,'2025_12_03_120000_create_ai_parsing_profiles_table',1),(86,'2025_12_03_120001_migrate_ai_configurations_to_connections',1),(87,'2025_12_03_130000_create_translation_settings_table',1),(88,'2025_12_03_140000_refactor_ai_model_profiles_to_use_connections',1),(89,'2025_12_04_000001_add_telegram_chat_id_to_users_and_indexes',1),(90,'2025_12_05_015138_create_bot_templates_table',1),(91,'2025_12_05_015159_create_signal_source_templates_table',1),(92,'2025_12_05_015204_create_complete_bots_table',1),(93,'2025_12_05_015209_create_template_backtests_table',1),(94,'2025_12_05_015213_create_template_ratings_table',1),(95,'2025_12_05_015218_create_template_clones_table',1),(96,'2025_12_05_015223_create_trader_profiles_table',1),(97,'2025_12_05_015228_create_trader_leaderboard_table',1),(98,'2025_12_05_015233_create_trader_ratings_table',1),(99,'2025_12_05_015237_create_market_data_subscriptions_table',1),(100,'2025_12_05_015242_add_cache_metadata_to_market_data_table',1),(101,'2025_01_30_100000_add_template_fields_to_trading_bots_table',2),(102,'2025_12_04_100015_create_trading_bots_table',2),(103,'2025_12_05_100000_add_trading_mode_to_trading_bots_table',2),(104,'2025_12_05_100001_add_bot_lifecycle_fields_to_trading_bots_table',2),(105,'2025_12_04_100013_create_backtests_table',3),(106,'2025_12_04_100014_create_backtest_results_table',3),(107,'2025_12_05_093225_add_template_fields_to_trading_bots_table',4),(108,'2025_12_05_100000_create_signal_take_profits_table',5),(109,'2025_12_05_121113_create_mt_accounts_table',5),(110,'2025_12_05_121638_add_trailing_stop_fields_to_execution_positions_table',5),(111,'2025_12_05_124411_create_failed_jobs_table',5),(112,'2025_12_05_130000_add_signal_modification_tracking',5),(113,'2025_12_05_125048_add_performance_indexes_to_tables',6);
 /*!40000 ALTER TABLE `sp_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1609,6 +1749,57 @@ LOCK TABLES `sp_money_transfers` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sp_mt_accounts`
+--
+
+DROP TABLE IF EXISTS `sp_mt_accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_mt_accounts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `admin_id` bigint(20) unsigned DEFAULT NULL,
+  `execution_connection_id` bigint(20) unsigned DEFAULT NULL,
+  `platform` enum('MT4','MT5') NOT NULL DEFAULT 'MT4',
+  `account_number` varchar(255) NOT NULL COMMENT 'MT4/MT5 account number',
+  `server` varchar(255) NOT NULL COMMENT 'MT4/MT5 server name',
+  `broker_name` varchar(255) DEFAULT NULL,
+  `api_key` varchar(255) NOT NULL COMMENT 'mtapi.io API key',
+  `account_id` varchar(255) NOT NULL COMMENT 'mtapi.io account ID',
+  `credentials` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Encrypted credentials' CHECK (json_valid(`credentials`)),
+  `balance` decimal(20,2) NOT NULL DEFAULT 0.00,
+  `equity` decimal(20,2) NOT NULL DEFAULT 0.00,
+  `margin` decimal(20,2) NOT NULL DEFAULT 0.00,
+  `free_margin` decimal(20,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(10) NOT NULL DEFAULT 'USD',
+  `leverage` int(11) NOT NULL DEFAULT 100,
+  `status` enum('active','inactive','error') NOT NULL DEFAULT 'inactive',
+  `last_synced_at` timestamp NULL DEFAULT NULL,
+  `last_error` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sp_mt_accounts_account_number_server_platform_unique` (`account_number`,`server`,`platform`),
+  KEY `sp_mt_accounts_user_id_platform_status_index` (`user_id`,`platform`,`status`),
+  KEY `sp_mt_accounts_admin_id_platform_status_index` (`admin_id`,`platform`,`status`),
+  KEY `sp_mt_accounts_execution_connection_id_index` (`execution_connection_id`),
+  CONSTRAINT `sp_mt_accounts_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `sp_admins` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_mt_accounts_execution_connection_id_foreign` FOREIGN KEY (`execution_connection_id`) REFERENCES `sp_execution_connections` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_mt_accounts_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `sp_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_mt_accounts`
+--
+
+LOCK TABLES `sp_mt_accounts` WRITE;
+/*!40000 ALTER TABLE `sp_mt_accounts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_mt_accounts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sp_notifications`
 --
 
@@ -1653,7 +1844,7 @@ CREATE TABLE `sp_page_sections` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1662,7 +1853,7 @@ CREATE TABLE `sp_page_sections` (
 
 LOCK TABLES `sp_page_sections` WRITE;
 /*!40000 ALTER TABLE `sp_page_sections` DISABLE KEYS */;
-INSERT INTO `sp_page_sections` VALUES (1,1,'\"banner\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(2,1,'\"about\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(3,1,'\"benefits\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(4,1,'\"how_works\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(5,1,'\"plans\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(6,1,'\"trade\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(7,1,'\"referral\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(8,1,'\"team\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(9,1,'\"testimonial\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(10,1,'\"blog\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(11,2,'\"about\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(12,2,'\"overview\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(13,2,'\"how_works\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(14,2,'\"team\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(15,3,'\"plans\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(16,4,'\"contact\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(17,5,'\"blog\"','2025-12-04 20:57:58','2025-12-04 20:57:58'),(18,1,'\"banner\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(19,1,'\"about\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(20,1,'\"benefits\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(21,1,'\"how_works\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(22,1,'\"plans\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(23,1,'\"trade\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(24,1,'\"referral\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(25,1,'\"team\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(26,1,'\"testimonial\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(27,1,'\"blog\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(28,2,'\"about\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(29,2,'\"overview\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(30,2,'\"how_works\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(31,2,'\"team\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(32,3,'\"plans\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(33,4,'\"contact\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(34,5,'\"blog\"','2025-12-04 20:58:07','2025-12-04 20:58:07'),(35,1,'\"banner\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(36,1,'\"about\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(37,1,'\"benefits\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(38,1,'\"how_works\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(39,1,'\"plans\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(40,1,'\"trade\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(41,1,'\"referral\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(42,1,'\"team\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(43,1,'\"testimonial\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(44,1,'\"blog\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(45,2,'\"about\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(46,2,'\"overview\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(47,2,'\"how_works\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(48,2,'\"team\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(49,3,'\"plans\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(50,4,'\"contact\"','2025-12-04 20:58:25','2025-12-04 20:58:25'),(51,5,'\"blog\"','2025-12-04 20:58:25','2025-12-04 20:58:25');
+INSERT INTO `sp_page_sections` VALUES (1,1,'\"banner\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(2,1,'\"about\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(3,1,'\"benefits\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(4,1,'\"how_works\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(5,1,'\"plans\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(6,1,'\"trade\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(7,1,'\"referral\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(8,1,'\"team\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(9,1,'\"testimonial\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(10,1,'\"blog\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(11,2,'\"about\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(12,2,'\"overview\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(13,2,'\"how_works\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(14,2,'\"team\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(15,3,'\"plans\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(16,4,'\"contact\"','2025-12-04 23:35:56','2025-12-04 23:35:56'),(17,5,'\"blog\"','2025-12-04 23:35:56','2025-12-04 23:35:56');
 /*!40000 ALTER TABLE `sp_page_sections` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1725,7 +1916,8 @@ CREATE TABLE `sp_payments` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sp_payments_trx_unique` (`trx`),
-  KEY `sp_payments_user_id_status_index` (`user_id`,`status`)
+  KEY `sp_payments_user_id_status_index` (`user_id`,`status`),
+  KEY `payments_user_id_status_index` (`user_id`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1837,7 +2029,8 @@ CREATE TABLE `sp_plan_subscriptions` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `sp_plan_subscriptions_user_id_is_current_plan_expired_at_index` (`user_id`,`is_current`,`plan_expired_at`)
+  KEY `sp_plan_subscriptions_user_id_is_current_plan_expired_at_index` (`user_id`,`is_current`,`plan_expired_at`),
+  KEY `plan_subscriptions_user_id_is_current_plan_expired_at_index` (`user_id`,`is_current`,`plan_expired_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2099,6 +2292,41 @@ LOCK TABLES `sp_signal_source_templates` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sp_signal_take_profits`
+--
+
+DROP TABLE IF EXISTS `sp_signal_take_profits`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_signal_take_profits` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `signal_id` bigint(20) unsigned NOT NULL,
+  `tp_level` tinyint(4) NOT NULL COMMENT 'TP level number (1, 2, 3, etc.)',
+  `tp_price` decimal(28,8) NOT NULL COMMENT 'Take profit price for this level',
+  `tp_percentage` decimal(5,2) DEFAULT NULL COMMENT 'Percentage of total position to close at this TP',
+  `lot_percentage` decimal(5,2) DEFAULT NULL COMMENT 'Percentage of lot size for this TP (alternative to tp_percentage)',
+  `is_closed` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Whether this TP level has been hit',
+  `closed_at` timestamp NULL DEFAULT NULL COMMENT 'When this TP was hit',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sp_signal_take_profits_signal_id_tp_level_unique` (`signal_id`,`tp_level`),
+  KEY `sp_signal_take_profits_signal_id_tp_level_index` (`signal_id`,`tp_level`),
+  KEY `sp_signal_take_profits_signal_id_is_closed_index` (`signal_id`,`is_closed`),
+  CONSTRAINT `sp_signal_take_profits_signal_id_foreign` FOREIGN KEY (`signal_id`) REFERENCES `sp_signals` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_signal_take_profits`
+--
+
+LOCK TABLES `sp_signal_take_profits` WRITE;
+/*!40000 ALTER TABLE `sp_signal_take_profits` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_signal_take_profits` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sp_signals`
 --
 
@@ -2123,6 +2351,8 @@ CREATE TABLE `sp_signals` (
   `auto_created` tinyint(1) NOT NULL DEFAULT 0,
   `message_hash` varchar(64) DEFAULT NULL,
   `published_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `last_modified_at` timestamp NULL DEFAULT NULL,
+  `modification_count` int(11) NOT NULL DEFAULT 0,
   `status` tinyint(1) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -2132,6 +2362,7 @@ CREATE TABLE `sp_signals` (
   KEY `sp_signals_message_hash_index` (`message_hash`),
   KEY `sp_signals_structure_sl_price_index` (`structure_sl_price`),
   KEY `sp_signals_is_published_published_date_index` (`is_published`,`published_date`),
+  KEY `signals_is_published_published_date_index` (`is_published`,`published_date`),
   CONSTRAINT `sp_signals_channel_source_id_foreign` FOREIGN KEY (`channel_source_id`) REFERENCES `sp_channel_sources` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -2736,6 +2967,83 @@ LOCK TABLES `sp_trader_ratings` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sp_trading_bots`
+--
+
+DROP TABLE IF EXISTS `sp_trading_bots`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sp_trading_bots` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `admin_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `exchange_connection_id` bigint(20) unsigned DEFAULT NULL COMMENT 'FK to exchange_connections (nullable for templates)',
+  `data_connection_id` bigint(20) unsigned DEFAULT NULL COMMENT 'FK to exchange_connections for OHLCV streaming (MARKET_STREAM_BASED only)',
+  `trading_preset_id` bigint(20) unsigned NOT NULL COMMENT 'FK to trading_presets',
+  `filter_strategy_id` bigint(20) unsigned DEFAULT NULL COMMENT 'FK to filter_strategies (optional)',
+  `ai_model_profile_id` bigint(20) unsigned DEFAULT NULL COMMENT 'FK to ai_model_profiles (optional)',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `is_paper_trading` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Paper trading mode (demo)',
+  `trading_mode` enum('SIGNAL_BASED','MARKET_STREAM_BASED') NOT NULL DEFAULT 'SIGNAL_BASED' COMMENT 'SIGNAL_BASED: Execute only on signals | MARKET_STREAM_BASED: Stream OHLCV data and apply technical indicators',
+  `status` enum('stopped','running','paused') NOT NULL DEFAULT 'stopped' COMMENT 'Bot lifecycle status',
+  `is_template` tinyint(1) NOT NULL DEFAULT 0,
+  `visibility` enum('private','public','admin_only') NOT NULL DEFAULT 'private',
+  `parent_bot_id` bigint(20) unsigned DEFAULT NULL,
+  `is_admin_owned` tinyint(1) NOT NULL DEFAULT 0,
+  `worker_pid` int(10) unsigned DEFAULT NULL COMMENT 'Process ID of background worker',
+  `last_started_at` timestamp NULL DEFAULT NULL,
+  `last_stopped_at` timestamp NULL DEFAULT NULL,
+  `last_paused_at` timestamp NULL DEFAULT NULL,
+  `worker_started_at` timestamp NULL DEFAULT NULL,
+  `last_market_analysis_at` timestamp NULL DEFAULT NULL,
+  `last_position_check_at` timestamp NULL DEFAULT NULL,
+  `streaming_symbols` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Symbols to stream (e.g., ["BTC/USDT", "ETH/USDT"])' CHECK (json_valid(`streaming_symbols`)),
+  `streaming_timeframes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Timeframes to stream (e.g., ["1h", "4h", "1d"])' CHECK (json_valid(`streaming_timeframes`)),
+  `position_monitoring_interval` int(10) unsigned NOT NULL DEFAULT 5 COMMENT 'How often to check SL/TP (seconds)',
+  `market_analysis_interval` int(10) unsigned NOT NULL DEFAULT 60 COMMENT 'How often to analyze market for MARKET_STREAM_BASED (seconds)',
+  `total_executions` int(10) unsigned NOT NULL DEFAULT 0,
+  `successful_executions` int(10) unsigned NOT NULL DEFAULT 0,
+  `failed_executions` int(10) unsigned NOT NULL DEFAULT 0,
+  `total_profit` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `win_rate` decimal(5,2) NOT NULL DEFAULT 0.00 COMMENT 'Percentage',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sp_trading_bots_filter_strategy_id_foreign` (`filter_strategy_id`),
+  KEY `sp_trading_bots_ai_model_profile_id_foreign` (`ai_model_profile_id`),
+  KEY `sp_trading_bots_user_id_index` (`user_id`),
+  KEY `sp_trading_bots_admin_id_index` (`admin_id`),
+  KEY `sp_trading_bots_is_active_index` (`is_active`),
+  KEY `sp_trading_bots_exchange_connection_id_index` (`exchange_connection_id`),
+  KEY `sp_trading_bots_trading_preset_id_index` (`trading_preset_id`),
+  KEY `sp_trading_bots_status_index` (`status`),
+  KEY `sp_trading_bots_data_connection_id_index` (`data_connection_id`),
+  KEY `sp_trading_bots_worker_pid_index` (`worker_pid`),
+  KEY `sp_trading_bots_parent_bot_id_foreign` (`parent_bot_id`),
+  KEY `sp_trading_bots_is_template_visibility_index` (`is_template`,`visibility`),
+  CONSTRAINT `sp_trading_bots_admin_id_foreign` FOREIGN KEY (`admin_id`) REFERENCES `sp_admins` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_trading_bots_ai_model_profile_id_foreign` FOREIGN KEY (`ai_model_profile_id`) REFERENCES `sp_ai_model_profiles` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_trading_bots_exchange_connection_id_foreign` FOREIGN KEY (`exchange_connection_id`) REFERENCES `sp_execution_connections` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_trading_bots_filter_strategy_id_foreign` FOREIGN KEY (`filter_strategy_id`) REFERENCES `sp_filter_strategies` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_trading_bots_parent_bot_id_foreign` FOREIGN KEY (`parent_bot_id`) REFERENCES `sp_trading_bots` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `sp_trading_bots_trading_preset_id_foreign` FOREIGN KEY (`trading_preset_id`) REFERENCES `sp_trading_presets` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sp_trading_bots_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `sp_users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sp_trading_bots`
+--
+
+LOCK TABLES `sp_trading_bots` WRITE;
+/*!40000 ALTER TABLE `sp_trading_bots` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sp_trading_bots` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sp_trading_presets`
 --
 
@@ -2951,7 +3259,8 @@ CREATE TABLE `sp_user_signals` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `sp_user_signals_user_id_signal_id_unique` (`user_id`,`signal_id`)
+  UNIQUE KEY `sp_user_signals_user_id_signal_id_unique` (`user_id`,`signal_id`),
+  UNIQUE KEY `user_signals_user_id_signal_id_unique` (`user_id`,`signal_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -3092,4 +3401,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-05 11:58:50
+-- Dump completed on 2025-12-05 21:02:18

@@ -17,7 +17,16 @@
 
     <title>{{ Config::config()->appname }}</title>
 
+    {{-- Resource hints for external domains --}}
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
+    @if(optional(Config::config()->fonts)->heading_font_url)
+        <link rel="preconnect" href="{{ parse_url(optional(Config::config()->fonts)->heading_font_url, PHP_URL_SCHEME) }}://{{ parse_url(optional(Config::config()->fonts)->heading_font_url, PHP_URL_HOST) }}" crossorigin>
+    @endif
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
 
@@ -96,7 +105,17 @@
 
     <div class="body-content-area">
         @if (request()->routeIs('home'))
-            @include(Config::theme() . 'widgets.banner')
+            @php
+                $hasBannerInWidgets = false;
+                if (isset($page) && $page && $page->widgets) {
+                    $hasBannerInWidgets = $page->widgets->contains(function($widget) {
+                        return $widget->sections === 'banner';
+                    });
+                }
+            @endphp
+            @if (!$hasBannerInWidgets)
+                @include(Config::theme() . 'widgets.banner')
+            @endif
         @endif
 
         @include(Config::theme() . 'layout.header')
@@ -110,26 +129,29 @@
 
     @include(Config::theme() . 'widgets.footer')
 
+    {{-- Critical scripts (load immediately) --}}
     <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
     <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
+    
+    {{-- Non-critical scripts (defer loading) --}}
+    <script src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}" defer></script>
 
 
 
     @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}" defer></script>
     @elseif(optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}" defer></script>
     @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}" defer></script>
     @endif
 
-    <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'main.js') }}" defer></script>
 
     @stack('script')
 

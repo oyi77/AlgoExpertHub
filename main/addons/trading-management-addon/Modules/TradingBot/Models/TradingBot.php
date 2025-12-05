@@ -41,6 +41,7 @@ class TradingBot extends Model
         'worker_started_at', 'last_market_analysis_at', 'last_position_check_at',
         'streaming_symbols', 'streaming_timeframes',
         'position_monitoring_interval', 'market_analysis_interval',
+        'is_template', 'parent_bot_id', 'is_admin_owned',
     ];
 
     protected $casts = [
@@ -66,6 +67,8 @@ class TradingBot extends Model
         'streaming_timeframes' => 'array',
         'position_monitoring_interval' => 'integer',
         'market_analysis_interval' => 'integer',
+        'is_template' => 'boolean',
+        'is_admin_owned' => 'boolean',
     ];
 
     /**
@@ -112,6 +115,16 @@ class TradingBot extends Model
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
+    public function parentBot()
+    {
+        return $this->belongsTo(TradingBot::class, 'parent_bot_id');
+    }
+
+    public function clonedBots()
+    {
+        return $this->hasMany(TradingBot::class, 'parent_bot_id');
+    }
+
     /**
      * Scopes
      */
@@ -119,6 +132,21 @@ class TradingBot extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeTemplate($query)
+    {
+        return $query->where('is_template', true);
+    }
+
+    public function scopePublicTemplates($query)
+    {
+        return $query->where('is_template', true)->where('visibility', 'public');
+    }
+
+    public function scopeAdminTemplates($query)
+    {
+        return $query->where('is_template', true)->where('visibility', 'admin_only');
     }
 
     public function scopePaperTrading($query)
@@ -167,6 +195,11 @@ class TradingBot extends Model
     public function scopeByCreator($query, int $userId)
     {
         return $query->where('created_by_user_id', $userId);
+    }
+
+    public function scopeByUser($query, int $userId)
+    {
+        return $this->scopeByCreator($query, $userId);
     }
 
     public function scopeRunning($query)
@@ -376,9 +409,12 @@ class TradingBot extends Model
             'ai_model_profile_id' => $aiProfileId,
             'is_active' => false, // Start inactive, user activates
             'is_paper_trading' => $options['is_paper_trading'] ?? true,
-            'visibility' => 'PRIVATE',
+            'visibility' => 'private',
             'clonable' => false,
             'is_default_template' => false,
+            'is_template' => false,
+            'parent_bot_id' => $this->id,
+            'is_admin_owned' => false,
             'created_by_user_id' => $user->id,
             'suggested_connection_type' => null, // Not needed for user bots
             'tags' => null, // User can set their own tags

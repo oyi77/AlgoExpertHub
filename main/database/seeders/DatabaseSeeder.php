@@ -14,23 +14,55 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
+            // Core configuration
             ConfigurationSeeder::class,
             AdminSeeder::class,
             RolePermission::class,  // After AdminSeeder so admin exists
             LanguageSeeder::class,
+            
+            // Payment & Gateway setup
             GatewaySeeder::class,
             WithdrawGatewaySeeder::class,
+            
+            // Content & Pages
             EmailTemplateSeeder::class,
+            PageSeeder::class,
+            ContentSeeder::class,
+            
+            // Trading setup
             CurrencyPairSeeder::class,
             TimeFrameSeeder::class,
             MarketSeeder::class,
             PlanSeeder::class,
-            PageSeeder::class,
-            ContentSeeder::class,
+            TradingPresetSeeder::class,
+            
+            // Demo data for investor presentations
+            UserSeeder::class,              // Demo users
+            SignalSeeder::class,            // Trading signals
+            PaymentSeeder::class,           // Payments/subscriptions
+            DepositSeeder::class,           // Deposits
+            WithdrawSeeder::class,          // Withdrawals
+            TransactionSeeder::class,       // All transactions
+            PlanSubscriptionSeeder::class,   // Active subscriptions
+            NotificationSeeder::class,      // Notifications
+            
+            // Referrals
             ReferralSeeder::class,
+            
+            // AI & Addons
             AIProviderSeeder::class,
             ParsingPatternSeeder::class,
-            TradingPresetSeeder::class,
         ]);
+
+        // Conditional addon seeders (only if addon is active and class exists)
+        try {
+            $seederClass = \Addons\TradingManagement\Database\Seeders\PrebuiltTradingBotSeeder::class;
+            if (class_exists($seederClass) && \App\Support\AddonRegistry::active('trading-management-addon')) {
+                $this->call($seederClass);
+            }
+        } catch (\Exception $e) {
+            // Silently skip if addon is not active, class doesn't exist, or registry fails
+            // This prevents seeding from failing when addon is not installed/active
+        }
     }
 }

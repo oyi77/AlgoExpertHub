@@ -8,6 +8,7 @@ use Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
+use Addons\TradingManagement\Modules\MarketData\Services\MarketDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -55,7 +56,66 @@ class BacktestController extends Controller
         return view('trading-management::backend.trading-management.test.backtests.create', compact('title', 'filters', 'aiModels', 'presets'));
     }
 
-    public function store(Request $request)
+    /**
+     * Check data availability for symbol/timeframe (AJAX endpoint)
+     */
+    public function checkDataAvailability(Request $request, MarketDataService $marketDataService)
+    {
+        $request->validate([
+            'symbol' => 'required|string',
+            'timeframe' => 'required|string',
+        ]);
+
+        $symbol = $request->symbol;
+        $timeframe = $request->timeframe;
+
+        $dateRange = $marketDataService->getAvailableDateRange($symbol, $timeframe);
+        $availableDates = $marketDataService->getAvailableDates($symbol, $timeframe);
+
+        if (!$dateRange) {
+            return response()->json([
+                'available' => false,
+                'message' => 'No market data available for ' . $symbol . ' on ' . $timeframe . ' timeframe.',
+                'date_range' => null,
+                'available_dates' => [],
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Data available from ' . $dateRange['min_date'] . ' to ' . $dateRange['max_date'] . ' (' . $dateRange['total_candles'] . ' candles)',
+            'date_range' => [
+                'min_date' => $dateRange['min_date'],
+                'max_date' => $dateRange['max_date'],
+                'total_candles' => $dateRange['total_candles'],
+            ],
+            'available_dates' => $availableDates,
+        ]);
+    }
+
+    /**
+     * Validate date range availability (AJAX endpoint)
+     */
+    public function validateDateRange(Request $request, MarketDataService $marketDataService)
+    {
+        $request->validate([
+            'symbol' => 'required|string',
+            'timeframe' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+        ]);
+
+        $availability = $marketDataService->checkDateRangeAvailability(
+            $request->symbol,
+            $request->timeframe,
+            $request->start_date,
+            $request->end_date
+        );
+
+        return response()->json($availability);
+    }
+
+    public function store(Request $request, MarketDataService $marketDataService)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -69,6 +129,35 @@ class BacktestController extends Controller
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
             'preset_id' => 'nullable|exists:trading_presets,id',
         ]);
+
+        // Check data availability
+        $availability = $marketDataService->checkDateRangeAvailability(
+            $validated['symbol'],
+            $validated['timeframe'],
+            $validated['start_date'],
+            $validated['end_date']
+        );
+
+        if (!$availability['available']) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Insufficient data coverage (' . $availability['coverage_percent'] . '%). Data is missing for ' . count($availability['missing_dates']) . ' dates. Please adjust your date range.');
+        }
+
+        // Check if date range is within available data
+        $dateRange = $marketDataService->getAvailableDateRange($validated['symbol'], $validated['timeframe']);
+        if ($dateRange) {
+            if ($validated['start_date'] < $dateRange['min_date']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Start date is before available data. Earliest available date: ' . $dateRange['min_date']);
+            }
+            if ($validated['end_date'] > $dateRange['max_date']) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'End date is after available data. Latest available date: ' . $dateRange['max_date']);
+            }
+        }
 
         $backtest = Backtest::create([
             ...$validated,
@@ -84,25 +173,42 @@ class BacktestController extends Controller
     public function show(Backtest $backtest)
     {
         $title = 'Backtest Details';
-        $backtest->load(['admin', 'user', 'filterStrategy', 'aiModelProfile', 'preset', 'results']);
+        $backtest->load(['admin', 'user', 'filterStrategy', 'aiModelProfile', 'preset', 'result']);
 
+        $result = $backtest->result;
         $summary = null;
-        if ($backtest->status === 'completed' && $backtest->results->isNotEmpty()) {
+        $equityCurve = [];
+        $tradeDetails = [];
+        
+        if ($backtest->status === 'completed' && $result) {
             $summary = [
-                'total_trades' => $backtest->results->count(),
-                'winning_trades' => $backtest->results->where('pnl', '>', 0)->count(),
-                'losing_trades' => $backtest->results->where('pnl', '<', 0)->count(),
-                'total_pnl' => $backtest->results->sum('pnl'),
-                'win_rate' => $backtest->results->count() > 0 
-                    ? ($backtest->results->where('pnl', '>', 0)->count() / $backtest->results->count()) * 100 
-                    : 0,
-                'avg_win' => $backtest->results->where('pnl', '>', 0)->avg('pnl') ?? 0,
-                'avg_loss' => $backtest->results->where('pnl', '<', 0)->avg('pnl') ?? 0,
-                'profit_factor' => $this->calculateProfitFactor($backtest),
+                'total_trades' => $result->total_trades,
+                'winning_trades' => $result->winning_trades,
+                'losing_trades' => $result->losing_trades,
+                'win_rate' => $result->win_rate,
+                'total_profit' => $result->total_profit,
+                'total_loss' => $result->total_loss,
+                'net_profit' => $result->net_profit,
+                'final_balance' => $result->final_balance,
+                'return_percent' => $result->return_percent,
+                'profit_factor' => $result->profit_factor,
+                'sharpe_ratio' => $result->sharpe_ratio,
+                'max_drawdown' => $result->max_drawdown,
+                'max_drawdown_percent' => $result->max_drawdown_percent,
+                'avg_win' => $result->avg_win,
+                'avg_loss' => $result->avg_loss,
+                'largest_win' => $result->largest_win,
+                'largest_loss' => $result->largest_loss,
+                'consecutive_wins' => $result->consecutive_wins,
+                'consecutive_losses' => $result->consecutive_losses,
+                'grade' => $result->grade,
             ];
+            
+            $equityCurve = $result->equity_curve ?? [];
+            $tradeDetails = $result->trade_details ?? [];
         }
 
-        return view('trading-management::backend.trading-management.test.backtests.show', compact('title', 'backtest', 'summary'));
+        return view('trading-management::backend.trading-management.test.backtests.show', compact('title', 'backtest', 'summary', 'equityCurve', 'tradeDetails'));
     }
 
     public function destroy(Backtest $backtest)

@@ -5,6 +5,8 @@ namespace Addons\TradingExecutionEngine\App\Services;
 use Addons\TradingExecutionEngine\App\Adapters\BaseExchangeAdapter;
 use Addons\TradingExecutionEngine\App\Adapters\CryptoExchangeAdapter;
 use Addons\TradingExecutionEngine\App\Adapters\FxBrokerAdapter;
+use Addons\TradingExecutionEngine\App\Adapters\Mt4Adapter;
+use Addons\TradingExecutionEngine\App\Adapters\Mt5Adapter;
 use Addons\TradingExecutionEngine\App\Models\ExecutionConnection;
 use Illuminate\Support\Facades\Log;
 
@@ -116,6 +118,16 @@ class ConnectionService
         if ($connection->type === 'crypto') {
             return new CryptoExchangeAdapter($connection);
         } elseif ($connection->type === 'fx') {
+            // Check if exchange_name indicates MT4 or MT5
+            $exchangeName = strtoupper($connection->exchange_name ?? '');
+            
+            if (strpos($exchangeName, 'MT4') !== false || $exchangeName === 'MT4') {
+                return new Mt4Adapter($connection);
+            } elseif (strpos($exchangeName, 'MT5') !== false || $exchangeName === 'MT5') {
+                return new Mt5Adapter($connection);
+            }
+            
+            // Fallback to generic FX broker adapter
             return new FxBrokerAdapter($connection);
         }
 

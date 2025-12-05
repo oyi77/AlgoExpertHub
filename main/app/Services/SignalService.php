@@ -77,13 +77,34 @@ class SignalService
             'time_frame_id' => $request->time_frame,
             'open_price' => $request->open_price,
             'sl' => $request->sl,
-            'tp' => $request->tp,
+            'tp' => $request->tp ?? 0, // Primary TP (fallback for backward compatibility)
             'image' => $request->has('image') ? Helper::saveImage($request->image, Helper::filePath('signal', true)) : '',
             'description' => $description,
             'direction' => $request->direction,
             'market_id' => $request->market,
             'is_published' => 0
         ]);
+
+        // Handle multiple TPs if provided
+        if ($request->has('take_profits') && is_array($request->take_profits)) {
+            foreach ($request->take_profits as $index => $tpData) {
+                if (isset($tpData['tp_price']) && $tpData['tp_price'] > 0) {
+                    \App\Models\SignalTakeProfit::create([
+                        'signal_id' => $signal->id,
+                        'tp_level' => $index + 1,
+                        'tp_price' => $tpData['tp_price'],
+                        'tp_percentage' => $tpData['tp_percentage'] ?? null,
+                        'lot_percentage' => $tpData['lot_percentage'] ?? null,
+                    ]);
+                }
+            }
+            
+            // Update primary TP to first level if multiple TPs exist
+            $firstTp = $signal->takeProfits()->orderBy('tp_level')->first();
+            if ($firstTp) {
+                $signal->update(['tp' => $firstTp->tp_price]);
+            }
+        }
 
         $signal->plans()->attach($request->plans);
 
@@ -163,21 +184,66 @@ class SignalService
             $description = $dom->saveHTML();
         }
 
+        // Store original data for modification detection
+        $originalData = [
+            'sl' => $signal->sl,
+            'tp' => $signal->tp,
+            'open_price' => $signal->open_price,
+            'take_profits' => $signal->takeProfits()->orderBy('tp_level')->get()->pluck('tp_price', 'tp_level')->toArray(),
+        ];
+
         $signal->update([
             'title' => $request->title,
             'currency_pair_id' => $request->currency_pair,
             'time_frame_id' => $request->time_frame,
             'open_price' => $request->open_price,
             'sl' => $request->sl,
-            'tp' => $request->tp,
+            'tp' => $request->tp ?? 0, // Primary TP (fallback)
             'image' => $request->has('image') ? Helper::saveImage($request->image, Helper::filePath('signal', true), '', $signal->image) : $signal->image,
             'description' => $description,
             'direction' => $request->direction,
             'market_id' => $request->market
         ]);
 
+        // Handle multiple TPs if provided
+        if ($request->has('take_profits') && is_array($request->take_profits)) {
+            // Delete existing TPs
+            $signal->takeProfits()->delete();
+            
+            // Create new TPs
+            foreach ($request->take_profits as $index => $tpData) {
+                if (isset($tpData['tp_price']) && $tpData['tp_price'] > 0) {
+                    \App\Models\SignalTakeProfit::create([
+                        'signal_id' => $signal->id,
+                        'tp_level' => $index + 1,
+                        'tp_price' => $tpData['tp_price'],
+                        'tp_percentage' => $tpData['tp_percentage'] ?? null,
+                        'lot_percentage' => $tpData['lot_percentage'] ?? null,
+                    ]);
+                }
+            }
+            
+            // Update primary TP to first level if multiple TPs exist
+            $firstTp = $signal->takeProfits()->orderBy('tp_level')->first();
+            if ($firstTp) {
+                $signal->update(['tp' => $firstTp->tp_price]);
+            }
+        }
 
         $signal->plans()->sync($request->plans);
+
+        // Handle signal modification if signal is published
+        if ($signal->is_published) {
+            try {
+                $modificationService = app(\App\Services\SignalModificationService::class);
+                $modificationService->handleSignalModification($signal->fresh(), $originalData);
+            } catch (\Exception $e) {
+                \Log::error('Failed to handle signal modification', [
+                    'signal_id' => $signal->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         if ($request->type == 'Send') {
 

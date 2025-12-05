@@ -343,5 +343,101 @@ class MarketDataService
             'backtest_ttl' => $this->backtestCacheTtl,
         ];
     }
+
+    /**
+     * Get available date range for a symbol/timeframe
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @return array|null ['min_date' => 'Y-m-d', 'max_date' => 'Y-m-d', 'total_candles' => int] or null if no data
+     */
+    public function getAvailableDateRange(string $symbol, string $timeframe): ?array
+    {
+        $result = MarketData::where('symbol', $symbol)
+            ->where('timeframe', $timeframe)
+            ->selectRaw('MIN(timestamp) as min_timestamp, MAX(timestamp) as max_timestamp, COUNT(*) as total_candles')
+            ->first();
+
+        if (!$result || !$result->min_timestamp) {
+            return null;
+        }
+
+        return [
+            'min_date' => date('Y-m-d', $result->min_timestamp),
+            'max_date' => date('Y-m-d', $result->max_timestamp),
+            'min_timestamp' => $result->min_timestamp,
+            'max_timestamp' => $result->max_timestamp,
+            'total_candles' => $result->total_candles,
+        ];
+    }
+
+    /**
+     * Get all available dates for a symbol/timeframe (for date picker)
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @return array Array of date strings ['Y-m-d', ...]
+     */
+    public function getAvailableDates(string $symbol, string $timeframe): array
+    {
+        $timestamps = MarketData::where('symbol', $symbol)
+            ->where('timeframe', $timeframe)
+            ->select('timestamp')
+            ->distinct()
+            ->orderBy('timestamp')
+            ->pluck('timestamp')
+            ->toArray();
+
+        // Convert timestamps to dates and get unique dates
+        $dates = [];
+        foreach ($timestamps as $timestamp) {
+            $date = date('Y-m-d', $timestamp);
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+        }
+
+        sort($dates);
+        return $dates;
+    }
+
+    /**
+     * Check if data exists for date range
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @param string $startDate Y-m-d format
+     * @param string $endDate Y-m-d format
+     * @return array ['available' => bool, 'coverage_percent' => float, 'missing_dates' => array]
+     */
+    public function checkDateRangeAvailability(string $symbol, string $timeframe, string $startDate, string $endDate): array
+    {
+        $startTimestamp = strtotime($startDate . ' 00:00:00');
+        $endTimestamp = strtotime($endDate . ' 23:59:59');
+
+        $availableDates = $this->getAvailableDates($symbol, $timeframe);
+        
+        // Generate all dates in range
+        $allDates = [];
+        $current = strtotime($startDate);
+        $end = strtotime($endDate);
+        while ($current <= $end) {
+            $allDates[] = date('Y-m-d', $current);
+            $current = strtotime('+1 day', $current);
+        }
+
+        $missingDates = array_diff($allDates, $availableDates);
+        $coveragePercent = count($allDates) > 0 
+            ? ((count($allDates) - count($missingDates)) / count($allDates)) * 100 
+            : 0;
+
+        return [
+            'available' => count($missingDates) === 0,
+            'coverage_percent' => round($coveragePercent, 2),
+            'missing_dates' => array_values($missingDates),
+            'available_dates_count' => count($availableDates),
+            'requested_dates_count' => count($allDates),
+        ];
+    }
 }
 

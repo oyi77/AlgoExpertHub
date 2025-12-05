@@ -117,7 +117,7 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-plug"></i> Exchange Connections</h4>
-                    <a href="{{ route('admin.exchange-connections.create') }}" class="btn btn-primary">
+                    <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Create Connection
                     </a>
                 </div>
@@ -180,10 +180,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.exchange-connections.show', $conn) }}" class="btn btn-sm btn-success" title="Test & Preview">
+                                    <a href="{{ route('admin.trading-management.config.exchange-connections.show', $conn) }}" class="btn btn-sm btn-success" title="Test & Preview">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.exchange-connections.edit', $conn) }}" class="btn btn-sm btn-info" title="Edit">
+                                    <a href="{{ route('admin.trading-management.config.exchange-connections.edit', $conn) }}" class="btn btn-sm btn-info" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 </td>
@@ -195,7 +195,7 @@
                 {{ $connections->links() }}
                 @else
                 <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> No exchange connections yet. <a href="{{ route('admin.exchange-connections.create') }}">Create your first connection</a>.
+                    <i class="fas fa-info-circle"></i> No exchange connections yet. <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}">Create your first connection</a>.
                 </div>
                 @endif
             </div>

@@ -18,6 +18,24 @@ class AppServiceProvider extends ServiceProvider
     {
         // Conditionally register addon service providers based on their status
         $this->registerAddonServiceProviders();
+        
+    }
+    
+    public function boot()
+    {
+        Model::unguard();
+
+        Paginator::useBootstrap();
+
+        // Global view composer to ensure $page is always available
+        view()->composer('*', function ($view) {
+            $data = $view->getData();
+            if (!isset($data['page'])) {
+                $view->with('page', null);
+            }
+        });
+        
+        
     }
 
     /**
@@ -40,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
                 'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
                 'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // NEW: Consolidated trading management
+                'advanced-theme-addon' => \Addons\AdvancedThemeAddon\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {
@@ -62,23 +81,4 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        Model::unguard();
-
-        Paginator::useBootstrap();
-
-        // Global view composer to ensure $page is always available
-        view()->composer('*', function ($view) {
-            $data = $view->getData();
-            if (!isset($data['page'])) {
-                $view->with('page', null);
-            }
-        });
-    }
 }

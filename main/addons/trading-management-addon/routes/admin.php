@@ -45,29 +45,37 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/', function () {
             $title = 'Trading Configuration';
             
-            // Load Exchange Connections (unified)
-            $connections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::with('admin', 'user', 'preset')
-                ->orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'conn_page');
-            
-            $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'preset_page');
-            
-            $smartRiskSettings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings', [
-                'enabled' => false,
-                'min_provider_score' => 70,
-                'slippage_buffer_enabled' => false,
-                'dynamic_lot_enabled' => false,
-                'max_risk_multiplier' => 2.0,
-                'min_risk_multiplier' => 0.5,
-            ]);
-            
-            $stats = [
-                'total_connections' => $connections->total(),
-                'data_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
-                'execution_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
-                'total_presets' => $presets->total(),
-            ];
+            try {
+                // Load Exchange Connections (unified)
+                $connections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::with('admin', 'user', 'preset')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'conn_page');
+                
+                $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'preset_page');
+                
+                $smartRiskSettings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings', [
+                    'enabled' => false,
+                    'min_provider_score' => 70,
+                    'slippage_buffer_enabled' => false,
+                    'dynamic_lot_enabled' => false,
+                    'max_risk_multiplier' => 2.0,
+                    'min_risk_multiplier' => 0.5,
+                ]);
+                
+                $stats = [
+                    'total_connections' => $connections->total(),
+                    'data_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
+                    'execution_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->count(),
+                    'total_presets' => $presets->total(),
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Trading config error', ['error' => $e->getMessage()]);
+                $connections = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $presets = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $smartRiskSettings = ['enabled' => false];
+                $stats = ['total_connections' => 0, 'data_connections' => 0, 'execution_connections' => 0, 'total_presets' => 0, 'error' => $e->getMessage()];
+            }
             
             return view('trading-management::backend.trading-management.config.index', compact('title', 'stats', 'connections', 'presets', 'smartRiskSettings'));
         })->name('index');
@@ -102,12 +110,38 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         // Operations dashboard with tabs
         Route::get('/', function () {
             $title = 'Trading Operations';
-            $stats = [
-                'active_connections' => \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)->where('trade_execution_enabled', 1)->count(),
-                'open_positions' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'open')->count(),
-                'today_executions' => \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::whereDate('created_at', today())->count(),
-                'today_pnl' => \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'closed')->whereDate('closed_at', today())->sum('pnl'),
-            ];
+            
+            try {
+                // Use old addon models until migration complete
+                $ExecutionPosition = class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class)
+                    ? \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class
+                    : \Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class;
+                
+                $ExecutionLog = class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::class)
+                    ? \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::class
+                    : \Addons\TradingExecutionEngine\App\Models\ExecutionLog::class;
+                
+                $ExecutionConnection = class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)
+                    ? \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class
+                    : \Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class;
+                
+                $stats = [
+                    'active_connections' => $ExecutionConnection::where('is_active', 1)->count(),
+                    'open_positions' => $ExecutionPosition::where('status', 'open')->count(),
+                    'today_executions' => $ExecutionLog::whereDate('created_at', today())->count(),
+                    'today_pnl' => $ExecutionPosition::where('status', 'closed')->whereDate('closed_at', today())->sum('pnl') ?? 0,
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Trading operations stats error', ['error' => $e->getMessage()]);
+                $stats = [
+                    'active_connections' => 0,
+                    'open_positions' => 0,
+                    'today_executions' => 0,
+                    'today_pnl' => 0,
+                    'error' => $e->getMessage(),
+                ];
+            }
+            
             return view('trading-management::backend.trading-management.operations.index', compact('title', 'stats'));
         })->name('index');
         
@@ -140,13 +174,19 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/', function () {
             $title = 'Strategy Management';
             
-            $filterStrategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::with('owner')
-                ->orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'filter_page');
-            
-            $aiProfiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::with('owner')
-                ->orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'ai_page');
+            try {
+                $filterStrategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::with('owner')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'filter_page');
+                
+                $aiProfiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::with('owner')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'ai_page');
+            } catch (\Exception $e) {
+                \Log::error('Trading strategy error', ['error' => $e->getMessage()]);
+                $filterStrategies = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $aiProfiles = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+            }
             
             return view('trading-management::backend.trading-management.strategy.index', compact('title', 'filterStrategies', 'aiProfiles'));
         })->name('index');
@@ -164,22 +204,29 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/', function () {
             $title = 'Copy Trading';
             
-            $traders = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::select('trader_id')
-                ->selectRaw('COUNT(DISTINCT follower_id) as follower_count')
-                ->with('trader')
-                ->groupBy('trader_id')
-                ->orderBy('follower_count', 'desc')
-                ->paginate(20, ['*'], 'trader_page');
-            
-            $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::with(['trader', 'follower'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'sub_page');
-            
-            $stats = [
-                'total_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::count(),
-                'active_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('is_active', true)->count(),
-                'total_traders' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::distinct('trader_id')->count('trader_id'),
-            ];
+            try {
+                $traders = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::select('trader_id')
+                    ->selectRaw('COUNT(DISTINCT follower_id) as follower_count')
+                    ->with('trader')
+                    ->groupBy('trader_id')
+                    ->orderBy('follower_count', 'desc')
+                    ->paginate(20, ['*'], 'trader_page');
+                
+                $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::with(['trader', 'follower'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'sub_page');
+                
+                $stats = [
+                    'total_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::count(),
+                    'active_subscriptions' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('is_active', true)->count(),
+                    'total_traders' => \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::distinct('trader_id')->count('trader_id'),
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Copy trading dashboard error', ['error' => $e->getMessage()]);
+                $traders = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $subscriptions = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $stats = ['total_subscriptions' => 0, 'active_subscriptions' => 0, 'total_traders' => 0, 'error' => $e->getMessage()];
+            }
             
             return view('trading-management::backend.trading-management.copy-trading.index', compact('title', 'stats', 'traders', 'subscriptions'));
         })->name('index');
@@ -204,19 +251,26 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/', function () {
             $title = 'Trading Test & Backtesting';
             
-            $backtests = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::with(['admin', 'filterStrategy', 'aiModelProfile', 'preset'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(20, ['*'], 'bt_page');
-            
-            $results = \Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult::with('backtest')
-                ->orderBy('entry_time', 'desc')
-                ->paginate(50, ['*'], 'result_page');
-            
-            $stats = [
-                'total_backtests' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::count(),
-                'completed' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'completed')->count(),
-                'running' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'running')->count(),
-            ];
+            try {
+                $backtests = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::with(['admin', 'filterStrategy', 'aiModelProfile', 'preset'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20, ['*'], 'bt_page');
+                
+                $results = \Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult::with('backtest')
+                    ->orderBy('entry_time', 'desc')
+                    ->paginate(50, ['*'], 'result_page');
+                
+                $stats = [
+                    'total_backtests' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::count(),
+                    'completed' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'completed')->count(),
+                    'running' => \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('status', 'running')->count(),
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Trading test dashboard error', ['error' => $e->getMessage()]);
+                $backtests = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                $results = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 50, 1);
+                $stats = ['total_backtests' => 0, 'completed' => 0, 'running' => 0, 'error' => $e->getMessage()];
+            }
             
             return view('trading-management::backend.trading-management.test.index', compact('title', 'stats', 'backtests', 'results'));
         })->name('index');
@@ -230,6 +284,10 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('backtests', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'store'])->name('backtests.store');
         Route::get('backtests/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'show'])->name('backtests.show');
         Route::delete('backtests/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'destroy'])->name('backtests.destroy');
+        
+        // Data availability checks (AJAX)
+        Route::post('backtests/check-data', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'checkDataAvailability'])->name('backtests.check-data');
+        Route::post('backtests/validate-dates', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'validateDateRange'])->name('backtests.validate-dates');
         
         // Results
         Route::get('results', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'results'])->name('results.index');

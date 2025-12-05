@@ -264,5 +264,199 @@ class AnalyticsService
             }
         }
     }
+
+    /**
+     * Compare performance across multiple channels/connections.
+     * 
+     * @param array $connectionIds Array of connection IDs to compare
+     * @param int $days Number of days to analyze
+     * @return array Comparison data
+     */
+    public function compareChannels(array $connectionIds, int $days = 30): array
+    {
+        $startDate = Carbon::today()->subDays($days);
+        $comparison = [];
+
+        foreach ($connectionIds as $connectionId) {
+            $connection = ExecutionConnection::find($connectionId);
+            if (!$connection) {
+                continue;
+            }
+
+            $summary = $this->getAnalyticsSummary($connection, $days);
+            
+            // Get additional metrics
+            $positions = ExecutionPosition::closed()
+                ->byConnection($connectionId)
+                ->where('closed_at', '>=', $startDate)
+                ->get();
+
+            $sharpeRatio = $this->calculateSharpeRatio($connection, Carbon::today());
+            $maxDrawdown = $summary['max_drawdown'] ?? 0;
+            
+            // Calculate average trade duration
+            $avgDuration = 0;
+            if ($positions->isNotEmpty()) {
+                $durations = $positions->filter(function ($pos) {
+                    return $pos->closed_at && $pos->created_at;
+                })->map(function ($pos) {
+                    return $pos->created_at->diffInHours($pos->closed_at);
+                });
+                $avgDuration = $durations->isNotEmpty() ? $durations->avg() : 0;
+            }
+
+            $comparison[] = [
+                'connection_id' => $connectionId,
+                'connection_name' => $connection->name,
+                'exchange_name' => $connection->exchange_name,
+                'total_trades' => $summary['total_trades'],
+                'win_rate' => $summary['win_rate'],
+                'profit_factor' => $summary['profit_factor'],
+                'total_pnl' => $summary['total_pnl'],
+                'sharpe_ratio' => round($sharpeRatio, 4),
+                'max_drawdown' => $maxDrawdown,
+                'average_trade_duration_hours' => round($avgDuration, 2),
+                'balance' => $summary['balance'],
+                'equity' => $summary['equity'],
+            ];
+        }
+
+        // Sort by total PnL (descending)
+        usort($comparison, function ($a, $b) {
+            return $b['total_pnl'] <=> $a['total_pnl'];
+        });
+
+        return [
+            'period_days' => $days,
+            'start_date' => $startDate->toDateString(),
+            'end_date' => Carbon::today()->toDateString(),
+            'channels' => $comparison,
+            'best_performer' => !empty($comparison) ? $comparison[0] : null,
+        ];
+    }
+
+    /**
+     * Export analytics report to CSV.
+     * 
+     * @param ExecutionConnection $connection
+     * @param int $days Number of days
+     * @return string CSV content
+     */
+    public function exportToCsv(ExecutionConnection $connection, int $days = 30): string
+    {
+        $startDate = Carbon::today()->subDays($days);
+        
+        $positions = ExecutionPosition::closed()
+            ->byConnection($connection->id)
+            ->where('closed_at', '>=', $startDate)
+            ->orderBy('closed_at', 'asc')
+            ->with('signal')
+            ->get();
+
+        $summary = $this->getAnalyticsSummary($connection, $days);
+        $sharpeRatio = $this->calculateSharpeRatio($connection, Carbon::today());
+
+        // Build CSV
+        $csv = [];
+        $csv[] = "Analytics Report for: {$connection->name}";
+        $csv[] = "Period: {$startDate->toDateString()} to " . Carbon::today()->toDateString();
+        $csv[] = "";
+        $csv[] = "Summary";
+        $csv[] = "Total Trades," . $summary['total_trades'];
+        $csv[] = "Winning Trades," . $summary['winning_trades'];
+        $csv[] = "Losing Trades," . $summary['losing_trades'];
+        $csv[] = "Win Rate," . $summary['win_rate'] . "%";
+        $csv[] = "Total P&L," . $summary['total_pnl'];
+        $csv[] = "Profit Factor," . $summary['profit_factor'];
+        $csv[] = "Max Drawdown," . $summary['max_drawdown'] . "%";
+        $csv[] = "Sharpe Ratio," . round($sharpeRatio, 4);
+        $csv[] = "Balance," . $summary['balance'];
+        $csv[] = "Equity," . $summary['equity'];
+        $csv[] = "";
+        $csv[] = "Trade Details";
+        $csv[] = "Date,Signal ID,Symbol,Direction,Entry Price,Exit Price,Quantity,P&L,P&L %,Duration (hours),Close Reason";
+
+        foreach ($positions as $position) {
+            $duration = $position->closed_at && $position->created_at 
+                ? $position->created_at->diffInHours($position->closed_at) 
+                : 0;
+            
+            $csv[] = sprintf(
+                "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
+                $position->closed_at ? $position->closed_at->format('Y-m-d H:i:s') : '',
+                $position->signal_id ?? '',
+                $position->symbol ?? '',
+                strtoupper($position->direction ?? ''),
+                $position->entry_price ?? 0,
+                $position->current_price ?? 0,
+                $position->quantity ?? 0,
+                $position->pnl ?? 0,
+                $position->pnl_percentage ?? 0,
+                $duration,
+                $position->closed_reason ?? ''
+            );
+        }
+
+        return implode("\n", $csv);
+    }
+
+    /**
+     * Export analytics report to JSON.
+     * 
+     * @param ExecutionConnection $connection
+     * @param int $days Number of days
+     * @return array JSON data
+     */
+    public function exportToJson(ExecutionConnection $connection, int $days = 30): array
+    {
+        $startDate = Carbon::today()->subDays($days);
+        
+        $positions = ExecutionPosition::closed()
+            ->byConnection($connection->id)
+            ->where('closed_at', '>=', $startDate)
+            ->orderBy('closed_at', 'asc')
+            ->with('signal')
+            ->get();
+
+        $summary = $this->getAnalyticsSummary($connection, $days);
+        $sharpeRatio = $this->calculateSharpeRatio($connection, Carbon::today());
+
+        $trades = $positions->map(function ($position) {
+            $duration = $position->closed_at && $position->created_at 
+                ? $position->created_at->diffInHours($position->closed_at) 
+                : 0;
+            
+            return [
+                'date' => $position->closed_at ? $position->closed_at->toIso8601String() : null,
+                'signal_id' => $position->signal_id,
+                'symbol' => $position->symbol,
+                'direction' => $position->direction,
+                'entry_price' => (float) $position->entry_price,
+                'exit_price' => (float) ($position->current_price ?? $position->entry_price),
+                'quantity' => (float) $position->quantity,
+                'pnl' => (float) $position->pnl,
+                'pnl_percentage' => (float) $position->pnl_percentage,
+                'duration_hours' => $duration,
+                'close_reason' => $position->closed_reason,
+            ];
+        })->toArray();
+
+        return [
+            'connection' => [
+                'id' => $connection->id,
+                'name' => $connection->name,
+                'exchange_name' => $connection->exchange_name,
+            ],
+            'period' => [
+                'start_date' => $startDate->toDateString(),
+                'end_date' => Carbon::today()->toDateString(),
+                'days' => $days,
+            ],
+            'summary' => array_merge($summary, [
+                'sharpe_ratio' => round($sharpeRatio, 4),
+            ]),
+            'trades' => $trades,
+        ];
+    }
 }
 
