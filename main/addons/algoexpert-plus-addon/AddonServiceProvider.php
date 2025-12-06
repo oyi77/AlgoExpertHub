@@ -25,6 +25,16 @@ class AddonServiceProvider extends ServiceProvider
         if ($queuesEnabled && $queueIsRedis && class_exists(\Laravel\Horizon\HorizonServiceProvider::class)) {
             $this->app->register(\Laravel\Horizon\HorizonServiceProvider::class);
         }
+
+        $backupEnabled = (bool) optional($modules->firstWhere('key', 'backup'))['enabled'] ?? false;
+        if ($backupEnabled && class_exists(\Spatie\Backup\BackupServiceProvider::class)) {
+            $this->app->register(\Spatie\Backup\BackupServiceProvider::class);
+        }
+
+        $healthEnabled = (bool) optional($modules->firstWhere('key', 'health'))['enabled'] ?? false;
+        if ($healthEnabled && class_exists(\Spatie\Health\HealthServiceProvider::class)) {
+            $this->app->register(\Spatie\Health\HealthServiceProvider::class);
+        }
     }
 
     public function boot(): void
@@ -39,6 +49,7 @@ class AddonServiceProvider extends ServiceProvider
 
         $this->configureHorizonAccess();
         $this->configureLocale();
+        $this->configureHealthUi();
     }
 
     protected function loadRoutes(): void
@@ -89,6 +100,18 @@ class AddonServiceProvider extends ServiceProvider
         }
     }
 
+    protected function configureHealthUi(): void
+    {
+        try {
+            $manifest = $this->readManifest();
+            $healthEnabled = (bool) optional(collect($manifest['modules'] ?? [])->firstWhere('key', 'health'))['enabled'] ?? false;
+            if ($healthEnabled && class_exists(\Spatie\Health\Facades\Health::class)) {
+                // No-op: package registers routes; we only ensure it's loaded via provider
+            }
+        } catch (\Throwable $e) {
+        }
+    }
+
     protected function readManifest(): array
     {
         try {
@@ -102,4 +125,3 @@ class AddonServiceProvider extends ServiceProvider
         return [];
     }
 }
-

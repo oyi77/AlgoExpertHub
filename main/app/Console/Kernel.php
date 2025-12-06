@@ -48,6 +48,26 @@ class Kernel extends ConsoleKernel
             }
         }
 
+        // AlgoExpert++ Addon - System Health
+        if (AddonRegistry::active('algoexpert-plus-addon') && AddonRegistry::moduleEnabled('algoexpert-plus-addon', 'health')) {
+            if (class_exists(\Spatie\Health\Commands\RunHealthChecksCommand::class)) {
+                $schedule->command('health:snapshot')
+                    ->everyFiveMinutes()
+                    ->withoutOverlapping();
+            }
+        }
+
+        // AlgoExpert++ Addon - System Backup
+        if (AddonRegistry::active('algoexpert-plus-addon') && AddonRegistry::moduleEnabled('algoexpert-plus-addon', 'backup')) {
+            if (class_exists(\Spatie\Backup\BackupServiceProvider::class)) {
+                $schedule->command('backup:run')
+                    ->dailyAt('02:00')
+                    ->withoutOverlapping();
+                $schedule->command('backup:clean')
+                    ->weeklyOn(1, '03:00')
+                    ->withoutOverlapping();
+            }
+        }
         // Trading Management Addon - Execution Module
         if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             // Monitor positions every minute
