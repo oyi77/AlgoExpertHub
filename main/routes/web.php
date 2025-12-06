@@ -23,6 +23,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\User\ExternalSignalController;
 use App\Http\Controllers\WithdrawController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 /*
 |--------------------------------------------------------------------------
@@ -159,6 +160,474 @@ Route::name('user.')->group(function () {
             // External Signal (multi-tab wrapper for Signal Sources, Channel Forwarding, Pattern Templates)
             Route::get('external-signals', [ExternalSignalController::class, 'index'])->name('external-signals.index');
 
+            // Trading Management Addon - User Routes (registered at root user. prefix)
+            if (\App\Support\AddonRegistry::active('trading-management-addon')) {
+                // Trading Presets
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management')) {
+                    Route::prefix('trading-presets')->name('trading-presets.')->group(function () {
+                        Route::get('/', function () {
+                            try {
+                                $title = 'My Trading Presets';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('trading_presets')) {
+                                    \Log::warning('Trading presets table does not exist');
+                                    return view('trading-management::user.risk-management.presets.index', [
+                                        'presets' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::where(function($query) {
+                                    $query->where('created_by_user_id', auth()->id())
+                                          ->orWhereNull('created_by_user_id');
+                                })
+                                ->orderBy('created_at', 'desc')
+                                ->paginate(20);
+                                return view('trading-management::user.risk-management.presets.index', compact('presets', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Trading presets index error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.risk-management.presets.index', [
+                                    'presets' => collect([])->paginate(20),
+                                    'title' => 'My Trading Presets'
+                                ]);
+                            }
+                        })->name('index');
+                        
+                        Route::get('/marketplace', function () {
+                            try {
+                                $title = 'Trading Presets Marketplace';
+                                $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::whereNull('created_by_user_id')
+                                    ->where('visibility', 'PUBLIC_MARKETPLACE')
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.risk-management.presets.marketplace', compact('presets', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Trading presets marketplace error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+                                return view('trading-management::user.risk-management.presets.marketplace', [
+                                    'presets' => collect([])->paginate(20),
+                                    'title' => 'Trading Presets Marketplace'
+                                ]);
+                            }
+                        })->name('marketplace');
+                        
+                        Route::get('/create', function () {
+                            $title = 'Create Trading Preset';
+                            return view('trading-management::user.risk-management.presets.create', compact('title'));
+                        })->name('create');
+                    });
+                }
+
+                // Filter Strategies
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy')) {
+                    Route::prefix('filter-strategies')->name('filter-strategies.')->group(function () {
+                        Route::get('/', function () {
+                            try {
+                                $title = 'My Filter Strategies';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('filter_strategies')) {
+                                    \Log::warning('Filter strategies table does not exist');
+                                    return view('trading-management::user.filter-strategy.index', [
+                                        'strategies' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $strategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::where('created_by_user_id', auth()->id())
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.filter-strategy.index', compact('strategies', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Filter strategies index error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.filter-strategy.index', [
+                                    'strategies' => collect([])->paginate(20),
+                                    'title' => 'My Filter Strategies'
+                                ]);
+                            }
+                        })->name('index');
+                        
+                        Route::get('/marketplace', function () {
+                            try {
+                                $title = 'Filter Strategies Marketplace';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('filter_strategies')) {
+                                    \Log::warning('Filter strategies table does not exist');
+                                    return view('trading-management::user.filter-strategy.marketplace', [
+                                        'strategies' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $strategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::whereNull('created_by_user_id')
+                                    ->where('visibility', 'PUBLIC_MARKETPLACE')
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.filter-strategy.marketplace', compact('strategies', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Filter strategies marketplace error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.filter-strategy.marketplace', [
+                                    'strategies' => collect([])->paginate(20),
+                                    'title' => 'Filter Strategies Marketplace'
+                                ]);
+                            }
+                        })->name('marketplace');
+                        
+                        Route::get('/create', function () {
+                            $title = 'Create Filter Strategy';
+                            return view('trading-management::user.filter-strategy.create', compact('title'));
+                        })->name('create');
+                    });
+                }
+
+                // AI Model Profiles
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis')) {
+                    Route::prefix('ai-model-profiles')->name('ai-model-profiles.')->group(function () {
+                        Route::get('/', function () {
+                            try {
+                                $title = 'My AI Model Profiles';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('ai_model_profiles')) {
+                                    \Log::warning('AI model profiles table does not exist');
+                                    return view('trading-management::user.ai-analysis.profiles.index', [
+                                        'profiles' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $profiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::where('created_by_user_id', auth()->id())
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.ai-analysis.profiles.index', compact('profiles', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('AI model profiles index error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.ai-analysis.profiles.index', [
+                                    'profiles' => collect([])->paginate(20),
+                                    'title' => 'My AI Model Profiles'
+                                ]);
+                            }
+                        })->name('index');
+                        
+                        Route::get('/marketplace', function () {
+                            try {
+                                $title = 'AI Model Profiles Marketplace';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('ai_model_profiles')) {
+                                    \Log::warning('AI model profiles table does not exist');
+                                    return view('trading-management::user.ai-analysis.profiles.marketplace', [
+                                        'profiles' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $profiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::whereNull('created_by_user_id')
+                                    ->where('visibility', 'PUBLIC_MARKETPLACE')
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.ai-analysis.profiles.marketplace', compact('profiles', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('AI model profiles marketplace error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.ai-analysis.profiles.marketplace', [
+                                    'profiles' => collect([])->paginate(20),
+                                    'title' => 'AI Model Profiles Marketplace'
+                                ]);
+                            }
+                        })->name('marketplace');
+                        
+                        Route::get('/create', function () {
+                            $title = 'Create AI Model Profile';
+                            return view('trading-management::user.ai-analysis.profiles.create', compact('title'));
+                        })->name('create');
+                    });
+                }
+
+                // Copy Trading
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')) {
+                    Route::prefix('copy-trading')->name('copy-trading.')->group(function () {
+                        Route::get('/settings', function () {
+                            try {
+                                $title = 'Copy Trading Settings';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('copy_trading_settings')) {
+                                    \Log::warning('Copy trading settings table does not exist');
+                                    return view('trading-management::user.copy-trading.settings', [
+                                        'title' => $title,
+                                        'error' => 'Copy trading settings table does not exist. Please run migrations.'
+                                    ]);
+                                }
+                                
+                                // Try to get or create settings
+                                // Check both deprecated addon and trading-management-addon models
+                                $setting = null;
+                                try {
+                                    // Try deprecated addon model first
+                                    $deprecatedModel = \Addons\CopyTrading\App\Models\CopyTradingSetting::class;
+                                    if (class_exists($deprecatedModel)) {
+                                        $setting = $deprecatedModel::firstOrCreate(
+                                            ['user_id' => auth()->id()],
+                                            [
+                                                'is_enabled' => false,
+                                                'risk_multiplier_default' => 1.0,
+                                                'allow_manual_trades' => true,
+                                                'allow_auto_trades' => true,
+                                            ]
+                                        );
+                                    }
+                                } catch (\Exception $e) {
+                                    \Log::error('Error loading copy trading settings: ' . $e->getMessage());
+                                }
+                                
+                                // Get stats if available
+                                $stats = [
+                                    'follower_count' => 0,
+                                    'total_copied_trades' => 0,
+                                ];
+                                
+                                try {
+                                    // Try trading-management-addon model first
+                                    $subscriptionModel = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+                                    if (class_exists($subscriptionModel)) {
+                                        $stats['follower_count'] = $subscriptionModel::where('trader_id', auth()->id())
+                                            ->where('is_active', true)
+                                            ->count();
+                                    } elseif (class_exists(\Addons\CopyTrading\App\Models\CopyTradingSubscription::class)) {
+                                        // Fallback to deprecated addon
+                                        $stats['follower_count'] = \Addons\CopyTrading\App\Models\CopyTradingSubscription::where('trader_id', auth()->id())
+                                            ->where('is_active', true)
+                                            ->count();
+                                    }
+                                } catch (\Exception $e) {
+                                    // Stats not critical, continue
+                                }
+                                
+                                return view('trading-management::user.copy-trading.settings', compact('title', 'setting', 'stats'));
+                            } catch (\Exception $e) {
+                                \Log::error('Copy trading settings error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.copy-trading.settings', [
+                                    'title' => 'Copy Trading Settings',
+                                    'error' => 'An error occurred while loading settings. Please check the logs.'
+                                ]);
+                            }
+                        })->name('settings');
+                        
+                        Route::get('/traders', function () {
+                            try {
+                                $title = 'Browse Traders';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('trader_profiles')) {
+                                    \Log::warning('Trader profiles table does not exist');
+                                    return view('trading-management::user.copy-trading.traders.index', [
+                                        'traders' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $traders = \Addons\TradingManagement\Modules\Marketplace\Models\TraderProfile::public()
+                                    ->verified()
+                                    ->with('user')
+                                    ->orderBy('total_profit_percent', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.copy-trading.traders.index', compact('traders', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Copy trading traders error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.copy-trading.traders.index', [
+                                    'traders' => collect([])->paginate(20),
+                                    'title' => 'Browse Traders'
+                                ]);
+                            }
+                        })->name('traders.index');
+                        
+                        Route::get('/traders/{id}', function ($id) {
+                            try {
+                                $title = 'Trader Profile';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('trader_profiles')) {
+                                    \Log::warning('Trader profiles table does not exist');
+                                    abort(404, 'Trader profile not found');
+                                }
+                                
+                                $trader = \Addons\TradingManagement\Modules\Marketplace\Models\TraderProfile::with(['user', 'ratings'])
+                                    ->where('user_id', $id)
+                                    ->public()
+                                    ->firstOrFail();
+                                
+                                // Check if user is following this trader
+                                $isFollowing = false;
+                                try {
+                                    $subscriptionModel = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+                                    if (class_exists($subscriptionModel)) {
+                                        $isFollowing = $subscriptionModel::where('trader_id', $id)
+                                            ->where('follower_id', auth()->id())
+                                            ->where('is_active', true)
+                                            ->exists();
+                                    }
+                                } catch (\Exception $e) {
+                                    // Not critical
+                                }
+                                
+                                return view('trading-management::user.copy-trading.traders.show', compact('trader', 'title', 'isFollowing'));
+                            } catch (\Exception $e) {
+                                \Log::error('Copy trading trader show error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                abort(404, 'Trader profile not found');
+                            }
+                        })->name('traders.show');
+                        
+                        Route::get('/subscriptions', function () {
+                            try {
+                                $title = 'My Copy Trading Subscriptions';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('copy_trading_subscriptions')) {
+                                    \Log::warning('Copy trading subscriptions table does not exist');
+                                    return view('trading-management::user.copy-trading.subscriptions.index', [
+                                        'subscriptions' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('follower_id', auth()->id())
+                                    ->with(['trader', 'preset'])
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.copy-trading.subscriptions.index', compact('subscriptions', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Copy trading subscriptions error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.copy-trading.subscriptions.index', [
+                                    'subscriptions' => collect([])->paginate(20),
+                                    'title' => 'My Copy Trading Subscriptions'
+                                ]);
+                            }
+                        })->name('subscriptions.index');
+                        
+                        Route::get('/history', function () {
+                            try {
+                                $title = 'Copy Trading History';
+                                
+                                // Check if table exists
+                                if (!\Schema::hasTable('copy_trading_executions')) {
+                                    \Log::warning('Copy trading executions table does not exist');
+                                    return view('trading-management::user.copy-trading.history.index', [
+                                        'executions' => collect([])->paginate(20),
+                                        'title' => $title
+                                    ]);
+                                }
+                                
+                                $executions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution::where('follower_id', auth()->id())
+                                    ->with(['subscription', 'trader'])
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(20);
+                                return view('trading-management::user.copy-trading.history.index', compact('executions', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Copy trading history error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.copy-trading.history.index', [
+                                    'executions' => collect([])->paginate(20),
+                                    'title' => 'Copy Trading History'
+                                ]);
+                            }
+                        })->name('history.index');
+                    });
+                }
+
+                // Smart Risk Management
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management')) {
+                    Route::prefix('srm')->name('srm.')->group(function () {
+                        Route::get('/', function () {
+                            try {
+                                $title = 'Smart Risk Management Dashboard';
+                                return view('trading-management::user.smart-risk.dashboard', compact('title'));
+                            } catch (\Exception $e) {
+                                \Log::error('SRM dashboard error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.smart-risk.dashboard', [
+                                    'title' => 'Smart Risk Management Dashboard'
+                                ]);
+                            }
+                        })->name('dashboard');
+                        
+                        Route::get('/adjustments', function () {
+                            try {
+                                $title = 'SRM Adjustments';
+                                return view('trading-management::user.smart-risk.adjustments.index', compact('title'));
+                            } catch (\Exception $e) {
+                                \Log::error('SRM adjustments error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.smart-risk.adjustments.index', [
+                                    'title' => 'SRM Adjustments'
+                                ]);
+                            }
+                        })->name('adjustments.index');
+                        
+                        Route::get('/insights', function () {
+                            try {
+                                $title = 'SRM Insights';
+                                return view('trading-management::user.smart-risk.insights.index', compact('title'));
+                            } catch (\Exception $e) {
+                                \Log::error('SRM insights error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString(),
+                                    'file' => $e->getFile(),
+                                    'line' => $e->getLine()
+                                ]);
+                                return view('trading-management::user.smart-risk.insights.index', [
+                                    'title' => 'SRM Insights'
+                                ]);
+                            }
+                        })->name('insights.index');
+                    });
+                }
+            }
+
             Route::get('profile/setting', [UserController::class, 'profile'])->name('profile');
             Route::post('profile/setting', [UserController::class, 'profileUpdate'])->name('profileupdate');
             Route::get('profile/change/password', [UserController::class, 'changePassword'])->name('change.password');
@@ -283,15 +752,16 @@ Route::get('/docs.postman', function () {
     ]);
 })->name('scribe.postman');
 
-Route::get('current-price', [CryptoTradeController::class, 'currentPrice'])->name('user.current-price');
-
-Route::get('get-ticker', [CryptoTradeController::class, 'latestTicker'])->name('ticker');
-
 Route::get('trading-return', [CryptoTradeController::class, 'tradingInterest'])->name('trading-interest');
 
 Route::get('change-language', [FrontendController::class, 'changeLanguage'])->name('change-language');
 
-Route::get('{pages}', [FrontendController::class, 'page'])->name('pages');
+// API routes - must be before catch-all route
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('current-price', [CryptoTradeController::class, 'currentPrice'])->name('user.current-price');
+    Route::get('get-ticker', [CryptoTradeController::class, 'latestTicker'])->name('ticker');
+    Route::get('stream-prices', [CryptoTradeController::class, 'streamPrices'])->name('stream.prices');
+});
 
 Route::get('blog/{id}/{slug}', [FrontendController::class, 'blogDetails'])->name('blog.details');
 
@@ -300,3 +770,6 @@ Route::get('links/{id}/{slug}', [FrontendController::class, 'linksDetails'])->na
 Route::post('subscribe', [FrontendController::class, 'subscribe'])->name('subscribe');
 
 Route::post('contact', [FrontendController::class, 'contactSend'])->name('contact');
+
+// Catch-all route must be last
+Route::get('{pages}', [FrontendController::class, 'page'])->name('pages');

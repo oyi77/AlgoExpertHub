@@ -198,6 +198,13 @@ class BacktestSeeder extends Seeder
             $isAdminOwned = rand(0, 1);
             $symbol = $symbols[array_rand($symbols)];
             $timeframe = $timeframes[array_rand($timeframes)];
+            // Preset is required, so use a random one or first available
+            $preset = $presets->isNotEmpty() ? $presets->random() : ($presetClass ? $presetClass::first() : null);
+
+            if (!$preset) {
+                $this->command->warn('No trading presets found. Skipping failed backtest creation.');
+                continue;
+            }
 
             $startDate = now()->subMonths(rand(3, 6));
             $endDate = now()->subDays(rand(0, 7));
@@ -219,7 +226,7 @@ class BacktestSeeder extends Seeder
                 'description' => "Failed backtest for {$symbol} on {$timeframe} timeframe",
                 'filter_strategy_id' => null,
                 'ai_model_profile_id' => null,
-                'preset_id' => null,
+                'preset_id' => $preset->id, // Required field, cannot be null
                 'symbol' => $symbol,
                 'timeframe' => $timeframe,
                 'start_date' => $startDate,

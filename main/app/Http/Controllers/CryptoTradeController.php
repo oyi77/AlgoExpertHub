@@ -32,7 +32,7 @@ class CryptoTradeController extends Controller
             $general = Helper::config();
             
             if (!$general) {
-                return response()->json(['error' => 'Configuration not found'], 500);
+                return response()->json(['error' => 'Configuration not found', 'rate_limited' => false], 500);
             }
 
             $currency = $request->currency ?? 'BTC';
@@ -63,30 +63,56 @@ class CryptoTradeController extends Controller
 
             if ($curlError) {
                 \Log::error('CryptoCompare API error', ['error' => $curlError, 'currency' => $currency]);
-                return response()->json([]);
+                return response()->json(['error' => 'Connection error', 'rate_limited' => false, 'data' => []]);
+            }
+
+            // Check for rate limit (429 Too Many Requests)
+            if ($httpCode === 429) {
+                \Log::warning('CryptoCompare API rate limit hit', ['currency' => $currency]);
+                return response()->json(['error' => 'Rate limit exceeded', 'rate_limited' => true, 'data' => []]);
             }
 
             if ($httpCode !== 200) {
                 \Log::error('CryptoCompare API HTTP error', ['code' => $httpCode, 'currency' => $currency]);
-                return response()->json([]);
+                return response()->json(['error' => 'API error', 'rate_limited' => false, 'data' => []]);
             }
 
             $result = json_decode($response, true);
 
             // Check if response is valid
-            if (!$result || !isset($result['Response']) || $result['Response'] !== 'Success') {
-                // If API returns error, return empty array instead of error
-                return response()->json([]);
+            if (!$result) {
+                return response()->json(['error' => 'Invalid response', 'rate_limited' => false, 'data' => []]);
+            }
+
+            // Check for API error response (rate limit or other errors)
+            if (isset($result['Response']) && $result['Response'] === 'Error') {
+                $isRateLimited = isset($result['Message']) && (
+                    stripos($result['Message'], 'rate limit') !== false ||
+                    stripos($result['Message'], 'too many') !== false ||
+                    stripos($result['Message'], '429') !== false
+                );
+                
+                \Log::warning('CryptoCompare API error response', [
+                    'message' => $result['Message'] ?? 'Unknown error',
+                    'currency' => $currency,
+                    'rate_limited' => $isRateLimited
+                ]);
+                
+                return response()->json([
+                    'error' => $result['Message'] ?? 'API error',
+                    'rate_limited' => $isRateLimited,
+                    'data' => []
+                ]);
             }
 
             if (!isset($result['Data']) || !isset($result['Data']['Data'])) {
-                return response()->json([]);
+                return response()->json(['error' => 'No data available', 'rate_limited' => false, 'data' => []]);
             }
 
             $hvoc = $result['Data']['Data'];
 
-            if (!is_array($hvoc)) {
-                return response()->json([]);
+            if (!is_array($hvoc) || empty($hvoc)) {
+                return response()->json(['error' => 'Empty data', 'rate_limited' => false, 'data' => []]);
             }
 
             $chartData = [];
@@ -100,10 +126,15 @@ class CryptoTradeController extends Controller
                 }
             }
 
+            // Return empty array if no valid data points
+            if (empty($chartData)) {
+                return response()->json(['error' => 'No valid data points', 'rate_limited' => false, 'data' => []]);
+            }
+
             return response()->json($chartData);
         } catch (\Exception $e) {
             \Log::error('latestTicker error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json([]);
+            return response()->json(['error' => 'Server error', 'rate_limited' => false, 'data' => []]);
         }
     }
 
@@ -114,7 +145,7 @@ class CryptoTradeController extends Controller
 
             if (!$general) {
                 \Log::error('Configuration not found in currentPrice');
-                return response()->json(['error' => 'Configuration not found'], 200);
+                return response()->json(['error' => 'Configuration not found', 'rate_limited' => false], 200);
             }
 
             $currency = $request->currency ?? 'BTC';
@@ -136,33 +167,47 @@ class CryptoTradeController extends Controller
 
             if ($response === false) {
                 \Log::error('CryptoCompare price fetch failed', ['currency' => $currency]);
-                return response()->json(['error' => 'Failed to fetch price'], 200);
+                return response()->json(['error' => 'Failed to fetch price', 'rate_limited' => false], 200);
             }
 
             $data = json_decode($response, true);
 
             if (!$data || !is_array($data)) {
                 \Log::error('CryptoCompare invalid response', ['currency' => $currency, 'response' => $response]);
-                return response()->json(['error' => 'Invalid API response'], 200);
+                return response()->json(['error' => 'Invalid API response', 'rate_limited' => false], 200);
             }
 
             // Check for API error response
             if (isset($data['Response']) && $data['Response'] === 'Error') {
-                \Log::error('CryptoCompare API error', ['currency' => $currency, 'message' => $data['Message'] ?? 'Unknown error']);
-                return response()->json(['error' => $data['Message'] ?? 'API error'], 200);
+                $isRateLimited = isset($data['Message']) && (
+                    stripos($data['Message'], 'rate limit') !== false ||
+                    stripos($data['Message'], 'too many') !== false ||
+                    stripos($data['Message'], '429') !== false
+                );
+                
+                \Log::warning('CryptoCompare API error', [
+                    'currency' => $currency,
+                    'message' => $data['Message'] ?? 'Unknown error',
+                    'rate_limited' => $isRateLimited
+                ]);
+                
+                return response()->json([
+                    'error' => $data['Message'] ?? 'API error',
+                    'rate_limited' => $isRateLimited
+                ], 200);
             }
 
             $result = reset($data);
 
-            if ($result === false || $result === null) {
+            if ($result === false || $result === null || !is_numeric($result)) {
                 \Log::error('CryptoCompare no price data', ['currency' => $currency, 'data' => $data]);
-                return response()->json(['error' => 'No price data available'], 200);
+                return response()->json(['error' => 'No price data available', 'rate_limited' => false], 200);
             }
 
             return response()->json($result);
         } catch (\Exception $e) {
             \Log::error('currentPrice error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'currency' => $request->currency ?? 'BTC']);
-            return response()->json(['error' => 'Server error: ' . $e->getMessage()], 200);
+            return response()->json(['error' => 'Server error: ' . $e->getMessage(), 'rate_limited' => false], 200);
         }
     }
 
@@ -353,5 +398,131 @@ class CryptoTradeController extends Controller
                 ]);
             }
         }
+    }
+
+    /**
+     * Server-Sent Events endpoint for real-time price updates
+     */
+    public function streamPrices(Request $request)
+    {
+        $currency = $request->get('currency', 'BTC');
+        
+        // Disable output buffering
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        
+        // Set headers to force HTTP/1.1 and disable QUIC
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+        header('HTTP/1.1 200 OK');
+        
+        // Disable time limit for long-running connection
+        set_time_limit(0);
+        ignore_user_abort(false);
+        
+        $general = Helper::config();
+        $apiKey = $general->crypto_api ?? '';
+        
+        // Send initial connection message
+        echo "data: " . json_encode(['type' => 'connected', 'currency' => $currency]) . "\n\n";
+        flush();
+        
+        $lastChartData = null;
+        $lastPrice = null;
+        $updateCount = 0;
+        
+        while (true) {
+            if (connection_aborted()) {
+                break;
+            }
+            
+            // Send keepalive every 30 seconds
+            if ($updateCount % 10 == 0 && $updateCount > 0) {
+                echo ": keepalive\n\n";
+                flush();
+            }
+            
+            try {
+                // Fetch chart data
+                $url = "https://min-api.cryptocompare.com/data/v2/histominute?fsym={$currency}&tsym=USD&limit=40";
+                if (!empty($apiKey)) {
+                    $url .= "&api_key=" . $apiKey;
+                }
+                
+                $curl = curl_init();
+                curl_setopt_array($curl, [
+                    CURLOPT_URL => $url,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 5,
+                    CURLOPT_FOLLOWLOCATION => true,
+                ]);
+                
+                $response = curl_exec($curl);
+                $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                curl_close($curl);
+                
+                if ($httpCode === 200) {
+                    $result = json_decode($response, true);
+                    
+                    if ($result && isset($result['Response']) && $result['Response'] === 'Success' && isset($result['Data']['Data'])) {
+                        $chartData = [];
+                        foreach ($result['Data']['Data'] as $value) {
+                            if (isset($value['time'], $value['open'], $value['high'], $value['low'], $value['close'])) {
+                                $chartData[] = [
+                                    'x' => $value['time'] * 1000,
+                                    'y' => [(float)$value['open'], (float)$value['high'], (float)$value['low'], (float)$value['close']]
+                                ];
+                            }
+                        }
+                        
+                        // Only send if data changed
+                        $chartDataJson = json_encode($chartData);
+                        if ($lastChartData !== $chartDataJson) {
+                            echo "data: " . json_encode(['type' => 'chart', 'data' => $chartData]) . "\n\n";
+                            flush();
+                            $lastChartData = $chartDataJson;
+                        }
+                    }
+                }
+                
+                // Fetch current price
+                $priceUrl = "https://min-api.cryptocompare.com/data/price?fsym={$currency}&tsyms=USD";
+                if (!empty($apiKey)) {
+                    $priceUrl .= "&api_key=" . $apiKey;
+                }
+                
+                $priceResponse = @file_get_contents($priceUrl, false, stream_context_create([
+                    'http' => ['timeout' => 5, 'ignore_errors' => true]
+                ]));
+                
+                if ($priceResponse !== false) {
+                    $priceData = json_decode($priceResponse, true);
+                    if ($priceData && !isset($priceData['Response']) && is_array($priceData)) {
+                        $currentPrice = reset($priceData);
+                        if ($currentPrice !== false && $currentPrice !== null && $lastPrice != $currentPrice) {
+                            echo "data: " . json_encode(['type' => 'price', 'price' => $currentPrice, 'currency' => $currency]) . "\n\n";
+                            flush();
+                            $lastPrice = $currentPrice;
+                        }
+                    }
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('SSE stream error', ['error' => $e->getMessage()]);
+            }
+            
+            $updateCount++;
+            
+            // Wait 3 seconds before next update
+            sleep(3);
+        }
+        
+        // This should never be reached, but just in case
+        return response('', 200);
     }
 }

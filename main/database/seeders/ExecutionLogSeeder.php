@@ -105,6 +105,7 @@ class ExecutionLogSeeder extends Seeder
 
             // Handle different model field names
             if ($modelClass === \Addons\TradingExecutionEngine\App\Models\ExecutionLog::class) {
+                // Old model uses connection_id, direction, quantity, sl_price, tp_price
                 $logData['connection_id'] = $logData['execution_connection_id'];
                 $logData['direction'] = $logData['side'];
                 $logData['quantity'] = $logData['lot_size'];
@@ -113,6 +114,27 @@ class ExecutionLogSeeder extends Seeder
                 $logData['execution_type'] = 'market';
                 $logData['executed_at'] = $status === 'SUCCESS' ? $createdAt : null;
                 $logData['response_data'] = $logData['order_data'];
+                unset($logData['execution_connection_id'], $logData['side'], $logData['lot_size'], 
+                      $logData['stop_loss'], $logData['take_profit'], $logData['order_data']);
+            } else {
+                // New model (TradingManagement) - database uses connection_id, not execution_connection_id
+                // Convert execution_connection_id to connection_id for database
+                $logData['connection_id'] = $logData['execution_connection_id'];
+                // Also convert field names to match database schema
+                $logData['direction'] = strtolower($logData['side']); // 'BUY' -> 'buy', 'SELL' -> 'sell'
+                $logData['quantity'] = $logData['lot_size'];
+                $logData['sl_price'] = $logData['stop_loss'];
+                $logData['tp_price'] = $logData['take_profit'];
+                $logData['execution_type'] = 'market';
+                $logData['executed_at'] = $status === 'SUCCESS' ? $createdAt : null;
+                $logData['response_data'] = $logData['order_data'];
+                // Map status values
+                $statusMap = [
+                    'SUCCESS' => 'executed',
+                    'FAILED' => 'failed',
+                    'PENDING' => 'pending',
+                ];
+                $logData['status'] = $statusMap[$status] ?? 'pending';
                 unset($logData['execution_connection_id'], $logData['side'], $logData['lot_size'], 
                       $logData['stop_loss'], $logData['take_profit'], $logData['order_data']);
             }

@@ -286,31 +286,45 @@
 
                         @if($results->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Backtest</th>
-                                        <th>Entry Time</th>
-                                        <th>Direction</th>
-                                        <th>Entry</th>
-                                        <th>Exit</th>
-                                        <th>P&L</th>
+                                        <th>Total Trades</th>
+                                        <th>Win Rate</th>
+                                        <th>Net Profit</th>
+                                        <th>Return %</th>
+                                        <th>Profit Factor</th>
+                                        <th>Max Drawdown</th>
+                                        <th>Grade</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($results as $result)
                                     <tr>
-                                        <td>{{ $result->backtest->name ?? 'N/A' }}</td>
-                                        <td>{{ $result->entry_time->format('Y-m-d H:i') }}</td>
+                                        <td><strong>{{ $result->backtest->name ?? 'N/A' }}</strong></td>
+                                        <td>{{ $result->total_trades }}</td>
                                         <td>
-                                            <span class="badge {{ $result->direction === 'buy' ? 'badge-success' : 'badge-danger' }}">
-                                                {{ strtoupper($result->direction) }}
+                                            <span class="badge {{ $result->win_rate >= 50 ? 'badge-success' : 'badge-warning' }}">
+                                                {{ number_format($result->win_rate, 2) }}%
                                             </span>
                                         </td>
-                                        <td>{{ $result->entry_price }}</td>
-                                        <td>{{ $result->exit_price }}</td>
-                                        <td class="{{ $result->pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                            ${{ number_format($result->pnl, 2) }}
+                                        <td class="{{ $result->net_profit >= 0 ? 'text-success' : 'text-danger' }}">
+                                            ${{ number_format($result->net_profit, 2) }}
+                                        </td>
+                                        <td class="{{ $result->return_percent >= 0 ? 'text-success' : 'text-danger' }}">
+                                            {{ number_format($result->return_percent, 2) }}%
+                                        </td>
+                                        <td>{{ number_format($result->profit_factor, 2) }}</td>
+                                        <td class="text-danger">{{ number_format($result->max_drawdown_percent, 2) }}%</td>
+                                        <td>
+                                            <span class="badge badge-info">{{ $result->grade }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.trading-management.test.backtests.show', $result->backtest_id) }}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </a>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -318,13 +332,10 @@
                             </table>
                         </div>
                         {{ $results->links() }}
-                        <div class="mt-3">
-                            <a href="{{ route('admin.trading-management.test.results.index') }}" class="btn btn-primary">
-                                <i class="fas fa-external-link-alt"></i> View All Results
-                            </a>
-                        </div>
                         @else
-                        <div class="alert alert-info">No results yet.</div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No backtest results yet. Complete a backtest to see results here.
+                        </div>
                         @endif
                     </div>
 

@@ -94,7 +94,7 @@
                                             {{ $traders->firstItem() + $index }}
                                         </td>
                                         <td>
-                                            <a href="{{ route('admin.user.detail', $trader->id) }}">
+                                            <a href="{{ route('admin.user.details', $trader->id) }}">
                                                 <strong>{{ $trader->username }}</strong>
                                             </a>
                                             @if($trader->is_verified)

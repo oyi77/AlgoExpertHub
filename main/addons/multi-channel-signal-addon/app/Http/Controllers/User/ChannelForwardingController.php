@@ -56,9 +56,14 @@ class ChannelForwardingController extends Controller
                 ->count(),
             'by_plan' => ChannelSource::assignedToUser(Auth::id())
                 ->whereHas('assignedPlans', function ($q) {
-                    $q->whereHas('users', fn($uq) => $uq->where('users.id', Auth::id())
-                        ->where('is_current', 1)
-                        ->where('plan_expired_at', '>', now()));
+                    $q->whereHas('subscriptions', function ($sq) {
+                        $sq->where('user_id', Auth::id())
+                            ->where('is_current', 1)
+                            ->where(function($dateQuery) {
+                                $dateQuery->where('plan_expired_at', '>', now())
+                                          ->orWhereNull('plan_expired_at'); // Handle lifetime plans
+                            });
+                    });
                 })
                 ->where('status', 'active')
                 ->count(),
@@ -192,9 +197,12 @@ class ChannelForwardingController extends Controller
                 'users' => $assignedUsers,
             ];
         } elseif ($channel->scope === 'plan') {
-            $userPlan = Auth::user()->currentplan()
+            $userPlan = Auth::user()->subscriptions()
                 ->where('is_current', 1)
-                ->where('plan_expired_at', '>', now())
+                ->where(function($q) {
+                    $q->where('plan_expired_at', '>', now())
+                      ->orWhereNull('plan_expired_at'); // Handle lifetime plans
+                })
                 ->first();
             
             $assignedPlans = $channel->assignedPlans()->pluck('name')->toArray();

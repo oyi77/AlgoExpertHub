@@ -9,9 +9,11 @@
     <div class="card-header">
         <div class="d-flex flex-wrap align-items-center justify-content-between">
             <h4>{{ __($title) }}</h4>
-            <a href="{{ route('user.trading-bots.index') }}" class="btn btn-secondary">
+            @if(Route::has('user.trading-management.trading-bots.index'))
+            <a href="{{ route('user.trading-management.trading-bots.index') }}" class="btn btn-secondary">
                 <i class="fa fa-arrow-left"></i> {{ __('My Bots') }}
             </a>
+            @endif
         </div>
     </div>
     <div class="card-body">
@@ -35,7 +37,9 @@
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary">Filter</button>
-                    <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-secondary">Reset</a>
+                    @if(Route::has('user.trading-management.trading-bots.marketplace'))
+                    <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-secondary">Reset</a>
+                    @endif
                 </div>
             </div>
         </form>
@@ -104,7 +108,7 @@
                                 </div>
                             </div>
                             <div class="card-footer">
-                                <a href="{{ route('user.trading-bots.clone', $template->id) }}" class="btn btn-primary w-100">
+                                <a href="{{ route('user.trading-management.trading-bots.clone', $template->id) }}" class="btn btn-primary w-100">
                                     <i class="fa fa-copy"></i> Clone Template
                                 </a>
                             </div>

@@ -60,6 +60,7 @@ class ConnectionController extends Controller
             'name' => 'required|string|max:255',
             'credentials' => 'required|array',
             'credentials.api_key' => 'required|string',
+            'credentials.base_url' => 'nullable|url',
             'settings' => 'nullable|array',
             'priority' => 'required|integer|min:1',
             'rate_limit_per_minute' => 'nullable|integer|min:1',
@@ -100,6 +101,8 @@ class ConnectionController extends Controller
             'provider_id' => 'required|exists:ai_providers,id',
             'name' => 'required|string|max:255',
             'credentials' => 'sometimes|array',
+            'credentials.api_key' => 'sometimes|string',
+            'credentials.base_url' => 'nullable|url',
             'settings' => 'nullable|array',
             'priority' => 'required|integer|min:1',
             'rate_limit_per_minute' => 'nullable|integer|min:1',
@@ -115,9 +118,27 @@ class ConnectionController extends Controller
             'rate_limit_per_day' => $request->rate_limit_per_day,
         ];
 
-        // Only update credentials if provided (to avoid overwriting with empty)
-        if ($request->has('credentials') && !empty($request->credentials['api_key'])) {
-            $data['credentials'] = $request->credentials;
+        // Handle credentials update - merge with existing if only partial update
+        if ($request->has('credentials')) {
+            $newCredentials = $request->credentials;
+            $existingCredentials = $connection->credentials;
+            
+            // Merge: keep existing values if new ones not provided
+            $mergedCredentials = array_merge($existingCredentials, array_filter($newCredentials, function($value) {
+                return !empty($value); // Only include non-empty values
+            }));
+            
+            // If api_key is provided, use it; otherwise keep existing
+            if (!empty($newCredentials['api_key'])) {
+                $mergedCredentials['api_key'] = $newCredentials['api_key'];
+            }
+            
+            // base_url can be set to empty string to clear it
+            if (isset($newCredentials['base_url'])) {
+                $mergedCredentials['base_url'] = !empty($newCredentials['base_url']) ? $newCredentials['base_url'] : null;
+            }
+            
+            $data['credentials'] = $mergedCredentials;
         }
 
         $connection->update($data);

@@ -8,6 +8,7 @@ use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class TradingBotController extends Controller
@@ -26,27 +27,61 @@ class TradingBotController extends Controller
      */
     public function index(Request $request): View
     {
-        $data['title'] = 'My Trading Bots';
-        
-        $filters = [
-            'is_active' => $request->get('is_active'),
-            'is_paper_trading' => $request->get('is_paper_trading'),
-            'search' => $request->get('search'),
-            'per_page' => 15,
-        ];
+        try {
+            $data['title'] = 'My Trading Bots';
+            
+            // Check if table exists
+            if (!Schema::hasTable('trading_bots')) {
+                \Log::warning('Trading bots table does not exist');
+                return view('trading-management::user.trading-bots.index', [
+                    'title' => $data['title'],
+                    'bots' => \Illuminate\Pagination\Paginator::empty(),
+                    'stats' => [
+                        'total' => 0,
+                        'active' => 0,
+                        'paper_trading' => 0,
+                        'total_profit' => 0,
+                    ]
+                ]);
+            }
+            
+            $filters = [
+                'is_active' => $request->get('is_active'),
+                'is_paper_trading' => $request->get('is_paper_trading'),
+                'search' => $request->get('search'),
+                'per_page' => 15,
+            ];
 
-        $data['bots'] = $this->botService->getBots($filters);
-        
-        // Statistics
-        $allBots = TradingBot::forUser(auth()->id())->get();
-        $data['stats'] = [
-            'total' => $allBots->count(),
-            'active' => $allBots->where('is_active', true)->count(),
-            'paper_trading' => $allBots->where('is_paper_trading', true)->count(),
-            'total_profit' => $allBots->sum('total_profit'),
-        ];
+            $data['bots'] = $this->botService->getBots($filters);
+            
+            // Statistics
+            $allBots = TradingBot::forUser(auth()->id())->get();
+            $data['stats'] = [
+                'total' => $allBots->count(),
+                'active' => $allBots->where('is_active', true)->count(),
+                'paper_trading' => $allBots->where('is_paper_trading', true)->count(),
+                'total_profit' => $allBots->sum('total_profit'),
+            ];
 
-        return view('trading-management::user.trading-bots.index', $data);
+            return view('trading-management::user.trading-bots.index', $data);
+        } catch (\Exception $e) {
+            \Log::error('Trading bots index error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return view('trading-management::user.trading-bots.index', [
+                'title' => 'My Trading Bots',
+                'bots' => \Illuminate\Pagination\Paginator::empty(),
+                'stats' => [
+                    'total' => 0,
+                    'active' => 0,
+                    'paper_trading' => 0,
+                    'total_profit' => 0,
+                ]
+            ]);
+        }
     }
 
     /**
@@ -88,7 +123,7 @@ class TradingBotController extends Controller
             $bot = $this->botService->create($validated);
             
             return redirect()
-                ->route('user.trading-bots.show', $bot->id)
+                ->route('user.trading-management.trading-bots.show', $bot->id)
                 ->with('success', 'Trading bot created successfully!');
         } catch (\Exception $e) {
             return redirect()
@@ -158,7 +193,7 @@ class TradingBotController extends Controller
             $this->botService->update($bot, $validated);
             
             return redirect()
-                ->route('user.trading-bots.show', $bot->id)
+                ->route('user.trading-management.trading-bots.show', $bot->id)
                 ->with('success', 'Trading bot updated successfully!');
         } catch (\Exception $e) {
             return redirect()
@@ -179,7 +214,7 @@ class TradingBotController extends Controller
             $this->botService->delete($bot);
             
             return redirect()
-                ->route('user.trading-bots.index')
+                ->route('user.trading-management.trading-bots.index')
                 ->with('success', 'Trading bot deleted successfully!');
         } catch (\Exception $e) {
             return redirect()
@@ -280,7 +315,7 @@ class TradingBotController extends Controller
     {
         // Validate template
         if (!$template->isTemplate()) {
-            return redirect()->route('user.trading-bots.marketplace')
+            return redirect()->route('user.trading-management.trading-bots.marketplace')
                 ->with('error', 'This bot is not a template');
         }
 
@@ -302,7 +337,7 @@ class TradingBotController extends Controller
             );
 
             return redirect()
-                ->route('user.trading-bots.show', $bot->id)
+                ->route('user.trading-management.trading-bots.show', $bot->id)
                 ->with('success', 'Bot cloned successfully! You can now activate it when ready.');
         } catch (\Exception $e) {
             return redirect()

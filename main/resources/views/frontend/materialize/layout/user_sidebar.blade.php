@@ -1,39 +1,51 @@
 @php
     $plan_expired_at = now();
+    $currentPlanSubscription = auth()->user()->currentplan()->where('is_current', 1)->first();
+    if ($currentPlanSubscription) {
+        $plan_expired_at = $currentPlanSubscription->plan_expired_at;
+    }
 @endphp
 
-@if (auth()->user()->currentplan)
-    @php
-        $is_subscribe = auth()
-            ->user()
-            ->currentplan()
-            ->where('is_current', 1)
-            ->first();
-        
-        if ($is_subscribe) {
-            $plan_expired_at = $is_subscribe->plan_expired_at;
-        }
-    @endphp
-@endif
-
-
-
 @php
-    $multiChannelUserModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
-    $executionEngineUserModuleEnabled = \App\Support\AddonRegistry::active('trading-execution-engine-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'user_ui');
-    // Copy trading requires trading execution engine to be active
-    $copyTradingUserModuleEnabled = \App\Support\AddonRegistry::active('copy-trading-addon') 
-        && \App\Support\AddonRegistry::moduleEnabled('copy-trading-addon', 'user_ui')
-        && \App\Support\AddonRegistry::active('trading-execution-engine-addon');
-    $tradingPresetUserModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'user_ui');
-    $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
-    $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
-    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
+    // AddonRegistry calls with error handling
+    try {
+        $multiChannelUserModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') 
+            && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
+    } catch (\Exception $e) {
+        $multiChannelUserModuleEnabled = false;
+    }
+    
+    // Trading Management Addon modules
+    try {
+        $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
+        $executionEngineUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+        // Copy trading requires trading execution engine to be active
+        $copyTradingUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')
+            && $executionEngineUserModuleEnabled;
+        $tradingPresetUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+        $filterStrategyUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
+        $aiTradingUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
+        $srmUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+    } catch (\Exception $e) {
+        $tradingManagementEnabled = false;
+        $executionEngineUserModuleEnabled = false;
+        $copyTradingUserModuleEnabled = false;
+        $tradingPresetUserModuleEnabled = false;
+        $filterStrategyUserModuleEnabled = false;
+        $aiTradingUserModuleEnabled = false;
+        $srmUserModuleEnabled = false;
+    }
 @endphp
 
 <aside class="user-sidebar">
     <a href="{{ route('user.dashboard') }}" class="site-logo">
-        <img src="{{ Config::getFile('logo', Config::config()->logo, true) }}" alt="image">
+        <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}" alt="image">
     </a>
 
     <div class="user-sidebar-bottom">

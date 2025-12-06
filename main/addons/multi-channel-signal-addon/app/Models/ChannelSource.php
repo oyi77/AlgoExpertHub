@@ -210,7 +210,10 @@ class ChannelSource extends Model
                     $planQuery->whereHas('subscriptions', function ($subscriptionQuery) use ($userId) {
                         $subscriptionQuery->where('user_id', $userId)
                             ->where('is_current', 1)
-                            ->where('plan_expired_at', '>', now());
+                            ->where(function($q) {
+                                $q->where('plan_expired_at', '>', now())
+                                  ->orWhereNull('plan_expired_at'); // Handle lifetime plans
+                            });
                     });
                 });
         });

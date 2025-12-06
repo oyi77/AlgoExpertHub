@@ -95,8 +95,10 @@ class CopyTradingSubscriptionSeeder extends Seeder
 
             // Handle different model field names
             if ($modelClass === \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class) {
-                $subscriptionData['execution_connection_id'] = $connection->id;
+                // New model (TradingManagement) - database uses connection_id, not execution_connection_id
+                $subscriptionData['connection_id'] = $connection->id;
             } else {
+                // Old model uses connection_id
                 $subscriptionData['connection_id'] = $connection->id;
             }
 
@@ -155,8 +157,10 @@ class CopyTradingSubscriptionSeeder extends Seeder
 
             // Handle different model field names
             if ($modelClass === \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class) {
-                $subscriptionData['execution_connection_id'] = $connection->id;
+                // New model (TradingManagement) - database uses connection_id, not execution_connection_id
+                $subscriptionData['connection_id'] = $connection->id;
             } else {
+                // Old model uses connection_id
                 $subscriptionData['connection_id'] = $connection->id;
             }
 

@@ -69,7 +69,7 @@ class BotMarketplaceController extends Controller
         
         $template->delete();
 
-        return redirect()->route('admin.marketplace.bots.index')->with('success', 'Template deleted successfully');
+        return redirect()->route('admin.trading-management.marketplace.bots.index')->with('success', 'Template deleted successfully');
     }
 
     protected function getTemplate($type, $id)

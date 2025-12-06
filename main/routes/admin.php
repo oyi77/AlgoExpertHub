@@ -159,6 +159,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Performance Settings
             Route::post('performance/optimize', [ConfigurationController::class, 'performanceOptimize'])->name('performance.optimize');
             Route::post('performance/clear', [ConfigurationController::class, 'performanceClear'])->name('performance.clear');
+            Route::get('performance/status', [ConfigurationController::class, 'getSystemStatus'])->name('performance.status');
+            Route::get('performance/stream', [ConfigurationController::class, 'streamSystemStatus'])->name('performance.stream');
 
             // Database Management
             Route::post('reseed-database', [ConfigurationController::class, 'reseedDatabase'])->name('reseed-database');

@@ -102,6 +102,11 @@
 
 @push('style')
   <style>
+      #linechart {
+          min-height: 400px;
+          width: 100%;
+      }
+      
       #linechart .apexcharts-tooltip {
           background-color: #220700 !important;
           border: 1px solid rgba(255, 255, 255, 0.15)
@@ -125,8 +130,8 @@
 @endpush
 
 
-@push('script')
-    <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}"></script>
+@push('external-script')
+    <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}?v={{ time() }}" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js';"></script>
 @endpush
 
 @push('script')
@@ -134,135 +139,238 @@
         (function() {
             'use strict'
 
-            let cryptoPrice = [];
+            // Wait for jQuery and ApexCharts
+            function waitForjQuery(callback, maxAttempts = 20, attempt = 0) {
+                if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+                    callback();
+                } else if (attempt < maxAttempts) {
+                    setTimeout(function() {
+                        waitForjQuery(callback, maxAttempts, attempt + 1);
+                    }, 100);
+                } else {
+                    console.error('jQuery library failed to load');
+                }
+            }
 
-            let currency = $("input[name='currency']:checked").val();
+            function waitForApexCharts(callback, maxAttempts = 20, attempt = 0) {
+                if (typeof ApexCharts !== 'undefined') {
+                    callback();
+                } else if (attempt < maxAttempts) {
+                    setTimeout(function() {
+                        waitForApexCharts(callback, maxAttempts, attempt + 1);
+                    }, 100);
+                } else {
+                    console.error('ApexCharts library failed to load');
+                }
+            }
 
-            $('.currency').each(function(index) {
-                $('.currency').eq(index).on('click', function() {
-                    currency = $(this).val();
-                    fetchCryptocurrencyPrices(currency);
-                    currentPrice(currency)
-                })
-            })
+            // Initialize chart
+            function initializeChart() {
+                if (typeof ApexCharts === 'undefined') {
+                    return false;
+                }
 
-            function currentPrice(currency) {
+                var chartElement = document.querySelector("#linechart");
+                if (!chartElement) {
+                    return false;
+                }
 
-                $.ajax({
-                    url: "{{ route('user.current-price') }}",
-                    method: "GET",
-                    data: {
-                        currency: currency
-                    },
-                    success: function(response) {
-                        if (response && !response.error) {
-                            $('#currentPrice').text('Current Price ' + response + '(' + currency + ')')
-                            $('input[name=trade_cur]').val(currency)
-                            $('input[name=trade_price]').val(response)
+                if (chartElement.offsetWidth === 0 || chartElement.offsetHeight === 0) {
+                    setTimeout(function() {
+                        initializeChart();
+                    }, 300);
+                    return false;
+                }
+
+                try {
+                    var options = {
+                        series: [{
+                            data: []
+                        }],
+                        chart: {
+                            type: 'candlestick',
+                            height: 400,
+                            width: '100%'
+                        },
+                        title: {
+                            text: 'CandleStick Chart',
+                            align: 'left',
+                            style: {
+                                color: '#ffffff'
+                            }
+                        },
+                        xaxis: {
+                            type: 'datetime',
+                            labels: {
+                                style: {
+                                    colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
+                                }
+                            }
+                        },
+                        yaxis: {
+                            tooltip: {
+                                enabled: true
+                            },
+                            labels: {
+                                style: {
+                                    colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
+                                }
+                            }
+                        },
+                        grid: {
+                            show: true,
+                            borderColor: '#ffffff26',
+                            strokeDashArray: 0,
+                            yaxis: {
+                                lines: {
+                                    show: true
+                                }
+                            }
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Failed to fetch current price:', error);
-                        // Don't update UI on error
+                    };
+
+                    var chart = new ApexCharts(chartElement, options);
+                    chart.render();
+
+                    window.widgetChart = chart;
+                    return true;
+                } catch (error) {
+                    console.error('Error initializing chart:', error);
+                    return false;
+                }
+            }
+
+            // Optimized polling with rate limiting and error handling
+            let pollingInterval = null;
+            let lastPollTime = 0;
+            let consecutiveErrors = 0;
+            let isRateLimited = false;
+            let backoffDelay = 5000;
+            const POLL_INTERVAL = 5000;
+            const MIN_POLL_GAP = 3000;
+            const MAX_BACKOFF = 60000;
+            const RATE_LIMIT_BACKOFF = 30000;
+
+            function startPolling(currency) {
+                stopPolling();
+                consecutiveErrors = 0;
+                backoffDelay = POLL_INTERVAL;
+                isRateLimited = false;
+
+                function poll() {
+                    const now = Date.now();
+                    if (now - lastPollTime < MIN_POLL_GAP) {
+                        return;
                     }
-                });
+                    lastPollTime = now;
 
-            }
+                    if (!window.widgetChart || typeof $ === 'undefined') {
+                        return;
+                    }
 
-            function updateChart(data) {
-                chart.updateSeries([{
-                    data: data
-                }]);
-            }
-
-            let priceInterval;
-            $(window).on("load", function() {
-                fetchCryptocurrencyPrices(currency);
-                currentPrice(currency);
+                    $.ajax({
+                        url: "{{ route('ticker') }}",
+                        method: "GET",
+                        data: { currency: currency },
+                        timeout: 8000
+                    }).then(function(response) {
+                        let chartData = null;
+                        
+                        if (Array.isArray(response)) {
+                            chartData = response;
+                        } else if (response && response.data && Array.isArray(response.data)) {
+                            chartData = response.data;
+                        } else if (response && response.error) {
+                            if (response.rate_limited) {
+                                handleRateLimit();
+                                return;
+                            }
+                            handleError(response.error);
+                            return;
+                        }
+                        
+                        if (chartData && chartData.length > 0) {
+                            window.widgetChart.updateSeries([{ data: chartData }]);
+                            consecutiveErrors = 0;
+                            backoffDelay = POLL_INTERVAL;
+                            isRateLimited = false;
+                        } else {
+                            handleNoData();
+                        }
+                    }).catch(function(xhr) {
+                        handleError(xhr.status === 429 ? 'Rate limit exceeded' : 'Network error');
+                    });
+                }
                 
-                priceInterval = setInterval(() => {
-                    fetchCryptocurrencyPrices(currency);
-                    currentPrice(currency);
-                }, 5000);
-            });
-
-
-            function fetchCryptocurrencyPrices(currency) {
-                $.ajax({
-                    url: "{{ route('ticker') }}",
-                    method: "GET",
-                    data: {
-                        currency: currency
-                    },
-                    success: function(response) {
-                        if (response && Array.isArray(response) && response.length > 0) {
-                            chart.updateSeries([{
-                                data: response
-                            }]);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Failed to fetch cryptocurrency prices:', error);
-                        // Don't update chart on error to avoid breaking it
-                    }
-                });
-            }
-
-            var options = {
-                series: [{
-                    data: cryptoPrice
-                }],
-                chart: {
-                    type: 'candlestick',
-                    height: 400
-                },
-                title: {
-                    text: 'CandleStick Chart',
-                    align: 'left',
-                    style: {
-                        color: '#ffffff'
-                    }
-                },
-                xaxis: {
-                    type: 'datetime',
-                    labels: {
-                        style: {
-                            colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
-                        }
-                    }
-                },
-                yaxis: {
-                    tooltip: {
-                        enabled: true
-                    },
-                    labels: {
-                        style: {
-                            colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
-                        }
-                    }
-                },
-                grid: {
-                    show: true,
-                    borderColor: '#ffffff26',
-                    strokeDashArray: 0,
-                    yaxis: {
-                        lines: {
-                            show: true
-                        }
+                function handleRateLimit() {
+                    if (!isRateLimited) {
+                        isRateLimited = true;
+                        backoffDelay = RATE_LIMIT_BACKOFF;
+                        const currency = $("input[name='currency']:checked").val() || 'BTC';
+                        stopPolling();
+                        setTimeout(function() {
+                            startPolling(currency);
+                        }, RATE_LIMIT_BACKOFF);
                     }
                 }
-            };
+                
+                function handleError(message) {
+                    consecutiveErrors++;
+                    if (consecutiveErrors > 3) {
+                        backoffDelay = Math.min(backoffDelay * 1.5, MAX_BACKOFF);
+                        const currency = $("input[name='currency']:checked").val() || 'BTC';
+                        stopPolling();
+                        setTimeout(function() {
+                            startPolling(currency);
+                        }, backoffDelay);
+                    }
+                }
+                
+                function handleNoData() {
+                    // No data is not necessarily an error
+                }
 
-            var chart = new ApexCharts(document.querySelector("#linechart"), options);
-            chart.render();
+                poll();
+                pollingInterval = setInterval(poll, backoffDelay);
+            }
 
+            function stopPolling() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+            }
 
-            $('.order').on('click', function() {
+            // Main initialization
+            function initWidget() {
+                waitForjQuery(function() {
+                    waitForApexCharts(function() {
+                        setTimeout(function() {
+                            if (initializeChart()) {
+                                var currency = $("input[name='currency']:checked").val() || 'BTC';
+                                startPolling(currency);
 
-                const modal = $('#order');
+                                $('.currency').on('click', function() {
+                                    currency = $(this).val();
+                                    startPolling(currency);
+                                });
+                            }
+                        }, 100);
+                    });
+                });
+            }
 
-                modal.modal('show')
-            })
+            // Start when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initWidget);
+            } else {
+                initWidget();
+            }
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function() {
+                stopPolling();
+            });
         })();
     </script>
 @endpush

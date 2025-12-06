@@ -264,8 +264,10 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
                     ->orderBy('created_at', 'desc')
                     ->paginate(20, ['*'], 'bt_page');
                 
+                // BacktestResult stores aggregated results, not individual trades
+                // Individual trades are in trade_details JSON column
                 $results = \Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult::with('backtest')
-                    ->orderBy('entry_time', 'desc')
+                    ->orderBy('created_at', 'desc')
                     ->paginate(50, ['*'], 'result_page');
                 
                 $stats = [

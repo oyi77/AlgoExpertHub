@@ -10,12 +10,16 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between">
             <h4>{{ $bot->name }}</h4>
             <div>
-                <a href="{{ route('user.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
+                @if(Route::has('user.trading-management.trading-bots.edit'))
+                <a href="{{ route('user.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
                     <i class="fa fa-edit"></i> Edit
                 </a>
-                <a href="{{ route('user.trading-bots.index') }}" class="btn btn-sm btn-secondary">
+                @endif
+                @if(Route::has('user.trading-management.trading-bots.index'))
+                <a href="{{ route('user.trading-management.trading-bots.index') }}" class="btn btn-sm btn-secondary">
                     <i class="fa fa-arrow-left"></i> Back
                 </a>
+                @endif
             </div>
         </div>
     </div>
@@ -143,13 +147,15 @@
                 <h5 class="mb-0"><i class="fa fa-cog"></i> Actions</h5>
             </div>
             <div class="card-body">
-                <form action="{{ route('user.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
+                @if(Route::has('user.trading-management.trading-bots.toggle-active'))
+                <form action="{{ route('user.trading-management.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-{{ $bot->is_active ? 'warning' : 'success' }}">
                         <i class="fa fa-{{ $bot->is_active ? 'pause' : 'play' }}"></i>
                         {{ $bot->is_active ? 'Deactivate' : 'Activate' }} Bot
                     </button>
                 </form>
+                @endif
 
                 <a href="{{ route('user.trading-management.operations.index') }}?bot_id={{ $bot->id }}" class="btn btn-primary">
                     <i class="fa fa-eye"></i> View Executions

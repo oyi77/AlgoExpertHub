@@ -67,7 +67,7 @@
                                         </td>
                                         <td>
                                             @if($template->user_id)
-                                                <a href="{{ route('admin.user.detail', $template->user_id) }}">
+                                                <a href="{{ route('admin.user.details', $template->user_id) }}">
                                                     {{ $template->user->username ?? 'Unknown' }}
                                                 </a>
                                             @else

@@ -49,7 +49,7 @@ class TraderMarketplaceController extends Controller
         $trader = TraderProfile::findOrFail($id);
         $trader->delete();
 
-        return redirect()->route('admin.marketplace.traders.index')->with('success', 'Trader profile deleted');
+        return redirect()->route('admin.trading-management.marketplace.traders.index')->with('success', 'Trader profile deleted');
     }
 
     public function recalculateLeaderboard()

@@ -9,7 +9,18 @@ use Illuminate\Support\Facades\Log;
 
 class OpenAiAdapter implements AiProviderInterface
 {
-    protected $baseUrl = 'https://api.openai.com/v1';
+    /**
+     * Default base URL (fallback if not provided in connection)
+     */
+    protected $defaultBaseUrl = 'https://api.openai.com/v1';
+
+    /**
+     * Get base URL for connection (custom or default)
+     */
+    protected function getBaseUrl(AiConnection $connection): string
+    {
+        return $connection->getBaseUrl() ?? $this->defaultBaseUrl;
+    }
 
     /**
      * Execute AI call
@@ -17,6 +28,7 @@ class OpenAiAdapter implements AiProviderInterface
     public function execute(AiConnection $connection, string $prompt, array $options = []): array
     {
         $apiKey = $connection->getApiKey();
+        $baseUrl = $this->getBaseUrl($connection);
         $model = $options['model'] ?? $connection->getModel() ?? 'gpt-3.5-turbo';
         $temperature = $options['temperature'] ?? $connection->settings['temperature'] ?? 0.3;
         $maxTokens = $options['max_tokens'] ?? $connection->settings['max_tokens'] ?? 500;
@@ -27,7 +39,7 @@ class OpenAiAdapter implements AiProviderInterface
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])
-            ->post($this->baseUrl . '/chat/completions', [
+            ->post($baseUrl . '/chat/completions', [
                 'model' => $model,
                 'messages' => [
                     [
@@ -64,12 +76,13 @@ class OpenAiAdapter implements AiProviderInterface
         try {
             $apiKey = $connection->getApiKey();
 
+            $baseUrl = $this->getBaseUrl($connection);
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ])
-                ->post($this->baseUrl . '/chat/completions', [
+                ->post($baseUrl . '/chat/completions', [
                     'model' => 'gpt-3.5-turbo',
                     'messages' => [
                         ['role' => 'user', 'content' => 'Test'],

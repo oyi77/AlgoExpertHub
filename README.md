@@ -108,11 +108,11 @@
 
 ### System Architecture
 
-![diagram](./README-1.svg)
+![diagram](./docs/images/README-1.svg)
 
 ### Layered Architecture
 
-![diagram](./README-2.svg)
+![diagram](./docs/images/README-2.svg)
 
 ---
 
@@ -188,11 +188,11 @@ public_html/
 
 ### Core Tables ER Diagram
 
-![diagram](./README-3.svg)
+![diagram](./docs/images/README-3.svg)
 
 ### Addon Tables ER Diagram
 
-![diagram](./README-4.svg)
+![diagram](./docs/images/README-4.svg)
 
 ---
 
@@ -200,19 +200,19 @@ public_html/
 
 ### Signal Creation and Distribution Flow
 
-![diagram](./README-5.svg)
+![diagram](./docs/images/README-5.svg)
 
 ### Payment and Subscription Flow
 
-![diagram](./README-6.svg)
+![diagram](./docs/images/README-6.svg)
 
 ### Multi-Channel Signal Ingestion Flow
 
-![diagram](./README-7.svg)
+![diagram](./docs/images/README-7.svg)
 
 ### AI Market Confirmation Flow
 
-![diagram](./README-8.svg)
+![diagram](./docs/images/README-8.svg)
 
 ### Automated Trade Execution Flow
 
@@ -266,7 +266,7 @@ graph TD
     R --> S[Update Analytics<br/>Daily]
 ```
 
-![diagram](./README-9.svg)
+![diagram](./docs/images/README-9.svg)
 
 ---
 
@@ -274,11 +274,11 @@ graph TD
 
 ### Addon Architecture
 
-![diagram](./README-10.svg)
+![diagram](./docs/images/README-10.svg)
 
 ### Addon Registration Flow
 
-![diagram](./README-11.svg)
+![diagram](./docs/images/README-11.svg)
 
 ### Installed Addons
 

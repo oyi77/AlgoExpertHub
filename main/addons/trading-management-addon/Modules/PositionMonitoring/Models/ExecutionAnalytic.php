@@ -18,33 +18,31 @@ class ExecutionAnalytic extends Model
     protected $table = 'execution_analytics';
 
     protected $fillable = [
-        'execution_connection_id',
+        'connection_id', // Database column name
+        'user_id',
+        'admin_id',
         'date',
         'total_trades',
         'winning_trades',
         'losing_trades',
         'win_rate',
         'total_pnl',
-        'total_profit',
-        'total_loss',
-        'avg_win',
-        'avg_loss',
         'profit_factor',
         'max_drawdown',
-        'recovery_factor',
+        'balance',
+        'equity',
+        'additional_metrics',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'total_pnl' => 'decimal:8',
         'win_rate' => 'decimal:2',
-        'total_pnl' => 'decimal:2',
-        'total_profit' => 'decimal:2',
-        'total_loss' => 'decimal:2',
-        'avg_win' => 'decimal:2',
-        'avg_loss' => 'decimal:2',
-        'profit_factor' => 'decimal:2',
-        'max_drawdown' => 'decimal:2',
-        'recovery_factor' => 'decimal:2',
+        'profit_factor' => 'decimal:4',
+        'max_drawdown' => 'decimal:4',
+        'balance' => 'decimal:8',
+        'equity' => 'decimal:8',
+        'additional_metrics' => 'array',
     ];
 
     /**
@@ -52,7 +50,7 @@ class ExecutionAnalytic extends Model
      */
     public function connection()
     {
-        return $this->belongsTo(ExecutionConnection::class, 'execution_connection_id');
+        return $this->belongsTo(ExecutionConnection::class, 'connection_id');
     }
 }
 
