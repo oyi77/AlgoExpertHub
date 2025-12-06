@@ -59,7 +59,6 @@ class AppServiceProvider extends ServiceProvider
                 'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
                 'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // NEW: Consolidated trading management
                 'page-builder-addon' => \Addons\PageBuilderAddon\PageBuilderServiceProvider::class,
-                'advanced-theme-addon' => \Addons\AdvancedThemeAddon\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {
