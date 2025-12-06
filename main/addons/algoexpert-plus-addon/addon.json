@@ -30,6 +30,18 @@
       "enabled": true
     },
     {
+      "key": "backup",
+      "name": "System Backup",
+      "targets": ["admin_ui", "jobs", "services"],
+      "enabled": true
+    },
+    {
+      "key": "health",
+      "name": "System Health",
+      "targets": ["admin_ui", "jobs", "services"],
+      "enabled": true
+    },
+    {
       "key": "ai_tools",
       "name": "AI Tools",
       "targets": ["admin_ui"],
