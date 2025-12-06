@@ -33,9 +33,22 @@ class AppServiceProvider extends ServiceProvider
             if (!isset($data['page'])) {
                 $view->with('page', null);
             }
+            try {
+                if (\App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','seo')) {
+                    if (class_exists(\Artesaos\SEOTools\Facades\SEOMeta::class)) {
+                        \Artesaos\SEOTools\Facades\SEOMeta::setTitle($data['title'] ?? config('app.name'));
+                        \Artesaos\SEOTools\Facades\SEOMeta::setCanonical(url()->current());
+                    }
+                    if (class_exists(\Artesaos\SEOTools\Facades\OpenGraph::class)) {
+                        \Artesaos\SEOTools\Facades\OpenGraph::setTitle($data['title'] ?? config('app.name'));
+                        \Artesaos\SEOTools\Facades\OpenGraph::setUrl(url()->current());
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
         });
-        
-        
+
+
     }
 
     /**
@@ -60,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
                 'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // Consolidated trading management
                 'page-builder-addon' => \Addons\PageBuilderAddon\PageBuilderServiceProvider::class,
+                'algoexpert-plus-addon' => \Addons\AlgoExpertPlus\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {
