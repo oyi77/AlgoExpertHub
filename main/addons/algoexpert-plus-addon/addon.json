@@ -1,0 +1,51 @@
+{
+  "name": "AlgoExpert++",
+  "slug": "algoexpert-plus-addon",
+  "version": "1.0.0",
+  "description": "Modular integration layer for SEO, Queues dashboard, UI components, and i18n",
+  "status": "active",
+  "modules": [
+    {
+      "key": "seo",
+      "name": "SEO Integration",
+      "targets": ["services", "views"],
+      "enabled": true
+    },
+    {
+      "key": "queues",
+      "name": "Queues Dashboard",
+      "targets": ["admin_ui", "services"],
+      "enabled": true
+    },
+    {
+      "key": "ui_components",
+      "name": "UI Components",
+      "targets": ["admin_ui", "views"],
+      "enabled": false
+    },
+    {
+      "key": "i18n",
+      "name": "Internationalization",
+      "targets": ["services"],
+      "enabled": true
+    },
+    {
+      "key": "backup",
+      "name": "System Backup",
+      "targets": ["admin_ui", "jobs", "services"],
+      "enabled": true
+    },
+    {
+      "key": "health",
+      "name": "System Health",
+      "targets": ["admin_ui", "jobs", "services"],
+      "enabled": true
+    },
+    {
+      "key": "ai_tools",
+      "name": "AI Tools",
+      "targets": ["admin_ui"],
+      "enabled": false
+    }
+  ]
+}

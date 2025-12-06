@@ -319,6 +319,46 @@
                         <span class="nav-text">{{ __('Manage Addons') }}</span>
                     </a>
                 </li>
+                @php
+                    $algoPlusHasAdmin = \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.index');
+                    $algoPlusQueuesEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','queues');
+                    $algoPlusBackupEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','backup');
+                    $algoPlusHealthEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','health');
+                    $horizonRouteExists = \Illuminate\Support\Facades\Route::has('horizon.index');
+                    $healthRouteExists = \Illuminate\Support\Facades\Route::has('health');
+                @endphp
+                @if ($algoPlusHasAdmin)
+                <li>
+                    <a href="{{ route('admin.algoexpert-plus.index') }}" aria-expanded="false">
+                        <i data-feather="zap"></i>
+                        <span class="nav-text">{{ __('AlgoExpert++') }}</span>
+                    </a>
+                </li>
+                @endif
+                @if ($algoPlusQueuesEnabled && $horizonRouteExists)
+                <li>
+                    <a href="{{ route('horizon.index') }}" aria-expanded="false">
+                        <i data-feather="monitor"></i>
+                        <span class="nav-text">{{ __('Queues Dashboard') }}</span>
+                    </a>
+                </li>
+                @endif
+                @if ($algoPlusHealthEnabled && $healthRouteExists)
+                <li>
+                    <a href="{{ route('health') }}" aria-expanded="false">
+                        <i data-feather="heart"></i>
+                        <span class="nav-text">{{ __('System Health') }}</span>
+                    </a>
+                </li>
+                @endif
+                @if ($algoPlusBackupEnabled && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.backup.run'))
+                <li>
+                    <a href="{{ route('admin.algoexpert-plus.backup.run') }}" aria-expanded="false">
+                        <i data-feather="archive"></i>
+                        <span class="nav-text">{{ __('Run Backup') }}</span>
+                    </a>
+                </li>
+                @endif
             @endif
 
             @if ($adminUser && $adminUser->can('manage-gateway'))
