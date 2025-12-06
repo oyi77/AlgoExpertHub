@@ -56,6 +56,20 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="base_url">{{ __('Base URL') }}</label>
+                                    <input type="url" name="credentials[base_url]" id="base_url" class="form-control @error('credentials.base_url') is-invalid @enderror"
+                                        value="{{ old('credentials.base_url') }}" placeholder="" data-placeholder-openai="https://api.openai.com/v1" data-placeholder-gemini="https://generativelanguage.googleapis.com/v1" data-placeholder-openrouter="https://openrouter.ai/api/v1">
+                                    <small class="form-text text-muted">
+                                        {{ __('Optional: Override default API endpoint. Leave empty to use provider default.') }}
+                                    </small>
+                                    @error('credentials.base_url')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="priority">{{ __('Priority') }} <span class="text-danger">*</span></label>
                                     <input type="number" name="priority" id="priority" class="form-control @error('priority') is-invalid @enderror"
                                         value="{{ old('priority', 1) }}" min="1" required>
@@ -101,5 +115,33 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const providerSelect = document.getElementById('provider_id');
+            const baseUrlInput = document.getElementById('base_url');
+            const providerNames = @json($providers->pluck('name', 'id')->toArray());
+            const providerSlugs = @json($providers->pluck('slug', 'id')->toArray());
+            
+            function updateBaseUrlPlaceholder() {
+                const selectedProviderId = providerSelect.value;
+                if (!selectedProviderId || !baseUrlInput) return;
+                
+                const slug = providerSlugs[selectedProviderId];
+                const placeholder = baseUrlInput.getAttribute(`data-placeholder-${slug}`);
+                
+                if (placeholder) {
+                    baseUrlInput.placeholder = placeholder;
+                } else {
+                    baseUrlInput.placeholder = '';
+                }
+            }
+            
+            if (providerSelect && baseUrlInput) {
+                providerSelect.addEventListener('change', updateBaseUrlPlaceholder);
+                updateBaseUrlPlaceholder(); // Set initial placeholder
+            }
+        });
+    </script>
 @endsection
 

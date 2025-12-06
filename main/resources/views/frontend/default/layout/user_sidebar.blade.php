@@ -1,51 +1,63 @@
 @php
     $plan_expired_at = now();
+    $currentPlanSubscription = auth()->user()->currentplan()->where('is_current', 1)->first();
+    if ($currentPlanSubscription) {
+        $plan_expired_at = $currentPlanSubscription->plan_expired_at;
+    }
 @endphp
 
-@if (auth()->user()->currentplan)
-    @php
-        $is_subscribe = auth()
-            ->user()
-            ->currentplan()
-            ->where('is_current', 1)
-            ->first();
-        
-        if ($is_subscribe) {
-            $plan_expired_at = $is_subscribe->plan_expired_at;
-        }
-    @endphp
-@endif
-
-
-
 @php
-    $multiChannelUserModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
+    // AddonRegistry calls with error handling
+    try {
+        $multiChannelUserModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') 
+            && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
+    } catch (\Exception $e) {
+        $multiChannelUserModuleEnabled = false;
+    }
+    
     // Trading Management Addon modules
-    $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
-    $executionEngineUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
-    $copyTradingUserModuleEnabled = $tradingManagementEnabled 
-        && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')
-        && $executionEngineUserModuleEnabled;
-    $tradingPresetUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
-    $filterStrategyUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
-    $aiTradingUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
-    $srmUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
-    // Trading Management: Check if addon is active and has any enabled module with user_ui target
-    $tradingManagementUserModuleEnabled = false;
-    if (\App\Support\AddonRegistry::active('trading-management-addon')) {
-        $manifest = \App\Support\AddonRegistry::get('trading-management-addon');
-        if ($manifest) {
-            $modules = collect($manifest['modules'] ?? []);
-            $tradingManagementUserModuleEnabled = $modules->where('enabled', true)->filter(function ($module) {
-                return in_array('user_ui', $module['targets'] ?? []);
-            })->isNotEmpty();
+    try {
+        $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
+        $executionEngineUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+        $copyTradingUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')
+            && $executionEngineUserModuleEnabled;
+        $tradingPresetUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+        $filterStrategyUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
+        $aiTradingUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
+        $srmUserModuleEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+        
+        // Trading Management: Check if addon is active and has any enabled module with user_ui target
+        $tradingManagementUserModuleEnabled = false;
+        if ($tradingManagementEnabled) {
+            $manifest = \App\Support\AddonRegistry::get('trading-management-addon');
+            if ($manifest) {
+                $modules = collect($manifest['modules'] ?? []);
+                $tradingManagementUserModuleEnabled = $modules->where('enabled', true)->filter(function ($module) {
+                    return in_array('user_ui', $module['targets'] ?? []);
+                })->isNotEmpty();
+            }
         }
+    } catch (\Exception $e) {
+        $tradingManagementEnabled = false;
+        $executionEngineUserModuleEnabled = false;
+        $copyTradingUserModuleEnabled = false;
+        $tradingPresetUserModuleEnabled = false;
+        $filterStrategyUserModuleEnabled = false;
+        $aiTradingUserModuleEnabled = false;
+        $srmUserModuleEnabled = false;
+        $tradingManagementUserModuleEnabled = false;
     }
 @endphp
 
 <aside class="user-sidebar">
     <a href="{{ route('user.dashboard') }}" class="site-logo">
-        <img src="{{ Config::getFile('logo', Config::config()->logo, true) }}" alt="image">
+        <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}" alt="image">
     </a>
 
     <div class="user-sidebar-bottom">

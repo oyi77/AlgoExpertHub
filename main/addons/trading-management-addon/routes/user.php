@@ -75,5 +75,3 @@ Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'resume'])->name('resume');
 });
 
-// Full routes will be implemented in respective phases
-

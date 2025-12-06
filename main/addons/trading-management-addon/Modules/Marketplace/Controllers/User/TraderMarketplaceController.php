@@ -45,8 +45,9 @@ class TraderMarketplaceController extends Controller
             ->first();
 
         $isFollowing = false;
-        if (class_exists('\Addons\CopyTrading\App\Models\CopyTradingSubscription')) {
-            $isFollowing = \Addons\CopyTrading\App\Models\CopyTradingSubscription::where('trader_id', $trader->user_id)
+        $subscriptionClass = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+        if (class_exists($subscriptionClass)) {
+            $isFollowing = $subscriptionClass::where('trader_id', $trader->user_id)
                 ->where('follower_id', auth()->id())
                 ->where('is_active', true)
                 ->exists();
@@ -64,11 +65,12 @@ class TraderMarketplaceController extends Controller
         }
 
         // Create copy trading subscription
-        if (class_exists('\Addons\CopyTrading\App\Models\CopyTradingSubscription')) {
-            \Addons\CopyTrading\App\Models\CopyTradingSubscription::create([
+        $subscriptionClass = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+        if (class_exists($subscriptionClass)) {
+            $subscriptionClass::create([
                 'trader_id' => $trader->user_id,
                 'follower_id' => auth()->id(),
-                'copy_mode' => 'fixed',
+                'copy_mode' => 'easy',
                 'risk_multiplier' => $request->get('risk_multiplier', 1.0),
                 'is_active' => true,
                 'subscribed_at' => now(),
@@ -86,8 +88,9 @@ class TraderMarketplaceController extends Controller
     {
         $trader = TraderProfile::findOrFail($id);
 
-        if (class_exists('\Addons\CopyTrading\App\Models\CopyTradingSubscription')) {
-            \Addons\CopyTrading\App\Models\CopyTradingSubscription::where('trader_id', $trader->user_id)
+        $subscriptionClass = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+        if (class_exists($subscriptionClass)) {
+            $subscriptionClass::where('trader_id', $trader->user_id)
                 ->where('follower_id', auth()->id())
                 ->where('is_active', true)
                 ->update(['is_active' => false, 'unsubscribed_at' => now()]);
@@ -126,11 +129,12 @@ class TraderMarketplaceController extends Controller
 
     protected function isVerifiedFollower($trader): bool
     {
-        if (!class_exists('\Addons\CopyTrading\App\Models\CopyTradingSubscription')) {
+        $subscriptionClass = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+        if (!class_exists($subscriptionClass)) {
             return false;
         }
 
-        return \Addons\CopyTrading\App\Models\CopyTradingSubscription::where('trader_id', $trader->user_id)
+        return $subscriptionClass::where('trader_id', $trader->user_id)
             ->where('follower_id', auth()->id())
             ->exists();
     }

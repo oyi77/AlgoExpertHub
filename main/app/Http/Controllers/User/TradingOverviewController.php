@@ -80,8 +80,8 @@ class TradingOverviewController extends Controller
 
         if ($copyTradingEnabled && class_exists(\Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class)) {
             // Get Copy Trading Subscriptions
-            $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('user_id', $userId)
-                ->where('status', 'active')
+            $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('follower_id', $userId)
+                ->where('is_active', true)
                 ->with(['trader'])
                 ->get();
 

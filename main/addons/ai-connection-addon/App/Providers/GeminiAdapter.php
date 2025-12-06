@@ -8,7 +8,18 @@ use Illuminate\Support\Facades\Http;
 
 class GeminiAdapter implements AiProviderInterface
 {
-    protected $baseUrl = 'https://generativelanguage.googleapis.com/v1';
+    /**
+     * Default base URL (fallback if not provided in connection)
+     */
+    protected $defaultBaseUrl = 'https://generativelanguage.googleapis.com/v1';
+
+    /**
+     * Get base URL for connection (custom or default)
+     */
+    protected function getBaseUrl(AiConnection $connection): string
+    {
+        return $connection->getBaseUrl() ?? $this->defaultBaseUrl;
+    }
 
     /**
      * Execute AI call
@@ -16,6 +27,7 @@ class GeminiAdapter implements AiProviderInterface
     public function execute(AiConnection $connection, string $prompt, array $options = []): array
     {
         $apiKey = $connection->getApiKey();
+        $baseUrl = $this->getBaseUrl($connection);
         $model = $options['model'] ?? $connection->getModel() ?? 'gemini-pro';
         $temperature = $options['temperature'] ?? $connection->settings['temperature'] ?? 0.3;
         $maxTokens = $options['max_tokens'] ?? $connection->settings['max_tokens'] ?? 500;
@@ -25,7 +37,7 @@ class GeminiAdapter implements AiProviderInterface
             ->withHeaders([
                 'Content-Type' => 'application/json',
             ])
-            ->post($this->baseUrl . "/models/{$model}:generateContent?key={$apiKey}", [
+            ->post($baseUrl . "/models/{$model}:generateContent?key={$apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
@@ -67,11 +79,12 @@ class GeminiAdapter implements AiProviderInterface
             $apiKey = $connection->getApiKey();
             $model = 'gemini-pro';
 
+            $baseUrl = $this->getBaseUrl($connection);
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                 ])
-                ->post($this->baseUrl . "/models/{$model}:generateContent?key={$apiKey}", [
+                ->post($baseUrl . "/models/{$model}:generateContent?key={$apiKey}", [
                     'contents' => [
                         [
                             'parts' => [

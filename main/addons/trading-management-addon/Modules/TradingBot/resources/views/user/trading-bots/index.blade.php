@@ -10,12 +10,16 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between">
             <h4>{{ __($title) }}</h4>
             <div>
-                <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-info me-2">
+                @if(Route::has('user.trading-management.trading-bots.marketplace'))
+                <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-info me-2">
                     <i class="fa fa-store"></i> {{ __('Browse Templates') }}
                 </a>
-                <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
+                @endif
+                @if(Route::has('user.trading-management.trading-bots.create'))
+                <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-primary">
                     <i class="fa fa-plus"></i> {{ __('Create Trading Bot') }}
                 </a>
+                @endif
             </div>
         </div>
     </div>
@@ -76,7 +80,9 @@
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary">Filter</button>
-                    <a href="{{ route('user.trading-bots.index') }}" class="btn btn-secondary">Reset</a>
+                    @if(Route::has('user.trading-management.trading-bots.index'))
+                    <a href="{{ route('user.trading-management.trading-bots.index') }}" class="btn btn-secondary">Reset</a>
+                    @endif
                 </div>
             </div>
         </form>
@@ -141,18 +147,24 @@
                             </div>
                             <div class="card-footer">
                                 <div class="btn-group w-100" role="group">
-                                    <a href="{{ route('user.trading-bots.show', $bot->id) }}" class="btn btn-sm btn-primary">
+                                    @if(Route::has('user.trading-management.trading-bots.show'))
+                                    <a href="{{ route('user.trading-management.trading-bots.show', $bot->id) }}" class="btn btn-sm btn-primary">
                                         <i class="fa fa-eye"></i> View
                                     </a>
-                                    <a href="{{ route('user.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
+                                    @endif
+                                    @if(Route::has('user.trading-management.trading-bots.edit'))
+                                    <a href="{{ route('user.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
                                         <i class="fa fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ route('user.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
+                                    @endif
+                                    @if(Route::has('user.trading-management.trading-bots.toggle-active'))
+                                    <form action="{{ route('user.trading-management.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-{{ $bot->is_active ? 'warning' : 'success' }}">
                                             <i class="fa fa-{{ $bot->is_active ? 'pause' : 'play' }}"></i>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -170,12 +182,16 @@
                 <h5>No Trading Bots Yet</h5>
                 <p class="text-muted">Start by browsing prebuilt templates or create your own bot from scratch!</p>
                 <div>
-                    <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-info me-2">
+                    @if(Route::has('user.trading-management.trading-bots.marketplace'))
+                    <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-info me-2">
                         <i class="fa fa-store"></i> Browse Templates
                     </a>
-                    <a href="{{ route('user.trading-bots.create') }}" class="btn btn-primary">
+                    @endif
+                    @if(Route::has('user.trading-management.trading-bots.create'))
+                    <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus"></i> Create Your Own Bot
                     </a>
+                    @endif
                 </div>
             </div>
         @endif

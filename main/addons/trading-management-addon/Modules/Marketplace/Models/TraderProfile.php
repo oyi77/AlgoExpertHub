@@ -49,8 +49,9 @@ class TraderProfile extends Model
     public function followers()
     {
         // Link to copy_trading_subscriptions
-        if (class_exists('\Addons\CopyTrading\App\Models\CopyTradingSubscription')) {
-            return $this->hasMany('\Addons\CopyTrading\App\Models\CopyTradingSubscription', 'trader_id', 'user_id')
+        $subscriptionClass = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class;
+        if (class_exists($subscriptionClass)) {
+            return $this->hasMany($subscriptionClass, 'trader_id', 'user_id')
                 ->where('is_active', true);
         }
         return null;

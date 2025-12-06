@@ -3309,18 +3309,18 @@ Dashboard css
 .sidebar-menu {
     max-height: calc(100vh - 230px);
     overflow-y: auto;
-    padding: 0 0.9375rem;
+    padding: 0 0.9375rem 120px 0.9375rem;
 }
 
 @media (max-width: 1399px) {
     .sidebar-menu {
-        padding-right: 0;
+        padding: 0 0 120px 0.9375rem;
     }
 }
 
 @media (max-width: 1199px) {
     .sidebar-menu {
-        padding-right: 0.9375rem;
+        padding: 0 0.9375rem 120px 0.9375rem;
     }
 }
 

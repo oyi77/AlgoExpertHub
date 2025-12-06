@@ -242,7 +242,7 @@
 
 {{-- Submit Buttons --}}
 <div class="d-flex justify-content-between">
-    <a href="{{ isset($bot) ? route('user.trading-bots.show', $bot->id) : route('user.trading-bots.index') }}" class="btn btn-secondary">
+    <a href="{{ isset($bot) ? route('user.trading-management.trading-bots.show', $bot->id) : route('user.trading-management.trading-bots.index') }}" class="btn btn-secondary">
         <i class="fa fa-times"></i> Cancel
     </a>
     <button type="submit" class="btn btn-primary">

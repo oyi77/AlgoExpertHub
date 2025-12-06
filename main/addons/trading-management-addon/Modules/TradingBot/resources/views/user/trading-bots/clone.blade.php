@@ -14,9 +14,11 @@
             <div class="alert alert-danger">
                 <i class="fa fa-exclamation-triangle"></i> {{ $error }}
             </div>
-            <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-secondary">
+            @if(Route::has('user.trading-management.trading-bots.marketplace'))
+            <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-secondary">
                 <i class="fa fa-arrow-left"></i> Back to Marketplace
             </a>
+            @endif
             @if($connections->isEmpty())
                 <a href="{{ route('user.execution-connections.create') }}" class="btn btn-primary">
                     <i class="fa fa-plus"></i> Create Exchange Connection
@@ -48,7 +50,7 @@
             </div>
 
             {{-- Clone Form --}}
-            <form method="POST" action="{{ route('user.trading-bots.clone.store', $template->id) }}">
+            <form method="POST" action="{{ route('user.trading-management.trading-bots.clone.store', $template->id) }}">
                 @csrf
 
                 <div class="mb-3">
@@ -108,9 +110,11 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('user.trading-bots.marketplace') }}" class="btn btn-secondary">
+                    @if(Route::has('user.trading-management.trading-bots.marketplace'))
+                    <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-secondary">
                         <i class="fa fa-arrow-left"></i> Cancel
                     </a>
+                    @endif
                     <button type="submit" class="btn btn-primary">
                         <i class="fa fa-copy"></i> Clone Bot
                     </button>

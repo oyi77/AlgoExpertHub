@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * TradingBotService
@@ -128,42 +129,72 @@ class TradingBotService
      */
     public function getBots(array $filters = [])
     {
-        $query = TradingBot::with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile']);
+        try {
+            $query = TradingBot::with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile']);
 
-        // Filter by ownership
-        if (Auth::guard('admin')->check()) {
-            $adminId = Auth::guard('admin')->id();
-            $query->where(function ($q) use ($adminId) {
-                $q->where('admin_id', $adminId)
-                  ->orWhereNull('admin_id'); // Show all if super admin
-            });
-        } else {
-            $query->where('user_id', Auth::id());
+            // Filter by ownership
+            if (Auth::guard('admin')->check()) {
+                $adminId = Auth::guard('admin')->id();
+                $query->where(function ($q) use ($adminId) {
+                    $q->where('admin_id', $adminId)
+                      ->orWhereNull('admin_id'); // Show all if super admin
+                });
+            } else {
+                $query->where('user_id', Auth::id());
+            }
+
+            // Exclude templates (only show user bots)
+            // Check if column exists before using it (table might be sp_trading_bots or trading_bots)
+            $tableName = (new TradingBot())->getTable();
+            if (Schema::hasColumn($tableName, 'is_default_template')) {
+                $query->where(function ($q) {
+                    $q->whereNotNull('user_id')
+                      ->where('is_default_template', false);
+                });
+            } elseif (Schema::hasColumn($tableName, 'is_template')) {
+                // Use is_template column if it exists
+                $query->where(function ($q) {
+                    $q->whereNotNull('user_id')
+                      ->where('is_template', false);
+                });
+            } else {
+                // Fallback: just filter by user_id if neither column exists
+                $query->whereNotNull('user_id');
+            }
+
+            // Apply filters
+            if (isset($filters['is_active'])) {
+                $query->where('is_active', $filters['is_active']);
+            }
+
+            if (isset($filters['is_paper_trading'])) {
+                $query->where('is_paper_trading', $filters['is_paper_trading']);
+            }
+
+            if (isset($filters['search'])) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('name', 'like', '%' . $filters['search'] . '%')
+                      ->orWhere('description', 'like', '%' . $filters['search'] . '%');
+                });
+            }
+
+            return $query->orderBy('created_at', 'desc')->paginate($filters['per_page'] ?? 15);
+        } catch (\Exception $e) {
+            \Log::error('TradingBotService::getBots error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'filters' => $filters
+            ]);
+            
+            // Return empty paginator on error
+            $perPage = $filters['per_page'] ?? 15;
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]),
+                0,
+                $perPage,
+                1,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
         }
-
-        // Exclude templates (only show user bots)
-        $query->where(function ($q) {
-            $q->whereNotNull('user_id')
-              ->where('is_default_template', false);
-        });
-
-        // Apply filters
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
-        }
-
-        if (isset($filters['is_paper_trading'])) {
-            $query->where('is_paper_trading', $filters['is_paper_trading']);
-        }
-
-        if (isset($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                  ->orWhere('description', 'like', '%' . $filters['search'] . '%');
-            });
-        }
-
-        return $query->orderBy('created_at', 'desc')->paginate($filters['per_page'] ?? 15);
     }
 
     /**

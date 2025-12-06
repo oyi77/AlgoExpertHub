@@ -8,7 +8,18 @@ use Illuminate\Support\Facades\Http;
 
 class OpenRouterAdapter implements AiProviderInterface
 {
-    protected $baseUrl = 'https://openrouter.ai/api/v1';
+    /**
+     * Default base URL (fallback if not provided in connection)
+     */
+    protected $defaultBaseUrl = 'https://openrouter.ai/api/v1';
+
+    /**
+     * Get base URL for connection (custom or default)
+     */
+    protected function getBaseUrl(AiConnection $connection): string
+    {
+        return $connection->getBaseUrl() ?? $this->defaultBaseUrl;
+    }
 
     /**
      * Execute AI call
@@ -16,6 +27,7 @@ class OpenRouterAdapter implements AiProviderInterface
     public function execute(AiConnection $connection, string $prompt, array $options = []): array
     {
         $apiKey = $connection->getApiKey();
+        $baseUrl = $this->getBaseUrl($connection);
         $model = $options['model'] ?? $connection->getModel() ?? 'openai/gpt-3.5-turbo';
         $temperature = $options['temperature'] ?? $connection->settings['temperature'] ?? 0.3;
         $maxTokens = $options['max_tokens'] ?? $connection->settings['max_tokens'] ?? 500;
@@ -28,7 +40,7 @@ class OpenRouterAdapter implements AiProviderInterface
                 'HTTP-Referer' => config('app.url'),
                 'X-Title' => config('app.name'),
             ])
-            ->post($this->baseUrl . '/chat/completions', [
+            ->post($baseUrl . '/chat/completions', [
                 'model' => $model,
                 'messages' => [
                     [
@@ -67,13 +79,14 @@ class OpenRouterAdapter implements AiProviderInterface
         try {
             $apiKey = $connection->getApiKey();
 
+            $baseUrl = $this->getBaseUrl($connection);
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                     'HTTP-Referer' => config('app.url'),
                 ])
-                ->post($this->baseUrl . '/chat/completions', [
+                ->post($baseUrl . '/chat/completions', [
                     'model' => 'openai/gpt-3.5-turbo',
                     'messages' => [
                         ['role' => 'user', 'content' => 'Test'],
@@ -108,12 +121,13 @@ class OpenRouterAdapter implements AiProviderInterface
         try {
             $apiKey = $connection->getApiKey();
             
+            $baseUrl = $this->getBaseUrl($connection);
             $response = Http::timeout(15)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                     'Content-Type' => 'application/json',
                 ])
-                ->get($this->baseUrl . '/models');
+                ->get($baseUrl . '/models');
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -150,12 +164,13 @@ class OpenRouterAdapter implements AiProviderInterface
     {
         $apiKey = $connection->getApiKey();
         
+        $baseUrl = $this->getBaseUrl($connection);
         $response = Http::timeout(15)
             ->withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])
-            ->get($this->baseUrl . '/models');
+            ->get($baseUrl . '/models');
 
         if (!$response->successful()) {
             throw new \Exception("Failed to fetch models: " . $response->body());

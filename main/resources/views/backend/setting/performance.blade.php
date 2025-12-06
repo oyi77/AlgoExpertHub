@@ -1,31 +1,122 @@
 <div class="card">
     <div class="card-header">
         <h4 class="m-0">{{ __('Performance Settings') }}</h4>
-        <p class="text-muted mb-0">{{ __('Optimize your application performance with these tools') }}</p>
     </div>
     <div class="card-body">
         <!-- System Information -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <h5 class="mb-3"><i class="las la-info-circle"></i> {{ __('System Information') }}</h5>
-                <div class="table-responsive">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="las la-info-circle"></i> {{ __('System Information') }}</h5>
+                    <small class="text-muted" id="system-info-last-update">{{ __('Last updated: Loading...') }}</small>
+                </div>
+                <div class="table-responsive" id="system-info-table">
                     <table class="table table-bordered table-sm">
                         <tbody>
                             <tr>
                                 <td><strong>{{ __('PHP Version') }}</strong></td>
-                                <td>{{ PHP_VERSION }}</td>
+                                <td id="sys-php-version">{{ PHP_VERSION }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Laravel Version') }}</strong></td>
+                                <td id="sys-laravel-version">{{ app()->version() }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ __('PHP Binary Path') }}</strong></td>
-                                <td><code>{{ defined('PHP_BINARY') ? PHP_BINARY : __('Not available') }}</code></td>
+                                <td><code id="sys-php-binary">{{ defined('PHP_BINARY') ? PHP_BINARY : __('Not available') }}</code></td>
                             </tr>
                             <tr>
                                 <td><strong>{{ __('Application Path') }}</strong></td>
-                                <td><code>{{ base_path() }}</code></td>
+                                <td><code id="sys-app-path">{{ base_path() }}</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Environment') }}</strong></td>
+                                <td><span class="badge badge-{{ app()->environment() === 'production' ? 'success' : 'warning' }}" id="sys-environment">{{ app()->environment() }}</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Timezone') }}</strong></td>
+                                <td id="sys-timezone">{{ config('app.timezone') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Locale') }}</strong></td>
+                                <td id="sys-locale">{{ app()->getLocale() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Server Software') }}</strong></td>
+                                <td id="sys-server-software">{{ $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Memory Usage') }}</strong></td>
+                                <td id="sys-memory-usage">
+                                    @if(function_exists('memory_get_usage'))
+                                        {{ number_format(memory_get_usage(true) / 1024 / 1024, 2) }} MB / {{ ini_get('memory_limit') }}
+                                    @else
+                                        {{ __('Not available') }}
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Memory Peak') }}</strong></td>
+                                <td id="sys-memory-peak">
+                                    @if(function_exists('memory_get_peak_usage'))
+                                        {{ number_format(memory_get_peak_usage(true) / 1024 / 1024, 2) }} MB
+                                    @else
+                                        {{ __('Not available') }}
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('PHP Extensions') }}</strong></td>
+                                <td id="sys-extensions">
+                                    {{ count(get_loaded_extensions()) }} {{ __('loaded') }}
+                                    <small class="text-muted d-block">
+                                        PDO: {{ extension_loaded('pdo') ? '✓' : '✗' }} | 
+                                        MBString: {{ extension_loaded('mbstring') ? '✓' : '✗' }} | 
+                                        OpenSSL: {{ extension_loaded('openssl') ? '✓' : '✗' }} | 
+                                        cURL: {{ extension_loaded('curl') ? '✓' : '✗' }}
+                                    </small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Disk Space') }}</strong></td>
+                                <td id="sys-disk-space">
+                                    @if(function_exists('disk_free_space') && function_exists('disk_total_space'))
+                                        @php
+                                            $free = disk_free_space(base_path());
+                                            $total = disk_total_space(base_path());
+                                            $used = $total - $free;
+                                            $percent = $total > 0 ? ($used / $total) * 100 : 0;
+                                        @endphp
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {{ $percent > 90 ? 'bg-danger' : ($percent > 75 ? 'bg-warning' : 'bg-success') }}" 
+                                                 style="width: {{ $percent }}%">
+                                                {{ number_format($percent, 1) }}%
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ number_format($free / 1024 / 1024 / 1024, 2) }} GB free / 
+                                            {{ number_format($total / 1024 / 1024 / 1024, 2) }} GB total
+                                        </small>
+                                    @else
+                                        {{ __('Not available') }}
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('PHP Processes') }}</strong></td>
+                                <td id="sys-php-processes">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('System Load') }}</strong></td>
+                                <td id="sys-load-average">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Server Uptime') }}</strong></td>
+                                <td id="sys-uptime">{{ __('Loading...') }}</td>
                             </tr>
                             <tr>
                                 <td><strong>{{ __('Shell Exec Available') }}</strong></td>
-                                <td>
+                                <td id="sys-shell-exec">
                                     @if(function_exists('shell_exec') && !in_array('shell_exec', explode(',', ini_get('disable_functions'))))
                                         <span class="badge badge-success">{{ __('Yes') }}</span>
                                     @else
@@ -36,7 +127,7 @@
                             </tr>
                             <tr>
                                 <td><strong>{{ __('OPcache Available') }}</strong></td>
-                                <td>
+                                <td id="sys-opcache-available">
                                     @if(function_exists('opcache_reset'))
                                         <span class="badge badge-success">{{ __('Yes') }}</span>
                                     @else
@@ -50,37 +141,39 @@
             </div>
         </div>
 
-        <!-- PHP OPcache Status -->
+        <!-- System Monitoring -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <h5 class="mb-3"><i class="las la-memory"></i> {{ __('PHP OPcache Status') }}</h5>
-                <div class="table-responsive">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="las la-memory"></i> {{ __('System Monitoring') }}</h5>
+                    <small class="text-muted" id="opcache-last-update">{{ __('Last updated: Loading...') }}</small>
+                </div>
+                <div class="table-responsive" id="opcache-status-table">
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>{{ __('Setting') }}</th>
-                                <th>{{ __('Status') }}</th>
+                                <th>{{ __('Metric') }}</th>
+                                <th>{{ __('Status/Visual') }}</th>
                                 <th>{{ __('Value') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>{{ __('OPcache Enabled') }}</td>
-                                <td>
+                                <td><strong>{{ __('OPcache Status') }}</strong></td>
+                                <td id="opcache-enabled-status">
                                     @if(function_exists('opcache_get_status') && opcache_get_status() !== false)
                                         <span class="badge badge-success">{{ __('Enabled') }}</span>
                                     @else
                                         <span class="badge badge-danger">{{ __('Disabled') }}</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td id="opcache-scripts-cached">
                                     @if(function_exists('opcache_get_status'))
                                         @php
                                             $opcache = opcache_get_status();
-                                            $config = opcache_get_configuration();
                                         @endphp
                                         @if($opcache && isset($opcache['opcache_statistics']))
-                                            {{ __('Active') }} - {{ number_format($opcache['opcache_statistics']['num_cached_scripts'] ?? 0) }} {{ __('scripts cached') }}
+                                            {{ number_format($opcache['opcache_statistics']['num_cached_scripts'] ?? 0) }} {{ __('scripts cached') }}
                                         @else
                                             {{ __('Not Available') }}
                                         @endif
@@ -89,56 +182,61 @@
                                     @endif
                                 </td>
                             </tr>
-                            @if(function_exists('opcache_get_status') && opcache_get_status() !== false)
-                                @php
-                                    $opcache = opcache_get_status();
-                                    $config = opcache_get_configuration();
-                                @endphp
-                                @if($opcache && isset($opcache['memory_usage']))
-                                    <tr>
-                                        <td>{{ __('Memory Usage') }}</td>
-                                        <td>
-                                            @php
-                                                $used = $opcache['memory_usage']['used_memory'] ?? 0;
-                                                $free = $opcache['memory_usage']['free_memory'] ?? 0;
-                                                $total = $used + $free;
-                                                $percent = $total > 0 ? ($used / $total) * 100 : 0;
-                                            @endphp
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar {{ $percent > 80 ? 'bg-danger' : ($percent > 60 ? 'bg-warning' : 'bg-success') }}" 
-                                                     role="progressbar" 
-                                                     style="width: {{ $percent }}%">
-                                                    {{ number_format($percent, 1) }}%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {{ number_format($used / 1024 / 1024, 2) }} MB / {{ number_format($total / 1024 / 1024, 2) }} MB
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>{{ __('Hit Rate') }}</td>
-                                        <td>
-                                            @php
-                                                $hits = $opcache['opcache_statistics']['hits'] ?? 0;
-                                                $misses = $opcache['opcache_statistics']['misses'] ?? 0;
-                                                $total_reqs = $hits + $misses;
-                                                $hit_rate = $total_reqs > 0 ? ($hits / $total_reqs) * 100 : 0;
-                                            @endphp
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar {{ $hit_rate > 90 ? 'bg-success' : ($hit_rate > 70 ? 'bg-warning' : 'bg-danger') }}" 
-                                                     role="progressbar" 
-                                                     style="width: {{ $hit_rate }}%">
-                                                    {{ number_format($hit_rate, 1) }}%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {{ number_format($hits) }} {{ __('hits') }} / {{ number_format($total_reqs) }} {{ __('requests') }}
-                                        </td>
-                                    </tr>
-                                @endif
-                            @endif
+                            <tr>
+                                <td><strong>{{ __('Memory Usage') }}</strong></td>
+                                <td id="opcache-memory-progress">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 0%">0%</div>
+                                    </div>
+                                </td>
+                                <td id="opcache-memory-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Hit Rate') }}</strong></td>
+                                <td id="opcache-hitrate-progress">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 0%">0%</div>
+                                    </div>
+                                </td>
+                                <td id="opcache-hitrate-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Cached Keys') }}</strong></td>
+                                <td>
+                                    <span class="badge badge-info" id="opcache-keys-badge">-</span>
+                                </td>
+                                <td id="opcache-keys-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Wasted Memory') }}</strong></td>
+                                <td id="opcache-wasted-progress">
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 0%">0%</div>
+                                    </div>
+                                </td>
+                                <td id="opcache-wasted-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Interned Strings') }}</strong></td>
+                                <td>
+                                    <span class="badge badge-secondary" id="opcache-strings-badge">-</span>
+                                </td>
+                                <td id="opcache-strings-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Max Accelerated Files') }}</strong></td>
+                                <td>
+                                    <span class="badge badge-primary" id="opcache-max-files-badge">-</span>
+                                </td>
+                                <td id="opcache-max-files-value">{{ __('Loading...') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Opening/Running Processes') }}</strong></td>
+                                <td>
+                                    <span class="badge badge-info" id="processes-php-badge">-</span>
+                                </td>
+                                <td id="processes-php-value">{{ __('Loading...') }}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -150,10 +248,6 @@
             <div class="col-md-12">
                 <h5 class="mb-3"><i class="las la-rocket"></i> {{ __('Laravel Optimization') }}</h5>
                 <div class="row">
-                    <!-- Individual Optimization Actions -->
-                    <div class="col-md-12 mb-3">
-                        <h6 class="text-muted mb-2"><i class="las la-cog"></i> {{ __('Individual Optimization') }}</h6>
-                    </div>
                     <div class="col-md-6 mb-3">
                         <div class="card border">
                             <div class="card-body">
@@ -992,15 +1086,263 @@
             return false;
         });
         
-        // Auto-refresh OPcache stats every 30 seconds if on performance tab
-        @if(request()->has('tab') && request()->get('tab') === 'performance' || !request()->has('tab'))
-            setInterval(function() {
-                // Only refresh if tab is active
-                if ($('#performance').hasClass('active')) {
-                    // Could add AJAX refresh here if needed
+        // Real-time system monitoring using Server-Sent Events (SSE)
+        let eventSource = null;
+        let reconnectTimeout = null;
+        
+        function connectSystemMonitoring() {
+            // Close existing connection
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            // Clear any pending reconnects
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+            
+            try {
+                const url = "{{ route('admin.general.performance.stream') }}";
+                eventSource = new EventSource(url);
+                
+                eventSource.onopen = function() {
+                    console.log('System monitoring SSE connected');
+                };
+                
+                eventSource.onmessage = function(event) {
+                    // Ignore keepalive comments
+                    if (event.data.trim() === '' || event.data.startsWith(':')) {
+                        return;
+                    }
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.type === 'connected') {
+                            console.log('System monitoring connected');
+                        } else if (data.type === 'status') {
+                            updateSystemStatusUI(data);
+                        } else if (data.type === 'error') {
+                            console.error('SSE error:', data.message);
+                        }
+                    } catch (e) {
+                        if (!event.data.startsWith(':')) {
+                            console.error('Error parsing SSE data:', e, event.data);
+                        }
+                    }
+                };
+                
+                eventSource.onerror = function(error) {
+                    if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+                        console.warn('SSE connection closed, reconnecting...');
+                        reconnectTimeout = setTimeout(function() {
+                            connectSystemMonitoring();
+                        }, 3000);
+                    }
+                };
+            } catch (e) {
+                console.error('Error creating SSE connection:', e);
+                // Fallback to polling if SSE fails
+                fallbackToPolling();
+            }
+        }
+        
+        function updateSystemStatusUI(data) {
+            const timestamp = new Date(data.timestamp).toLocaleTimeString();
+            $('#system-info-last-update, #opcache-last-update').text('{{ __("Last updated:") }} ' + timestamp);
+            
+            // Update system info
+            if (data.system) {
+                const sys = data.system;
+                $('#sys-php-version').text(sys.php_version);
+                $('#sys-laravel-version').text(sys.laravel_version || '{{ app()->version() }}');
+                $('#sys-php-binary').text(sys.php_binary || '{{ __("Not available") }}');
+                $('#sys-app-path').text(sys.application_path);
+                $('#sys-environment').text(sys.environment).removeClass('badge-success badge-warning').addClass(sys.environment === 'production' ? 'badge-success' : 'badge-warning');
+                $('#sys-timezone').text(sys.timezone);
+                $('#sys-locale').text(sys.locale);
+                $('#sys-server-software').text(sys.server_software || 'Unknown');
+                
+                if (sys.memory_usage) {
+                    $('#sys-memory-usage').text(
+                        (sys.memory_usage / 1024 / 1024).toFixed(2) + ' MB / ' + (sys.memory_limit || 'N/A')
+                    );
                 }
-            }, 30000);
-        @endif
+                if (sys.memory_peak) {
+                    $('#sys-memory-peak').text((sys.memory_peak / 1024 / 1024).toFixed(2) + ' MB');
+                }
+                
+                if (sys.disk_free && sys.disk_total) {
+                    const diskUsed = sys.disk_total - sys.disk_free;
+                    const diskPercent = (diskUsed / sys.disk_total) * 100;
+                    $('#sys-disk-space').html(
+                        '<div class="progress" style="height: 20px;">' +
+                        '<div class="progress-bar ' + (diskPercent > 90 ? 'bg-danger' : diskPercent > 75 ? 'bg-warning' : 'bg-success') + '" ' +
+                        'style="width: ' + diskPercent.toFixed(1) + '%">' + diskPercent.toFixed(1) + '%</div></div>' +
+                        '<small class="text-muted">' +
+                        (sys.disk_free / 1024 / 1024 / 1024).toFixed(2) + ' GB free / ' +
+                        (sys.disk_total / 1024 / 1024 / 1024).toFixed(2) + ' GB total</small>'
+                    );
+                }
+                
+                if (sys.loaded_extensions) {
+                    const ext = sys.important_extensions || {};
+                    $('#sys-extensions').html(
+                        sys.loaded_extensions + ' {{ __("loaded") }}' +
+                        '<small class="text-muted d-block">' +
+                        'PDO: ' + (ext.pdo ? '✓' : '✗') + ' | ' +
+                        'MBString: ' + (ext.mbstring ? '✓' : '✗') + ' | ' +
+                        'OpenSSL: ' + (ext.openssl ? '✓' : '✗') + ' | ' +
+                        'cURL: ' + (ext.curl ? '✓' : '✗') +
+                        '</small>'
+                    );
+                }
+            }
+            
+            // Update process info
+            if (data.processes) {
+                const proc = data.processes;
+                if (proc.php_processes !== null) {
+                    $('#sys-php-processes').text(proc.php_processes + ' {{ __("processes") }}');
+                    $('#processes-php-badge').text(proc.php_processes);
+                    $('#processes-php-value').text(proc.php_processes + ' {{ __("PHP processes running") }}');
+                }
+                if (proc.system_load) {
+                    const load = Array.isArray(proc.system_load) ? proc.system_load.join(', ') : proc.system_load;
+                    $('#sys-load-average').text(load);
+                }
+                if (proc.uptime) {
+                    $('#sys-uptime').text(proc.uptime);
+                }
+            }
+            
+            // Update OPcache status
+            if (data.opcache) {
+                const op = data.opcache;
+                
+                if (!op.enabled) {
+                    $('#opcache-enabled-status').html('<span class="badge badge-danger">{{ __("Disabled") }}</span>');
+                    return;
+                }
+                
+                $('#opcache-enabled-status').html('<span class="badge badge-success">{{ __("Enabled") }}</span>');
+                
+                // Memory usage
+                if (op.memory) {
+                    const memPercent = op.memory.percent || 0;
+                    const memClass = memPercent > 80 ? 'bg-danger' : memPercent > 60 ? 'bg-warning' : 'bg-success';
+                    $('#opcache-memory-progress').html(
+                        '<div class="progress" style="height: 20px;">' +
+                        '<div class="progress-bar ' + memClass + '" style="width: ' + memPercent + '%">' +
+                        memPercent.toFixed(1) + '%</div></div>'
+                    );
+                    $('#opcache-memory-value').text(
+                        op.memory.used_mb + ' MB / ' + op.memory.total_mb + ' MB'
+                    );
+                }
+                
+                // Hit rate
+                if (op.statistics) {
+                    const hitRate = op.statistics.hit_rate || 0;
+                    const hitClass = hitRate > 90 ? 'bg-success' : hitRate > 70 ? 'bg-warning' : 'bg-danger';
+                    $('#opcache-hitrate-progress').html(
+                        '<div class="progress" style="height: 20px;">' +
+                        '<div class="progress-bar ' + hitClass + '" style="width: ' + hitRate + '%">' +
+                        hitRate.toFixed(1) + '%</div></div>'
+                    );
+                    $('#opcache-hitrate-value').text(
+                        op.statistics.hits.toLocaleString() + ' {{ __("hits") }} / ' +
+                        op.statistics.total_requests.toLocaleString() + ' {{ __("requests") }}'
+                    );
+                    
+                    // Scripts cached
+                    $('#opcache-scripts-cached').text(
+                        op.statistics.num_cached_scripts.toLocaleString() + ' {{ __("scripts cached") }}'
+                    );
+                    
+                    // Keys
+                    $('#opcache-keys-badge').text(op.statistics.num_cached_keys || 0);
+                    $('#opcache-keys-value').text(
+                        (op.statistics.num_cached_keys || 0).toLocaleString() + ' / ' +
+                        (op.statistics.max_cached_keys || 0).toLocaleString() + ' {{ __("max") }}'
+                    );
+                }
+                
+                // Wasted memory
+                if (op.memory && op.configuration) {
+                    const wasted = op.memory.wasted || 0;
+                    const maxWasted = op.configuration.max_wasted_percentage || 5;
+                    const wastedPercent = op.memory.total > 0 ? (wasted / op.memory.total) * 100 : 0;
+                    const wastedClass = wastedPercent > maxWasted ? 'bg-danger' : wastedPercent > (maxWasted * 0.7) ? 'bg-warning' : 'bg-success';
+                    $('#opcache-wasted-progress').html(
+                        '<div class="progress" style="height: 20px;">' +
+                        '<div class="progress-bar ' + wastedClass + '" style="width: ' + Math.min(wastedPercent * 2, 100) + '%">' +
+                        wastedPercent.toFixed(2) + '%</div></div>'
+                    );
+                    $('#opcache-wasted-value').text(
+                        (wasted / 1024 / 1024).toFixed(2) + ' MB ({{ __("max") }}: ' + maxWasted + '%)'
+                    );
+                }
+                
+                // Interned strings
+                if (op.interned_strings) {
+                    const strings = op.interned_strings;
+                    $('#opcache-strings-badge').text(strings.number_of_strings || 0);
+                    $('#opcache-strings-value').text(
+                        (strings.number_of_strings || 0).toLocaleString() + ' {{ __("strings") }} | ' +
+                        (strings.used_memory / 1024 / 1024).toFixed(2) + ' MB {{ __("used") }}'
+                    );
+                }
+                
+                // Max files
+                if (op.configuration) {
+                    $('#opcache-max-files-badge').text(op.configuration.max_accelerated_files || 0);
+                    $('#opcache-max-files-value').text(
+                        (op.configuration.max_accelerated_files || 0).toLocaleString() + ' {{ __("files") }}'
+                    );
+                }
+            }
+        }
+        
+        // Fallback to polling if SSE not available
+        function fallbackToPolling() {
+            console.warn('SSE not available, falling back to polling');
+            let pollingInterval = setInterval(function() {
+                $.ajax({
+                    url: "{{ route('admin.general.performance.status') }}",
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            updateSystemStatusUI(response.data);
+                        }
+                    }
+                });
+            }, 5000);
+            
+            // Cleanup on unload
+            $(window).on('beforeunload', function() {
+                clearInterval(pollingInterval);
+            });
+        }
+        
+        // Connect to SSE stream
+        if (typeof EventSource !== 'undefined') {
+            connectSystemMonitoring();
+        } else {
+            fallbackToPolling();
+        }
+        
+        // Cleanup on page unload
+        $(window).on('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+            }
+        });
     });
 </script>
 <style>
