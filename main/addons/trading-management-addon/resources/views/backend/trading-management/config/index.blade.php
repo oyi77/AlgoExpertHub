@@ -300,97 +300,31 @@
 
                     <!-- Global Settings Tab -->
                     <div class="tab-pane fade" id="tab-global-settings">
-                        <h5 class="mb-3"><i class="fas fa-globe"></i> Global Settings</h5>
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> Configure global credentials and settings that apply to all connections.
-                        </div>
-
-                        <form action="{{ route('admin.trading-management.config.global-settings.update') }}" method="POST">
-                            @csrf
-
-                            <!-- MTAPI.io Global Config -->
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-key"></i> mtapi.io Global Configuration</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i> You need an mtapi.io account to connect MT4/MT5 brokers. 
-                                        <a href="https://mtapi.io" target="_blank" class="alert-link">Get API key here</a>
-                                    </div>
-
-                                    @php
-                                        $globalSettings = \Illuminate\Support\Facades\Cache::get('trading_management_global_settings', [
-                                            'mtapi_enabled' => false,
-                                            'mtapi_api_key' => '',
-                                            'mtapi_account_id' => '',
-                                            'mtapi_base_url' => 'https://api.mtapi.io',
-                                        ]);
-                                        
-                                        // Decrypt if encrypted
-                                        if (!empty($globalSettings['mtapi_api_key']) && strpos($globalSettings['mtapi_api_key'], 'eyJpdiI6') === 0) {
-                                            try {
-                                                $globalSettings['mtapi_api_key'] = \Illuminate\Support\Facades\Crypt::decryptString($globalSettings['mtapi_api_key']);
-                                            } catch (\Exception $e) {
-                                                // Keep as is if decryption fails
-                                            }
-                                        }
-                                    @endphp
-
-                                    <div class="form-group">
-                                        <div class="custom-control custom-switch custom-switch-lg">
-                                            <input type="hidden" name="mtapi_enabled" value="0">
-                                            <input type="checkbox" class="custom-control-input" id="mtapi_enabled" name="mtapi_enabled" value="1" {{ $globalSettings['mtapi_enabled'] ?? false ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="mtapi_enabled">
-                                                <strong>Enable Global MTAPI Credentials</strong>
-                                            </label>
-                                        </div>
-                                        <small class="form-text text-muted">When enabled, these credentials will be used as defaults for all MT4/MT5 connections</small>
-                                    </div>
-
-                                    <div id="mtapiFields" style="{{ ($globalSettings['mtapi_enabled'] ?? false) ? '' : 'display:none;' }}">
-                                        <div class="form-group">
-                                            <label for="mtapi_api_key">mtapi.io API Key <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="mtapi_api_key" 
-                                                   name="mtapi_api_key" 
-                                                   value="{{ old('mtapi_api_key', $globalSettings['mtapi_api_key'] ?? '') }}" 
-                                                   placeholder="Your mtapi.io API key"
-                                                   {{ ($globalSettings['mtapi_enabled'] ?? false) ? '' : 'disabled' }}>
-                                            <small class="form-text text-muted">Get your API key from <a href="https://mtapi.io/dashboard" target="_blank">mtapi.io dashboard</a></small>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="mtapi_account_id">mtapi.io Account ID</label>
-                                            <input type="text" class="form-control" id="mtapi_account_id" 
-                                                   name="mtapi_account_id" 
-                                                   value="{{ old('mtapi_account_id', $globalSettings['mtapi_account_id'] ?? '') }}" 
-                                                   placeholder="Your mtapi.io account ID (optional)"
-                                                   {{ ($globalSettings['mtapi_enabled'] ?? false) ? '' : 'disabled' }}>
-                                            <small class="form-text text-muted">The account ID from your mtapi.io dashboard (optional, can be set per connection)</small>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="mtapi_base_url">mtapi.io Base URL</label>
-                                            <input type="url" class="form-control" id="mtapi_base_url" 
-                                                   name="mtapi_base_url" 
-                                                   value="{{ old('mtapi_base_url', $globalSettings['mtapi_base_url'] ?? 'https://api.mtapi.io') }}" 
-                                                   placeholder="https://api.mtapi.io"
-                                                   {{ ($globalSettings['mtapi_enabled'] ?? false) ? '' : 'disabled' }}>
-                                            <small class="form-text text-muted">Default: https://api.mtapi.io (usually no need to change)</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save Global Settings
-                                </button>
-                            </div>
-                        </form>
+                        @php
+                            $globalConfig = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', [
+                                'api_key' => '',
+                                'base_url' => 'mt5grpc.mtapi.io:443',
+                                'timeout' => 30,
+                                'default_host' => '78.140.180.198',
+                                'default_port' => 443,
+                                'demo_account' => [
+                                    'user' => '62333850',
+                                    'password' => 'tecimil4',
+                                    'host' => '78.140.180.198',
+                                    'port' => 443,
+                                ],
+                            ]);
+                            
+                            // Decrypt API key if present
+                            if (!empty($globalConfig['api_key'])) {
+                                try {
+                                    $globalConfig['api_key'] = \Illuminate\Support\Facades\Crypt::decryptString($globalConfig['api_key']);
+                                } catch (\Exception $e) {
+                                    $globalConfig['api_key'] = '';
+                                }
+                            }
+                        @endphp
+                        @include('trading-management::backend.trading-management.config.global-settings', ['config' => $globalConfig])
                     </div>
                 </div>
             </div>
