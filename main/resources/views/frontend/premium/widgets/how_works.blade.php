@@ -12,7 +12,15 @@
         </div>
 
         <div class="row gy-4 justify-content-center">
-            @foreach ($element as $item)
+            @php
+                $uniqueElements = collect($element)
+                    ->unique(function ($item) {
+                        return $item->content->title ?? $item->id;
+                    })
+                    ->sortBy('id')
+                    ->values();
+            @endphp
+            @foreach ($uniqueElements as $item)
                 <div class="col-lg-4 col-md-6">
                     <div class="sp_work_item">
                         <div class="sp_work_number">

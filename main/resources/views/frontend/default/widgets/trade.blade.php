@@ -131,137 +131,138 @@
 
 @push('script')
     <script>
-        'use strict'
+        (function() {
+            'use strict'
 
+            let cryptoPrice = [];
 
-        let cryptoPrice = [];
+            let currency = $("input[name='currency']:checked").val();
 
-        let currency = $("input[name='currency']:checked").val();
-
-        $('.currency').each(function(index) {
-            $('.currency').eq(index).on('click', function() {
-                currency = $(this).val();
-                fetchCryptocurrencyPrices(currency);
-                currentPrice(currency)
+            $('.currency').each(function(index) {
+                $('.currency').eq(index).on('click', function() {
+                    currency = $(this).val();
+                    fetchCryptocurrencyPrices(currency);
+                    currentPrice(currency)
+                })
             })
-        })
 
-        function currentPrice(currency) {
+            function currentPrice(currency) {
 
-            $.ajax({
-                url: "{{ route('user.current-price') }}",
-                method: "GET",
-                data: {
-                    currency: currency
-                },
-                success: function(response) {
-                    if (response && !response.error) {
-                        $('#currentPrice').text('Current Price ' + response + '(' + currency + ')')
-                        $('input[name=trade_cur]').val(currency)
-                        $('input[name=trade_price]').val(response)
+                $.ajax({
+                    url: "{{ route('user.current-price') }}",
+                    method: "GET",
+                    data: {
+                        currency: currency
+                    },
+                    success: function(response) {
+                        if (response && !response.error) {
+                            $('#currentPrice').text('Current Price ' + response + '(' + currency + ')')
+                            $('input[name=trade_cur]').val(currency)
+                            $('input[name=trade_price]').val(response)
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to fetch current price:', error);
+                        // Don't update UI on error
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Failed to fetch current price:', error);
-                    // Don't update UI on error
-                }
-            });
+                });
 
-        }
-
-        function updateChart(data) {
-            chart.updateSeries([{
-                data: data
-            }]);
-        }
-
-        setInterval(() => {
-            fetchCryptocurrencyPrices(currency);
-            currentPrice(currency);
-        }, 5000);
-
-
-        $(window).on("load", function() {
-            fetchCryptocurrencyPrices(currency);
-            currentPrice(currency);
-        });
-
-
-        function fetchCryptocurrencyPrices(currency) {
-            $.ajax({
-                url: "{{ route('ticker') }}",
-                method: "GET",
-                data: {
-                    currency: currency
-                },
-                success: function(response) {
-                    if (response && Array.isArray(response) && response.length > 0) {
-                        chart.updateSeries([{
-                            data: response
-                        }]);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Failed to fetch cryptocurrency prices:', error);
-                    // Don't update chart on error to avoid breaking it
-                }
-            });
-        }
-
-        var options = {
-            series: [{
-                data: cryptoPrice
-            }],
-            chart: {
-                type: 'candlestick',
-                height: 400
-            },
-            title: {
-                text: 'CandleStick Chart',
-                align: 'left',
-                style: {
-                    color: '#ffffff'
-                }
-            },
-            xaxis: {
-                type: 'datetime',
-                labels: {
-                    style: {
-                        colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
-                    }
-                }
-            },
-            yaxis: {
-                tooltip: {
-                    enabled: true
-                },
-                labels: {
-                    style: {
-                        colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
-                    }
-                }
-            },
-            grid: {
-                show: true,
-                borderColor: '#ffffff26',
-                strokeDashArray: 0,
-                yaxis: {
-                    lines: {
-                        show: true
-                    }
-                }
             }
-        };
 
-        var chart = new ApexCharts(document.querySelector("#linechart"), options);
-        chart.render();
+            function updateChart(data) {
+                chart.updateSeries([{
+                    data: data
+                }]);
+            }
+
+            let priceInterval;
+            $(window).on("load", function() {
+                fetchCryptocurrencyPrices(currency);
+                currentPrice(currency);
+                
+                priceInterval = setInterval(() => {
+                    fetchCryptocurrencyPrices(currency);
+                    currentPrice(currency);
+                }, 5000);
+            });
 
 
-        $('.order').on('click', function() {
+            function fetchCryptocurrencyPrices(currency) {
+                $.ajax({
+                    url: "{{ route('ticker') }}",
+                    method: "GET",
+                    data: {
+                        currency: currency
+                    },
+                    success: function(response) {
+                        if (response && Array.isArray(response) && response.length > 0) {
+                            chart.updateSeries([{
+                                data: response
+                            }]);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to fetch cryptocurrency prices:', error);
+                        // Don't update chart on error to avoid breaking it
+                    }
+                });
+            }
 
-            const modal = $('#order');
+            var options = {
+                series: [{
+                    data: cryptoPrice
+                }],
+                chart: {
+                    type: 'candlestick',
+                    height: 400
+                },
+                title: {
+                    text: 'CandleStick Chart',
+                    align: 'left',
+                    style: {
+                        color: '#ffffff'
+                    }
+                },
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: {
+                            colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
+                        }
+                    }
+                },
+                yaxis: {
+                    tooltip: {
+                        enabled: true
+                    },
+                    labels: {
+                        style: {
+                            colors: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff']
+                        }
+                    }
+                },
+                grid: {
+                    show: true,
+                    borderColor: '#ffffff26',
+                    strokeDashArray: 0,
+                    yaxis: {
+                        lines: {
+                            show: true
+                        }
+                    }
+                }
+            };
 
-            modal.modal('show')
-        })
+            var chart = new ApexCharts(document.querySelector("#linechart"), options);
+            chart.render();
+
+
+            $('.order').on('click', function() {
+
+                const modal = $('#order');
+
+                modal.modal('show')
+            })
+        })();
     </script>
 @endpush

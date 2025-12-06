@@ -132,10 +132,10 @@
 
 @push('script')
     <script>
-        'use strict'
+        (function() {
+            'use strict'
 
-
-        let cryptoPrice = [];
+            let cryptoPrice = [];
 
         let currency = $("input[name='currency']:checked").val();
 
@@ -264,5 +264,6 @@
 
             modal.modal('show')
         })
+        })();
     </script>
 @endpush

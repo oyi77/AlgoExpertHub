@@ -20,9 +20,16 @@
                     <ul class="hc-list justify-content-lg-end justify-content-center">
                         <li>
                             <ul class="social-icons">
-                                @foreach ($socials as $social)
-                                    <li><a href="{{ $social->content->link }}"><i
-                                                class="{{ $social->content->icon }}"></i></a></li>
+                                @php
+                                    $uniqueSocials = collect($socials)->unique(function ($social) {
+                                        return $social->content->link ?? $social->content->icon ?? $social->id;
+                                    });
+                                @endphp
+                                @foreach ($uniqueSocials as $social)
+                                    @if(isset($social->content->link) && isset($social->content->icon))
+                                        <li><a href="{{ $social->content->link }}"><i
+                                                    class="{{ $social->content->icon }}"></i></a></li>
+                                    @endif
                                 @endforeach
                             </ul>
                         </li>

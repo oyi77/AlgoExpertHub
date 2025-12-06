@@ -323,10 +323,10 @@
 
 @push('script')
     <script>
-        'use strict'
+        (function() {
+            'use strict'
 
-
-        let cryptoPrice;
+            let cryptoPrice;
 
         let currency = $("input[name='currency']:checked").val();
 
@@ -347,9 +347,15 @@
                     currency: currency
                 },
                 success: function(response) {
-                    $('#currentPrice').text('Current Price ' + response + '(' + currency + ')')
-                    $('input[name=trade_cur]').val(currency)
-                    $('input[name=trade_price]').val(response)
+                    if (response && !response.error) {
+                        $('#currentPrice').text('Current Price ' + response + '(' + currency + ')')
+                        $('input[name=trade_cur]').val(currency)
+                        $('input[name=trade_price]').val(response)
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to fetch current price:', error);
+                    // Don't update UI on error
                 }
             });
 
@@ -444,5 +450,6 @@
 
             modal.modal('show')
         })
+        })();
     </script>
 @endpush

@@ -28,11 +28,6 @@
                 $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
             @endphp
 
-            @if ($adminUser && $adminUser->can('manage-plan'))
-                <li><a href="{{ route('admin.plan.index') }}" aria-expanded="false"><i data-feather="box"></i><span
-                            class="nav-text">{{ __('Manage Plans') }}</span></a>
-                </li>
-            @endif
 
             @if ($adminUser && $adminUser->can('signal'))
                 {{-- Core Signal Management --}}
@@ -217,68 +212,13 @@
                 </li>
             @endif
 
-            @if ($adminUser && $adminUser->can('manage-referral'))
-                <li><a href="{{ route('admin.refferal.index') }}" aria-expanded="false"><i
-                            data-feather="link"></i><span class="nav-text">{{ __('Manage Affiliates') }}</span></a>
-                </li>
-            @endif
 
-
-            
-
-            @if ($adminUser && $adminUser->can('payments'))
-                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i data-feather="list"></i><span
-                            class="nav-text">{{ __('Manage Payments') }}</span></a>
-                    <ul aria-expanded="false">
-
-                        <li><a href="{{ route('admin.payments.index', 'online') }}">{{ __('Online payments') }}</a>
-                        </li>
-
-                        <li><a href="{{ route('admin.payments.index', 'offline') }}">{{ __('Offline payments') }}</a>
-                        </li>
-
-                    </ul>
-                </li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-deposit'))
-                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
-                            data-feather="credit-card"></i><span class="nav-text">{{ __('Manage Deposit') }}</span></a>
-                    <ul aria-expanded="false">
-
-                        <li><a href="{{ route('admin.deposit', 'online') }}">{{ __('Online Deposit') }}</a></li>
-                        <li><a href="{{ route('admin.deposit', 'offline') }}">{{ __('Offline Deposit') }}</a></li>
-                    </ul>
-                </li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-withdraw'))
-                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
-                            data-feather="package"></i><span class="nav-text">{{ __('Manage Withdraw') }}</span></a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('admin.withdraw.index') }}">{{ __('Withdraw Methods') }}</a></li>
-                        <li><a href="{{ route('admin.withdraw.filter') }}">{{ __('All Withdraw') }}</a></li>
-                        <li><a href="{{ route('admin.withdraw.filter', 'pending') }}">{{ __('Pending Withdraw') }}
-                                <span class="noti-count">{{Config::sidebarData()['pendingWithdraw'] }}</span></a></li>
-                        <li><a
-                                href="{{ route('admin.withdraw.filter', 'accepted') }}">{{ __('Accepted Withdraw') }}</a>
-                        </li>
-                        <li><a
-                                href="{{ route('admin.withdraw.filter', 'rejected') }}">{{ __('Rejected Withdraw') }}</a>
-                        </li>
-                    </ul>
-                </li>
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-user'))
-                <li><a href="{{ route('admin.user.index') }}"><i data-feather="user"></i><span
-                            class="nav-text">{{ __('Manage Users') }}</span></a>
-                </li>
-            @endif
 
             @if ($adminUser && ($adminUser->can('manage-setting') ||
                     $adminUser->can('manage-email') ||
                     $adminUser->can('manage-theme') ||
+                    $adminUser->can('manage-frontend') ||
+                    $adminUser->can('manage-language') ||
                     $adminUser->can('manage-gateway') ||
                     $adminUser->can('manage-addon')))
                 <li class="nav-label">{{ __('Application Settings') }}</li>
@@ -331,88 +271,155 @@
                     && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
             @endphp
 
+            {{-- UI Manager (Unified Parent Menu) --}}
             @if ($adminUser && ($adminUser->can('manage-theme') || 
                  $adminUser->can('manage-frontend') || 
+                 $adminUser->can('manage-language') ||
                  $pageBuilderEnabled))
-                <li class="nav-label">{{ __('UI Manager') }}</li>
-                
-                {{-- Manage Pages (Backward Compatible) --}}
-                @if ($adminUser->can('manage-frontend'))
-                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
-                        <i data-feather="book-open"></i>
-                        <span class="nav-text">{{ __('Manage Pages') }}</span>
-                    </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.frontend.pages') }}">{{ __('All Pages') }}</a></li>
-                            <li><a href="{{ route('admin.frontend.pages.create') }}">{{ __('Create Page') }}</a></li>
-                            @if ($pageBuilderEnabled)
-                                <li><a href="{{ route('admin.page-builder.index') }}">{{ __('Page Builder') }}</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                @endif
-                
-                {{-- Manage Theme (Backward Compatible) --}}
-                @if ($adminUser->can('manage-theme'))
-                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
-                        <i data-feather="layers"></i>
-                        <span class="nav-text">{{ __('Manage Theme') }}</span>
-                    </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.manage.theme') }}">{{ __('Themes') }}</a></li>
-                            @if ($pageBuilderEnabled)
-                                <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                @endif
-                
-                {{-- Manage Frontend (Backward Compatible) --}}
-                @if ($adminUser->can('manage-frontend'))
-                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
-                        <i data-feather="layout"></i>
-                        <span class="nav-text">{{ __('Manage Frontend') }}</span>
-                    </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}">{{ __('Sections') }}</a></li>
-                            @if ($pageBuilderEnabled)
-                                <li><a href="{{ route('admin.page-builder.sections.index') }}">{{ __('Section Builder') }}</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                @endif
-                
-                {{-- Page Builder (Comprehensive Elementor-like) --}}
-                @if ($pageBuilderEnabled && ($adminUser->can('manage-frontend') || $adminUser->can('manage-theme')))
-                    <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
-                        <i data-feather="edit-3"></i>
-                        <span class="nav-text">{{ __('Page Builder') }}</span>
-                    </a>
-                        <ul aria-expanded="false">
-                            <li><a href="{{ route('admin.page-builder.index') }}">{{ __('All Pages') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.create') }}">{{ __('Create Page') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.templates.index') }}">{{ __('Templates') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.widgets.index') }}">{{ __('Widget Library') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.layouts.index') }}">{{ __('Manage Layouts') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.menus.index') }}">{{ __('Manage Menus') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.themes.create') }}">{{ __('Create Theme') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.global-styles.index') }}">{{ __('Global Styles') }}</a></li>
-                        </ul>
-                    </li>
-                @endif
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-language'))
-                <li class="nav-label">{{ __('Theme Settings') }}</li>
-                <li><a href="{{ route('admin.language.index') }}" aria-expanded="false"><i
-                            data-feather="globe"></i><span class="nav-text">{{ __('Manage Language') }}</span></a>
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                    <i data-feather="layout"></i>
+                    <span class="nav-text">{{ __('UI Manager') }}</span>
+                </a>
+                    <ul aria-expanded="false">
+                        {{-- Manage Pages --}}
+                        @if ($adminUser->can('manage-frontend'))
+                            <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                                {{ __('Manage Pages') }}
+                            </a>
+                                <ul aria-expanded="false">
+                                    <li><a href="{{ route('admin.frontend.pages') }}">{{ __('All Pages') }}</a></li>
+                                    <li><a href="{{ route('admin.frontend.pages.create') }}">{{ __('Create Page') }}</a></li>
+                                    @if ($pageBuilderEnabled)
+                                        <li><a href="{{ route('admin.page-builder.index') }}">{{ __('Page Builder') }}</a></li>
+                                    @endif
+                                </ul>
+                            </li>
+                        @endif
+                        
+                        {{-- Manage Theme --}}
+                        @if ($adminUser->can('manage-theme'))
+                            <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                                {{ __('Manage Theme') }}
+                            </a>
+                                <ul aria-expanded="false">
+                                    <li><a href="{{ route('admin.manage.theme') }}">{{ __('Themes') }}</a></li>
+                                    @if ($pageBuilderEnabled)
+                                        <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
+                                    @endif
+                                </ul>
+                            </li>
+                        @endif
+                        
+                        {{-- Manage Frontend --}}
+                        @if ($adminUser->can('manage-frontend'))
+                            <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                                {{ __('Manage Frontend') }}
+                            </a>
+                                <ul aria-expanded="false">
+                                    <li><a href="{{ route('admin.frontend.section.manage', 'banner') }}">{{ __('Sections') }}</a></li>
+                                    @if ($pageBuilderEnabled)
+                                        <li><a href="{{ route('admin.page-builder.sections.index') }}">{{ __('Section Builder') }}</a></li>
+                                    @endif
+                                </ul>
+                            </li>
+                        @endif
+                        
+                        {{-- Manage Language --}}
+                        @if ($adminUser->can('manage-language'))
+                            <li><a href="{{ route('admin.language.index') }}" aria-expanded="false">
+                                {{ __('Manage Language') }}
+                            </a></li>
+                        @endif
+                        
+                        {{-- Page Builder (Comprehensive) --}}
+                        @if ($pageBuilderEnabled && ($adminUser->can('manage-frontend') || $adminUser->can('manage-theme')))
+                            <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                                {{ __('Page Builder') }}
+                            </a>
+                                <ul aria-expanded="false">
+                                    <li><a href="{{ route('admin.page-builder.index') }}">{{ __('All Pages') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.create') }}">{{ __('Create Page') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.templates.index') }}">{{ __('Templates') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.widgets.index') }}">{{ __('Widget Library') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.layouts.index') }}">{{ __('Manage Layouts') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.menus.index') }}">{{ __('Manage Menus') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.themes.create') }}">{{ __('Create Theme') }}</a></li>
+                                    <li><a href="{{ route('admin.page-builder.global-styles.index') }}">{{ __('Global Styles') }}</a></li>
+                                </ul>
+                            </li>
+                        @endif
+                    </ul>
                 </li>
             @endif
 
             @if ($adminUser && ($adminUser->can('manage-role') ||
-                    $adminUser->can('manage-admin')))
+                    $adminUser->can('manage-admin') ||
+                    $adminUser->can('manage-user') ||
+                    $adminUser->can('manage-plan') ||
+                    $adminUser->can('manage-referral') ||
+                    $adminUser->can('payments') ||
+                    $adminUser->can('manage-deposit') ||
+                    $adminUser->can('manage-withdraw')))
                 <li class="nav-label">{{ __('Administration') }}</li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-user'))
+                <li><a href="{{ route('admin.user.index') }}"><i data-feather="user"></i><span
+                            class="nav-text">{{ __('Manage Users') }}</span></a>
+                </li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-plan'))
+                <li><a href="{{ route('admin.plan.index') }}" aria-expanded="false"><i data-feather="box"></i><span
+                            class="nav-text">{{ __('Manage Plans') }}</span></a>
+                </li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-referral'))
+                <li><a href="{{ route('admin.refferal.index') }}" aria-expanded="false"><i
+                            data-feather="link"></i><span class="nav-text">{{ __('Manage Affiliates') }}</span></a>
+                </li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('payments'))
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i data-feather="list"></i><span
+                            class="nav-text">{{ __('Manage Payments') }}</span></a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.payments.index', 'online') }}">{{ __('Online payments') }}</a>
+                        </li>
+                        <li><a href="{{ route('admin.payments.index', 'offline') }}">{{ __('Offline payments') }}</a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-deposit'))
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="credit-card"></i><span class="nav-text">{{ __('Manage Deposit') }}</span></a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.deposit', 'online') }}">{{ __('Online Deposit') }}</a></li>
+                        <li><a href="{{ route('admin.deposit', 'offline') }}">{{ __('Offline Deposit') }}</a></li>
+                    </ul>
+                </li>
+            @endif
+
+            @if ($adminUser && $adminUser->can('manage-withdraw'))
+                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
+                            data-feather="package"></i><span class="nav-text">{{ __('Manage Withdraw') }}</span></a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.withdraw.index') }}">{{ __('Withdraw Methods') }}</a></li>
+                        <li><a href="{{ route('admin.withdraw.filter') }}">{{ __('All Withdraw') }}</a></li>
+                        <li><a href="{{ route('admin.withdraw.filter', 'pending') }}">{{ __('Pending Withdraw') }}
+                                <span class="noti-count">{{Config::sidebarData()['pendingWithdraw'] }}</span></a></li>
+                        <li><a
+                                href="{{ route('admin.withdraw.filter', 'accepted') }}">{{ __('Accepted Withdraw') }}</a>
+                        </li>
+                        <li><a
+                                href="{{ route('admin.withdraw.filter', 'rejected') }}">{{ __('Rejected Withdraw') }}</a>
+                        </li>
+                    </ul>
+                </li>
             @endif
 
             @if ($adminUser && $adminUser->can('manage-role'))
