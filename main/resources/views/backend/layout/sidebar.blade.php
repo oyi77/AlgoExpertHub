@@ -319,6 +319,27 @@
                         <span class="nav-text">{{ __('Manage Addons') }}</span>
                     </a>
                 </li>
+                @php
+                    $algoPlusHasAdmin = \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.index');
+                    $algoPlusQueuesEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','queues');
+                    $horizonRouteExists = \Illuminate\Support\Facades\Route::has('horizon.index');
+                @endphp
+                @if ($algoPlusHasAdmin)
+                <li>
+                    <a href="{{ route('admin.algoexpert-plus.index') }}" aria-expanded="false">
+                        <i data-feather="zap"></i>
+                        <span class="nav-text">{{ __('AlgoExpert++') }}</span>
+                    </a>
+                </li>
+                @endif
+                @if ($algoPlusQueuesEnabled && $horizonRouteExists)
+                <li>
+                    <a href="{{ route('horizon.index') }}" aria-expanded="false">
+                        <i data-feather="monitor"></i>
+                        <span class="nav-text">{{ __('Queues Dashboard') }}</span>
+                    </a>
+                </li>
+                @endif
             @endif
 
             @if ($adminUser && $adminUser->can('manage-gateway'))
