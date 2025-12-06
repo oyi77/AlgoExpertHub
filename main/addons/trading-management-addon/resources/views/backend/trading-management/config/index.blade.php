@@ -73,6 +73,11 @@
                             <i class="fas fa-globe"></i> Global Settings
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab-metaapi-stats" data-toggle="tab" id="metaapi-stats-tab">
+                            <i class="fas fa-chart-line"></i> MetaApi Stats
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="card-body">
@@ -81,9 +86,16 @@
                     <div class="tab-pane fade show active" id="tab-exchange-connections">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> Exchange/Broker Connections</h5>
-                            <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Create Connection
-                            </a>
+                            <div>
+                                @if(config('trading-management.metaapi.api_token'))
+                                    <a href="{{ route('admin.trading-management.config.metaapi-stats.index') }}" class="btn btn-info btn-sm mr-2" title="View MetaApi Statistics">
+                                        <i class="fas fa-chart-line"></i> MetaApi Stats
+                                    </a>
+                                @endif
+                                <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create Connection
+                                </a>
+                            </div>
                         </div>
 
                         @if($connections->count() > 0)
@@ -323,38 +335,55 @@
                                     $globalConfig['api_key'] = '';
                                 }
                             }
+
+                            // Get MetaApi global settings
+                            $metaapiConfig = \App\Services\GlobalConfigurationService::get('metaapi_global_settings', [
+                                'api_token' => '',
+                                'base_url' => 'https://mt-client-api-v1.london.agiliumtrade.ai',
+                                'market_data_base_url' => 'https://mt-market-data-client-api-v1.london.agiliumtrade.ai',
+                                'provisioning_base_url' => 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai',
+                                'billing_base_url' => 'https://billing-api-v1.agiliumtrade.agiliumtrade.ai',
+                                'timeout' => 30,
+                            ]);
+
+                            // Decrypt MetaApi token if present
+                            if (!empty($metaapiConfig['api_token'])) {
+                                try {
+                                    $metaapiConfig['api_token'] = \Illuminate\Support\Facades\Crypt::decryptString($metaapiConfig['api_token']);
+                                } catch (\Exception $e) {
+                                    $metaapiConfig['api_token'] = '';
+                                }
+                            }
                         @endphp
                         
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> <strong>Global Configuration</strong> - These settings are shared across all MTAPI connections. Only admins can modify these settings.
+                        <!-- Info Alert -->
+                        <div class="alert alert-info border-left-info mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle fa-lg mr-3"></i>
+                                <div>
+                                    <strong>Global Configuration</strong><br>
+                                    <small>These settings are shared across all MT4/MT5 connections. Configure your provider credentials here to use them globally.</small>
+                                </div>
+                            </div>
                         </div>
 
                         <form action="{{ route('admin.trading-management.config.global-settings.update') }}" method="POST" id="globalSettingsForm">
                             @csrf
 
-                            <!-- MTAPI gRPC Configuration -->
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="fas fa-server"></i> MTAPI gRPC Configuration</h5>
+                            <!-- MTAPI.io Configuration -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-gradient-primary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-server"></i> MTAPI.io Configuration
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Configure these credentials once. All MTAPI connections will use these global settings.
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>API Key</label>
-                                                <input type="password" name="api_key" class="form-control" value="{{ $globalConfig['api_key'] ?? '' }}" placeholder="Leave blank to keep existing">
-                                                <small class="text-muted">MTAPI.io API key (optional, for future use)</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Base URL <span class="text-danger">*</span></label>
-                                                <input type="text" name="base_url" class="form-control" value="{{ $globalConfig['base_url'] ?? 'mt5grpc.mtapi.io:443' }}" required>
-                                                <small class="text-muted">MTAPI gRPC server endpoint</small>
+                                    <div class="alert alert-warning border-left-warning mb-4">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-exclamation-triangle mr-2 mt-1"></i>
+                                            <div>
+                                                <strong>Important:</strong> You need an mtapi.io account to connect MT4/MT5 brokers.
+                                                <a href="https://mtapi.io" target="_blank" class="alert-link font-weight-bold">Get API key here</a>
                                             </div>
                                         </div>
                                     </div>
@@ -362,16 +391,33 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Timeout (seconds) <span class="text-danger">*</span></label>
-                                                <input type="number" name="timeout" class="form-control" value="{{ $globalConfig['timeout'] ?? 30 }}" min="5" max="300" required>
-                                                <small class="text-muted">Connection timeout in seconds</small>
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-key text-primary"></i> API Key
+                                                </label>
+                                                <input type="password" 
+                                                       class="form-control" 
+                                                       name="mtapi_api_key" 
+                                                       value="{{ $globalConfig['api_key'] ?? '' }}" 
+                                                       placeholder="Enter your mtapi.io API key">
+                                                <small class="form-text text-muted">
+                                                    <i class="fas fa-info-circle"></i> Get your API key from 
+                                                    <a href="https://mtapi.io/dashboard" target="_blank">mtapi.io dashboard</a>
+                                                </small>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Default Host</label>
-                                                <input type="text" name="default_host" class="form-control" value="{{ $globalConfig['default_host'] ?? '78.140.180.198' }}">
-                                                <small class="text-muted">Default MT5 server host</small>
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-link text-primary"></i> gRPC Base URL <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="mtapi_base_url" 
+                                                       value="{{ $globalConfig['base_url'] ?? 'mt5grpc.mtapi.io:443' }}" 
+                                                       required>
+                                                <small class="form-text text-muted">
+                                                    <i class="fas fa-info-circle"></i> Default: mt5grpc.mtapi.io:443
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -379,9 +425,48 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Default Port</label>
-                                                <input type="number" name="default_port" class="form-control" value="{{ $globalConfig['default_port'] ?? 443 }}" min="1" max="65535">
-                                                <small class="text-muted">Default MT5 server port</small>
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-clock text-primary"></i> Timeout (seconds) <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       name="mtapi_timeout" 
+                                                       value="{{ $globalConfig['timeout'] ?? 30 }}" 
+                                                       min="5" 
+                                                       max="300" 
+                                                       required>
+                                                <small class="form-text text-muted">
+                                                    <i class="fas fa-info-circle"></i> Connection timeout in seconds (5-300)
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-server text-primary"></i> Default Host
+                                                </label>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="mtapi_default_host" 
+                                                       value="{{ $globalConfig['default_host'] ?? '78.140.180.198' }}">
+                                                <small class="form-text text-muted">Default MT5 server host</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-network-wired text-primary"></i> Default Port
+                                                </label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       name="mtapi_default_port" 
+                                                       value="{{ $globalConfig['default_port'] ?? 443 }}" 
+                                                       min="1" 
+                                                       max="65535">
+                                                <small class="form-text text-muted">Default MT5 server port</small>
                                             </div>
                                         </div>
                                     </div>
@@ -389,28 +474,18 @@
                             </div>
 
                             <!-- Demo Account Configuration -->
-                            <div class="card mb-3">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="fas fa-vial"></i> Demo Account Configuration</h5>
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-gradient-secondary text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-vial"></i> Demo Account Configuration
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> Configure demo account credentials for testing connections. These are used for connection testing only.
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Demo User</label>
-                                                <input type="text" name="demo_user" class="form-control" value="{{ $globalConfig['demo_account']['user'] ?? '62333850' }}">
-                                                <small class="text-muted">MT5 demo account number</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Demo Password</label>
-                                                <input type="password" name="demo_password" class="form-control" value="{{ $globalConfig['demo_account']['password'] ?? 'tecimil4' }}">
-                                                <small class="text-muted">MT5 demo account password</small>
+                                    <div class="alert alert-info border-left-info mb-4">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-info-circle mr-2 mt-1"></i>
+                                            <div>
+                                                <strong>Note:</strong> Configure demo account credentials for testing connections. These are used for connection testing only.
                                             </div>
                                         </div>
                                     </div>
@@ -418,16 +493,55 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Demo Host</label>
-                                                <input type="text" name="demo_host" class="form-control" value="{{ $globalConfig['demo_account']['host'] ?? '78.140.180.198' }}">
-                                                <small class="text-muted">MT5 demo server host</small>
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-user text-secondary"></i> Demo User
+                                                </label>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="mtapi_demo_user" 
+                                                       value="{{ $globalConfig['demo_account']['user'] ?? '62333850' }}">
+                                                <small class="form-text text-muted">MT5 demo account number</small>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Demo Port</label>
-                                                <input type="number" name="demo_port" class="form-control" value="{{ $globalConfig['demo_account']['port'] ?? 443 }}" min="1" max="65535">
-                                                <small class="text-muted">MT5 demo server port</small>
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-lock text-secondary"></i> Demo Password
+                                                </label>
+                                                <input type="password" 
+                                                       class="form-control" 
+                                                       name="mtapi_demo_password" 
+                                                       value="{{ $globalConfig['demo_account']['password'] ?? 'tecimil4' }}">
+                                                <small class="form-text text-muted">MT5 demo account password</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-server text-secondary"></i> Demo Host
+                                                </label>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="mtapi_demo_host" 
+                                                       value="{{ $globalConfig['demo_account']['host'] ?? '78.140.180.198' }}">
+                                                <small class="form-text text-muted">MT5 demo server host</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-network-wired text-secondary"></i> Demo Port
+                                                </label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       name="mtapi_demo_port" 
+                                                       value="{{ $globalConfig['demo_account']['port'] ?? 443 }}" 
+                                                       min="1" 
+                                                       max="65535">
+                                                <small class="form-text text-muted">MT5 demo server port</small>
                                             </div>
                                         </div>
                                     </div>
@@ -441,14 +555,147 @@
                                 </div>
                             </div>
 
-                            <hr>
+                            <!-- MetaApi.cloud Configuration -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-gradient-info text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-cloud"></i> MetaApi.cloud Configuration
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info border-left-info mb-4">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-info-circle mr-2 mt-1"></i>
+                                            <div>
+                                                <strong>Note:</strong> You need a MetaApi.cloud account to connect MT4/MT5 brokers.
+                                                <a href="https://metaapi.cloud" target="_blank" class="alert-link font-weight-bold">Get API token here</a>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save"></i> Save Global Settings
-                                </button>
+                                    <div class="form-group">
+                                        <label class="font-weight-bold">
+                                            <i class="fas fa-key text-info"></i> API Token <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="metaapi_api_token" 
+                                               value="{{ $metaapiConfig['api_token'] ?? '' }}" 
+                                               placeholder="Enter your MetaApi API token">
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Get your API token from 
+                                            <a href="https://app.metaapi.cloud" target="_blank">MetaApi dashboard</a>. 
+                                            This token will be used for all MetaApi connections.
+                                        </small>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-globe text-info"></i> Main API Base URL
+                                                </label>
+                                                <input type="url" 
+                                                       class="form-control" 
+                                                       name="metaapi_base_url" 
+                                                       value="{{ $metaapiConfig['base_url'] ?? 'https://mt-client-api-v1.london.agiliumtrade.ai' }}" 
+                                                       placeholder="https://mt-client-api-v1.london.agiliumtrade.ai">
+                                                <small class="form-text text-muted">Main API endpoint</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-chart-line text-info"></i> Market Data API Base URL
+                                                </label>
+                                                <input type="url" 
+                                                       class="form-control" 
+                                                       name="metaapi_market_data_base_url" 
+                                                       value="{{ $metaapiConfig['market_data_base_url'] ?? 'https://mt-market-data-client-api-v1.london.agiliumtrade.ai' }}" 
+                                                       placeholder="https://mt-market-data-client-api-v1.london.agiliumtrade.ai">
+                                                <small class="form-text text-muted">Market data API endpoint</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-plus-circle text-info"></i> Provisioning API Base URL
+                                                </label>
+                                                <input type="url" 
+                                                       class="form-control" 
+                                                       name="metaapi_provisioning_base_url" 
+                                                       value="{{ $metaapiConfig['provisioning_base_url'] ?? 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai' }}" 
+                                                       placeholder="https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai">
+                                                <small class="form-text text-muted">Provisioning API endpoint</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-credit-card text-info"></i> Billing API Base URL
+                                                </label>
+                                                <input type="url" 
+                                                       class="form-control" 
+                                                       name="metaapi_billing_base_url" 
+                                                       value="{{ $metaapiConfig['billing_base_url'] ?? 'https://billing-api-v1.agiliumtrade.agiliumtrade.ai' }}" 
+                                                       placeholder="https://billing-api-v1.agiliumtrade.agiliumtrade.ai">
+                                                <small class="form-text text-muted">Billing API endpoint</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">
+                                                    <i class="fas fa-clock text-info"></i> Timeout (seconds)
+                                                </label>
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       name="metaapi_timeout" 
+                                                       value="{{ $metaapiConfig['timeout'] ?? 30 }}" 
+                                                       min="5" 
+                                                       max="300">
+                                                <small class="form-text text-muted">Connection timeout in seconds (5-300)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i> Changes will be applied to all connections using these providers
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                                <i class="fas fa-save"></i> Save Global Settings
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- MetaApi Stats Tab -->
+                    <div class="tab-pane fade" id="tab-metaapi-stats">
+                        <div id="metaapi-stats-content">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Loading MetaApi statistics...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -461,6 +708,34 @@
 <script>
     $(function() {
         'use strict'
+        
+        // Load MetaApi Stats content when tab is clicked
+        $('#metaapi-stats-tab').on('shown.bs.tab', function() {
+            const contentDiv = $('#metaapi-stats-content');
+            
+            // Only load if not already loaded
+            if (contentDiv.find('.spinner-border').length > 0) {
+                $.ajax({
+                    url: '{{ route("admin.trading-management.config.metaapi-stats.index") }}',
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    },
+                    success: function(html) {
+                        contentDiv.html(html);
+                    },
+                    error: function(xhr, status, error) {
+                        contentDiv.html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>Error loading statistics:</strong> ${error || 'Unknown error'}
+                            </div>
+                        `);
+                    }
+                });
+            }
+        });
         
         // Test Demo Connection
         $('#testDemoConnection').on('click', function() {
@@ -510,6 +785,53 @@
                 }
             });
         });
+        
+        // Form submission with loading state
+        $('#globalSettingsForm').on('submit', function() {
+            const btn = $(this).find('button[type="submit"]');
+            const originalHtml = btn.html();
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            
+            // Re-enable after 5 seconds as fallback
+            setTimeout(function() {
+                btn.prop('disabled', false);
+                btn.html(originalHtml);
+            }, 5000);
+        });
     });
 </script>
+@endpush
+
+@push('style')
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    }
+    
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    }
+    
+    .border-left-info {
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .border-left-warning {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .card.shadow-sm {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card.shadow-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>
 @endpush

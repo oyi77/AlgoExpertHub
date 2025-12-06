@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\DataProvider\Services;
 use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
 use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter;
 use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter;
 use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
 
 /**
@@ -26,6 +27,7 @@ class AdapterFactory
         return match ($connection->type) {
             'mtapi' => new MtapiAdapter($connection->credentials),
             'mtapi_grpc' => new MtapiGrpcAdapter($connection->credentials),
+            'metaapi' => new MetaApiAdapter($connection->credentials),
             'ccxt_crypto' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter($connection->credentials, $connection->provider),
             'custom_api' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CustomApiAdapter($connection->credentials),
             default => throw new \Exception("Unsupported data provider type: {$connection->type}"),
@@ -50,6 +52,12 @@ class AdapterFactory
                 'name' => 'mtapi.io (MT4/MT5) gRPC',
                 'description' => 'Connect to MT4/MT5 brokers via mtapi.io gRPC for Forex market data (faster, real-time)',
                 'credentials' => ['user', 'password', 'host', 'port'],
+                'exchanges' => ['MT4', 'MT5'],
+            ],
+            'metaapi' => [
+                'name' => 'MetaApi.cloud (MT4/MT5)',
+                'description' => 'Connect to MT4/MT5 brokers via MetaApi.cloud REST API for Forex market data',
+                'credentials' => ['api_token', 'account_id'],
                 'exchanges' => ['MT4', 'MT5'],
             ],
             'ccxt_crypto' => [
@@ -82,6 +90,7 @@ class AdapterFactory
         $required = match ($type) {
             'mtapi' => ['api_key', 'account_id'],
             'mtapi_grpc' => ['user', 'password', 'host', 'port'],
+            'metaapi' => ['api_token', 'account_id'],
             'ccxt_crypto' => ['api_key', 'api_secret'],
             default => [],
         };

@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backen
 use App\Http\Controllers\Controller;
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
+use Addons\TradingManagement\Modules\DataProvider\Services\MetaApiProvisioningService;
 use Illuminate\Http\Request;
 
 /**
@@ -45,6 +46,19 @@ class ExchangeConnectionController extends Controller
             'data_settings' => 'nullable|array',
         ]);
 
+        // Validate credentials based on provider
+        if ($validated['provider'] === 'metaapi') {
+            if (empty($validated['credentials']['account_id'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['credentials.account_id' => 'MetaApi Account ID is required']);
+            }
+            // Auto-fill api_token from config if not provided
+            if (empty($validated['credentials']['api_token'])) {
+                $validated['credentials']['api_token'] = config('trading-management.metaapi.api_token');
+            }
+        }
+
         $connection = ExchangeConnection::create([
             ...$validated,
             'admin_id' => auth()->guard('admin')->id(),
@@ -52,7 +66,7 @@ class ExchangeConnectionController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()->route('admin.exchange-connections.show', $connection)
+        return redirect()->route('admin.trading-management.config.exchange-connections.show', $connection)
             ->with('success', 'Exchange connection created. Test it below.');
     }
 
@@ -150,7 +164,7 @@ class ExchangeConnectionController extends Controller
                 $connection->provider
             );
         } else {
-            // Check if using gRPC provider
+            // Check provider type
             if ($connection->provider === 'mtapi_grpc' || 
                 (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
                 // Merge global settings if available
@@ -165,6 +179,10 @@ class ExchangeConnectionController extends Controller
                 }
                 
                 return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
+            } elseif ($connection->provider === 'metaapi') {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
+                    $connection->credentials
+                );
             } else {
                 return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
                     $connection->credentials
@@ -189,6 +207,103 @@ class ExchangeConnectionController extends Controller
     {
         // Implement test order (dry run)
         return ['orderId' => 'TEST_' . time(), 'status' => 'test'];
+    }
+
+    /**
+     * Add MT account to MetaApi
+     */
+    public function addMetaApiAccount(Request $request)
+    {
+        $validated = $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+            'server' => 'required|string',
+            'name' => 'required|string|max:255',
+            'platform' => 'required|in:MT4,MT5,mt4,mt5',
+            'provisioning_profile_id' => 'nullable|string',
+            'account_type' => 'nullable|in:cloud-g1,cloud-g2',
+            'magic' => 'nullable|integer|min:0',
+            'manual_trades' => 'nullable|boolean',
+        ]);
+
+        try {
+            $provisioningService = new MetaApiProvisioningService();
+
+            $result = $provisioningService->addAccount([
+                'login' => $validated['login'],
+                'password' => $validated['password'],
+                'server' => $validated['server'],
+                'name' => $validated['name'],
+                'platform' => $validated['platform'],
+                'provisioningProfileId' => $validated['provisioning_profile_id'] ?? null,
+                'type' => $validated['account_type'] ?? 'cloud-g2',
+                'magic' => $validated['magic'] ?? null,
+                'manualTrades' => $validated['manual_trades'] ?? false,
+            ]);
+
+            if ($result['success']) {
+                // Create exchange connection automatically
+                $connection = ExchangeConnection::create([
+                    'name' => $validated['name'],
+                    'connection_type' => 'FX_BROKER',
+                    'provider' => 'metaapi',
+                    'credentials' => [
+                        'api_token' => config('trading-management.metaapi.api_token'),
+                        'account_id' => $result['account_id'],
+                    ],
+                    'admin_id' => auth()->guard('admin')->id(),
+                    'is_admin_owned' => true,
+                    'status' => 'pending',
+                    'data_fetching_enabled' => true,
+                    'trade_execution_enabled' => true,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'metaapi_account_id' => $result['account_id'],
+                    'connection_id' => $connection->id,
+                    'data' => $result['data'] ?? [],
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to add MetaApi account', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add account: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get MetaApi account status
+     */
+    public function getMetaApiAccountStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'account_id' => 'required|string',
+        ]);
+
+        try {
+            $provisioningService = new MetaApiProvisioningService();
+            $result = $provisioningService->getAccountStatus($validated['account_id']);
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
 

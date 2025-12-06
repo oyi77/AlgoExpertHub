@@ -221,6 +221,7 @@ class AddonServiceProvider extends ServiceProvider
     {
         $this->commands([
             \Addons\TradingManagement\Modules\TradingBot\Console\Commands\TradingBotWorker::class,
+            \Addons\TradingManagement\Console\Commands\TestMetaApiConnection::class,
         ]);
     }
 

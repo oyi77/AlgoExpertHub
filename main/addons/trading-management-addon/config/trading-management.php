@@ -39,6 +39,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | MetaApi.cloud Settings
+    |--------------------------------------------------------------------------
+    */
+    'metaapi' => [
+        'api_token' => env('METAAPI_TOKEN'),
+        'base_url' => env('METAAPI_BASE_URL', 'https://mt-client-api-v1.london.agiliumtrade.ai'),
+        'market_data_base_url' => env('METAAPI_MARKET_DATA_BASE_URL', 'https://mt-market-data-client-api-v1.london.agiliumtrade.ai'),
+        'provisioning_base_url' => env('METAAPI_PROVISIONING_BASE_URL', 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai'),
+        'billing_base_url' => env('METAAPI_BILLING_BASE_URL', 'https://billing-api-v1.agiliumtrade.agiliumtrade.ai'),
+        'timeout' => env('METAAPI_TIMEOUT', 30), // seconds
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Risk Management Settings
     |--------------------------------------------------------------------------
     */

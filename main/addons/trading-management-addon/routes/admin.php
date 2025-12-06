@@ -93,6 +93,10 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             // Testing endpoints
             Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
             Route::post('/test-execution', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testExecution'])->name('test-execution');
+            
+            // MetaApi provisioning endpoints
+            Route::post('/add-metaapi-account', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'addMetaApiAccount'])->name('add-metaapi-account');
+            Route::post('/metaapi-account-status', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getMetaApiAccountStatus'])->name('metaapi-account-status');
         });
         
         // Risk Presets
@@ -111,6 +115,14 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             ->name('global-settings.update');
         Route::post('global-settings/test-demo', [\Addons\TradingManagement\Modules\GlobalSettings\Controllers\Backend\GlobalSettingsController::class, 'testDemoConnection'])
             ->name('global-settings.test-demo');
+        
+        // MetaApi Statistics
+        Route::get('metaapi-stats', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\MetaApiStatsController::class, 'index'])
+            ->name('metaapi-stats.index');
+        Route::post('metaapi-stats/refresh', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\MetaApiStatsController::class, 'refresh'])
+            ->name('metaapi-stats.refresh');
+        Route::post('metaapi-stats/deposit', [\Addons\TradingManagement\Modules\DataProvider\Controllers\Backend\MetaApiStatsController::class, 'deposit'])
+            ->name('metaapi-stats.deposit');
     });
 
     // 2. Trading Operations (Page with tabs)
