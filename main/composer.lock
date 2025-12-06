@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ee0b0d66a7ad0ac3624f065dbdecd676",
+    "content-hash": "a74229c88a47b6dd8436d969f586d241",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4534,6 +4534,109 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "hansschouten/laravel-pagebuilder",
+            "version": "v0.31.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HansSchouten/Laravel-Pagebuilder.git",
+                "reference": "cbc2ece377dd9b7c19dafc93e9324b0afd704708"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HansSchouten/Laravel-Pagebuilder/zipball/cbc2ece377dd9b7c19dafc93e9324b0afd704708",
+                "reference": "cbc2ece377dd9b7c19dafc93e9324b0afd704708",
+                "shasum": ""
+            },
+            "require": {
+                "hansschouten/phpagebuilder": "^0.31",
+                "php": ">=7.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "PageBuilder": "HansSchouten\\LaravelPageBuilder\\Facade"
+                    },
+                    "providers": [
+                        "HansSchouten\\LaravelPageBuilder\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "HansSchouten\\LaravelPageBuilder\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Hans Schouten",
+                    "email": "hans@falcosolutions.nl"
+                }
+            ],
+            "description": "A drag and drop pagebuilder to manage pages in any Laravel project.",
+            "homepage": "https://github.com/HansSchouten/Laravel-Pagebuilder",
+            "keywords": [
+                "laravel",
+                "pagebuilder"
+            ],
+            "support": {
+                "issues": "https://github.com/HansSchouten/Laravel-Pagebuilder/issues",
+                "source": "https://github.com/HansSchouten/Laravel-Pagebuilder/tree/v0.31.0"
+            },
+            "time": "2025-01-05T10:47:42+00:00"
+        },
+        {
+            "name": "hansschouten/phpagebuilder",
+            "version": "v0.31.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HansSchouten/PHPageBuilder.git",
+                "reference": "ec13bb04a16f6889baf84d1b5e5dc863d48148dd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HansSchouten/PHPageBuilder/zipball/ec13bb04a16f6889baf84d1b5e5dc863d48148dd",
+                "reference": "ec13bb04a16f6889baf84d1b5e5dc863d48148dd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Core/helpers.php"
+                ],
+                "psr-4": {
+                    "PHPageBuilder\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Hans Schouten",
+                    "email": "hans@falcosolutions.nl"
+                }
+            ],
+            "description": "A drag and drop pagebuilder to manage pages in any PHP project.",
+            "homepage": "https://github.com/HansSchouten/PHPagebuilder",
+            "keywords": [
+                "pagebuilder"
+            ],
+            "support": {
+                "issues": "https://github.com/HansSchouten/PHPageBuilder/issues",
+                "source": "https://github.com/HansSchouten/PHPageBuilder/tree/v0.31.0"
+            },
+            "time": "2025-01-03T11:34:34+00:00"
         },
         {
             "name": "intervention/image",

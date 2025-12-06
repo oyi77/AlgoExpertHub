@@ -128,4 +128,13 @@ class ManageSectionController extends Controller
 
         return redirect()->back()->with('success', "{$name} Deleted Successfully");
     }
+
+    /**
+     * Access page builder from Manage Frontend (backward compatibility)
+     */
+    public function pageBuilder($name)
+    {
+        // Redirect to section builder edit route
+        return redirect()->route('admin.page-builder.sections.edit', ['name' => $name]);
+    }
 }

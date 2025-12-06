@@ -65,6 +65,16 @@
                                                 class="btn btn-sm btn-outline-primary edit" title="{{ __('Edit') }}">
                                                 <i class="fa fa-pen"></i>
                                             </a>
+                                            @php
+                                                $pageBuilderEnabled = \App\Support\AddonRegistry::active('page-builder-addon') 
+                                                    && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
+                                            @endphp
+                                            @if ($pageBuilderEnabled)
+                                                <a href="{{ route('admin.page-builder.edit', $page->id) }}"
+                                                    class="btn btn-sm btn-outline-success" title="{{ __('Edit in Page Builder') }}">
+                                                    <i class="fa fa-magic"></i>
+                                                </a>
+                                            @endif
                                             @if (!$loop->first)
                                                 <a href="#" class="btn btn-sm btn-outline-danger delete"
                                                     data-url="{{ route('admin.frontend.pages.delete', $page) }}" title="{{ __('Delete') }}"><i

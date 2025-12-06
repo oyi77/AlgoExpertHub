@@ -1,0 +1,32 @@
+{
+  "name": "page-builder-addon",
+  "title": "Page Builder",
+  "description": "Drag-and-drop page builder with Laravel-Pagebuilder integration",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "namespace": "Addons\\PageBuilderAddon",
+  "status": "active",
+  "requires": {
+    "php": "^8.0.2",
+    "laravel": "^9.0"
+  },
+  "dependencies": {
+    "hansschouten/laravel-pagebuilder": "^0.31"
+  },
+  "modules": [
+    {
+      "key": "admin_ui",
+      "name": "Admin Interface",
+      "description": "Provides admin routes, views, and menus for page builder functionality",
+      "targets": ["admin_routes", "admin_menu"],
+      "enabled": true
+    },
+    {
+      "key": "processing",
+      "name": "Background Processing",
+      "description": "Background jobs for page processing and migration",
+      "targets": ["jobs"],
+      "enabled": true
+    }
+  ]
+}

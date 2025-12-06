@@ -94,6 +94,16 @@
                                                 <a href="/" target="_blank" class="btn btn-sm btn-info" title="{{ __('Preview') }}">
                                                     <i data-feather="eye"></i> {{ __('Preview') }}
                                                 </a>
+                                                @php
+                                                    $pageBuilderEnabled = \App\Support\AddonRegistry::active('page-builder-addon') 
+                                                        && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
+                                                @endphp
+                                                @if ($pageBuilderEnabled)
+                                                    <a href="{{ route('admin.page-builder.themes.edit', ['theme' => $theme['name']]) }}" 
+                                                       class="btn btn-sm btn-success" title="{{ __('Edit Theme Template') }}">
+                                                        <i data-feather="edit-3"></i> {{ __('Edit Template') }}
+                                                    </a>
+                                                @endif
                                                 @if(!$theme['is_active'])
                                                     <a data-route="{{ route('admin.manage.theme.update', $theme['name']) }}" 
                                                        data-theme="{{ $theme['name'] }}"
