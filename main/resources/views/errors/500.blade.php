@@ -38,9 +38,14 @@
   </svg>
 
   <div class="message">
-    {{__("Internal Server Error")}}
+    {{__("Ummm, i think we make a mistake, here. Please Tell Us! Just in case we are forget ):")}}
   </div>
-  <a href="{{ route('home') }}" class="main-btn btn-sm mt-5"> {{__("Back To Home")}}</a>
+  <div class="error-actions mt-4">
+    <a href="{{ route('home') }}" class="main-btn btn-sm"> {{__("Back To Home")}}</a>
+    @if(Route::has('contact'))
+    <a href="{{ route('contact') }}" class="main-btn btn-sm btn-outline-primary ml-2">{{__("Contact Us")}}</a>
+    @endif
+  </div>
   </div>
     </div>
 @endsection
@@ -174,6 +179,21 @@
                 r: 20;
                 opacity: 0;
             }
+        }
+        .error-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .error-actions .btn-outline-primary {
+            border: 2px solid #be0eea;
+            color: #be0eea;
+            background: transparent;
+        }
+        .error-actions .btn-outline-primary:hover {
+            background: #be0eea;
+            color: #fff;
         }
 
     </style>

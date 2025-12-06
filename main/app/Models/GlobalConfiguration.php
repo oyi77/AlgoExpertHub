@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 class GlobalConfiguration extends Model
 {
     use HasFactory;
+
+    protected $table = 'global_configurations';
 
     protected $fillable = [
         'config_key',
@@ -29,8 +32,20 @@ class GlobalConfiguration extends Model
      */
     public static function getValue(string $key, $default = null)
     {
-        $config = static::where('config_key', $key)->first();
-        return $config ? $config->config_value : $default;
+        try {
+            if (!Schema::hasTable('global_configurations')) {
+                \Log::warning('global_configurations table does not exist', ['key' => $key]);
+                return $default;
+            }
+            $config = static::where('config_key', $key)->first();
+            return $config ? $config->config_value : $default;
+        } catch (\Exception $e) {
+            \Log::error('GlobalConfiguration::getValue error', [
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            return $default;
+        }
     }
 
     /**
@@ -43,13 +58,25 @@ class GlobalConfiguration extends Model
      */
     public static function setValue(string $key, $value, ?string $description = null): self
     {
-        return static::updateOrCreate(
-            ['config_key' => $key],
-            [
-                'config_value' => $value,
-                'description' => $description,
-            ]
-        );
+        try {
+            if (!Schema::hasTable('global_configurations')) {
+                \Log::warning('global_configurations table does not exist', ['key' => $key]);
+                throw new \Exception('global_configurations table does not exist');
+            }
+            return static::updateOrCreate(
+                ['config_key' => $key],
+                [
+                    'config_value' => $value,
+                    'description' => $description,
+                ]
+            );
+        } catch (\Exception $e) {
+            \Log::error('GlobalConfiguration::setValue error', [
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     /**

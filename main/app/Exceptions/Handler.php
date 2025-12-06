@@ -51,10 +51,92 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
-        // Handle HTTP exceptions (404, 403, 500, etc.)
+        // Handle all exceptions (including 500 errors from database, etc.)
+        $statusCode = 500;
+        
         if ($this->isHttpException($e)) {
             $statusCode = $e->getStatusCode();
-            
+        } elseif ($e instanceof \Illuminate\Database\QueryException || 
+                  $e instanceof \PDOException ||
+                  $e instanceof \ErrorException) {
+            // Database errors, missing tables, etc. - show friendly 500 page
+            $statusCode = 500;
+        }
+        
+        // Only show friendly error pages for 500 errors
+        if ($statusCode === 500) {
+            try {
+                // Check if View service is available before trying to render views
+                if (!app()->bound('view')) {
+                    // If View service is not available, return simple text response
+                    return response("Ummm, i think we make a mistake, here. Please Tell Us! Just in case we are forget ):", $statusCode);
+                }
+                
+                // Safely check if request is from admin panel
+                $isAdmin = $request->is('admin/*');
+                if (!$isAdmin) {
+                    try {
+                        if (app()->bound('auth') && app('auth')->guard('admin')) {
+                            $isAdmin = Auth::guard('admin')->check();
+                        }
+                    } catch (\Exception $authEx) {
+                        // If auth check fails, just use URL pattern
+                        $isAdmin = false;
+                    }
+                }
+                
+                // Safely check if request is from user panel
+                $isUser = false;
+                if (!$isAdmin) {
+                    try {
+                        if (app()->bound('auth')) {
+                            $isUser = Auth::check();
+                        }
+                    } catch (\Exception $authEx) {
+                        // If auth check fails, assume not user
+                        $isUser = false;
+                    }
+                }
+
+                // Use panel-specific error views
+                if ($isAdmin) {
+                    $view = "errors.500-admin";
+                    $viewPath = resource_path("views/{$view}.blade.php");
+                    if (file_exists($viewPath)) {
+                        try {
+                            return response()->view($view, ['exception' => $e], $statusCode);
+                        } catch (\Exception $viewEx) {
+                            // If view rendering fails, fall back to default
+                        }
+                    }
+                } elseif ($isUser) {
+                    $view = "errors.500-user";
+                    $viewPath = resource_path("views/{$view}.blade.php");
+                    if (file_exists($viewPath)) {
+                        try {
+                            return response()->view($view, ['exception' => $e], $statusCode);
+                        } catch (\Exception $viewEx) {
+                            // If view rendering fails, fall back to default
+                        }
+                    }
+                } else {
+                    // Public/guest error page
+                    $view = "errors.500";
+                    $viewPath = resource_path("views/{$view}.blade.php");
+                    if (file_exists($viewPath)) {
+                        try {
+                            return response()->view($view, ['exception' => $e], $statusCode);
+                        } catch (\Exception $viewEx) {
+                            // If view rendering fails, fall back to default
+                        }
+                    }
+                }
+            } catch (\Exception $ex) {
+                // If there's any error, fall back to default error handling
+                // Don't log to avoid infinite loops or breaking normal pages
+            }
+        } else {
+            // Handle other HTTP exceptions (404, 403, etc.)
             try {
                 // Check if View service is available before trying to render views
                 if (!app()->bound('view')) {

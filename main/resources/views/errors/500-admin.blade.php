@@ -34,9 +34,14 @@
                 </g>
             </svg>
             <div class="message">
-                {{__("Internal Server Error")}}
+                {{__("Ummm, i think we make a mistake, here. Please Tell Us! Just in case we are forget ):")}}
             </div>
-            <a href="{{ route('admin.home') }}" class="main-btn btn-sm mt-5">{{__("Back To Dashboard")}}</a>
+            <div class="error-actions mt-4">
+                <a href="{{ route('admin.home') }}" class="main-btn btn-sm">{{__("Back To Dashboard")}}</a>
+                @if(Route::has('admin.ticket.index'))
+                <a href="{{ route('admin.ticket.index') }}" class="main-btn btn-sm btn-outline-primary ml-2">{{__("View Support Tickets")}}</a>
+                @endif
+            </div>
         </div>
     </div>
 @endsection
@@ -119,6 +124,21 @@
             50% { r: 10; opacity: 0.2; }
             75% { r: 15; opacity: 0.1; }
             100% { r: 20; opacity: 0; }
+        }
+        .error-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .error-actions .btn-outline-primary {
+            border: 2px solid #be0eea;
+            color: #be0eea;
+            background: transparent;
+        }
+        .error-actions .btn-outline-primary:hover {
+            background: #be0eea;
+            color: #fff;
         }
     </style>
 @endpush

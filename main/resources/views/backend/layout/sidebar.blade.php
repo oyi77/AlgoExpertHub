@@ -77,29 +77,91 @@
 
             {{-- Trading Management Addon (Parent Menu) --}}
             @if ($adminUser && $tradingManagementEnabled)
+                @php
+                    try {
+                        $hasConfigRoute = Route::has('admin.trading-management.config.index');
+                        $hasStrategyRoute = Route::has('admin.trading-management.strategy.index');
+                        $hasOperationsRoute = Route::has('admin.trading-management.operations.index');
+                        $hasCopyTradingRoute = Route::has('admin.trading-management.copy-trading.index');
+                        $hasTestRoute = Route::has('admin.trading-management.test.index');
+                        $hasTradingBotsRoute = Route::has('admin.trading-management.trading-bots.index');
+                    } catch (\Exception $e) {
+                        \Log::error('Trading Management menu route check error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                        $hasConfigRoute = false;
+                        $hasStrategyRoute = false;
+                        $hasOperationsRoute = false;
+                        $hasCopyTradingRoute = false;
+                        $hasTestRoute = false;
+                        $hasTradingBotsRoute = false;
+                    }
+                @endphp
+                @if ($hasConfigRoute || $hasStrategyRoute || $hasOperationsRoute || $hasCopyTradingRoute || $hasTestRoute || $hasTradingBotsRoute)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span></a>
                     <ul aria-expanded="false">
-                        @if (Route::has('admin.trading-management.config.index'))
-                        <li><a href="{{ route('admin.trading-management.config.index') }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
+                        @if ($hasConfigRoute)
+                        @php
+                            try {
+                                $configRouteUrl = route('admin.trading-management.config.index');
+                            } catch (\Exception $e) {
+                                $configRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $configRouteUrl }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
                         @endif
-                        @if (Route::has('admin.trading-management.strategy.index'))
-                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('Strategy Management') }}</a></li>
+                        @if ($hasStrategyRoute)
+                        @php
+                            try {
+                                $strategyRouteUrl = route('admin.trading-management.strategy.index');
+                            } catch (\Exception $e) {
+                                $strategyRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $strategyRouteUrl }}" aria-expanded="false">{{ __('Strategy Management') }}</a></li>
                         @endif
-                        @if (Route::has('admin.trading-management.operations.index'))
-                        <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
+                        @if ($hasOperationsRoute)
+                        @php
+                            try {
+                                $operationsRouteUrl = route('admin.trading-management.operations.index');
+                            } catch (\Exception $e) {
+                                $operationsRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $operationsRouteUrl }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
                         @endif
-                        @if (Route::has('admin.trading-management.copy-trading.index'))
-                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">{{ __('Copy Trading') }}</a></li>
+                        @if ($hasCopyTradingRoute)
+                        @php
+                            try {
+                                $copyTradingRouteUrl = route('admin.trading-management.copy-trading.index');
+                            } catch (\Exception $e) {
+                                $copyTradingRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $copyTradingRouteUrl }}" aria-expanded="false">{{ __('Copy Trading') }}</a></li>
                         @endif
-                        @if (Route::has('admin.trading-management.test.index'))
-                        <li><a href="{{ route('admin.trading-management.test.index') }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
+                        @if ($hasTestRoute)
+                        @php
+                            try {
+                                $testRouteUrl = route('admin.trading-management.test.index');
+                            } catch (\Exception $e) {
+                                $testRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $testRouteUrl }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
                         @endif
-                        @if (Route::has('admin.trading-management.trading-bots.index'))
-                        <li><a href="{{ route('admin.trading-management.trading-bots.index') }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
+                        @if ($hasTradingBotsRoute)
+                        @php
+                            try {
+                                $tradingBotsRouteUrl = route('admin.trading-management.trading-bots.index');
+                            } catch (\Exception $e) {
+                                $tradingBotsRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $tradingBotsRouteUrl }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
                         @endif
                     </ul>
                 </li>
+                @endif
             @endif
 
             {{-- OLD: Keep for backward compatibility during migration (can be hidden if trading-management-addon active) --}}
@@ -411,7 +473,17 @@
                         <li><a href="{{ route('admin.withdraw.index') }}">{{ __('Withdraw Methods') }}</a></li>
                         <li><a href="{{ route('admin.withdraw.filter') }}">{{ __('All Withdraw') }}</a></li>
                         <li><a href="{{ route('admin.withdraw.filter', 'pending') }}">{{ __('Pending Withdraw') }}
-                                <span class="noti-count">{{Config::sidebarData()['pendingWithdraw'] }}</span></a></li>
+                                @php
+                                    try {
+                                        $pendingWithdraw = Config::sidebarData()['pendingWithdraw'] ?? 0;
+                                    } catch (\Exception $e) {
+                                        $pendingWithdraw = 0;
+                                    }
+                                @endphp
+                                @if($pendingWithdraw > 0)
+                                <span class="noti-count">{{ $pendingWithdraw }}</span>
+                                @endif
+                            </a></li>
                         <li><a
                                 href="{{ route('admin.withdraw.filter', 'accepted') }}">{{ __('Accepted Withdraw') }}</a>
                         </li>
@@ -460,8 +532,15 @@
                         <li><a href="{{ route('admin.ticket.index') }}">{{ __('All Tickets') }}</a></li>
 
                         <li><a href="{{ route('admin.ticket.status', 'pending') }}">{{ __('Pending Ticket') }}
-                                @if (Config::sidebarData()['pendingTicket'] > 0)
-                                    <span class="noti-count">{{ Config::sidebarData()['pendingTicket'] }}</span>
+                                @php
+                                    try {
+                                        $pendingTicket = Config::sidebarData()['pendingTicket'] ?? 0;
+                                    } catch (\Exception $e) {
+                                        $pendingTicket = 0;
+                                    }
+                                @endphp
+                                @if($pendingTicket > 0)
+                                    <span class="noti-count">{{ $pendingTicket }}</span>
                                 @endif
                             </a></li>
 
