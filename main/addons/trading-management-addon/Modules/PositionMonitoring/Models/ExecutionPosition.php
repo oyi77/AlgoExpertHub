@@ -53,6 +53,14 @@ class ExecutionPosition extends Model
         return $this->belongsTo(ExecutionConnection::class);
     }
 
+    /**
+     * Alias for executionConnection() for compatibility with views
+     */
+    public function connection()
+    {
+        return $this->executionConnection();
+    }
+
     public function executionLog()
     {
         return $this->belongsTo(ExecutionLog::class);

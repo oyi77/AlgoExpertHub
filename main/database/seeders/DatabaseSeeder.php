@@ -59,7 +59,13 @@ class DatabaseSeeder extends Seeder
             FilterStrategySeeder::class,      // Filter Strategies
             ChannelSourceSeeder::class,        // Channel Sources
             ExecutionConnectionSeeder::class,  // Execution Connections
+            ExecutionLogSeeder::class,        // Execution Logs (after ExecutionConnectionSeeder)
+            ExecutionPositionSeeder::class,   // Execution Positions (after ExecutionLogSeeder)
             CopyTradingSeeder::class,          // Copy Trading Settings
+            CopyTradingSubscriptionSeeder::class, // Copy Trading Subscriptions (after CopyTradingSeeder, users, connections)
+            BacktestSeeder::class,            // Backtests (after FilterStrategySeeder, AiModelProfileSeeder, TradingPresetSeeder)
+            AiUsageAnalyticsSeeder::class,    // AI Usage Analytics (after AiConnectionSeeder)
+            MarketplaceSeeder::class,         // Marketplace (bot templates, trader profiles, backtests)
         ]);
 
         // Conditional addon seeders (only if addon is active and class exists)

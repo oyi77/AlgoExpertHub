@@ -37,6 +37,14 @@ class ExecutionLog extends Model
         return $this->belongsTo(ExecutionConnection::class);
     }
 
+    /**
+     * Alias for executionConnection() for compatibility with views
+     */
+    public function connection()
+    {
+        return $this->executionConnection();
+    }
+
     public function signal()
     {
         return $this->belongsTo(Signal::class);
@@ -55,6 +63,15 @@ class ExecutionLog extends Model
     public function scopeByStatus($query, string $status)
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * Get direction attribute (alias for side)
+     * For compatibility with views that expect 'direction'
+     */
+    public function getDirectionAttribute()
+    {
+        return $this->side;
     }
 }
 

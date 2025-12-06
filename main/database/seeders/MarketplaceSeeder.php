@@ -3,17 +3,27 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Addons\TradingManagement\Modules\Marketplace\Models\{BotTemplate, SignalSourceTemplate, CompleteBot, TemplateBacktest, TraderProfile};
 use App\Models\User;
 
 class MarketplaceSeeder extends Seeder
 {
     public function run()
     {
+        // Check if models exist
+        if (!class_exists(\Addons\TradingManagement\Modules\Marketplace\Models\BotTemplate::class)) {
+            $this->command->warn('Marketplace models not found. Skipping marketplace seeding.');
+            return;
+        }
+
+        $BotTemplate = \Addons\TradingManagement\Modules\Marketplace\Models\BotTemplate::class;
+        $SignalSourceTemplate = \Addons\TradingManagement\Modules\Marketplace\Models\SignalSourceTemplate::class;
+        $CompleteBot = \Addons\TradingManagement\Modules\Marketplace\Models\CompleteBot::class;
+        $TemplateBacktest = \Addons\TradingManagement\Modules\Marketplace\Models\TemplateBacktest::class;
+        $TraderProfile = \Addons\TradingManagement\Modules\Marketplace\Models\TraderProfile::class;
         // Create sample bot templates
         $categories = ['grid', 'dca', 'martingale', 'scalping', 'trend_following'];
         for ($i = 1; $i <= 20; $i++) {
-            $bot = BotTemplate::create([
+            $bot = $BotTemplate::create([
                 'user_id' => User::inRandomOrder()->first()?->id,
                 'name' => "Bot Template #{$i}",
                 'description' => "High-performance {$categories[array_rand($categories)]} bot with proven results",
@@ -26,7 +36,7 @@ class MarketplaceSeeder extends Seeder
                 'total_ratings' => rand(10, 200),
             ]);
 
-            TemplateBacktest::create([
+            $TemplateBacktest::create([
                 'template_type' => 'bot',
                 'template_id' => $bot->id,
                 'capital_initial' => 10000,
@@ -47,7 +57,7 @@ class MarketplaceSeeder extends Seeder
 
         // Signal sources
         for ($i = 1; $i <= 15; $i++) {
-            SignalSourceTemplate::create([
+            $SignalSourceTemplate::create([
                 'user_id' => User::inRandomOrder()->first()?->id,
                 'name' => "Signal Source #{$i}",
                 'description' => "Professional signal channel with 75%+ accuracy",
@@ -63,7 +73,7 @@ class MarketplaceSeeder extends Seeder
 
         // Complete bots
         for ($i = 1; $i <= 10; $i++) {
-            $bot = CompleteBot::create([
+            $bot = $CompleteBot::create([
                 'user_id' => User::inRandomOrder()->first()?->id,
                 'name' => "Complete Bot #{$i}",
                 'description' => "Fully automated trading system with indicators and rules",
@@ -78,7 +88,7 @@ class MarketplaceSeeder extends Seeder
                 'total_ratings' => rand(15, 100),
             ]);
 
-            TemplateBacktest::create([
+            $TemplateBacktest::create([
                 'template_type' => 'complete',
                 'template_id' => $bot->id,
                 'capital_initial' => 10000,
@@ -100,7 +110,7 @@ class MarketplaceSeeder extends Seeder
         // Trader profiles
         $users = User::limit(20)->get();
         foreach ($users as $user) {
-            TraderProfile::create([
+            $TraderProfile::create([
                 'user_id' => $user->id,
                 'display_name' => $user->username,
                 'bio' => "Professional trader with 5+ years experience",
@@ -115,6 +125,8 @@ class MarketplaceSeeder extends Seeder
                 'verified' => rand(0, 1),
             ]);
         }
+
+        $this->command->info('Marketplace data seeded successfully!');
     }
 }
 
