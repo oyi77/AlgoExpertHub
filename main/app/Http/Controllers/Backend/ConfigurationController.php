@@ -44,6 +44,9 @@ class ConfigurationController extends Controller
         // Get database backups
         $data['backups'] = $this->backupService->listBackups();
         
+        // Get dynamic seeder count
+        $data['seederCount'] = $this->getSeederCount();
+        
         return view('backend.setting.index')->with($data);
     }
 
@@ -211,33 +214,49 @@ class ConfigurationController extends Controller
         ];
 
         // Database Optimization Tips (Dynamic Analysis)
-        $tips['database'][] = [
-            'tip' => __('Use eager loading (with()) to prevent N+1 query problems'),
-            'example' => __('Example: Signal::with("pair", "time", "market")->get()'),
-            'priority' => 'high',
-            'detected' => $this->checkNPlusOneRisk()
-        ];
+        $nPlusOneAnalysis = $this->analyzeNPlusOneQueries();
+        if (!empty($nPlusOneAnalysis)) {
+            $tips['database'][] = [
+                'tip' => __('Use eager loading (with()) to prevent N+1 query problems'),
+                'example' => $nPlusOneAnalysis['example'],
+                'priority' => 'high',
+                'detected' => $nPlusOneAnalysis['detected'],
+                'details' => $nPlusOneAnalysis['details'] ?? null
+            ];
+        }
 
-        $tips['database'][] = [
-            'tip' => __('Add database indexes on frequently queried columns'),
-            'example' => __('Columns: user_id, signal_id, status, is_published, created_at'),
-            'priority' => 'medium',
-            'detected' => $this->checkMissingIndexes()
-        ];
+        $indexAnalysis = $this->analyzeDatabaseIndexes();
+        if (!empty($indexAnalysis)) {
+            $tips['database'][] = [
+                'tip' => __('Add database indexes on frequently queried columns'),
+                'example' => $indexAnalysis['example'],
+                'priority' => 'medium',
+                'detected' => $indexAnalysis['detected'],
+                'details' => $indexAnalysis['details'] ?? null
+            ];
+        }
 
-        $tips['database'][] = [
-            'tip' => __('Use query caching for expensive queries'),
-            'example' => __('Cache::remember("key", 3600, function() { return Model::get(); })'),
-            'priority' => 'medium',
-            'detected' => $this->checkCacheUsage()
-        ];
+        $cacheAnalysis = $this->analyzeCacheUsage();
+        if (!empty($cacheAnalysis)) {
+            $tips['database'][] = [
+                'tip' => __('Use query caching for expensive queries'),
+                'example' => $cacheAnalysis['example'],
+                'priority' => 'medium',
+                'detected' => $cacheAnalysis['detected'],
+                'details' => $cacheAnalysis['details'] ?? null
+            ];
+        }
 
-        $tips['database'][] = [
-            'tip' => __('Use pagination for large datasets'),
-            'example' => __('Model::paginate(20) instead of Model::all()'),
-            'priority' => 'high',
-            'detected' => true
-        ];
+        $paginationAnalysis = $this->analyzePaginationUsage();
+        if (!empty($paginationAnalysis)) {
+            $tips['database'][] = [
+                'tip' => __('Use pagination for large datasets'),
+                'example' => $paginationAnalysis['example'],
+                'priority' => 'high',
+                'detected' => $paginationAnalysis['detected'],
+                'details' => $paginationAnalysis['details'] ?? null
+            ];
+        }
 
         // Server Configuration Tips (Dynamic Detection)
         $opcacheEnabled = function_exists('opcache_get_status') && opcache_get_status() !== false;
@@ -284,12 +303,16 @@ class ConfigurationController extends Controller
             'status' => __('Current') . ': ' . strtoupper($queueConnection)
         ];
 
-        $tips['code'][] = [
-            'tip' => __('Cache expensive computations and API calls'),
-            'example' => __('Cache::remember("key", 3600, function() { ... })'),
-            'priority' => 'medium',
-            'detected' => $this->checkCacheUsage()
-        ];
+        $cacheAnalysis = $this->analyzeCacheUsage();
+        if (!empty($cacheAnalysis)) {
+            $tips['code'][] = [
+                'tip' => __('Cache expensive computations and API calls'),
+                'example' => $cacheAnalysis['example'],
+                'priority' => 'medium',
+                'detected' => $cacheAnalysis['detected'],
+                'details' => $cacheAnalysis['details'] ?? null
+            ];
+        }
 
         $middlewareCount = count(config('app.middleware', []));
         $tips['code'][] = [
@@ -299,72 +322,259 @@ class ConfigurationController extends Controller
             'detected' => $middlewareCount <= 10
         ];
 
-        $tips['code'][] = [
-            'tip' => __('Use chunking for processing large datasets'),
-            'example' => __('Model::chunk(100, function($items) { ... })'),
-            'priority' => 'medium',
-            'detected' => true
-        ];
+        $chunkingAnalysis = $this->analyzeChunkingUsage();
+        if (!empty($chunkingAnalysis)) {
+            $tips['code'][] = [
+                'tip' => __('Use chunking for processing large datasets'),
+                'example' => $chunkingAnalysis['example'],
+                'priority' => 'medium',
+                'detected' => $chunkingAnalysis['detected'],
+                'details' => $chunkingAnalysis['details'] ?? null
+            ];
+        }
 
         return $tips;
     }
 
     /**
-     * Check for potential N+1 query risks
+     * Analyze N+1 query risks by scanning models and controllers
      */
-    protected function checkNPlusOneRisk()
+    protected function analyzeNPlusOneQueries()
     {
-        // Check if models have relationships that might cause N+1
-        $modelsWithRelationships = [
-            'App\Models\Signal' => ['pair', 'time', 'market', 'plans'],
-            'App\Models\User' => ['subscriptions', 'payments', 'tickets'],
-            'App\Models\Payment' => ['user', 'plan', 'gateway']
-        ];
-
-        // This is a simplified check - in production, you'd analyze actual queries
-        return true; // Assume risk exists and recommend eager loading
-    }
-
-    /**
-     * Check for missing database indexes
-     */
-    protected function checkMissingIndexes()
-    {
-        // Common columns that should be indexed
-        $shouldBeIndexed = [
-            'users.ref_id',
-            'users.status',
-            'signals.is_published',
-            'signals.published_date',
-            'plan_subscriptions.is_current',
-            'payments.status'
-        ];
-
-        // In production, you'd query information_schema to check actual indexes
-        return true; // Recommend checking indexes
-    }
-
-    /**
-     * Check cache usage patterns
-     */
-    protected function checkCacheUsage()
-    {
-        // Check if Cache::remember is used in codebase
-        $cacheFiles = glob(app_path('**/*.php'));
-        $cacheUsageFound = false;
-
-        foreach ($cacheFiles as $file) {
-            if (is_file($file)) {
-                $content = file_get_contents($file);
-                if (strpos($content, 'Cache::remember') !== false || 
-                    strpos($content, 'cache()->remember') !== false) {
-                    $cacheUsageFound = true;
-                    break;
+        $models = $this->scanModels();
+        $controllers = $this->scanControllers();
+        
+        $riskyPatterns = [];
+        $examples = [];
+        
+        // Find models with relationships
+        foreach ($models as $model => $relationships) {
+            if (empty($relationships)) continue;
+            
+            // Check if controllers use this model without eager loading
+            foreach ($controllers as $controller => $queries) {
+                foreach ($queries as $query) {
+                    // Check if model is used but relationships aren't eager loaded
+                    if (strpos($query, $model) !== false && 
+                        strpos($query, '->with(') === false &&
+                        strpos($query, '::with(') === false) {
+                        $riskyPatterns[] = [
+                            'model' => class_basename($model),
+                            'controller' => class_basename($controller),
+                            'relationships' => implode(', ', array_slice($relationships, 0, 3))
+                        ];
+                        
+                        if (count($examples) < 3) {
+                            $relList = implode('", "', array_slice($relationships, 0, 3));
+                            $examples[] = class_basename($model) . '::with("' . $relList . '")->get()';
+                        }
+                    }
                 }
             }
         }
+        
+        return [
+            'detected' => empty($riskyPatterns),
+            'example' => !empty($examples) ? __('Example: :example', ['example' => $examples[0]]) : __('Example: Signal::with("pair", "time", "market")->get()'),
+            'details' => !empty($riskyPatterns) ? __('Found :count potential N+1 risks', ['count' => count($riskyPatterns)]) : null
+        ];
+    }
 
-        return $cacheUsageFound;
+    /**
+     * Analyze database indexes by checking migrations and schema
+     */
+    protected function analyzeDatabaseIndexes()
+    {
+        $migrations = glob(database_path('migrations/*.php'));
+        $indexedColumns = [];
+        $commonColumns = ['user_id', 'status', 'is_published', 'created_at', 'is_current'];
+        
+        foreach ($migrations as $migration) {
+            $content = file_get_contents($migration);
+            // Extract index definitions
+            preg_match_all('/\$table->(index|unique)\([\'"]([^\'"]+)[\'"]\)/', $content, $matches);
+            if (!empty($matches[2])) {
+                $indexedColumns = array_merge($indexedColumns, $matches[2]);
+            }
+        }
+        
+        $missingIndexes = array_diff($commonColumns, $indexedColumns);
+        
+        return [
+            'detected' => empty($missingIndexes),
+            'example' => !empty($missingIndexes) 
+                ? __('Columns to index: :columns', ['columns' => implode(', ', array_slice($missingIndexes, 0, 5))])
+                : __('All common columns are indexed'),
+            'details' => !empty($missingIndexes) 
+                ? __(':count columns may need indexes', ['count' => count($missingIndexes)])
+                : null
+        ];
+    }
+
+    /**
+     * Analyze cache usage patterns in codebase
+     */
+    protected function analyzeCacheUsage()
+    {
+        $files = array_merge(
+            glob(app_path('**/*.php')),
+            glob(base_path('main/addons/**/app/**/*.php'))
+        );
+        
+        $cacheUsageCount = 0;
+        $totalFiles = 0;
+        
+        foreach ($files as $file) {
+            if (!is_file($file)) continue;
+            $totalFiles++;
+            $content = file_get_contents($file);
+            if (preg_match('/Cache::(remember|get|put)|cache\(\)->(remember|get|put)/', $content)) {
+                $cacheUsageCount++;
+            }
+        }
+        
+        $usageRate = $totalFiles > 0 ? ($cacheUsageCount / $totalFiles) * 100 : 0;
+        
+        return [
+            'detected' => $usageRate > 5, // More than 5% of files use cache
+            'example' => __('Cache::remember("key", 3600, function() { return Model::get(); })'),
+            'details' => __('Cache used in :count/:total files (:percent%)', [
+                'count' => $cacheUsageCount,
+                'total' => $totalFiles,
+                'percent' => round($usageRate, 1)
+            ])
+        ];
+    }
+
+    /**
+     * Analyze pagination usage
+     */
+    protected function analyzePaginationUsage()
+    {
+        $files = array_merge(
+            glob(app_path('Http/Controllers/**/*.php')),
+            glob(base_path('main/addons/**/app/Http/Controllers/**/*.php'))
+        );
+        
+        $paginationCount = 0;
+        $allCount = 0;
+        
+        foreach ($files as $file) {
+            if (!is_file($file)) continue;
+            $content = file_get_contents($file);
+            if (preg_match('/->(all|get)\(\)/', $content)) {
+                $allCount++;
+            }
+            if (preg_match('/->(paginate|simplePaginate)\(/', $content)) {
+                $paginationCount++;
+            }
+        }
+        
+        return [
+            'detected' => $paginationCount > 0,
+            'example' => __('Model::paginate(20) instead of Model::all()'),
+            'details' => __('Found :paginate pagination usages vs :all ->all() calls', [
+                'paginate' => $paginationCount,
+                'all' => $allCount
+            ])
+        ];
+    }
+
+    /**
+     * Analyze chunking usage
+     */
+    protected function analyzeChunkingUsage()
+    {
+        $files = array_merge(
+            glob(app_path('**/*.php')),
+            glob(base_path('main/addons/**/app/**/*.php'))
+        );
+        
+        $chunkingCount = 0;
+        
+        foreach ($files as $file) {
+            if (!is_file($file)) continue;
+            $content = file_get_contents($file);
+            if (preg_match('/->chunk\(/', $content)) {
+                $chunkingCount++;
+            }
+        }
+        
+        return [
+            'detected' => $chunkingCount > 0,
+            'example' => __('Model::chunk(100, function($items) { ... })'),
+            'details' => __('Found :count chunking usages', ['count' => $chunkingCount])
+        ];
+    }
+
+    /**
+     * Scan models to find relationships
+     */
+    protected function scanModels()
+    {
+        $models = [];
+        $modelFiles = array_merge(
+            glob(app_path('Models/*.php')),
+            glob(base_path('main/addons/**/app/Models/*.php'))
+        );
+        
+        foreach ($modelFiles as $file) {
+            if (!is_file($file)) continue;
+            $content = file_get_contents($file);
+            $className = $this->extractClassName($file, $content);
+            if (!$className) continue;
+            
+            // Extract relationship methods
+            preg_match_all('/public function (\w+)\(\)\s*\{[^}]*return \$this->(hasMany|belongsTo|hasOne|belongsToMany)\(/', $content, $matches);
+            $relationships = $matches[1] ?? [];
+            
+            if (!empty($relationships)) {
+                $models[$className] = $relationships;
+            }
+        }
+        
+        return $models;
+    }
+
+    /**
+     * Scan controllers for query patterns
+     */
+    protected function scanControllers()
+    {
+        $controllers = [];
+        $controllerFiles = array_merge(
+            glob(app_path('Http/Controllers/**/*.php')),
+            glob(base_path('main/addons/**/app/Http/Controllers/**/*.php'))
+        );
+        
+        foreach ($controllerFiles as $file) {
+            if (!is_file($file)) continue;
+            $content = file_get_contents($file);
+            $className = $this->extractClassName($file, $content);
+            if (!$className) continue;
+            
+            // Extract model queries
+            preg_match_all('/(\w+)::(all|get|find|where|paginate|first)\(/', $content, $matches);
+            $queries = $matches[0] ?? [];
+            
+            if (!empty($queries)) {
+                $controllers[$className] = $queries;
+            }
+        }
+        
+        return $controllers;
+    }
+
+    /**
+     * Extract class name from file content
+     */
+    protected function extractClassName($file, $content)
+    {
+        if (preg_match('/namespace\s+([^;]+);/', $content, $nsMatch) &&
+            preg_match('/class\s+(\w+)/', $content, $classMatch)) {
+            return $nsMatch[1] . '\\' . $classMatch[1];
+        }
+        return null;
     }
 
     public function ConfigurationUpdate(ConfigurationRequest $request)
@@ -1052,6 +1262,32 @@ class ConfigurationController extends Controller
             }
             
             return redirect()->back()->with('error', $errorMessage);
+        }
+    }
+
+    /**
+     * Get dynamic seeder count from DatabaseSeeder
+     * Counts all seeders by parsing the source code
+     */
+    protected function getSeederCount(): int
+    {
+        try {
+            $seederFile = database_path('seeders/DatabaseSeeder.php');
+            
+            if (!file_exists($seederFile)) {
+                return 0;
+            }
+
+            $content = file_get_contents($seederFile);
+            
+            // Count all Seeder::class and RolePermission::class occurrences
+            // This includes both main array and conditional seeders
+            $count = substr_count($content, 'Seeder::class') + substr_count($content, 'RolePermission::class');
+            
+            return $count;
+        } catch (\Exception $e) {
+            // If file read fails, return 0
+            return 0;
         }
     }
 }

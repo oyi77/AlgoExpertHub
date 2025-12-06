@@ -52,6 +52,14 @@ class DatabaseSeeder extends Seeder
             // AI & Addons
             AIProviderSeeder::class,
             ParsingPatternSeeder::class,
+            
+            // Addon Features (conditional - will skip if models don't exist)
+            AiConnectionSeeder::class,        // AI Connections (after AIProviderSeeder)
+            AiModelProfileSeeder::class,      // AI Model Profiles
+            FilterStrategySeeder::class,      // Filter Strategies
+            ChannelSourceSeeder::class,        // Channel Sources
+            ExecutionConnectionSeeder::class,  // Execution Connections
+            CopyTradingSeeder::class,          // Copy Trading Settings
         ]);
 
         // Conditional addon seeders (only if addon is active and class exists)

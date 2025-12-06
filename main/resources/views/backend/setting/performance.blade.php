@@ -4,6 +4,52 @@
         <p class="text-muted mb-0">{{ __('Optimize your application performance with these tools') }}</p>
     </div>
     <div class="card-body">
+        <!-- System Information -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h5 class="mb-3"><i class="las la-info-circle"></i> {{ __('System Information') }}</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <tbody>
+                            <tr>
+                                <td><strong>{{ __('PHP Version') }}</strong></td>
+                                <td>{{ PHP_VERSION }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('PHP Binary Path') }}</strong></td>
+                                <td><code>{{ defined('PHP_BINARY') ? PHP_BINARY : __('Not available') }}</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Application Path') }}</strong></td>
+                                <td><code>{{ base_path() }}</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('Shell Exec Available') }}</strong></td>
+                                <td>
+                                    @if(function_exists('shell_exec') && !in_array('shell_exec', explode(',', ini_get('disable_functions'))))
+                                        <span class="badge badge-success">{{ __('Yes') }}</span>
+                                    @else
+                                        <span class="badge badge-warning">{{ __('No') }}</span>
+                                        <small class="text-muted d-block">{{ __('Some optimizations may require manual execution') }}</small>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{ __('OPcache Available') }}</strong></td>
+                                <td>
+                                    @if(function_exists('opcache_reset'))
+                                        <span class="badge badge-success">{{ __('Yes') }}</span>
+                                    @else
+                                        <span class="badge badge-danger">{{ __('No') }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- PHP OPcache Status -->
         <div class="row mb-4">
             <div class="col-md-12">
@@ -193,11 +239,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Individual Clearing Actions -->
-                    <div class="col-md-12 mb-3 mt-3">
-                        <h6 class="text-muted mb-2"><i class="las la-broom"></i> {{ __('Individual Cache Clearing') }}</h6>
-                    </div>
                     <div class="col-md-6 mb-3">
                         <div class="card border border-warning">
                             <div class="card-body">
@@ -234,7 +275,7 @@
                     </div>
 
                     <!-- Optimize All Button -->
-                    <div class="col-md-12 mb-3 mt-3">
+                    <div class="col-md-6 mb-3">
                         <div class="card border border-success">
                             <div class="card-body">
                                 <h6 class="card-title text-success">
@@ -253,52 +294,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Information -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h5 class="mb-3"><i class="las la-info-circle"></i> {{ __('System Information') }}</h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <tbody>
-                            <tr>
-                                <td><strong>{{ __('PHP Version') }}</strong></td>
-                                <td>{{ PHP_VERSION }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ __('PHP Binary Path') }}</strong></td>
-                                <td><code>{{ defined('PHP_BINARY') ? PHP_BINARY : __('Not available') }}</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ __('Application Path') }}</strong></td>
-                                <td><code>{{ base_path() }}</code></td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ __('Shell Exec Available') }}</strong></td>
-                                <td>
-                                    @if(function_exists('shell_exec') && !in_array('shell_exec', explode(',', ini_get('disable_functions'))))
-                                        <span class="badge badge-success">{{ __('Yes') }}</span>
-                                    @else
-                                        <span class="badge badge-warning">{{ __('No') }}</span>
-                                        <small class="text-muted d-block">{{ __('Some optimizations may require manual execution') }}</small>
-                                    @endif
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>{{ __('OPcache Available') }}</strong></td>
-                                <td>
-                                    @if(function_exists('opcache_reset'))
-                                        <span class="badge badge-success">{{ __('Yes') }}</span>
-                                    @else
-                                        <span class="badge badge-danger">{{ __('No') }}</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
@@ -413,7 +408,7 @@
                                     <strong class="d-block mb-2">{{ __('Option 1: Factory State (Seeders)') }}</strong>
                                     <ul class="small text-muted mb-2">
                                         <li>✅ {{ __('Fresh install with demo data') }}</li>
-                                        <li>✅ {{ __('Uses DatabaseSeeder (17 seeders)') }}</li>
+                                        <li>✅ {{ __('Uses DatabaseSeeder (:count seeders)', ['count' => $seederCount ?? 0]) }}</li>
                                         <li>⚠️ {{ __('Wipes ALL data, re-migrates, seeds') }}</li>
                                     </ul>
                                     <form action="{{ route('admin.general.backup-load-factory') }}" method="POST" class="factory-restore-form">
