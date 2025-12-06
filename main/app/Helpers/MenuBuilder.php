@@ -21,19 +21,20 @@ class MenuBuilder
         // Check addon module status
         $multiChannelEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') 
             && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
-        $executionEngineEnabled = \App\Support\AddonRegistry::active('trading-execution-engine-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'user_ui');
-        $copyTradingEnabled = \App\Support\AddonRegistry::active('copy-trading-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('copy-trading-addon', 'user_ui')
-            && \App\Support\AddonRegistry::active('trading-execution-engine-addon');
-        $tradingPresetEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'user_ui');
-        $filterStrategyEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
-        $aiTradingEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
-        $srmEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
+        $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
+        $executionEngineEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+        $copyTradingEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')
+            && $executionEngineEnabled;
+        $tradingPresetEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+        $filterStrategyEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
+        $aiTradingEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
+        $srmEnabled = $tradingManagementEnabled 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
 
         // 0. HOME (Group 1)
         $home = [];

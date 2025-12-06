@@ -48,43 +48,43 @@ class Kernel extends ConsoleKernel
             }
         }
 
-        // Trading Execution Engine Addon
-        if (AddonRegistry::active('trading-execution-engine-addon') && AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'execution')) {
+        // Trading Management Addon - Execution Module
+        if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             // Monitor positions every minute
-            if (class_exists(\Addons\TradingExecutionEngine\App\Jobs\MonitorPositionsJob::class)) {
-            $schedule->job(\Addons\TradingExecutionEngine\App\Jobs\MonitorPositionsJob::class)
-                ->everyMinute()
-                ->withoutOverlapping();
+            if (class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\MonitorPositionsJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\MonitorPositionsJob::class)
+                    ->everyMinute()
+                    ->withoutOverlapping();
             }
 
             // Update analytics daily
-            if (class_exists(\Addons\TradingExecutionEngine\App\Jobs\UpdateAnalyticsJob::class)) {
-            $schedule->job(\Addons\TradingExecutionEngine\App\Jobs\UpdateAnalyticsJob::class)
-                ->daily()
-                ->at('00:00');
+            if (class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\UpdateAnalyticsJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\UpdateAnalyticsJob::class)
+                    ->daily()
+                    ->at('00:00');
             }
         }
 
-        // Smart Risk Management Addon
-        if (AddonRegistry::active('smart-risk-management-addon') && AddonRegistry::moduleEnabled('smart-risk-management-addon', 'srm_engine')) {
+        // Trading Management Addon - Risk Management Module (Smart Risk)
+        if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management')) {
             // Update performance scores daily at 1 AM
-            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\UpdatePerformanceScoresJob::class)) {
-                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\UpdatePerformanceScoresJob::class)
+            if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Jobs\UpdatePerformanceScoresJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\RiskManagement\Jobs\UpdatePerformanceScoresJob::class)
                     ->daily()
                     ->at('01:00')
                     ->withoutOverlapping();
             }
 
             // Monitor drawdown every 5 minutes
-            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\MonitorDrawdownJob::class)) {
-                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\MonitorDrawdownJob::class)
+            if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Jobs\MonitorDrawdownJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\RiskManagement\Jobs\MonitorDrawdownJob::class)
                     ->everyFiveMinutes()
                     ->withoutOverlapping();
             }
 
             // Retrain models weekly (Sunday at 3 AM)
-            if (class_exists(\Addons\SmartRiskManagement\App\Jobs\RetrainModelsJob::class)) {
-                $schedule->job(\Addons\SmartRiskManagement\App\Jobs\RetrainModelsJob::class)
+            if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Jobs\RetrainModelsJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\RiskManagement\Jobs\RetrainModelsJob::class)
                     ->weekly()
                     ->sundays()
                     ->at('03:00')

@@ -50,14 +50,15 @@ class AppServiceProvider extends ServiceProvider
                 'ai-connection-addon' => \Addons\AiConnectionAddon\AddonServiceProvider::class,
                 'multi-channel-signal-addon' => \Addons\MultiChannelSignalAddon\AddonServiceProvider::class,
                 'trading-bot-signal-addon' => \Addons\TradingBotSignalAddon\AddonServiceProvider::class,
-                'trading-execution-engine-addon' => \Addons\TradingExecutionEngine\AddonServiceProvider::class,
-                'copy-trading-addon' => \Addons\CopyTrading\AddonServiceProvider::class,
-                'trading-preset-addon' => \Addons\TradingPresetAddon\AddonServiceProvider::class,
-                'filter-strategy-addon' => \Addons\FilterStrategyAddon\AddonServiceProvider::class,
-                'ai-trading-addon' => \Addons\AiTradingAddon\AddonServiceProvider::class,
+                // Consolidated into trading-management-addon:
+                // - trading-execution-engine-addon (module: execution)
+                // - copy-trading-addon (module: copy_trading)
+                // - trading-preset-addon (module: risk_management)
+                // - filter-strategy-addon (module: filter_strategy)
+                // - ai-trading-addon (module: ai_analysis)
+                // - smart-risk-management-addon (module: risk_management)
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
-                'smart-risk-management-addon' => \Addons\SmartRiskManagement\AddonServiceProvider::class,
-                'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // NEW: Consolidated trading management
+                'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // Consolidated trading management
                 'page-builder-addon' => \Addons\PageBuilderAddon\PageBuilderServiceProvider::class,
             ];
 

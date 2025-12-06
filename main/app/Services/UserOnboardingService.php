@@ -100,15 +100,15 @@ class UserOnboardingService
      */
     protected function hasTradeConnection(User $user): bool
     {
-        if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
+        if (!\App\Support\AddonRegistry::active('trading-management-addon') || !\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             return false;
         }
 
-        if (!class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class)) {
+        if (!class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
             return false;
         }
 
-        return \Addons\TradingExecutionEngine\App\Models\ExecutionConnection::userOwned()
+        return \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::userOwned()
             ->where('user_id', $user->id)
             ->exists();
     }

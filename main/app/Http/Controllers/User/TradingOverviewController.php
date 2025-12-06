@@ -25,13 +25,13 @@ class TradingOverviewController extends Controller
 
         $userId = Auth::id();
 
-        // Check if Execution Engine addon is enabled
-        $executionEngineEnabled = \App\Support\AddonRegistry::active('trading-execution-engine-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'user_ui');
+        // Check if Execution Engine module is enabled in trading-management-addon
+        $executionEngineEnabled = \App\Support\AddonRegistry::active('trading-management-addon') 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
 
-        if ($executionEngineEnabled) {
+        if ($executionEngineEnabled && class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
             // Get Execution Connections
-            $connections = \Addons\TradingExecutionEngine\App\Models\ExecutionConnection::userOwned()
+            $connections = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::userOwned()
                 ->where('user_id', $userId)
                 ->with(['preset', 'positions' => function($q) {
                     $q->where('status', 'open');
@@ -43,12 +43,12 @@ class TradingOverviewController extends Controller
                 $todayStart = Carbon::today();
                 $weekStart = Carbon::now()->startOfWeek();
 
-                $todayPnL = \Addons\TradingExecutionEngine\App\Models\ExecutionPosition::where('connection_id', $connection->id)
+                $todayPnL = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('connection_id', $connection->id)
                     ->where('status', 'closed')
                     ->whereDate('closed_at', '>=', $todayStart)
                     ->sum('pnl');
 
-                $weekPnL = \Addons\TradingExecutionEngine\App\Models\ExecutionPosition::where('connection_id', $connection->id)
+                $weekPnL = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('connection_id', $connection->id)
                     ->where('status', 'closed')
                     ->whereDate('closed_at', '>=', $weekStart)
                     ->sum('pnl');
@@ -74,13 +74,13 @@ class TradingOverviewController extends Controller
             }
         }
 
-        // Check if Copy Trading addon is enabled
-        $copyTradingEnabled = \App\Support\AddonRegistry::active('copy-trading-addon') 
-            && \App\Support\AddonRegistry::moduleEnabled('copy-trading-addon', 'user_ui');
+        // Check if Copy Trading module is enabled in trading-management-addon
+        $copyTradingEnabled = \App\Support\AddonRegistry::active('trading-management-addon') 
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading');
 
-        if ($copyTradingEnabled && class_exists(\Addons\CopyTrading\App\Models\CopyTradingSubscription::class)) {
+        if ($copyTradingEnabled && class_exists(\Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::class)) {
             // Get Copy Trading Subscriptions
-            $subscriptions = \Addons\CopyTrading\App\Models\CopyTradingSubscription::where('user_id', $userId)
+            $subscriptions = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription::where('user_id', $userId)
                 ->where('status', 'active')
                 ->with(['trader'])
                 ->get();
@@ -90,15 +90,15 @@ class TradingOverviewController extends Controller
                 $todayPnL = 0;
                 $weekPnL = 0;
 
-                if (class_exists(\Addons\CopyTrading\App\Models\CopyTradingExecution::class)) {
+                if (class_exists(\Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution::class)) {
                     $todayStart = Carbon::today();
                     $weekStart = Carbon::now()->startOfWeek();
 
-                    $todayPnL = \Addons\CopyTrading\App\Models\CopyTradingExecution::where('subscription_id', $subscription->id)
+                    $todayPnL = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution::where('subscription_id', $subscription->id)
                         ->whereDate('created_at', '>=', $todayStart)
                         ->sum('pnl') ?? 0;
 
-                    $weekPnL = \Addons\CopyTrading\App\Models\CopyTradingExecution::where('subscription_id', $subscription->id)
+                    $weekPnL = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution::where('subscription_id', $subscription->id)
                         ->whereDate('created_at', '>=', $weekStart)
                         ->sum('pnl') ?? 0;
                 }

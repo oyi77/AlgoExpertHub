@@ -167,7 +167,7 @@ class ConfigurationController extends Controller
         }
 
         // Trading Execution Engine Addon tasks
-        if (\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
+        if (\App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             $tasks[] = [
                 'name' => __('Monitor Trading Positions'),
                 'frequency' => __('Every minute'),
@@ -181,7 +181,7 @@ class ConfigurationController extends Controller
         }
 
         // Smart Risk Management Addon tasks
-        if (\App\Support\AddonRegistry::active('smart-risk-management-addon')) {
+        if (\App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management')) {
             $tasks[] = [
                 'name' => __('Update Performance Scores'),
                 'frequency' => __('Daily at 01:00'),

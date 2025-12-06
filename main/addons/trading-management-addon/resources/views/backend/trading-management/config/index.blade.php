@@ -324,7 +324,131 @@
                                 }
                             }
                         @endphp
-                        @include('trading-management::backend.trading-management.config.global-settings', ['config' => $globalConfig])
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> <strong>Global Configuration</strong> - These settings are shared across all MTAPI connections. Only admins can modify these settings.
+                        </div>
+
+                        <form action="{{ route('admin.trading-management.config.global-settings.update') }}" method="POST" id="globalSettingsForm">
+                            @csrf
+
+                            <!-- MTAPI gRPC Configuration -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-server"></i> MTAPI gRPC Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Configure these credentials once. All MTAPI connections will use these global settings.
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>API Key</label>
+                                                <input type="password" name="api_key" class="form-control" value="{{ $globalConfig['api_key'] ?? '' }}" placeholder="Leave blank to keep existing">
+                                                <small class="text-muted">MTAPI.io API key (optional, for future use)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Base URL <span class="text-danger">*</span></label>
+                                                <input type="text" name="base_url" class="form-control" value="{{ $globalConfig['base_url'] ?? 'mt5grpc.mtapi.io:443' }}" required>
+                                                <small class="text-muted">MTAPI gRPC server endpoint</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Timeout (seconds) <span class="text-danger">*</span></label>
+                                                <input type="number" name="timeout" class="form-control" value="{{ $globalConfig['timeout'] ?? 30 }}" min="5" max="300" required>
+                                                <small class="text-muted">Connection timeout in seconds</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Default Host</label>
+                                                <input type="text" name="default_host" class="form-control" value="{{ $globalConfig['default_host'] ?? '78.140.180.198' }}">
+                                                <small class="text-muted">Default MT5 server host</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Default Port</label>
+                                                <input type="number" name="default_port" class="form-control" value="{{ $globalConfig['default_port'] ?? 443 }}" min="1" max="65535">
+                                                <small class="text-muted">Default MT5 server port</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Demo Account Configuration -->
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-vial"></i> Demo Account Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> Configure demo account credentials for testing connections. These are used for connection testing only.
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Demo User</label>
+                                                <input type="text" name="demo_user" class="form-control" value="{{ $globalConfig['demo_account']['user'] ?? '62333850' }}">
+                                                <small class="text-muted">MT5 demo account number</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Demo Password</label>
+                                                <input type="password" name="demo_password" class="form-control" value="{{ $globalConfig['demo_account']['password'] ?? 'tecimil4' }}">
+                                                <small class="text-muted">MT5 demo account password</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Demo Host</label>
+                                                <input type="text" name="demo_host" class="form-control" value="{{ $globalConfig['demo_account']['host'] ?? '78.140.180.198' }}">
+                                                <small class="text-muted">MT5 demo server host</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Demo Port</label>
+                                                <input type="number" name="demo_port" class="form-control" value="{{ $globalConfig['demo_account']['port'] ?? 443 }}" min="1" max="65535">
+                                                <small class="text-muted">MT5 demo server port</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-info" id="testDemoConnection">
+                                            <i class="fas fa-plug"></i> Test Demo Connection
+                                        </button>
+                                        <div id="testResult" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save"></i> Save Global Settings
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -338,17 +462,53 @@
     $(function() {
         'use strict'
         
-        $('#mtapi_enabled').on('change', function() {
-            const enabled = $(this).is(':checked');
-            const fields = $('#mtapiFields input, #mtapiFields select, #mtapiFields textarea');
+        // Test Demo Connection
+        $('#testDemoConnection').on('click', function() {
+            const btn = $(this);
+            const result = $('#testResult');
             
-            if (enabled) {
-                $('#mtapiFields').slideDown();
-                fields.prop('disabled', false);
-            } else {
-                $('#mtapiFields').slideUp();
-                fields.prop('disabled', true);
-            }
+            btn.prop('disabled', true);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> Testing...');
+            result.html('');
+            
+            $.ajax({
+                url: '{{ route("admin.trading-management.config.global-settings.test-demo") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                success: function(data) {
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-plug"></i> Test Demo Connection');
+                    
+                    if (data.success) {
+                        result.html(`
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> <strong>Connection Successful!</strong><br>
+                                ${data.message}<br>
+                                <small>Latency: ${data.latency}ms</small>
+                            </div>
+                        `);
+                    } else {
+                        result.html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle"></i> <strong>Connection Failed</strong><br>
+                                ${data.message}
+                            </div>
+                        `);
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false);
+                    btn.html('<i class="fas fa-plug"></i> Test Demo Connection');
+                    result.html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle"></i> <strong>Error</strong><br>
+                            ${xhr.responseJSON?.message || 'An error occurred'}
+                        </div>
+                    `);
+                }
+            });
         });
     });
 </script>

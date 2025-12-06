@@ -12,20 +12,19 @@
             @php
                 $adminUser = auth()->guard('admin')->user();
                 $multiChannelAdminModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'admin_ui');
-                $executionEngineAdminModuleEnabled = \App\Support\AddonRegistry::active('trading-execution-engine-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'admin_ui');
-                // Copy trading requires trading execution engine to be active
-                $copyTradingAdminModuleEnabled = \App\Support\AddonRegistry::active('copy-trading-addon') 
-                    && \App\Support\AddonRegistry::moduleEnabled('copy-trading-addon', 'admin_ui')
-                    && \App\Support\AddonRegistry::active('trading-execution-engine-addon');
-                $tradingPresetAdminModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'admin_ui');
-                $filterStrategyAdminModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'admin_ui');
-                $aiTradingAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'admin_ui');
                 $aiConnectionAdminModuleEnabled = \App\Support\AddonRegistry::active('ai-connection-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-connection-addon', 'admin_ui');
                 $openRouterAdminModuleEnabled = \App\Support\AddonRegistry::active('openrouter-integration-addon') && \App\Support\AddonRegistry::moduleEnabled('openrouter-integration-addon', 'admin_ui');
-                $srmAdminModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'admin_ui');
                 
-                // NEW: Trading Management Addon (Unified)
+                // Trading Management Addon (Unified - Consolidated from individual addons)
                 $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
+                $executionEngineAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+                $copyTradingAdminModuleEnabled = $tradingManagementEnabled 
+                    && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'copy_trading')
+                    && $executionEngineAdminModuleEnabled;
+                $tradingPresetAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+                $filterStrategyAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
+                $aiTradingAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
+                $srmAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
             @endphp
 
 

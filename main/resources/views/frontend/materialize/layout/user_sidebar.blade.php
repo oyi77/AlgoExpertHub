@@ -20,15 +20,16 @@
 
 @php
     $multiChannelUserModuleEnabled = \App\Support\AddonRegistry::active('multi-channel-signal-addon') && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
-    $executionEngineUserModuleEnabled = \App\Support\AddonRegistry::active('trading-execution-engine-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-execution-engine-addon', 'user_ui');
+    $tradingManagementEnabled = \App\Support\AddonRegistry::active('trading-management-addon');
+    $executionEngineUserModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
     // Copy trading requires trading execution engine to be active
-    $copyTradingUserModuleEnabled = \App\Support\AddonRegistry::active('copy-trading-addon') 
-        && \App\Support\AddonRegistry::moduleEnabled('copy-trading-addon', 'user_ui')
-        && \App\Support\AddonRegistry::active('trading-execution-engine-addon');
-    $tradingPresetUserModuleEnabled = \App\Support\AddonRegistry::active('trading-preset-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-preset-addon', 'user_ui');
-    $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('filter-strategy-addon') && \App\Support\AddonRegistry::moduleEnabled('filter-strategy-addon', 'user_ui');
-    $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('ai-trading-addon') && \App\Support\AddonRegistry::moduleEnabled('ai-trading-addon', 'user_ui');
-    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('smart-risk-management-addon') && \App\Support\AddonRegistry::moduleEnabled('smart-risk-management-addon', 'user_ui');
+    $copyTradingUserModuleEnabled = \App\Support\AddonRegistry::active('trading-management-addon') 
+        && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution')
+        && \App\Support\AddonRegistry::active('trading-management-addon');
+    $tradingPresetUserModuleEnabled = \App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+    $filterStrategyUserModuleEnabled = \App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+    $aiTradingUserModuleEnabled = \App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
+    $srmUserModuleEnabled = \App\Support\AddonRegistry::active('trading-management-addon') && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'execution');
 @endphp
 
 <aside class="user-sidebar">

@@ -24,6 +24,16 @@ class AddonManager
             return collect();
         }
 
+        // List of addons that have been consolidated into trading-management-addon
+        $consolidatedAddons = [
+            'trading-execution-engine-addon',
+            'copy-trading-addon',
+            'trading-preset-addon',
+            'filter-strategy-addon',
+            'ai-trading-addon',
+            'smart-risk-management-addon',
+        ];
+
         return collect(File::directories($addonsPath))
             ->map(function (string $directory) use ($addonsPath) {
                 $slug = basename($directory);
@@ -53,6 +63,10 @@ class AddonManager
                     'modules' => $modules,
                     'manifest' => $manifest,
                 ];
+            })
+            ->filter(function ($addon) use ($consolidatedAddons) {
+                // Filter out consolidated addons - they're now part of trading-management-addon
+                return !in_array($addon['slug'], $consolidatedAddons);
             })
             ->sortBy('title')
             ->values();
