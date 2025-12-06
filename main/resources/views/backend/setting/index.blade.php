@@ -36,18 +36,6 @@
                                 {{ __('Preferences') }}
                             </a>
                         </li>
-                        <li>
-                            <a data-toggle="tab" href="#performance">
-                                <i class="las la-tachometer-alt"></i>
-                                {{ __('Performance Settings') }}
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tab" href="#cron">
-                                <i class="las la-clock"></i>
-                                {{ __('Cron Job Settings') }}
-                            </a>
-                        </li>
                     </ul>
                     <!-- Tab panes -->
                 </div>
@@ -85,19 +73,27 @@
                     @include('backend.setting.preference')
 
                 </div>
-
-                <div class="tab-pane fade" id="performance" role="tabpanel">
-
-                    @include('backend.setting.performance')
-
-                </div>
-
-                <div class="tab-pane fade" id="cron" role="tabpanel">
-
-                    @include('backend.setting.cron')
-
+            </div>
+            
+            {{-- Note about moved features --}}
+            @php
+                $systemToolsAvailable = \App\Support\AddonRegistry::active('algoexpert-plus-addon') 
+                    && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.dashboard');
+            @endphp
+            @if($systemToolsAvailable)
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="las la-info-circle"></i>
+                        <strong>{{ __('Note') }}:</strong> 
+                        {{ __('Performance Settings and Cron Jobs have been moved to') }} 
+                        <a href="{{ route('admin.algoexpert-plus.system-tools.dashboard') }}" class="alert-link">
+                            {{ __('System Tools') }}
+                        </a>
+                    </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 

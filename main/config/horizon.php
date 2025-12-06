@@ -83,7 +83,7 @@ return [
     |
     */
 
-    'middleware' => ['web', 'admin'],
+    'middleware' => ['web', 'admin', \App\Http\Middleware\AllowHorizonIframe::class],
 
     /*
     |--------------------------------------------------------------------------

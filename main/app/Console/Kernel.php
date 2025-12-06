@@ -57,6 +57,16 @@ class Kernel extends ConsoleKernel
             }
         }
 
+        // Horizon Metrics Snapshot - Required for Horizon metrics dashboard
+        if (AddonRegistry::active('algoexpert-plus-addon') 
+            && AddonRegistry::moduleEnabled('algoexpert-plus-addon', 'queues')
+            && env('QUEUE_CONNECTION') === 'redis'
+            && class_exists(\Laravel\Horizon\HorizonServiceProvider::class)) {
+            $schedule->command('horizon:snapshot')
+                ->everyFiveMinutes()
+                ->withoutOverlapping();
+        }
+
         // AlgoExpert++ Addon - System Backup
         if (AddonRegistry::active('algoexpert-plus-addon') && AddonRegistry::moduleEnabled('algoexpert-plus-addon', 'backup')) {
             if (class_exists(\Spatie\Backup\BackupServiceProvider::class)) {

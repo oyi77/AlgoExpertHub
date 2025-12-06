@@ -56,12 +56,14 @@ class ConfigurationController extends Controller
     public function getSystemStatus(Request $request)
     {
         try {
-            $data = [
-                'system' => $this->getSystemInfo(),
-                'opcache' => $this->getOpcacheStatus(),
-                'processes' => $this->getProcessInfo(),
-                'timestamp' => now()->toIso8601String(),
-            ];
+                $data = [
+                    'system' => $this->getSystemInfo(),
+                    'opcache' => $this->getOpcacheStatus(),
+                    'processes' => $this->getProcessInfo(),
+                    'horizon' => $this->getHorizonStats(),
+                    'queue' => $this->getQueueStats(),
+                    'timestamp' => now()->toIso8601String(),
+                ];
 
             return response()->json([
                 'success' => true,
@@ -120,6 +122,8 @@ class ConfigurationController extends Controller
                     'system' => $this->getSystemInfo(),
                     'opcache' => $this->getOpcacheStatus(),
                     'processes' => $this->getProcessInfo(),
+                    'horizon' => $this->getHorizonStats(),
+                    'queue' => $this->getQueueStats(),
                     'timestamp' => now()->toIso8601String(),
                 ];
 
@@ -300,6 +304,60 @@ class ConfigurationController extends Controller
         }
 
         return $info;
+    }
+
+    /**
+     * Get Horizon statistics if available
+     */
+    protected function getHorizonStats(): ?array
+    {
+        if (!class_exists(\Laravel\Horizon\Horizon::class)) {
+            return null;
+        }
+
+        try {
+            $horizon = app(\Laravel\Horizon\Contracts\MetricsRepository::class);
+            
+            return [
+                'available' => true,
+                'throughput' => $horizon->throughput() ?? 0,
+                'wait_time' => $horizon->waitTime() ?? 0,
+                'recent_jobs' => $horizon->recentJobs() ?? [],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'available' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get queue statistics from database
+     */
+    protected function getQueueStats(): array
+    {
+        try {
+            $stats = [
+                'pending' => \DB::table('jobs')->count(),
+                'failed' => \DB::table('failed_jobs')->count(),
+                'queues' => \DB::table('jobs')
+                    ->select('queue', \DB::raw('count(*) as count'))
+                    ->groupBy('queue')
+                    ->get()
+                    ->pluck('count', 'queue')
+                    ->toArray(),
+            ];
+
+            return $stats;
+        } catch (\Throwable $e) {
+            return [
+                'pending' => 0,
+                'failed' => 0,
+                'queues' => [],
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     /**

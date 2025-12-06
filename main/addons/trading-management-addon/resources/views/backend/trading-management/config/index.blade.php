@@ -69,13 +69,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#tab-global-settings" data-toggle="tab">
-                            <i class="fas fa-globe"></i> Global Settings
+                        <a class="nav-link" href="#tab-metaapi-stats" data-toggle="tab" id="metaapi-stats-tab">
+                            <i class="fas fa-chart-line"></i> MetaApi Stats
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#tab-metaapi-stats" data-toggle="tab" id="metaapi-stats-tab">
-                            <i class="fas fa-chart-line"></i> MetaApi Stats
+                        <a class="nav-link" href="#tab-global-settings" data-toggle="tab">
+                            <i class="fas fa-globe"></i> Global Settings
                         </a>
                     </li>
                 </ul>
@@ -308,6 +308,18 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- MetaApi Stats Tab -->
+                    <div class="tab-pane fade" id="tab-metaapi-stats">
+                        <div id="metaapi-stats-content">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Loading MetaApi statistics...</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Global Settings Tab -->
@@ -684,18 +696,6 @@
                                 </div>
                             </div>
                         </form>
-                    </div>
-
-                    <!-- MetaApi Stats Tab -->
-                    <div class="tab-pane fade" id="tab-metaapi-stats">
-                        <div id="metaapi-stats-content">
-                            <div class="text-center py-5">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                                <p class="mt-3 text-muted">Loading MetaApi statistics...</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

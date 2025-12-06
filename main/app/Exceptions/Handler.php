@@ -43,6 +43,29 @@ class Handler extends ExceptionHandler
     }
 
     /**
+     * Report or log an exception.
+     *
+     * @param  \Throwable  $e
+     * @return void
+     */
+    public function report(Throwable $e)
+    {
+        // Skip reporting Page Builder database connection errors (not critical)
+        if ($e instanceof \Error && 
+            str_contains($e->getMessage() ?? '', 'Call to a member function select() on null') &&
+            (str_contains($e->getFile() ?? '', 'phpagebuilder') || str_contains($e->getFile() ?? '', 'pagebuilder'))) {
+            \Log::warning('Page Builder database connection not initialized', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return; // Don't report as error, just log warning
+        }
+
+        parent::report($e);
+    }
+
+    /**
      * Render an exception into an HTTP response.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -51,6 +74,17 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        // Handle Page Builder database connection errors gracefully (only log, don't interfere)
+        if ($e instanceof \Error && 
+            str_contains($e->getMessage() ?? '', 'Call to a member function select() on null') &&
+            (str_contains($e->getFile() ?? '', 'phpagebuilder') || str_contains($e->getFile() ?? '', 'pagebuilder'))) {
+            \Log::warning('Page Builder database connection not initialized', [
+                'error' => $e->getMessage(),
+                'url' => $request->fullUrl(),
+            ]);
+            // Let it fall through to normal error handling - don't interfere with routing
+        }
+
         // Handle all exceptions (including 500 errors from database, etc.)
         $statusCode = 500;
         

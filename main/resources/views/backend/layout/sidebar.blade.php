@@ -320,43 +320,78 @@
                     </a>
                 </li>
                 @php
-                    $algoPlusHasAdmin = \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.index');
-                    $algoPlusQueuesEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','queues');
-                    $algoPlusBackupEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','backup');
-                    $algoPlusHealthEnabled = \App\Support\AddonRegistry::active('algoexpert-plus-addon') && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','health');
+                    $algoPlusActive = \App\Support\AddonRegistry::active('algoexpert-plus-addon');
+                    $algoPlusHasAdmin = $algoPlusActive && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.index');
+                    $algoPlusQueuesEnabled = $algoPlusActive && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','queues');
+                    $algoPlusBackupEnabled = $algoPlusActive && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','backup');
+                    $algoPlusHealthEnabled = $algoPlusActive && \App\Support\AddonRegistry::moduleEnabled('algoexpert-plus-addon','health');
                     $horizonRouteExists = \Illuminate\Support\Facades\Route::has('horizon.index');
-                    $healthRouteExists = \Illuminate\Support\Facades\Route::has('health');
+                    $systemHealthRouteExists = \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-health');
+                    $backupRouteExists = \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.backup.index');
+                    
+                    // Check if any system tool is available
+                    $hasSystemTools = $algoPlusHasAdmin || 
+                                     ($algoPlusQueuesEnabled && $horizonRouteExists) || 
+                                     ($algoPlusHealthEnabled && $systemHealthRouteExists) || 
+                                     ($algoPlusBackupEnabled && $backupRouteExists);
                 @endphp
-                @if ($algoPlusHasAdmin)
+                @if ($hasSystemTools)
                 <li>
-                    <a href="{{ route('admin.algoexpert-plus.index') }}" aria-expanded="false">
-                        <i data-feather="zap"></i>
-                        <span class="nav-text">{{ __('AlgoExpert++') }}</span>
+                    <a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
+                        <i data-feather="tool"></i>
+                        <span class="nav-text">{{ __('System Tools') }}</span>
                     </a>
-                </li>
-                @endif
-                @if ($algoPlusQueuesEnabled && $horizonRouteExists)
-                <li>
-                    <a href="{{ route('horizon.index') }}" aria-expanded="false">
-                        <i data-feather="monitor"></i>
-                        <span class="nav-text">{{ __('Queues Dashboard') }}</span>
-                    </a>
-                </li>
-                @endif
-                @if ($algoPlusHealthEnabled && $healthRouteExists)
-                <li>
-                    <a href="{{ route('health') }}" aria-expanded="false">
-                        <i data-feather="heart"></i>
-                        <span class="nav-text">{{ __('System Health') }}</span>
-                    </a>
-                </li>
-                @endif
-                @if ($algoPlusBackupEnabled && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.backup.run'))
-                <li>
-                    <a href="{{ route('admin.algoexpert-plus.backup.run') }}" aria-expanded="false">
-                        <i data-feather="archive"></i>
-                        <span class="nav-text">{{ __('Run Backup') }}</span>
-                    </a>
+                    <ul aria-expanded="false">
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.dashboard'))
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.system-tools.dashboard') }}" aria-expanded="false">
+                                {{ __('Dashboard') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.performance'))
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.system-tools.performance') }}" aria-expanded="false">
+                                {{ __('Performance') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.cron-jobs'))
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.system-tools.cron-jobs') }}" aria-expanded="false">
+                                {{ __('Cron Jobs') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if ($algoPlusHealthEnabled && $systemHealthRouteExists)
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.system-health') }}" aria-expanded="false">
+                                {{ __('System Health') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if ($algoPlusHasAdmin)
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.index') }}" aria-expanded="false">
+                                {{ __('Dependencies') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if ($algoPlusBackupEnabled && $backupRouteExists)
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.backup.index') }}" aria-expanded="false">
+                                {{ __('Backup Dashboard') }}
+                            </a>
+                        </li>
+                        @endif
+                        @if ($algoPlusQueuesEnabled && $horizonRouteExists)
+                        <li>
+                            <a href="{{ route('admin.algoexpert-plus.horizon') }}" aria-expanded="false">
+                                {{ __('Queues Dashboard') }}
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
                 </li>
                 @endif
             @endif

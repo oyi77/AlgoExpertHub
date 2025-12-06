@@ -15,26 +15,38 @@ class AddonServiceProvider extends ServiceProvider
         $manifest = $this->readManifest();
         $modules = collect($manifest['modules'] ?? []);
 
+        // Register SEO service provider
         $seoEnabled = (bool) optional($modules->firstWhere('key', 'seo'))['enabled'] ?? false;
         if ($seoEnabled && class_exists(\Artesaos\SEOTools\Providers\SEOToolsServiceProvider::class)) {
             $this->app->register(\Artesaos\SEOTools\Providers\SEOToolsServiceProvider::class);
         }
 
+        // Register Horizon service provider
         $queuesEnabled = (bool) optional($modules->firstWhere('key', 'queues'))['enabled'] ?? false;
         $queueIsRedis = env('QUEUE_CONNECTION') === 'redis';
         if ($queuesEnabled && $queueIsRedis && class_exists(\Laravel\Horizon\HorizonServiceProvider::class)) {
             $this->app->register(\Laravel\Horizon\HorizonServiceProvider::class);
         }
 
+        // Register Backup service provider
         $backupEnabled = (bool) optional($modules->firstWhere('key', 'backup'))['enabled'] ?? false;
         if ($backupEnabled && class_exists(\Spatie\Backup\BackupServiceProvider::class)) {
             $this->app->register(\Spatie\Backup\BackupServiceProvider::class);
         }
 
+        // Register Health service provider
         $healthEnabled = (bool) optional($modules->firstWhere('key', 'health'))['enabled'] ?? false;
         if ($healthEnabled && class_exists(\Spatie\Health\HealthServiceProvider::class)) {
             $this->app->register(\Spatie\Health\HealthServiceProvider::class);
         }
+
+        // Register addon services as singletons
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\BackupService::class);
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\HealthService::class);
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\SeoService::class);
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\I18nService::class);
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\SystemHealthService::class);
+        $this->app->singleton(\Addons\AlgoExpertPlus\App\Services\DependencyService::class);
     }
 
     public function boot(): void
@@ -54,6 +66,14 @@ class AddonServiceProvider extends ServiceProvider
 
     protected function loadRoutes(): void
     {
+        // Check if any module with admin_ui target is enabled
+        $manifest = $this->readManifest();
+        $modules = collect($manifest['modules'] ?? []);
+        $hasAdminUi = $modules->contains(function ($module) {
+            return ($module['enabled'] ?? false) && in_array('admin_ui', $module['targets'] ?? []);
+        });
+
+        // Always load routes if addon is active (main dashboard should be available)
         if (file_exists(__DIR__ . '/routes/admin.php')) {
             Route::middleware(['web', 'admin', 'demo'])
                 ->prefix('admin')

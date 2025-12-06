@@ -1,33 +1,34 @@
 <?php
 
+use Addons\AlgoExpertPlus\App\Http\Controllers\Backend\AlgoExpertPlusController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('algoexpert-plus')->name('algoexpert-plus.')->group(function () {
-    Route::get('/', function () {
-        $data = [
-            'title' => 'AlgoExpert++'
-        ];
-        return view('backend.index')->with($data);
-    })->name('index');
-
-    // Run system backup (gated by addon module in provider registration)
-    Route::get('/backup/run', function () {
-        try {
-            \Artisan::call('backup:run');
-            return redirect()->route('admin.algoexpert-plus.index')
-                ->with('success', 'Backup started');
-        } catch (\Throwable $e) {
-            return redirect()->route('admin.algoexpert-plus.index')
-                ->with('error', 'Backup failed: ' . $e->getMessage());
-        }
-    })->name('backup.run');
-
-    // Link to health dashboard if available
-    Route::get('/health', function () {
-        if (\Illuminate\Support\Facades\Route::has('health')) {
-            return redirect()->route('health');
-        }
-        return redirect()->route('admin.algoexpert-plus.index')
-            ->with('error', 'Health dashboard not available');
-    })->name('health');
+    // Main dashboard (Dependencies)
+    Route::get('/', [AlgoExpertPlusController::class, 'index'])->name('index');
+    
+    // System Tools submenu
+    Route::prefix('system-tools')->name('system-tools.')->group(function () {
+        Route::get('/dashboard', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\SystemToolsController::class, 'dashboard'])->name('dashboard');
+        Route::get('/performance', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\PerformanceController::class, 'index'])->name('performance');
+        Route::get('/cron-jobs', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\CronJobController::class, 'index'])->name('cron-jobs');
+        Route::get('/cron-jobs/generate', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\CronJobController::class, 'generateCrontab'])->name('cron-jobs.generate');
+        Route::post('/cron-jobs/test', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\CronJobController::class, 'testCron'])->name('cron-jobs.test');
+    });
+    
+    // Backup routes
+    Route::prefix('backup')->name('backup.')->group(function () {
+        Route::get('/', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'index'])->name('index');
+        Route::post('/run', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'run'])->name('run');
+        Route::post('/clean', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'clean'])->name('clean');
+        Route::get('/download', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'download'])->name('download');
+        Route::delete('/delete', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'delete'])->name('delete');
+    });
+    
+    // Other routes
+    Route::get('/system-health', [AlgoExpertPlusController::class, 'systemHealth'])->name('system-health');
+    Route::post('/install-dependencies', [AlgoExpertPlusController::class, 'installDependencies'])->name('install-dependencies');
+    
+    // Embedded Horizon dashboard
+    Route::get('/horizon', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\HorizonController::class, 'index'])->name('horizon');
 });

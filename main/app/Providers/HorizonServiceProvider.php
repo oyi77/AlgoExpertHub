@@ -28,8 +28,14 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', function ($user = null) {
+            // Allow admin users to access Horizon
+            if ($user && $user instanceof \App\Models\Admin) {
+                return $user->type === 'super' || (method_exists($user, 'hasRole') && $user->hasRole('Super Admin'));
+            }
+            
+            // Fallback: allow specific emails if needed
             return in_array(optional($user)->email, [
-                //
+                // Add admin emails here if needed
             ]);
         });
     }

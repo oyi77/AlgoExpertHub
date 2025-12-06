@@ -69,6 +69,7 @@
             "Addons\\PageBuilderAddon\\": "addons/page-builder-addon/",
             "Addons\\PageBuilderAddon\\App\\": "addons/page-builder-addon/app/",
             "Addons\\AlgoExpertPlus\\": "addons/algoexpert-plus-addon/",
+            "Addons\\AlgoExpertPlus\\App\\": "addons/algoexpert-plus-addon/app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
@@ -104,7 +105,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "hansschouten/laravel-pagebuilder"
+            ]
         }
     },
     "config": {
