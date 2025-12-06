@@ -30,7 +30,7 @@ class TradingOperationsController extends Controller
         }
 
         if ($request->filled('connection_id')) {
-            $query->where('execution_connection_id', $request->connection_id);
+            $query->where('connection_id', $request->connection_id);
         }
 
         if ($request->filled('date_from')) {
@@ -65,7 +65,7 @@ class TradingOperationsController extends Controller
 
         // Filters
         if ($request->filled('connection_id')) {
-            $query->where('execution_connection_id', $request->connection_id);
+            $query->where('connection_id', $request->connection_id);
         }
 
         if ($request->filled('symbol')) {
@@ -95,7 +95,7 @@ class TradingOperationsController extends Controller
 
         // Filters
         if ($request->filled('connection_id')) {
-            $query->where('execution_connection_id', $request->connection_id);
+            $query->where('connection_id', $request->connection_id);
         }
 
         if ($request->filled('symbol')) {
@@ -186,14 +186,14 @@ class TradingOperationsController extends Controller
 
         // Top performing connections
         $topConnections = ExecutionPosition::select(
-                'execution_connection_id',
+                'connection_id',
                 DB::raw('COUNT(*) as total_trades'),
                 DB::raw('SUM(pnl) as total_pnl')
             )
             ->with('connection')
             ->where('status', 'closed')
             ->whereBetween('closed_at', [$dateFrom, $dateTo])
-            ->groupBy('execution_connection_id')
+            ->groupBy('connection_id')
             ->orderBy('total_pnl', 'desc')
             ->limit(10)
             ->get();
@@ -239,24 +239,22 @@ class TradingOperationsController extends Controller
 
             // Create execution log
             $log = ExecutionLog::create([
-                'execution_connection_id' => $connection->id,
+                'connection_id' => $connection->id,
                 'signal_id' => null, // Manual trade, no signal
                 'symbol' => $validated['symbol'],
-                'direction' => $validated['direction'],
-                'lot_size' => $validated['lot_size'],
+                'direction' => strtolower($validated['direction']), // 'buy' or 'sell'
+                'quantity' => $validated['lot_size'],
                 'entry_price' => $validated['entry_price'],
                 'sl_price' => $validated['sl_price'],
                 'tp_price' => $validated['tp_price'],
-                'order_type' => $validated['order_type'],
-                'status' => 'PENDING',
-                'notes' => $validated['notes'],
-                'is_manual' => true,
+                'execution_type' => $validated['order_type'] ?? 'market',
+                'status' => 'pending',
             ]);
 
             $orderId = 'MANUAL_' . time() . '_' . rand(1000, 9999);
             
             $log->update([
-                'status' => 'SUCCESS',
+                'status' => 'executed',
                 'order_id' => $orderId,
                 'executed_at' => now(),
             ]);
@@ -264,7 +262,7 @@ class TradingOperationsController extends Controller
             // Create position
             ExecutionPosition::create([
                 'signal_id' => null,
-                'execution_connection_id' => $connection->id,
+                'connection_id' => $connection->id,
                 'execution_log_id' => $log->id,
                 'order_id' => $orderId,
                 'symbol' => $validated['symbol'],

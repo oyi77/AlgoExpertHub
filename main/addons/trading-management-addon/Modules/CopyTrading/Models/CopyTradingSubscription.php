@@ -26,7 +26,7 @@ class CopyTradingSubscription extends Model
         'copy_mode',
         'risk_multiplier',
         'max_position_size',
-        'execution_connection_id',
+        'connection_id', // Database column name
         'copy_settings',
         'is_active',
         'subscribed_at',
@@ -57,7 +57,7 @@ class CopyTradingSubscription extends Model
 
     public function executionConnection()
     {
-        return $this->belongsTo(ExecutionConnection::class, 'execution_connection_id');
+        return $this->belongsTo(ExecutionConnection::class, 'connection_id');
     }
 
     public function preset()

@@ -84,6 +84,8 @@
                         $hasCopyTradingRoute = Route::has('admin.trading-management.copy-trading.index');
                         $hasTestRoute = Route::has('admin.trading-management.test.index');
                         $hasTradingBotsRoute = Route::has('admin.trading-management.trading-bots.index');
+                        $hasMarketplaceBotsRoute = Route::has('admin.trading-management.marketplace.bots.index');
+                        $hasMarketplaceTradersRoute = Route::has('admin.trading-management.marketplace.traders.index');
                     } catch (\Exception $e) {
                         \Log::error('Trading Management menu route check error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
                         $hasConfigRoute = false;
@@ -92,6 +94,8 @@
                         $hasCopyTradingRoute = false;
                         $hasTestRoute = false;
                         $hasTradingBotsRoute = false;
+                        $hasMarketplaceBotsRoute = false;
+                        $hasMarketplaceTradersRoute = false;
                     }
                 @endphp
                 @if ($hasConfigRoute || $hasStrategyRoute || $hasOperationsRoute || $hasCopyTradingRoute || $hasTestRoute || $hasTradingBotsRoute)
@@ -157,6 +161,29 @@
                             }
                         @endphp
                         <li><a href="{{ $tradingBotsRouteUrl }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
+                        @endif
+                        @if ($hasMarketplaceBotsRoute || $hasMarketplaceTradersRoute)
+                        <li class="nav-label">{{ __('Marketplace') }}</li>
+                        @if ($hasMarketplaceBotsRoute)
+                        @php
+                            try {
+                                $marketplaceBotsRouteUrl = route('admin.trading-management.marketplace.bots.index');
+                            } catch (\Exception $e) {
+                                $marketplaceBotsRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $marketplaceBotsRouteUrl }}" aria-expanded="false">{{ __('Bot Marketplace') }}</a></li>
+                        @endif
+                        @if ($hasMarketplaceTradersRoute)
+                        @php
+                            try {
+                                $marketplaceTradersRouteUrl = route('admin.trading-management.marketplace.traders.index');
+                            } catch (\Exception $e) {
+                                $marketplaceTradersRouteUrl = '#';
+                            }
+                        @endphp
+                        <li><a href="{{ $marketplaceTradersRouteUrl }}" aria-expanded="false">{{ __('Trader Marketplace') }}</a></li>
+                        @endif
                         @endif
                     </ul>
                 </li>

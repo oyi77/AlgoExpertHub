@@ -139,6 +139,64 @@
                 "ai_analysis",
                 "risk_management"
             ]
+        },
+        {
+            "key": "exchange_connection",
+            "name": "Exchange Connection",
+            "description": "Unified exchange/broker connections for data and execution",
+            "targets": [
+                "admin_ui",
+                "user_ui",
+                "jobs"
+            ],
+            "enabled": true,
+            "dependencies": [
+                "data_provider",
+                "risk_management"
+            ]
+        },
+        {
+            "key": "global_settings",
+            "name": "Global Settings",
+            "description": "Global MTAPI configuration shared across all connections",
+            "targets": [
+                "admin_ui"
+            ],
+            "enabled": true,
+            "dependencies": []
+        },
+        {
+            "key": "marketplace",
+            "name": "Marketplace",
+            "description": "Bot templates and trader profiles marketplace",
+            "targets": [
+                "admin_ui",
+                "user_ui",
+                "jobs"
+            ],
+            "enabled": true,
+            "dependencies": [
+                "backtesting",
+                "execution"
+            ]
+        },
+        {
+            "key": "trading_bot",
+            "name": "Trading Bot",
+            "description": "Automated trading bot management and execution",
+            "targets": [
+                "admin_ui",
+                "user_ui",
+                "jobs",
+                "listeners"
+            ],
+            "enabled": true,
+            "dependencies": [
+                "execution",
+                "filter_strategy",
+                "ai_analysis",
+                "risk_management"
+            ]
         }
     ]
 }

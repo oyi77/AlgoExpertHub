@@ -124,6 +124,11 @@ class ExecutionPositionSeeder extends Seeder
 
             // Handle different model field names
             if ($modelClass === \Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class) {
+                // Old model uses connection_id
+                $positionData['connection_id'] = $positionData['execution_connection_id'];
+                unset($positionData['execution_connection_id']);
+            } else {
+                // New model (TradingManagement) - database uses connection_id, not execution_connection_id
                 $positionData['connection_id'] = $positionData['execution_connection_id'];
                 unset($positionData['execution_connection_id']);
             }
@@ -201,6 +206,11 @@ class ExecutionPositionSeeder extends Seeder
 
             // Handle different model field names
             if ($modelClass === \Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class) {
+                // Old model uses connection_id
+                $positionData['connection_id'] = $positionData['execution_connection_id'];
+                unset($positionData['execution_connection_id']);
+            } else {
+                // New model (TradingManagement) - database uses connection_id, not execution_connection_id
                 $positionData['connection_id'] = $positionData['execution_connection_id'];
                 unset($positionData['execution_connection_id']);
             }

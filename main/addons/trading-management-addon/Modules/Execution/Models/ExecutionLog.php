@@ -10,31 +10,34 @@ class ExecutionLog extends Model
     protected $table = 'execution_logs';
 
     protected $fillable = [
-        'execution_connection_id',
+        'connection_id', // Database column name
         'signal_id',
         'order_id',
         'symbol',
-        'side',
-        'lot_size',
+        'direction', // Database column name (not 'side')
+        'quantity', // Database column name (not 'lot_size')
         'entry_price',
-        'stop_loss',
-        'take_profit',
+        'sl_price', // Database column name (not 'stop_loss')
+        'tp_price', // Database column name (not 'take_profit')
         'status',
         'error_message',
-        'order_data',
+        'response_data', // Database column name (not 'order_data')
+        'execution_type',
+        'executed_at',
     ];
 
     protected $casts = [
-        'lot_size' => 'decimal:2',
+        'quantity' => 'decimal:8',
         'entry_price' => 'decimal:8',
-        'stop_loss' => 'decimal:8',
-        'take_profit' => 'decimal:8',
-        'order_data' => 'array',
+        'sl_price' => 'decimal:8',
+        'tp_price' => 'decimal:8',
+        'response_data' => 'array',
+        'executed_at' => 'datetime',
     ];
 
     public function executionConnection()
     {
-        return $this->belongsTo(ExecutionConnection::class);
+        return $this->belongsTo(ExecutionConnection::class, 'connection_id');
     }
 
     /**
@@ -57,7 +60,7 @@ class ExecutionLog extends Model
 
     public function scopeByConnection($query, int $connectionId)
     {
-        return $query->where('execution_connection_id', $connectionId);
+        return $query->where('connection_id', $connectionId);
     }
 
     public function scopeByStatus($query, string $status)
@@ -66,12 +69,44 @@ class ExecutionLog extends Model
     }
 
     /**
-     * Get direction attribute (alias for side)
-     * For compatibility with views that expect 'direction'
+     * Get side attribute (alias for direction) - for compatibility
+     * Database uses 'direction', but code may expect 'side'
      */
-    public function getDirectionAttribute()
+    public function getSideAttribute()
     {
-        return $this->side;
+        return strtoupper($this->direction ?? '');
+    }
+
+    /**
+     * Get lot_size attribute (alias for quantity) - for compatibility
+     */
+    public function getLotSizeAttribute()
+    {
+        return $this->quantity ?? 0;
+    }
+
+    /**
+     * Get stop_loss attribute (alias for sl_price) - for compatibility
+     */
+    public function getStopLossAttribute()
+    {
+        return $this->sl_price;
+    }
+
+    /**
+     * Get take_profit attribute (alias for tp_price) - for compatibility
+     */
+    public function getTakeProfitAttribute()
+    {
+        return $this->tp_price;
+    }
+
+    /**
+     * Get order_data attribute (alias for response_data) - for compatibility
+     */
+    public function getOrderDataAttribute()
+    {
+        return $this->response_data;
     }
 }
 

@@ -13,7 +13,7 @@ class ExecutionPosition extends Model
 
     protected $fillable = [
         'signal_id',
-        'execution_connection_id',
+        'connection_id', // Database column name
         'execution_log_id',
         'order_id',
         'symbol',
@@ -50,7 +50,7 @@ class ExecutionPosition extends Model
 
     public function executionConnection()
     {
-        return $this->belongsTo(ExecutionConnection::class);
+        return $this->belongsTo(ExecutionConnection::class, 'connection_id');
     }
 
     /**
