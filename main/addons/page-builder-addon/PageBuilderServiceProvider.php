@@ -21,6 +21,9 @@ class PageBuilderServiceProvider extends ServiceProvider
         $this->app->singleton(\Addons\PageBuilderAddon\App\Services\MenuManagerService::class);
         $this->app->singleton(\Addons\PageBuilderAddon\App\Services\TemplateService::class);
         $this->app->singleton(\Addons\PageBuilderAddon\App\Services\ThemeTemplateService::class);
+        $this->app->singleton(\Addons\PageBuilderAddon\App\Services\LayoutManagerService::class);
+        $this->app->singleton(\Addons\PageBuilderAddon\App\Services\WidgetLibraryService::class);
+        $this->app->singleton(\Addons\PageBuilderAddon\App\Services\GlobalStylesService::class);
     }
 
     /**

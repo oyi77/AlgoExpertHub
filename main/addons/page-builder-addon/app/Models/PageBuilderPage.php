@@ -37,18 +37,6 @@ class PageBuilderPage extends Model
     }
 
     /**
-     * Check if table exists before using
-     */
-    public static function tableExists(): bool
-    {
-        try {
-            return \Illuminate\Support\Facades\Schema::hasTable('sp_pages');
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
      * Relationship to our Page model
      */
     public function page(): BelongsTo

@@ -382,7 +382,7 @@
                     </li>
                 @endif
                 
-                {{-- Page Builder (New) --}}
+                {{-- Page Builder (Comprehensive Elementor-like) --}}
                 @if ($pageBuilderEnabled && ($adminUser->can('manage-frontend') || $adminUser->can('manage-theme')))
                     <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
                         <i data-feather="edit-3"></i>
@@ -392,8 +392,12 @@
                             <li><a href="{{ route('admin.page-builder.index') }}">{{ __('All Pages') }}</a></li>
                             <li><a href="{{ route('admin.page-builder.create') }}">{{ __('Create Page') }}</a></li>
                             <li><a href="{{ route('admin.page-builder.templates.index') }}">{{ __('Templates') }}</a></li>
-                            <li><a href="{{ route('admin.page-builder.themes.edit') }}">{{ __('Edit Theme') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.widgets.index') }}">{{ __('Widget Library') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.layouts.index') }}">{{ __('Manage Layouts') }}</a></li>
                             <li><a href="{{ route('admin.page-builder.menus.index') }}">{{ __('Manage Menus') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.themes.index') }}">{{ __('Theme Builder') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.themes.create') }}">{{ __('Create Theme') }}</a></li>
+                            <li><a href="{{ route('admin.page-builder.global-styles.index') }}">{{ __('Global Styles') }}</a></li>
                         </ul>
                     </li>
                 @endif

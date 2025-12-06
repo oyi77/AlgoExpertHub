@@ -1,15 +1,28 @@
 # Page Builder Addon
 
-Drag-and-drop page builder with Laravel-Pagebuilder integration for AlgoExpertHub.
+Elementor-like drag-and-drop page builder with comprehensive theme and layout management for AlgoExpertHub.
 
 ## Features
 
+### Core Features
 - Drag-and-drop page editing using GrapesJS
-- Theme template editing
-- Menu management
+- Theme template editing with visual builder
+- Create and manage custom themes
+- Menu management with drag-and-drop interface
 - Section builder
-- Page templates
-- Backward compatibility with existing Manage Pages, Manage Theme, and Manage Frontend
+- Page templates library
+
+### Advanced Features (Elementor-like)
+- **Layout Manager**: Create and manage page layouts (header, footer, sidebar, content, full page)
+- **Widget Library**: Custom widget system with categories (general, form, media, social, navigation, content)
+- **Global Styles**: Manage global CSS/SCSS/LESS styles across all pages
+- **Theme Builder**: Visual theme creation and editing
+- **Menu Builder**: Advanced menu management inside UI Manager
+- **Template System**: Reusable page templates
+
+### Backward Compatibility
+- Existing Manage Pages, Manage Theme, and Manage Frontend interfaces remain functional
+- Seamless integration with core theme system
 
 ## Installation
 
@@ -19,11 +32,22 @@ Drag-and-drop page builder with Laravel-Pagebuilder integration for AlgoExpertHu
 
 ## Menu Structure
 
-The addon integrates into the "UI Manager" menu section with:
+The addon integrates into the "UI Manager" menu section with comprehensive Elementor-like features:
+
+### UI Manager Section
 - **Manage Pages**: Existing page management + Page Builder access
 - **Manage Theme**: Theme management + Theme Builder
 - **Manage Frontend**: Section management + Section Builder
-- **Page Builder**: Unified page builder interface
+- **Page Builder** (Comprehensive):
+  - All Pages
+  - Create Page
+  - Templates
+  - Widget Library
+  - Manage Layouts
+  - Manage Menus
+  - Theme Builder
+  - Create Theme
+  - Global Styles
 
 ## Usage
 
@@ -64,20 +88,64 @@ Each interface has buttons/links to access the page builder.
 - `MenuManagerService`: Menu structure management
 - `TemplateService`: Page template management
 - `ThemeTemplateService`: Theme template editing
+- `LayoutManagerService`: Layout management (header, footer, sidebar, etc.)
+- `WidgetLibraryService`: Widget library management
+- `GlobalStylesService`: Global CSS/SCSS/LESS management
 
 ### Controllers
 
 - `PageBuilderController`: Main page builder interface
-- `ThemeController`: Theme builder integration
-- `MenuController`: Menu management
+- `ThemeController`: Theme builder integration + Create theme
+- `MenuController`: Menu management with drag-and-drop
 - `TemplateController`: Template management
 - `SectionController`: Section builder
+- `LayoutController`: Layout management
+- `WidgetController`: Widget library management
+- `GlobalStylesController`: Global styles management
 
-## TODO
+### Models
 
-- [ ] Integrate GrapesJS editor in edit views
-- [ ] Implement pagebuilder page creation/linking
-- [ ] Add menu drag-and-drop interface
-- [ ] Complete template system
-- [ ] Add section builder integration
-- [ ] Theme template conversion (Blade ↔ PageBuilder)
+- `PageBuilderPage`: Page builder pages
+- `PageBuilderMenu`: Menu structures
+- `PageBuilderTemplate`: Page templates
+- `PageBuilderLayout`: Page layouts
+- `PageBuilderWidget`: Widget library
+- `PageBuilderGlobalStyle`: Global styles
+
+## Database Tables
+
+- `pagebuilder_pages`: Links pages to pagebuilder
+- `pagebuilder_menus`: Menu structures
+- `pagebuilder_templates`: Reusable templates
+- `pagebuilder_layouts`: Page layouts (header, footer, etc.)
+- `pagebuilder_widgets`: Widget library
+- `pagebuilder_global_styles`: Global CSS styles
+
+## Usage Examples
+
+### Creating a Layout
+1. Go to **UI Manager > Page Builder > Manage Layouts**
+2. Click "Create Layout"
+3. Choose layout type (header, footer, sidebar, content, full)
+4. Configure structure and settings
+5. Set as default if needed
+
+### Creating a Widget
+1. Go to **UI Manager > Page Builder > Widget Library**
+2. Click "Create Widget"
+3. Define widget name, category, and templates
+4. Add HTML/CSS/JS templates
+5. Configure default settings
+
+### Managing Global Styles
+1. Go to **UI Manager > Page Builder > Global Styles**
+2. Create or edit global CSS styles
+3. View compiled CSS
+4. Styles are automatically applied to all pages
+
+### Creating a Theme
+1. Go to **UI Manager > Page Builder > Create Theme**
+2. Enter theme details (name, display name, author, version)
+3. Optionally clone from existing theme
+4. Theme structure is created automatically
+5. Edit templates using Theme Builder
