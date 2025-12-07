@@ -85,9 +85,9 @@
                         <h5 class="mb-3"><i class="fas fa-bolt"></i> Manual Trade Execution</h5>
 
                         @php
-                            $activeConnections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', 1)
-                                ->where('is_active', 1)
-                                ->where('status', 'connected')
+                            $activeConnections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('trade_execution_enabled', true)
+                                ->where('is_active', true)
+                                ->where('status', 'active')
                                 ->get();
                         @endphp
 

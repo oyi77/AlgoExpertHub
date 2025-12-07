@@ -109,7 +109,7 @@ class TradingBotController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'exchange_connection_id' => 'required|exists:exchange_connections,id',
+            'exchange_connection_id' => 'required|exists:execution_connections,id',
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
@@ -181,7 +181,7 @@ class TradingBotController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'exchange_connection_id' => 'required|exists:exchange_connections,id',
+            'exchange_connection_id' => 'required|exists:execution_connections,id',
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
@@ -320,7 +320,7 @@ class TradingBotController extends Controller
         }
 
         $request->validate([
-            'exchange_connection_id' => 'required|exists:exchange_connections,id',
+            'exchange_connection_id' => 'required|exists:execution_connections,id',
             'name' => 'nullable|string|max:255',
             'is_paper_trading' => 'boolean',
         ]);

@@ -86,38 +86,60 @@ class MetaApiProvisioningService
             }
         }
 
+        // Validate login is numeric (MetaAPI requirement: string of digits only)
+        if (!ctype_digit((string) $accountData['login'])) {
+            return [
+                'success' => false,
+                'message' => "Login must contain only digits",
+            ];
+        }
+
         // Generate unique transaction ID (32 characters)
         $transactionId = bin2hex(random_bytes(16));
 
         // Prepare request body
+        // MetaAPI expects platform as lowercase 'mt4' or 'mt5' (per Swagger docs)
+        $platform = strtolower(trim($accountData['platform']));
+        $platformValue = ($platform === 'mt5' || $platform === 'MT5') ? 'mt5' : 'mt4';
+        
+        // Magic is REQUIRED per Swagger docs (required: ["magic", "name", "server"])
+        $magic = isset($accountData['magic']) && $accountData['magic'] !== null 
+            ? (int) $accountData['magic'] 
+            : 0;
+        
+        // If manualTrades is true, magic must be 0
+        $manualTrades = isset($accountData['manualTrades']) && $accountData['manualTrades'] !== null
+            ? (bool) $accountData['manualTrades']
+            : false;
+        
+        if ($manualTrades) {
+            $magic = 0;
+        }
+        
         $body = [
             'login' => (string) $accountData['login'],
-            'password' => $accountData['password'],
-            'server' => $accountData['server'],
-            'name' => $accountData['name'],
-            'platform' => strtolower($accountData['platform']) === 'mt5' ? 'mt5' : 'mt4',
+            'password' => (string) $accountData['password'],
+            'server' => (string) $accountData['server'],
+            'name' => (string) $accountData['name'],
+            'platform' => $platformValue,
             'type' => $accountData['type'] ?? 'cloud-g2',
+            'magic' => $magic, // Required field
         ];
 
-        // Optional fields
+        // Optional fields - only include if they have values
         if (!empty($accountData['provisioningProfileId'])) {
-            $body['provisioningProfileId'] = $accountData['provisioningProfileId'];
+            $body['provisioningProfileId'] = (string) $accountData['provisioningProfileId'];
         }
 
-        if (isset($accountData['magic'])) {
-            $body['magic'] = (int) $accountData['magic'];
-        }
-
-        if (isset($accountData['manualTrades'])) {
-            $body['manualTrades'] = (bool) $accountData['manualTrades'];
-            if ($body['manualTrades'] && (!isset($body['magic']) || $body['magic'] !== 0)) {
-                $body['magic'] = 0;
-            }
+        if ($manualTrades) {
+            $body['manualTrades'] = true;
         }
 
         try {
             $response = $this->client->post('/users/current/accounts', [
                 'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
                     'auth-token' => $this->apiToken,
                     'transaction-id' => $transactionId,
                 ],
@@ -129,12 +151,31 @@ class MetaApiProvisioningService
             if ($statusCode !== 200 && $statusCode !== 201) {
                 $responseBody = $response->getBody()->getContents();
                 $errorData = json_decode($responseBody, true);
+                
+                // Extract detailed error message
                 $errorMessage = $errorData['message'] ?? "HTTP {$statusCode}";
+                
+                // MetaAPI often returns validation errors in 'errors' array
+                if (isset($errorData['errors']) && is_array($errorData['errors'])) {
+                    $validationErrors = [];
+                    foreach ($errorData['errors'] as $field => $messages) {
+                        if (is_array($messages)) {
+                            $validationErrors[] = $field . ': ' . implode(', ', $messages);
+                        } else {
+                            $validationErrors[] = $field . ': ' . $messages;
+                        }
+                    }
+                    if (!empty($validationErrors)) {
+                        $errorMessage = 'Validation failed: ' . implode(' | ', $validationErrors);
+                    }
+                }
                 
                 if ($statusCode === 401) {
                     $errorMessage = 'Invalid MetaApi API token. Please check your token.';
                 } elseif ($statusCode === 400) {
-                    $errorMessage = 'Invalid request: ' . ($errorData['message'] ?? 'Bad request');
+                    if (empty($errorData['errors'])) {
+                        $errorMessage = 'Invalid request: ' . ($errorData['message'] ?? 'Bad request');
+                    }
                 } elseif ($statusCode === 409) {
                     $errorMessage = 'Account already exists in MetaApi: ' . ($errorData['message'] ?? 'Conflict');
                 }
@@ -142,6 +183,8 @@ class MetaApiProvisioningService
                 Log::error('Failed to add MetaApi account', [
                     'status_code' => $statusCode,
                     'error' => $errorMessage,
+                    'error_data' => $errorData,
+                    'request_body' => $body,
                     'mt_login' => $accountData['login'] ?? 'unknown',
                 ]);
                 
@@ -851,5 +894,235 @@ class MetaApiProvisioningService
         }
         
         return null;
+    }
+
+    /**
+     * Generate account-specific auth token via Profile API
+     * 
+     * Generates a scoped token with specific permissions for an account
+     * This is useful for monitoring connections with account-specific tokens
+     * 
+     * @param string $accountId MetaApi account ID
+     * @param array $accessRules Access rules (optional, defaults to all APIs with reader/writer)
+     * @param int|string $validityHours Token validity in hours ('Infinity' for never-expiring)
+     * @param string|null $captchaToken Turnstile CAPTCHA token (optional, may be required by MetaApi)
+     * @return array ['success' => bool, 'token' => string|null, 'message' => string]
+     */
+    public function generateAccountToken(string $accountId, array $accessRules = null, $validityHours = 'Infinity', ?string $captchaToken = null): array
+    {
+        if (empty($this->apiToken)) {
+            return [
+                'success' => false,
+                'message' => 'MetaApi API token is required to generate account tokens',
+            ];
+        }
+
+        // Default access rules: Full access to all MetaApi APIs for this account
+        if ($accessRules === null) {
+            $accessRules = [
+                [
+                    'id' => 'trading-account-management-api',
+                    'application' => 'trading-account-management-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'metaapi-rest-api',
+                    'application' => 'metaapi-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'metaapi-rpc-api',
+                    'application' => 'metaapi-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'ws',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'metaapi-real-time-streaming-api',
+                    'application' => 'metaapi-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'ws',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'metastats-api',
+                    'application' => 'metastats-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'risk-management-api',
+                    'application' => 'risk-management-api',
+                    'resources' => [
+                        ['entity' => 'account', 'id' => $accountId]
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'copyfactory-api',
+                    'application' => 'copyfactory-api',
+                    'resources' => [
+                        ['entity' => '*', 'id' => '*']
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [['method' => '*']]]
+                    ]
+                ],
+                [
+                    'id' => 'mt-manager-api',
+                    'application' => 'mt-manager-api',
+                    'resources' => [
+                        ['entity' => '*', 'id' => '*']
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader', 'writer'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [
+                            ['method' => '*', 'scopes' => ['public', 'dealing']]
+                        ]]
+                    ]
+                ],
+                [
+                    'id' => 'billing-api',
+                    'application' => 'billing-api',
+                    'resources' => [
+                        ['entity' => '*', 'id' => '*']
+                    ],
+                    'service' => 'rest',
+                    'roles' => ['reader'],
+                    'methodGroups' => [
+                        ['group' => '*', 'methods' => [
+                            ['method' => '*', 'scopes' => ['public']]
+                        ]]
+                    ]
+                ],
+            ];
+        }
+
+        // Profile API base URL
+        $profileApiUrl = config('trading-management.metaapi.profile_base_url')
+            ?? $this->getGlobalConfig()['profile_base_url'] ?? null
+            ?? 'https://profile-api-v1.agiliumtrade.agiliumtrade.ai';
+
+        // Build URL with validity hours
+        $url = rtrim($profileApiUrl, '/') . '/users/current/generate-auth-token';
+        if ($validityHours !== null && $validityHours !== 'Infinity') {
+            $url .= '?validity-hours=' . (int) $validityHours;
+        } elseif ($validityHours === 'Infinity') {
+            $url .= '?validity-hours=Infinity';
+        }
+
+        try {
+            $profileClient = new Client([
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'auth-token' => $this->apiToken,
+                ],
+            ]);
+
+            // Add CAPTCHA token if provided (may be required by MetaApi)
+            $headers = [];
+            if ($captchaToken) {
+                $headers['auth-captcha-token'] = $captchaToken;
+            }
+
+            $response = $profileClient->post($url, [
+                'headers' => $headers,
+                'json' => [
+                    'accessRules' => $accessRules,
+                ],
+                'http_errors' => false,
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $responseBody = json_decode($response->getBody()->getContents(), true);
+
+            if ($statusCode === 200 && isset($responseBody['token'])) {
+                return [
+                    'success' => true,
+                    'token' => $responseBody['token'],
+                    'message' => 'Account token generated successfully',
+                ];
+            } elseif ($statusCode === 401) {
+                return [
+                    'success' => false,
+                    'message' => 'Authentication failed. Please check your MetaApi API token.',
+                ];
+            } elseif ($statusCode === 403 && isset($responseBody['message']) && strpos($responseBody['message'], 'captcha') !== false) {
+                return [
+                    'success' => false,
+                    'message' => 'CAPTCHA verification required. This endpoint may require a CAPTCHA token from the MetaApi web interface.',
+                    'requires_captcha' => true,
+                ];
+            } else {
+                $errorMessage = $responseBody['message'] ?? "HTTP {$statusCode}";
+                return [
+                    'success' => false,
+                    'message' => 'Failed to generate account token: ' . $errorMessage,
+                ];
+            }
+        } catch (RequestException $e) {
+            $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : 0;
+            $message = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
+            
+            Log::error('Failed to generate MetaApi account token', [
+                'account_id' => $accountId,
+                'status_code' => $statusCode,
+                'error' => $message,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to generate account token: ' . ($e->getMessage() ?? "HTTP {$statusCode}"),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error generating MetaApi account token', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ];
+        }
     }
 }

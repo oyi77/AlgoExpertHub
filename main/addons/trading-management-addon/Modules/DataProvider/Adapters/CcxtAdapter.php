@@ -49,9 +49,9 @@ class CcxtAdapter implements DataProviderInterface
     }
 
     /**
-     * Fetch candle data
+     * Fetch OHLCV data (interface requirement)
      */
-    public function fetchCandles(string $symbol, string $timeframe, int $limit = 100): array
+    public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
     {
         try {
             $this->initializeCcxt();
@@ -59,25 +59,39 @@ class CcxtAdapter implements DataProviderInterface
             // Convert timeframe to CCXT format (1h, 4h, 1d, etc.)
             $ccxtTimeframe = $this->convertTimeframe($timeframe);
             
-            // Fetch OHLCV data
-            $ohlcv = $this->ccxtInstance->fetch_ohlcv($symbol, $ccxtTimeframe, null, $limit);
+            // Fetch OHLCV data (CCXT expects timestamp in milliseconds for since parameter)
+            $sinceMs = $since ? $since * 1000 : null;
+            $ohlcv = $this->ccxtInstance->fetch_ohlcv($symbol, $ccxtTimeframe, $sinceMs, $limit);
             
             // Transform to standard format
             $candles = [];
             foreach ($ohlcv as $candle) {
                 $candles[] = [
-                    'timestamp' => $candle[0],
-                    'open' => $candle[1],
-                    'high' => $candle[2],
-                    'low' => $candle[3],
-                    'close' => $candle[4],
-                    'volume' => $candle[5],
+                    'timestamp' => $candle[0], // Already in milliseconds from CCXT
+                    'open' => (float) $candle[1],
+                    'high' => (float) $candle[2],
+                    'low' => (float) $candle[3],
+                    'close' => (float) $candle[4],
+                    'volume' => (float) $candle[5],
                 ];
             }
             
+            return $candles;
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch OHLCV data: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fetch candle data (backward compatibility)
+     */
+    public function fetchCandles(string $symbol, string $timeframe, int $limit = 100): array
+    {
+        try {
+            $data = $this->fetchOHLCV($symbol, $timeframe, $limit);
             return [
                 'success' => true,
-                'data' => $candles,
+                'data' => $data,
             ];
         } catch (\Exception $e) {
             return [
@@ -160,6 +174,115 @@ class CcxtAdapter implements DataProviderInterface
         ];
 
         return $mapping[$timeframe] ?? $timeframe;
+    }
+
+    /**
+     * Connect to exchange
+     */
+    public function connect(array $credentials): bool
+    {
+        try {
+            $this->credentials = array_merge($this->credentials, $credentials);
+            $this->initializeCcxt();
+            $this->ccxtInstance->load_markets();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Disconnect
+     */
+    public function disconnect(): void
+    {
+        $this->ccxtInstance = null;
+    }
+
+    /**
+     * Check if connected
+     */
+    public function isConnected(): bool
+    {
+        return $this->ccxtInstance !== null;
+    }
+
+    /**
+     * Fetch tick data
+     */
+    public function fetchTicks(string $symbol, int $limit = 100): array
+    {
+        try {
+            $this->initializeCcxt();
+            $trades = $this->ccxtInstance->fetch_trades($symbol, null, $limit);
+            
+            $ticks = [];
+            foreach ($trades as $trade) {
+                $ticks[] = [
+                    'timestamp' => $trade['timestamp'],
+                    'symbol' => $symbol,
+                    'bid' => $trade['price'],
+                    'ask' => $trade['price'],
+                    'last' => $trade['price'],
+                    'volume' => $trade['amount'],
+                ];
+            }
+            
+            return $ticks;
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch ticks: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get account info
+     */
+    public function getAccountInfo(): array
+    {
+        try {
+            $this->initializeCcxt();
+            $balance = $this->ccxtInstance->fetch_balance();
+            
+            return [
+                'balance' => $balance['total']['USD'] ?? $balance['total']['USDT'] ?? 0,
+                'equity' => $balance['total']['USD'] ?? $balance['total']['USDT'] ?? 0,
+                'margin' => 0,
+                'free_margin' => $balance['free']['USD'] ?? $balance['free']['USDT'] ?? 0,
+                'currency' => 'USD',
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch account info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get available symbols
+     */
+    public function getAvailableSymbols(): array
+    {
+        try {
+            $this->initializeCcxt();
+            $markets = $this->ccxtInstance->load_markets();
+            return array_keys($markets);
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Test connection
+     */
+    public function testConnection(): array
+    {
+        return $this->test();
+    }
+
+    /**
+     * Get provider name
+     */
+    public function getProviderName(): string
+    {
+        return 'ccxt_' . strtolower($this->exchange);
     }
 }
 

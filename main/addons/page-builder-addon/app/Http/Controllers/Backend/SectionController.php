@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Content;
 use App\Utility\Config;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SectionController extends Controller
 {
@@ -25,16 +26,56 @@ class SectionController extends Controller
      */
     public function edit($name)
     {
-        $data['title'] = 'Edit Section: ' . ucwords(str_replace('_', ' ', $name));
-        $data['sectionName'] = $name;
-        
-        // Load section content
-        $data['elements'] = Content::where('theme', \App\Helpers\Helper\Helper::config()->theme)
-            ->where('type', 'iteratable')
-            ->where('name', $name)
-            ->get();
+        try {
+            $data['title'] = 'Edit Section: ' . ucwords(str_replace('_', ' ', $name));
+            $data['sectionName'] = $name;
+            
+            // Get theme safely with multiple fallbacks
+            $theme = 'default';
+            try {
+                $config = \App\Helpers\Helper\Helper::config();
+                if ($config && property_exists($config, 'theme') && !empty($config->theme)) {
+                    $theme = $config->theme;
+                } elseif ($config && isset($config->theme)) {
+                    $theme = $config->theme ?: 'default';
+                } else {
+                    // Try to get from database directly
+                    $dbConfig = \App\Models\Configuration::first();
+                    if ($dbConfig && !empty($dbConfig->theme)) {
+                        $theme = $dbConfig->theme;
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not get theme from config, using default', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Load section content (empty collection if none found)
+            $data['elements'] = Content::where('theme', $theme)
+                ->where('type', 'iteratable')
+                ->where('name', $name)
+                ->get();
 
-        return view('page-builder-addon::backend.page-builder.sections.edit', $data);
+            return view('page-builder-addon::backend.page-builder.sections.edit', $data);
+        } catch (\Exception $e) {
+            Log::error('Page Builder Section Edit Error', [
+                'section' => $name,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // If it's a view error, show more details in development
+            if (config('app.debug')) {
+                return redirect()->route('admin.page-builder.sections.index')
+                    ->with('error', 'Failed to load section editor: ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ':' . $e->getLine() . ')');
+            }
+            
+            return redirect()->route('admin.page-builder.sections.index')
+                ->with('error', 'Failed to load section editor. Please check the logs for details.');
+        }
     }
 
     /**

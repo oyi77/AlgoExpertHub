@@ -216,7 +216,7 @@ class TradingOperationsController extends Controller
     public function manualTrade(Request $request)
     {
         $validated = $request->validate([
-            'connection_id' => 'required|exists:exchange_connections,id',
+            'connection_id' => 'required|exists:execution_connections,id',
             'symbol' => 'required|string',
             'direction' => 'required|in:BUY,SELL,LONG,SHORT',
             'lot_size' => 'required|numeric|min:0.01',
@@ -237,56 +237,120 @@ class TradingOperationsController extends Controller
                 ], 400);
             }
 
+            // Map direction: BUY/LONG -> buy, SELL/SHORT -> sell
+            $direction = strtolower($validated['direction']);
+            if (in_array($direction, ['long', 'short'])) {
+                $direction = $direction === 'long' ? 'buy' : 'sell';
+            }
+
+            // Validate limit order requirements
+            $orderType = $validated['order_type'] ?? 'market';
+            if ($orderType === 'limit' && empty($validated['entry_price'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Entry price is required for limit orders'
+                ], 400);
+            }
+
+            // Get adapter and execute trade
+            $adapter = $this->getAdapter($connection);
+
+            if (!$adapter || !method_exists($adapter, 'placeOrder')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trade execution not supported for this connection type'
+                ], 400);
+            }
+
             // Create execution log
             $log = ExecutionLog::create([
                 'connection_id' => $connection->id,
                 'signal_id' => null, // Manual trade, no signal
                 'symbol' => $validated['symbol'],
-                'direction' => strtolower($validated['direction']), // 'buy' or 'sell'
+                'direction' => $direction,
                 'quantity' => $validated['lot_size'],
                 'entry_price' => $validated['entry_price'],
                 'sl_price' => $validated['sl_price'],
                 'tp_price' => $validated['tp_price'],
-                'execution_type' => $validated['order_type'] ?? 'market',
+                'execution_type' => $orderType,
                 'status' => 'pending',
             ]);
 
-            $orderId = 'MANUAL_' . time() . '_' . rand(1000, 9999);
-            
-            $log->update([
-                'status' => 'executed',
-                'order_id' => $orderId,
-                'executed_at' => now(),
-            ]);
+            try {
+                // Execute trade via adapter
+                $result = $adapter->placeOrder(
+                    $validated['symbol'],
+                    $direction,
+                    $validated['lot_size'],
+                    $orderType,
+                    $validated['entry_price'] ?? null,
+                    $validated['sl_price'] ?? null,
+                    $validated['tp_price'] ?? null,
+                    $validated['notes'] ?? null
+                );
 
-            // Create position
-            ExecutionPosition::create([
-                'signal_id' => null,
-                'connection_id' => $connection->id,
-                'execution_log_id' => $log->id,
-                'order_id' => $orderId,
-                'symbol' => $validated['symbol'],
-                'direction' => strtolower($validated['direction']),
-                'quantity' => $validated['lot_size'],
-                'entry_price' => $validated['entry_price'] ?? 0,
-                'current_price' => $validated['entry_price'] ?? 0,
-                'sl_price' => $validated['sl_price'],
-                'tp_price' => $validated['tp_price'],
-                'status' => 'open',
-            ]);
+                if (!isset($result['success']) || !$result['success']) {
+                    throw new \Exception($result['message'] ?? 'Trade execution failed');
+                }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Trade executed successfully',
-                'data' => [
+                $orderId = $result['orderId'] ?? $result['positionId'] ?? 'ORDER_' . time();
+                $positionId = $result['positionId'] ?? null;
+
+                // Update execution log
+                $log->update([
+                    'status' => 'executed',
                     'order_id' => $orderId,
-                    'symbol' => $validated['symbol'],
-                    'direction' => $validated['direction'],
-                    'lot_size' => $validated['lot_size'],
-                    'entry_price' => $validated['entry_price'] ?? 'Market',
-                    'status' => 'SUCCESS',
-                ]
-            ]);
+                    'executed_at' => now(),
+                ]);
+
+                // Create position if we have a position ID or if it's a market order (which creates position immediately)
+                if ($positionId || $orderType === 'market') {
+                    ExecutionPosition::create([
+                        'signal_id' => null,
+                        'connection_id' => $connection->id,
+                        'execution_log_id' => $log->id,
+                        'order_id' => $orderId,
+                        'symbol' => $validated['symbol'],
+                        'direction' => $direction,
+                        'quantity' => $validated['lot_size'],
+                        'entry_price' => $validated['entry_price'] ?? 0,
+                        'current_price' => $validated['entry_price'] ?? 0,
+                        'sl_price' => $validated['sl_price'],
+                        'tp_price' => $validated['tp_price'],
+                        'status' => 'open',
+                    ]);
+                }
+
+                // Update connection last used timestamp
+                $connection->update(['last_trade_execution_at' => now()]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Trade executed successfully',
+                    'data' => [
+                        'order_id' => $orderId,
+                        'position_id' => $positionId,
+                        'symbol' => $validated['symbol'],
+                        'direction' => strtoupper($direction),
+                        'lot_size' => $validated['lot_size'],
+                        'entry_price' => $validated['entry_price'] ?? 'Market',
+                        'order_type' => $orderType,
+                        'status' => 'SUCCESS',
+                    ]
+                ]);
+
+            } catch (\Exception $e) {
+                // Update log with failure
+                $log->update([
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Trade execution failed: ' . $e->getMessage()
+                ], 400);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -304,5 +368,43 @@ class TradingOperationsController extends Controller
         $wins = ExecutionPosition::where('status', 'closed')->where('pnl', '>', 0)->count();
 
         return $total > 0 ? ($wins / $total) * 100 : 0;
+    }
+
+    /**
+     * Get adapter for connection
+     */
+    protected function getAdapter($connection)
+    {
+        // Return appropriate adapter (CCXT or MT4/MT5)
+        if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
+                $connection->credentials,
+                $connection->provider
+            );
+        } else {
+            // Check provider type
+            if ($connection->provider === 'mtapi_grpc' || 
+                (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+                $credentials = $connection->credentials;
+                $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
+                
+                if (!empty($globalSettings['base_url'])) {
+                    $credentials['base_url'] = $globalSettings['base_url'];
+                }
+                if (!empty($globalSettings['timeout'])) {
+                    $credentials['timeout'] = $globalSettings['timeout'];
+                }
+                
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
+            } elseif ($connection->provider === 'metaapi') {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
+                    $connection->credentials
+                );
+            } else {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
+                    $connection->credentials
+                );
+            }
+        }
     }
 }

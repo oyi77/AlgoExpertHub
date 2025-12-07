@@ -239,7 +239,7 @@ class BacktestController extends Controller
     public function downloadData(Request $request)
     {
         $validated = $request->validate([
-            'connection_id' => 'required|exists:exchange_connections,id',
+            'connection_id' => 'required|exists:execution_connections,id',
             'symbol' => 'required|string',
             'timeframe' => 'required|string',
             'format' => 'required|in:csv,json,pandas,mt4',
@@ -251,18 +251,50 @@ class BacktestController extends Controller
         try {
             $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::findOrFail($validated['connection_id']);
             
-            // Fetch data using adapter
-            $adapter = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class)
-                ->create($connection);
-            
-            $limit = $validated['limit'] ?? 10000;
-            $result = $adapter->fetchCandles($validated['symbol'], $validated['timeframe'], $limit);
-
-            if (!$result['success']) {
-                return response()->json(['success' => false, 'message' => $result['message']], 400);
+            // Check if connection can fetch data
+            if (!$connection->canFetchData()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection is not active or data fetching is not enabled'
+                ], 400);
             }
+            
+            // Get adapter
+            $adapter = $this->getAdapter($connection);
+            
+            if (!$adapter || !method_exists($adapter, 'fetchOHLCV')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data fetching not supported for this connection type'
+                ], 400);
+            }
+            
+            // Calculate parameters
+            $limit = $validated['limit'] ?? 10000;
+            $since = null;
+            
+            // If date range provided, calculate since timestamp
+            if (!empty($validated['start_date'])) {
+                $since = strtotime($validated['start_date']);
+            }
+            
+            // Fetch data using adapter
+            $data = $adapter->fetchOHLCV(
+                $validated['symbol'],
+                $validated['timeframe'],
+                $limit,
+                $since
+            );
 
-            $data = $result['data'];
+            if (empty($data)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No data available for the specified parameters'
+                ], 400);
+            }
+            
+            // Update connection last used timestamp
+            $connection->update(['last_data_fetch_at' => now()]);
             $filename = sprintf('%s_%s_%s.%s', 
                 $validated['symbol'], 
                 $validated['timeframe'], 
@@ -278,10 +310,53 @@ class BacktestController extends Controller
             }, $filename);
 
         } catch (\Exception $e) {
+            \Log::error('Data download failed', [
+                'connection_id' => $validated['connection_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Download failed: ' . $e->getMessage()
             ], 400);
+        }
+    }
+
+    /**
+     * Get adapter for connection
+     */
+    protected function getAdapter($connection)
+    {
+        // Return appropriate adapter (CCXT or MT4/MT5)
+        if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
+                $connection->credentials,
+                $connection->provider
+            );
+        } else {
+            // Check provider type
+            if ($connection->provider === 'mtapi_grpc' || 
+                (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+                $credentials = $connection->credentials;
+                $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
+                
+                if (!empty($globalSettings['base_url'])) {
+                    $credentials['base_url'] = $globalSettings['base_url'];
+                }
+                if (!empty($globalSettings['timeout'])) {
+                    $credentials['timeout'] = $globalSettings['timeout'];
+                }
+                
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
+            } elseif ($connection->provider === 'metaapi') {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
+                    $connection->credentials
+                );
+            } else {
+                return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
+                    $connection->credentials
+                );
+            }
         }
     }
 
@@ -294,12 +369,19 @@ class BacktestController extends Controller
             case 'csv':
                 $csv = "timestamp,open,high,low,close,volume\n";
                 foreach ($data as $candle) {
+                    // Handle timestamp - can be in seconds or milliseconds
+                    $timestamp = $candle['timestamp'] ?? 0;
+                    if ($timestamp > 1000000000000) {
+                        // Milliseconds
+                        $timestamp = $timestamp / 1000;
+                    }
+                    
                     $csv .= sprintf("%s,%s,%s,%s,%s,%s\n",
-                        date('Y-m-d H:i:s', $candle['timestamp'] / 1000),
-                        $candle['open'],
-                        $candle['high'],
-                        $candle['low'],
-                        $candle['close'],
+                        date('Y-m-d H:i:s', $timestamp),
+                        $candle['open'] ?? 0,
+                        $candle['high'] ?? 0,
+                        $candle['low'] ?? 0,
+                        $candle['close'] ?? 0,
                         $candle['volume'] ?? 0
                     );
                 }

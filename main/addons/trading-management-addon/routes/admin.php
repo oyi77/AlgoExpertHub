@@ -37,6 +37,13 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
     // Testing endpoints
     Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
     Route::post('/test-execution', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testExecution'])->name('test-execution');
+    
+    // Connection management endpoints
+    Route::post('/{exchangeConnection}/test', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testConnection'])->name('test');
+    Route::post('/{exchangeConnection}/activate', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'activateConnection'])->name('activate');
+    Route::post('/{exchangeConnection}/deactivate', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'deactivateConnection'])->name('deactivate');
+    Route::post('/{exchangeConnection}/toggle-copy-trading', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'toggleCopyTrading'])->name('toggle-copy-trading');
+    Route::get('/{exchangeConnection}/copy-trading-stats', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getCopyTradingStats'])->name('copy-trading-stats');
 });
 
     // 1. Trading Configuration (Page with tabs)
@@ -94,9 +101,21 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
             Route::post('/test-execution', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testExecution'])->name('test-execution');
             
+            // Connection management endpoints
+            Route::post('/{exchangeConnection}/test', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testConnection'])->name('test');
+            Route::post('/{exchangeConnection}/activate', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'activateConnection'])->name('activate');
+            Route::post('/{exchangeConnection}/deactivate', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'deactivateConnection'])->name('deactivate');
+            Route::post('/{exchangeConnection}/toggle-copy-trading', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'toggleCopyTrading'])->name('toggle-copy-trading');
+            Route::get('/{exchangeConnection}/copy-trading-stats', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getCopyTradingStats'])->name('copy-trading-stats');
+            
             // MetaApi provisioning endpoints
             Route::post('/add-metaapi-account', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'addMetaApiAccount'])->name('add-metaapi-account');
             Route::post('/metaapi-account-status', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getMetaApiAccountStatus'])->name('metaapi-account-status');
+            Route::get('/{exchangeConnection}/monitor-metaapi', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'monitorMetaApi'])->name('monitor-metaapi');
+            Route::post('/{exchangeConnection}/generate-account-token', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'generateAccountToken'])->name('generate-account-token');
+            
+            // CCXT exchanges endpoint
+            Route::get('/ccxt-exchanges', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getCcxtExchanges'])->name('ccxt-exchanges');
         });
         
         // Risk Presets

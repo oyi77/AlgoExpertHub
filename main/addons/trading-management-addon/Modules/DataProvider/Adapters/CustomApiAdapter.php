@@ -120,5 +120,119 @@ class CustomApiAdapter implements DataProviderInterface
             'Accept' => 'application/json',
         ];
     }
+
+    /**
+     * Connect to data provider
+     */
+    public function connect(array $credentials): bool
+    {
+        $this->credentials = array_merge($this->credentials, $credentials);
+        $result = $this->test();
+        return $result['success'] ?? false;
+    }
+
+    /**
+     * Disconnect
+     */
+    public function disconnect(): void
+    {
+        // Nothing to disconnect for REST API
+    }
+
+    /**
+     * Check if connected
+     */
+    public function isConnected(): bool
+    {
+        return !empty($this->credentials['api_url']);
+    }
+
+    /**
+     * Fetch OHLCV data (interface requirement)
+     */
+    public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
+    {
+        $result = $this->fetchCandles($symbol, $timeframe, $limit);
+        if (isset($result['success']) && $result['success']) {
+            return $result['data'] ?? [];
+        }
+        throw new \Exception($result['message'] ?? 'Failed to fetch OHLCV data');
+    }
+
+    /**
+     * Fetch tick data
+     */
+    public function fetchTicks(string $symbol, int $limit = 100): array
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->get($this->credentials['api_url'] . '/ticks', [
+                    'symbol' => $symbol,
+                    'limit' => $limit,
+                ]);
+            
+            if ($response->successful()) {
+                return $response->json('data', []);
+            }
+            
+            throw new \Exception('Failed to fetch ticks');
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch ticks: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get account info
+     */
+    public function getAccountInfo(): array
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->get($this->credentials['api_url'] . '/account');
+            
+            if ($response->successful()) {
+                return $response->json('data', []);
+            }
+            
+            throw new \Exception('Failed to fetch account info');
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to fetch account info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get available symbols
+     */
+    public function getAvailableSymbols(): array
+    {
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->get($this->credentials['api_url'] . '/symbols');
+            
+            if ($response->successful()) {
+                return $response->json('data', []);
+            }
+            
+            return [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Test connection (interface requirement)
+     */
+    public function testConnection(): array
+    {
+        return $this->test();
+    }
+
+    /**
+     * Get provider name
+     */
+    public function getProviderName(): string
+    {
+        return 'custom_api';
+    }
 }
 
