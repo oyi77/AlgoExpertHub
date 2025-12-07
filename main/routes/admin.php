@@ -162,6 +162,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('performance/status', [ConfigurationController::class, 'getSystemStatus'])->name('performance.status');
             Route::get('performance/stream', [ConfigurationController::class, 'streamSystemStatus'])->name('performance.stream');
 
+            // Performance: granular actions & toggles
+            Route::post('performance/assets', [ConfigurationController::class, 'performanceAssets'])->name('performance.assets');
+            Route::post('performance/http', [ConfigurationController::class, 'performanceHttp'])->name('performance.http');
+            Route::post('performance/media', [ConfigurationController::class, 'performanceMedia'])->name('performance.media');
+            Route::post('performance/cache', [ConfigurationController::class, 'performanceCache'])->name('performance.cache');
+            Route::post('performance/db', [ConfigurationController::class, 'performanceDatabase'])->name('performance.db');
+            Route::post('performance/prewarm', [ConfigurationController::class, 'performancePrewarm'])->name('performance.prewarm');
+
             // Database Management
             Route::post('reseed-database', [ConfigurationController::class, 'reseedDatabase'])->name('reseed-database');
             Route::post('reset-database', [ConfigurationController::class, 'resetDatabase'])->name('reset-database');

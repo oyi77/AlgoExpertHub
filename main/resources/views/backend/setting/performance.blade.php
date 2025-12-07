@@ -722,6 +722,195 @@
             </div>
         </div>
     </div>
+
+    <!-- Frontend Optimization -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h5 class="mb-3"><i class="las la-tachometer-alt"></i> {{ __('Frontend Optimization') }}</h5>
+            <div class="card border">
+                <div class="card-body">
+                    <form action="{{ route('admin.general.performance.assets') }}" method="POST">
+                        @csrf
+                        <div class="form-row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="lazy_images" id="lazy_images">
+                                    <label class="form-check-label" for="lazy_images">{{ __('Lazy-load images') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="defer_scripts" id="defer_scripts" checked>
+                                    <label class="form-check-label" for="defer_scripts">{{ __('Defer scripts') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="async_scripts" id="async_scripts">
+                                    <label class="form-check-label" for="async_scripts">{{ __('Async scripts') }}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row mt-3">
+                            <div class="col-md-4">
+                                <label class="small">{{ __('Preload fonts (comma-separated URLs)') }}</label>
+                                <input type="text" name="preload_fonts[]" class="form-control" placeholder="https://cdn.example.com/font.woff2">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small">{{ __('Preload styles (comma-separated URLs)') }}</label>
+                                <input type="text" name="preload_styles[]" class="form-control" placeholder="/asset/frontend/css/main.css">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small">{{ __('Preload scripts (comma-separated URLs)') }}</label>
+                                <input type="text" name="preload_scripts[]" class="form-control" placeholder="/asset/frontend/js/main.js">
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="las la-save"></i> {{ __('Save Frontend Optimization') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTTP Caching -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h5 class="mb-3"><i class="las la-cloud"></i> {{ __('HTTP Caching') }}</h5>
+            <div class="card border">
+                <div class="card-body">
+                    <form action="{{ route('admin.general.performance.http') }}" method="POST">
+                        @csrf
+                        <div class="form-row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="cache_headers" id="cache_headers" checked>
+                                    <label class="form-check-label" for="cache_headers">{{ __('Enable Cache-Control') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="etag" id="etag" checked>
+                                    <label class="form-check-label" for="etag">{{ __('Enable ETag') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small d-block">{{ __('TTL (seconds)') }}</label>
+                                <input type="number" name="ttl" class="form-control" value="3600" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row mt-3">
+                            <div class="col-md-6">
+                                <label class="small">{{ __('Blacklist paths (one per line)') }}</label>
+                                <textarea name="blacklist[]" class="form-control" rows="3" placeholder="/admin"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small">{{ __('Whitelist paths (one per line)') }}</label>
+                                <textarea name="whitelist[]" class="form-control" rows="3" placeholder="/"></textarea>
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="las la-save"></i> {{ __('Save HTTP Caching') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Optimization -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h5 class="mb-3"><i class="las la-image"></i> {{ __('Media Optimization') }}</h5>
+            <div class="card border">
+                <div class="card-body">
+                    <form action="{{ route('admin.general.performance.media') }}" method="POST">
+                        @csrf
+                        <div class="form-row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="compress" id="compress" checked>
+                                    <label class="form-check-label" for="compress">{{ __('Compress images') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="webp" id="webp" checked>
+                                    <label class="form-check-label" for="webp">{{ __('Convert to WebP') }}</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small d-block">{{ __('Max width') }}</label>
+                                <input type="number" name="max_width" class="form-control" value="1920">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="small d-block">{{ __('Max height') }}</label>
+                                <input type="number" name="max_height" class="form-control" value="1920">
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="las la-save"></i> {{ __('Save Media Optimization') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cache & Prewarm -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h5 class="mb-3"><i class="las la-bolt"></i> {{ __('Cache & Prewarm') }}</h5>
+            <div class="card border">
+                <div class="card-body">
+                    <form action="{{ route('admin.general.performance.cache') }}" method="POST" class="mb-2">
+                        @csrf
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <label class="small">{{ __('Route names to prewarm (comma-separated)') }}</label>
+                                <input type="text" name="prewarm_routes[]" class="form-control" placeholder="home, page.index">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small">{{ __('TTL map (JSON)') }}</label>
+                                <input type="text" name="ttl_map" class="form-control" placeholder='{"dashboard.user":300}'>
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="las la-save"></i> {{ __('Save Cache Settings') }}</button>
+                        </div>
+                    </form>
+                    <form action="{{ route('admin.general.performance.prewarm') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-success"><i class="las la-fire"></i> {{ __('Run Prewarm Now') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Cleanup -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h5 class="mb-3"><i class="las la-database"></i> {{ __('Database Cleanup') }}</h5>
+            <div class="card border">
+                <div class="card-body">
+                    <form action="{{ route('admin.general.performance.db') }}" method="POST">
+                        @csrf
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <label class="small d-block">{{ __('Prune failed jobs older than (days)') }}</label>
+                                <input type="number" name="prune_days" class="form-control" value="14" min="0">
+                            </div>
+                        </div>
+                        <div class="text-right mt-3">
+                            <button type="submit" class="btn btn-sm btn-danger"><i class="las la-broom"></i> {{ __('Run Cleanup') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('script')

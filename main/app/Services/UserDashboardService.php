@@ -10,6 +10,8 @@ use App\Models\UserSignal;
 use App\Models\Withdraw;
 use Carbon\Carbon;
 use DB;
+use Illuminate\Support\Facades\Cache;
+use App\Models\GlobalConfiguration;
 
 class UserDashboardService
 {
@@ -20,9 +22,14 @@ class UserDashboardService
         $data['currentPlan'] = $user->currentplan()->first();
 
         if ($data['currentPlan'] != null) {
-            $data['signalGraph'] =  UserSignal::where('user_id', auth()->id())->select(DB::raw('COUNT(*) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')
-            ->get();
+            $perf = GlobalConfiguration::getValue('performance', config('performance'));
+            $ttlMap = $perf['cache']['ttl_map'] ?? [];
+            $ttl = (int)($ttlMap['dashboard.user'] ?? 300);
+            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
+                return UserSignal::where('user_id', auth()->id())->select(DB::raw('COUNT(*) as total'), DB::raw('MONTHNAME(created_at) month'))
+                    ->groupby('month')
+                    ->get();
+            });
         }
 
 
@@ -55,24 +62,30 @@ class UserDashboardService
             $signalGrapTotal->push(0);
         }
 
-        $payment = Payment::where('status', 1)
-            ->where('user_id', auth()->id())
-            ->whereYear('created_at', '=', now())
-            ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')->get();
+        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl ?? 300, function () {
+            return Payment::where('status', 1)
+                ->where('user_id', auth()->id())
+                ->whereYear('created_at', '=', now())
+                ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
+                ->groupby('month')->get();
+        });
 
-        $withdraw = Withdraw::where('status', 1)
-            ->where('user_id', auth()->id())
-            ->select(DB::raw('SUM(withdraw_amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')
-            ->get();
+        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl ?? 300, function () {
+            return Withdraw::where('status', 1)
+                ->where('user_id', auth()->id())
+                ->select(DB::raw('SUM(withdraw_amount) as total'), DB::raw('MONTHNAME(created_at) month'))
+                ->groupby('month')
+                ->get();
+        });
 
 
-        $deposit = Deposit::where('status', 1)
-            ->where('user_id', auth()->id())
-            ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')
-            ->get();
+        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl ?? 300, function () {
+            return Deposit::where('status', 1)
+                ->where('user_id', auth()->id())
+                ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
+                ->groupby('month')
+                ->get();
+        });
 
         foreach ($payment as $pay) {
             $result = array_search($pay->month, $months);

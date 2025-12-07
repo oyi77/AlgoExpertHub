@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ConfigurationRequest;
 use App\Models\Configuration;
 use App\Services\ConfigurationService;
+use App\Models\GlobalConfiguration;
+use App\Services\PerformanceOptimizationService;
 use App\Services\DatabaseBackupService;
 use App\Services\ThemeManager;
 use Illuminate\Http\Request;
@@ -1100,6 +1102,92 @@ class ConfigurationController extends Controller
             }
             return back()->with('error', __('Cache clearing failed: :error', ['error' => $e->getMessage()]));
         }
+    }
+
+    /**
+     * Frontend/assets optimization toggles
+     */
+    public function performanceAssets(Request $request)
+    {
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $perf['frontend']['enable'] = (bool)$request->input('enable', true);
+        $perf['frontend']['lazy_images'] = (bool)$request->input('lazy_images', false);
+        $perf['frontend']['defer_scripts'] = (bool)$request->input('defer_scripts', false);
+        $perf['frontend']['async_scripts'] = (bool)$request->input('async_scripts', false);
+        $perf['frontend']['preload'] = [
+            'fonts' => (array)$request->input('preload_fonts', []),
+            'styles' => (array)$request->input('preload_styles', []),
+            'scripts' => (array)$request->input('preload_scripts', []),
+            'dns_prefetch' => (array)$request->input('dns_prefetch', []),
+        ];
+        GlobalConfiguration::setValue('performance', $perf, 'Performance settings');
+        return response()->json(['success' => true, 'message' => __('Frontend optimization updated')]);
+    }
+
+    /**
+     * HTTP caching & ETag configuration
+     */
+    public function performanceHttp(Request $request)
+    {
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $perf['http']['enable'] = (bool)$request->input('enable', true);
+        $perf['http']['cache_headers']['enabled'] = (bool)$request->input('cache_headers', true);
+        $perf['http']['cache_headers']['ttl'] = (int)$request->input('ttl', 3600);
+        $perf['http']['etag']['enabled'] = (bool)$request->input('etag', true);
+        $perf['http']['blacklist']['paths'] = (array)$request->input('blacklist', []);
+        $perf['http']['whitelist']['paths'] = (array)$request->input('whitelist', []);
+        GlobalConfiguration::setValue('performance', $perf, 'Performance settings');
+        return response()->json(['success' => true, 'message' => __('HTTP caching updated')]);
+    }
+
+    /**
+     * Media optimization configuration
+     */
+    public function performanceMedia(Request $request)
+    {
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $perf['media']['enable'] = (bool)$request->input('enable', true);
+        $perf['media']['compress'] = (bool)$request->input('compress', true);
+        $perf['media']['convert_webp'] = (bool)$request->input('webp', true);
+        $perf['media']['max_width'] = (int)$request->input('max_width', 1920);
+        $perf['media']['max_height'] = (int)$request->input('max_height', 1920);
+        GlobalConfiguration::setValue('performance', $perf, 'Performance settings');
+        return response()->json(['success' => true, 'message' => __('Media optimization updated')]);
+    }
+
+    /**
+     * Cache configuration & prewarm trigger
+     */
+    public function performanceCache(Request $request)
+    {
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $perf['cache']['enable'] = (bool)$request->input('enable', true);
+        $perf['cache']['ttl_map'] = (array)$request->input('ttl_map', $perf['cache']['ttl_map'] ?? []);
+        $perf['cache']['prewarm']['enable'] = (bool)$request->input('prewarm', true);
+        $perf['cache']['prewarm']['routes'] = (array)$request->input('prewarm_routes', $perf['cache']['prewarm']['routes'] ?? []);
+        GlobalConfiguration::setValue('performance', $perf, 'Performance settings');
+        return response()->json(['success' => true, 'message' => __('Cache settings updated')]);
+    }
+
+    /**
+     * Database cleanup actions
+     */
+    public function performanceDatabase(Request $request, PerformanceOptimizationService $service)
+    {
+        $prune = (int)$request->input('prune_days', 14);
+        $summary = $service->cleanupDatabase($prune);
+        return response()->json(['success' => true, 'message' => __('Database cleaned'), 'data' => $summary]);
+    }
+
+    /**
+     * Prewarm routes
+     */
+    public function performancePrewarm(Request $request, PerformanceOptimizationService $service)
+    {
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $routes = (array)$request->input('routes', $perf['cache']['prewarm']['routes'] ?? []);
+        $results = $service->prewarmRoutes($routes);
+        return response()->json(['success' => true, 'message' => __('Prewarm complete'), 'data' => $results]);
     }
 
     public function manageTheme()
