@@ -27,6 +27,18 @@ class UserController extends Controller
 
         $data['title'] = "Dashboard";
 
+        // Add onboarding checklist data
+        $onboardingService = app(\App\Services\UserOnboardingService::class);
+        $user = auth()->user();
+        
+        if ($onboardingService->shouldShowOnboarding($user)) {
+            $data['onboardingChecklist'] = $onboardingService->getChecklist($user);
+            $data['onboardingProgress'] = $onboardingService->getProgress($user);
+        } else {
+            $data['onboardingChecklist'] = [];
+            $data['onboardingProgress'] = 100;
+        }
+
         return view(Helper::theme() . 'user.dashboard')->with($data);
     }
 

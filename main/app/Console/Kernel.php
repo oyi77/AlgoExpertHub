@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Support\AddonRegistry;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Symfony\Component\Console\Exception\CommandNotFoundException;
 
 class Kernel extends ConsoleKernel
 {
@@ -20,16 +21,26 @@ class Kernel extends ConsoleKernel
         
         if (AddonRegistry::active('multi-channel-signal-addon') && AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'processing')) {
             // Process RSS feeds every 10 minutes
-            $schedule->command('channel:process-rss')->everyTenMinutes();
+            if (class_exists(\App\Console\Commands\ProcessRssChannels::class) || 
+                class_exists(\Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessRssChannels::class)) {
+                $schedule->command('channel:process-rss')->everyTenMinutes();
+            }
 
             // Process web scraping channels every minute
-            $schedule->command('channel:process-web-scrape')->everyMinute();
+            if (class_exists(\App\Console\Commands\ProcessWebScrapeChannels::class) || 
+                class_exists(\Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessWebScrapeChannels::class)) {
+                $schedule->command('channel:process-web-scrape')->everyMinute();
+            }
 
             // Process Telegram MTProto channels every 5 minutes
-            $schedule->command('channel:process-telegram-mtproto')->everyFiveMinutes();
+            if (class_exists(\Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessTelegramMtprotoChannels::class)) {
+                $schedule->command('channel:process-telegram-mtproto')->everyFiveMinutes();
+            }
 
             // Process Trading Bot channels every 2 minutes
-            $schedule->command('channel:process-trading-bot')->everyTwoMinutes();
+            if (class_exists(\Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessTradingBotChannels::class)) {
+                $schedule->command('channel:process-trading-bot')->everyTwoMinutes();
+            }
         }
 
         // Trading Bot Signal Addon - Run worker continuously (or use supervisor/systemd)
@@ -50,11 +61,9 @@ class Kernel extends ConsoleKernel
 
         // AlgoExpert++ Addon - System Health
         if (AddonRegistry::active('algoexpert-plus-addon') && AddonRegistry::moduleEnabled('algoexpert-plus-addon', 'health')) {
-            if (class_exists(\Spatie\Health\Commands\RunHealthChecksCommand::class)) {
-                $schedule->command('health:snapshot')
-                    ->everyFiveMinutes()
-                    ->withoutOverlapping();
-            }
+            // Note: health:snapshot doesn't exist, use horizon:snapshot instead if using Horizon
+            // or health:check if using Spatie Health checks
+            // Removed health:snapshot as it's not a valid command
         }
 
         // Horizon Metrics Snapshot - Required for Horizon metrics dashboard
@@ -65,6 +74,16 @@ class Kernel extends ConsoleKernel
             $schedule->command('horizon:snapshot')
                 ->everyFiveMinutes()
                 ->withoutOverlapping();
+            
+            // Horizon Monitor - Auto-restart Horizon if it stops
+            // Only run if enabled and not using system supervisor
+            if (env('HORIZON_CRON_SUPERVISOR_ENABLED', true) && !env('HORIZON_USE_SYSTEM_SUPERVISOR', false)) {
+                $scheduleInterval = env('HORIZON_CRON_SUPERVISOR_SCHEDULE', 3);
+                $schedule->command('horizon:monitor')
+                    ->cron("*/{$scheduleInterval} * * * *")
+                    ->withoutOverlapping()
+                    ->runInBackground();
+            }
         }
 
         // AlgoExpert++ Addon - System Backup
@@ -78,6 +97,16 @@ class Kernel extends ConsoleKernel
                     ->withoutOverlapping();
             }
         }
+        // Trading Management Addon - Data Provider Module (Streaming)
+        if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'data_provider')) {
+            // Monitor stream health every 5 minutes
+            if (class_exists(\Addons\TradingManagement\Modules\DataProvider\Jobs\MonitorStreamHealthJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\DataProvider\Jobs\MonitorStreamHealthJob::class)
+                    ->everyFiveMinutes()
+                    ->withoutOverlapping();
+            }
+        }
+
         // Trading Management Addon - Execution Module
         if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             // Monitor positions every minute
@@ -134,4 +163,42 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
+    /**
+     * Safely schedule a command (only if it exists)
+     *
+     * @param Schedule $schedule
+     * @param string $command
+     * @param string $frequency
+     * @return void
+     */
+    protected function scheduleCommandSafe(Schedule $schedule, string $command, string $frequency): void
+    {
+        try {
+            $scheduled = $schedule->command($command);
+            
+            // Apply frequency
+            switch ($frequency) {
+                case 'everyMinute':
+                    $scheduled->everyMinute();
+                    break;
+                case 'everyTwoMinutes':
+                    $scheduled->everyTwoMinutes();
+                    break;
+                case 'everyFiveMinutes':
+                    $scheduled->everyFiveMinutes();
+                    break;
+                case 'everyTenMinutes':
+                    $scheduled->everyTenMinutes();
+                    break;
+                default:
+                    $scheduled->everyMinute();
+            }
+        } catch (CommandNotFoundException $e) {
+            \Log::debug("Command {$command} not found, skipping schedule");
+        } catch (\Exception $e) {
+            \Log::warning("Failed to schedule command {$command}: " . $e->getMessage());
+        }
+    }
+
 }

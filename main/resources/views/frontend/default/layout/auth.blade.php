@@ -36,6 +36,32 @@
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202">
+    @if(file_exists(public_path('asset/frontend/' . (\App\Models\Configuration::first()->theme ?? 'default') . '/css/menu-groups.css')))
+        <style>
+            {!! file_get_contents(public_path('asset/frontend/' . (\App\Models\Configuration::first()->theme ?? 'default') . '/css/menu-groups.css')) !!}
+        </style>
+    @else
+        <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'menu-groups.css') }}?v=20251202">
+    @endif
+    <!-- User Panel Admin Theme Override - Light background like admin (MUST be loaded LAST to override dark theme) -->
+    <link rel="stylesheet" href="{{ asset('asset/frontend/default/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
+    
+    <!-- Inline style as final override to ensure light background -->
+    <style>
+        /* Final override - ensure light background on all user pages */
+        body.user-pages-body,
+        .user-pages-body {
+            background-color: #F1F5F9 !important;
+            background: #F1F5F9 !important;
+        }
+        body.user-pages-body .dashboard-main,
+        .user-pages-body .dashboard-main,
+        body.user-pages-body main.dashboard-main,
+        .user-pages-body main.dashboard-main {
+            background-color: #F1F5F9 !important;
+            background: #F1F5F9 !important;
+        }
+    </style>
 
     @stack('style')
 
@@ -55,7 +81,7 @@
 
 <body class="user-pages-body">
 
-    @include(Config::theme() . 'layout.user_sidebar')
+    @include(Config::theme() . 'layout.user_sidebar_new')
 
     <header class="user-header">
         <a href="{{ route('user.dashboard') }}" class="site-logo">

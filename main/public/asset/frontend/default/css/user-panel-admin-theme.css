@@ -1,0 +1,431 @@
+/**
+ * User Panel Admin Theme Override
+ * Makes user panel match admin panel's light theme styling
+ * Applied globally to all user panel pages
+ * IMPORTANT: This file must be loaded AFTER main.css to override dark theme
+ */
+
+/* Override body and main wrapper - Light Background (like admin) */
+body.user-pages-body,
+.user-pages-body {
+    background-color: #F1F5F9 !important;
+}
+
+/* Main Content Area - Light Background (like admin) */
+.dashboard-main {
+    background-color: #F1F5F9 !important;
+}
+
+/* Override any dark background on main content */
+body.user-pages-body .dashboard-main,
+.user-pages-body .dashboard-main,
+.dashboard-main {
+    background-color: #F1F5F9 !important;
+}
+
+/* Cards - White Background */
+.dashboard-main .sp_site_card,
+.dashboard-main .card {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+    color: #333 !important;
+}
+
+.dashboard-main .sp_site_card .card-header,
+.dashboard-main .card .card-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    color: #333 !important;
+}
+
+.dashboard-main .sp_site_card .card-header h4,
+.dashboard-main .sp_site_card .card-header h5,
+.dashboard-main .card .card-header h4,
+.dashboard-main .card .card-header h5 {
+    color: #333 !important;
+    font-weight: 600;
+}
+
+.dashboard-main .sp_site_card .card-body,
+.dashboard-main .card .card-body {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+/* Form Elements - Light Theme */
+.dashboard-main .form-control,
+.dashboard-main .form-select,
+.dashboard-main select {
+    background: #ffffff !important;
+    border: 1px solid #ddd !important;
+    color: #333 !important;
+    /* Remove duplicate dropdown arrows */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 12px !important;
+    padding-right: 2.5rem !important;
+}
+
+.dashboard-main .form-control:focus,
+.dashboard-main .form-select:focus {
+    border-color: #5169df !important;
+    box-shadow: 0 0 0 0.2rem rgba(81, 105, 223, 0.25) !important;
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+.dashboard-main .form-control::placeholder {
+    color: #999 !important;
+}
+
+.dashboard-main select.form-control::-ms-expand,
+.dashboard-main select.form-select::-ms-expand {
+    display: none !important;
+}
+
+.dashboard-main select.form-control::after,
+.dashboard-main select.form-select::after {
+    display: none !important;
+}
+
+/* Labels */
+.dashboard-main .form-group label,
+.dashboard-main label {
+    color: #333 !important;
+    font-weight: 500;
+}
+
+/* Text Colors */
+.dashboard-main,
+.dashboard-main p,
+.dashboard-main span,
+.dashboard-main div {
+    color: #333 !important;
+}
+
+.dashboard-main .text-muted {
+    color: #6c757d !important;
+}
+
+.dashboard-main .text-danger {
+    color: #dc3545 !important;
+}
+
+.dashboard-main .text-success {
+    color: #28a745 !important;
+}
+
+.dashboard-main .text-info {
+    color: #17a2b8 !important;
+}
+
+.dashboard-main .text-warning {
+    color: #ffc107 !important;
+}
+
+/* Tables */
+.dashboard-main .table,
+.dashboard-main .sp_site_table {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+.dashboard-main .table thead th,
+.dashboard-main .sp_site_table thead th {
+    background: #f8f9fa !important;
+    color: #333 !important;
+    border-bottom: 2px solid #e0e0e0 !important;
+}
+
+.dashboard-main .table tbody td,
+.dashboard-main .sp_site_table tbody td {
+    color: #333 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.dashboard-main .table tbody tr:hover,
+.dashboard-main .sp_site_table tbody tr:hover {
+    background: #f8f9fa !important;
+}
+
+/* Buttons */
+.dashboard-main .btn-secondary {
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+}
+
+.dashboard-main .btn-secondary:hover {
+    background: #5a6268 !important;
+    border-color: #545b62 !important;
+    color: #fff !important;
+}
+
+.dashboard-main .sp_theme_btn {
+    background: #5169df !important;
+    border-color: #5169df !important;
+    color: #fff !important;
+}
+
+.dashboard-main .sp_theme_btn:hover {
+    background: #4058d0 !important;
+    border-color: #3d52c8 !important;
+    color: #fff !important;
+}
+
+/* Badges */
+.dashboard-main .badge {
+    color: #fff !important;
+}
+
+.dashboard-main .badge.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.dashboard-main .badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.dashboard-main .badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Alerts */
+.dashboard-main .alert {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    color: #333 !important;
+}
+
+.dashboard-main .alert-info {
+    background: #d1ecf1 !important;
+    border-color: #bee5eb !important;
+    color: #0c5460 !important;
+}
+
+.dashboard-main .alert-success {
+    background: #d4edda !important;
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+}
+
+.dashboard-main .alert-warning {
+    background: #fff3cd !important;
+    border-color: #ffeaa7 !important;
+    color: #856404 !important;
+}
+
+.dashboard-main .alert-danger {
+    background: #f8d7da !important;
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+}
+
+/* Nav Tabs */
+.dashboard-main .nav-tabs,
+.dashboard-main .nav-pills {
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.dashboard-main .nav-tabs .nav-link,
+.dashboard-main .nav-pills .nav-link {
+    color: #333 !important;
+    border-color: transparent !important;
+}
+
+.dashboard-main .nav-tabs .nav-link.active,
+.dashboard-main .nav-pills .nav-link.active {
+    background: #5169df !important;
+    color: #fff !important;
+    border-color: #5169df !important;
+}
+
+.dashboard-main .nav-tabs .nav-link:hover,
+.dashboard-main .nav-pills .nav-link:hover {
+    color: #5169df !important;
+    border-color: #e0e0e0 #e0e0e0 #5169df !important;
+}
+
+/* Pagination */
+.dashboard-main .pagination .page-link {
+    background: #ffffff !important;
+    border-color: #ddd !important;
+    color: #5169df !important;
+}
+
+.dashboard-main .pagination .page-link:hover {
+    background: #f8f9fa !important;
+    color: #4058d0 !important;
+}
+
+.dashboard-main .pagination .page-item.active .page-link {
+    background: #5169df !important;
+    border-color: #5169df !important;
+    color: #fff !important;
+}
+
+/* Input Groups */
+.dashboard-main .input-group-text {
+    background: #f8f9fa !important;
+    border-color: #ddd !important;
+    color: #333 !important;
+}
+
+/* Dropdowns */
+.dashboard-main .dropdown-menu {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.dashboard-main .dropdown-item {
+    color: #333 !important;
+}
+
+.dashboard-main .dropdown-item:hover {
+    background: #f8f9fa !important;
+    color: #333 !important;
+}
+
+/* Override dark theme body background */
+.user-pages-body {
+    background-color: #F1F5F9 !important;
+}
+
+/* Wrapper for dashboard content */
+.d-left-wrapper {
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+}
+
+/* Ensure all nested cards are also white */
+.dashboard-main .d-card {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+/* Links */
+.dashboard-main a {
+    color: #5169df !important;
+}
+
+.dashboard-main a:hover {
+    color: #4058d0 !important;
+}
+
+/* Headings */
+.dashboard-main h1,
+.dashboard-main h2,
+.dashboard-main h3,
+.dashboard-main h4,
+.dashboard-main h5,
+.dashboard-main h6 {
+    color: #333 !important;
+}
+
+/* Lists */
+.dashboard-main ul,
+.dashboard-main ol {
+    color: #333 !important;
+}
+
+.dashboard-main .list-group-item {
+    background: #ffffff !important;
+    border-color: #e0e0e0 !important;
+    color: #333 !important;
+}
+
+/* Progress Bars */
+.dashboard-main .progress {
+    background: #e9ecef !important;
+}
+
+.dashboard-main .progress-bar {
+    background: #5169df !important;
+}
+
+/* Modals */
+.dashboard-main .modal-content {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+.dashboard-main .modal-header {
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.dashboard-main .modal-footer {
+    border-top: 1px solid #e0e0e0 !important;
+}
+
+/* Select Options */
+.dashboard-main select option {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+.dashboard-main optgroup {
+    background: #ffffff !important;
+    color: #333 !important;
+}
+
+/* Remove any dark theme overrides */
+.dashboard-main * {
+    box-sizing: border-box;
+}
+
+/* Ensure icons are visible */
+.dashboard-main i,
+.dashboard-main .las,
+.dashboard-main .fas,
+.dashboard-main .far {
+    color: inherit;
+}
+
+/* CRITICAL: Override dark theme body background - MUST be at the end for maximum specificity */
+body.user-pages-body,
+.user-pages-body {
+    background-color: #F1F5F9 !important;
+    background: #F1F5F9 !important;
+}
+
+/* Override main content wrapper - ensure it's light */
+body.user-pages-body .dashboard-main,
+.user-pages-body .dashboard-main,
+body.user-pages-body main.dashboard-main,
+.user-pages-body main.dashboard-main {
+    background-color: #F1F5F9 !important;
+    background: #F1F5F9 !important;
+}
+
+/* Override any dark cards inside user-pages-body */
+body.user-pages-body .card,
+.user-pages-body .card,
+body.user-pages-body .sp_site_card,
+.user-pages-body .sp_site_card {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+}
+
+/* Override dark text colors */
+body.user-pages-body,
+.user-pages-body,
+body.user-pages-body h1,
+body.user-pages-body h2,
+body.user-pages-body h3,
+body.user-pages-body h4,
+body.user-pages-body h5,
+body.user-pages-body h6,
+body.user-pages-body p,
+body.user-pages-body span,
+body.user-pages-body div {
+    color: #333 !important;
+}
+

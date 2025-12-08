@@ -202,6 +202,53 @@ class SystemHealthService
     }
 
     /**
+     * Get Horizon supervisor status (cron-based)
+     */
+    public function getHorizonSupervisorStatus(): array
+    {
+        $enabled = env('HORIZON_CRON_SUPERVISOR_ENABLED', true);
+        $schedule = env('HORIZON_CRON_SUPERVISOR_SCHEDULE', 3);
+        $useSystemSupervisor = env('HORIZON_USE_SYSTEM_SUPERVISOR', false);
+        
+        // Check if command exists
+        $commandExists = class_exists(\App\Console\Commands\HorizonSupervisor::class);
+        
+        // Check last run time (if we can determine it from logs)
+        $lastRun = $this->getHorizonSupervisorLastRun();
+        
+        return [
+            'enabled' => $enabled && !$useSystemSupervisor,
+            'schedule_minutes' => $schedule,
+            'use_system_supervisor' => $useSystemSupervisor,
+            'command_exists' => $commandExists,
+            'last_run' => $lastRun,
+            'status' => ($enabled && !$useSystemSupervisor && $commandExists) ? 'active' : 'inactive',
+        ];
+    }
+
+    /**
+     * Get last run time of Horizon supervisor
+     */
+    protected function getHorizonSupervisorLastRun(): ?string
+    {
+        try {
+            // Try to get from log file
+            $logPath = storage_path('logs/laravel.log');
+            if (file_exists($logPath)) {
+                $logContent = file_get_contents($logPath);
+                // Look for "Horizon restarted by supervisor" or "Horizon is running"
+                if (preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\].*Horizon (restarted by supervisor|is running)/', $logContent, $matches)) {
+                    return $matches[1];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore errors
+        }
+        
+        return null;
+    }
+
+    /**
      * Format bytes to human readable format
      */
     protected function formatBytes(int $bytes, int $precision = 2): string

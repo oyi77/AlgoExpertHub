@@ -36,6 +36,15 @@
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202">
+    <link rel="stylesheet" href="{{ asset('asset/frontend/dark/css/menu-groups.css') }}?v=20251202">
+    <!-- User Panel Admin Theme Override - Light background like admin (MUST be loaded LAST) -->
+    <link rel="stylesheet" href="{{ asset('asset/frontend/dark/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
+    
+    <!-- Inline style as final override -->
+    <style>
+        body.user-pages-body, .user-pages-body { background-color: #F1F5F9 !important; background: #F1F5F9 !important; }
+        body.user-pages-body .dashboard-main, .user-pages-body .dashboard-main { background-color: #F1F5F9 !important; background: #F1F5F9 !important; }
+    </style>
 
     @stack('style')
 
@@ -55,7 +64,7 @@
 
 <body class="user-pages-body">
 
-    @include(Config::theme() . 'layout.user_sidebar')
+    @include(Config::theme() . 'layout.user_sidebar_new')
 
     <header class="user-header">
         <a href="{{ route('user.dashboard') }}" class="site-logo">

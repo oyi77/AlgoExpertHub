@@ -3,16 +3,19 @@
 namespace Addons\AlgoExpertPlus\App\Http\Controllers\Backend;
 
 use Addons\AlgoExpertPlus\App\Http\Controllers\Controller;
+use Addons\AlgoExpertPlus\App\Services\SystemHealthService;
 use App\Services\DatabaseBackupService;
 use Illuminate\View\View;
 
 class PerformanceController extends Controller
 {
     protected $backupService;
+    protected $systemHealthService;
 
-    public function __construct(DatabaseBackupService $backupService)
+    public function __construct(DatabaseBackupService $backupService, SystemHealthService $systemHealthService)
     {
         $this->backupService = $backupService;
+        $this->systemHealthService = $systemHealthService;
     }
 
     /**
@@ -33,6 +36,10 @@ class PerformanceController extends Controller
             \Log::warning('Could not count seeders', ['error' => $e->getMessage()]);
         }
 
+        // Get Horizon stats and supervisor status
+        $horizonStats = $this->systemHealthService->getHorizonStats();
+        $horizonSupervisorStatus = $this->systemHealthService->getHorizonSupervisorStatus();
+
         $data = [
             'title' => 'Performance Settings',
             'backups' => $this->backupService->listBackups(),
@@ -42,6 +49,8 @@ class PerformanceController extends Controller
                 'code' => []
             ],
             'seederCount' => $seederCount,
+            'horizonStats' => $horizonStats,
+            'horizonSupervisorStatus' => $horizonSupervisorStatus,
         ];
 
         return view('algoexpert-plus::backend.system-tools.performance', $data);

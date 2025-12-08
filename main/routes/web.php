@@ -155,10 +155,88 @@ Route::name('user.')->group(function () {
 
         Route::middleware('2fa', 'kyc')->group(function () {
 
-            Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+            // Onboarding routes (must be before check_onboarding to allow onboarding access)
+            Route::prefix('onboarding')->name('onboarding.')->group(function () {
+                Route::get('/welcome', [\App\Http\Controllers\User\OnboardingController::class, 'welcome'])->name('welcome');
+                Route::post('/welcome', [\App\Http\Controllers\User\OnboardingController::class, 'completeWelcome'])->name('welcome.complete');
+                Route::get('/step/{step}', [\App\Http\Controllers\User\OnboardingController::class, 'step'])->name('step');
+                Route::post('/step/{step}', [\App\Http\Controllers\User\OnboardingController::class, 'completeStep'])->name('step.complete');
+                Route::post('/skip', [\App\Http\Controllers\User\OnboardingController::class, 'skip'])->name('skip');
+                Route::get('/complete', [\App\Http\Controllers\User\OnboardingController::class, 'complete'])->name('complete');
+            });
 
-            // External Signal (multi-tab wrapper for Signal Sources, Channel Forwarding, Pattern Templates)
-            Route::get('external-signals', [ExternalSignalController::class, 'index'])->name('external-signals.index');
+            // Apply onboarding check to all other routes
+            Route::middleware('check_onboarding')->group(function () {
+                Route::get('dashboard', [UserController::class, 'dashboard'])->name('dashboard');
+
+            // Unified Trading Pages
+            Route::prefix('trading')->name('trading.')->group(function () {
+                // Multi-Channel Signal (unified page with tabs)
+                Route::prefix('multi-channel-signal')->name('multi-channel-signal.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\MultiChannelSignalController::class, 'index'])->name('index');
+                });
+
+                // Trading Operations (unified page with tabs)
+                Route::prefix('operations')->name('operations.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\TradingOperationsController::class, 'index'])->name('index');
+                });
+
+                // Trading Configuration (unified page with tabs)
+                Route::prefix('configuration')->name('configuration.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\TradingConfigurationController::class, 'index'])->name('index');
+                });
+
+                // Backtesting (unified page with tabs)
+                Route::prefix('backtesting')->name('backtesting.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'index'])->name('index');
+                });
+
+                // Marketplaces (unified marketplace)
+                Route::prefix('marketplaces')->name('marketplaces.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\MarketplacesController::class, 'index'])->name('index');
+                });
+            });
+            
+            // Help Center
+            Route::prefix('help')->name('help.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\User\HelpController::class, 'index'])->name('index');
+                Route::get('/topic/{topic}', [\App\Http\Controllers\User\HelpController::class, 'topic'])->name('topic');
+            });
+
+            // ============================================
+            // BACKWARD COMPATIBILITY REDIRECTS
+            // Old routes redirect to new unified pages
+            // ============================================
+            
+            // Multi-Channel Signal Addon - Old routes
+            Route::get('external-signals', function() {
+                return redirect()->route('user.trading.multi-channel-signal.index', ['tab' => 'signal-sources']);
+            })->name('external-signals.index');
+            
+            Route::get('signal-sources', function() {
+                return redirect()->route('user.trading.multi-channel-signal.index', ['tab' => 'signal-sources']);
+            })->name('signal-sources.index');
+            
+            Route::get('channel-forwarding', function() {
+                return redirect()->route('user.trading.multi-channel-signal.index', ['tab' => 'channel-forwarding']);
+            })->name('channel-forwarding.index');
+            
+            // Trading Management - Old routes
+            Route::get('execution-connections', function() {
+                return redirect()->route('user.trading.operations.index', ['tab' => 'connections']);
+            })->name('execution-connections.index');
+            
+            Route::get('trading-presets', function() {
+                return redirect()->route('user.trading.configuration.index', ['tab' => 'risk-presets']);
+            })->name('trading-presets.index');
+            
+            Route::get('filter-strategies', function() {
+                return redirect()->route('user.trading.configuration.index', ['tab' => 'filter-strategies']);
+            })->name('filter-strategies.index');
+            
+            Route::get('ai-model-profiles', function() {
+                return redirect()->route('user.trading.configuration.index', ['tab' => 'ai-profiles']);
+            })->name('ai-model-profiles.index');
 
             // Trading Management Addon - User Routes (registered at root user. prefix)
             if (\App\Support\AddonRegistry::active('trading-management-addon')) {
@@ -219,6 +297,54 @@ Route::name('user.')->group(function () {
                             $title = 'Create Trading Preset';
                             return view('trading-management::user.risk-management.presets.create', compact('title'));
                         })->name('create');
+                        
+                        Route::get('/{id}/edit', function ($id) {
+                            try {
+                                $preset = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::findOrFail($id);
+                                
+                                // Check if user can edit
+                                if ($preset->created_by_user_id !== auth()->id() && !is_null($preset->created_by_user_id)) {
+                                    return back()->with('error', __('You can only edit your own presets.'));
+                                }
+                                
+                                $title = 'Edit Trading Preset';
+                                return view('trading-management::user.risk-management.presets.edit', compact('preset', 'title'));
+                            } catch (\Exception $e) {
+                                \Log::error('Trading preset edit error: ' . $e->getMessage());
+                                return back()->with('error', __('Preset not found.'));
+                            }
+                        })->name('edit');
+                        
+                        Route::post('/{id}/clone', function ($id) {
+                            try {
+                                $preset = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::findOrFail($id);
+                                
+                                // Check if preset can be cloned
+                                if (!$preset->isPublic() || !$preset->isClonable()) {
+                                    return back()->with('error', __('This preset cannot be cloned.'));
+                                }
+                                
+                                // Clone preset for current user
+                                if (method_exists($preset, 'cloneFor')) {
+                                    $clonedPreset = $preset->cloneFor(auth()->user());
+                                } else {
+                                    // Fallback: manual clone
+                                    $clonedPreset = $preset->replicate();
+                                    $clonedPreset->created_by_user_id = auth()->id();
+                                    $clonedPreset->is_default_template = false;
+                                    $clonedPreset->visibility = 'PRIVATE';
+                                    $clonedPreset->name = $preset->name . ' (Copy)';
+                                    $clonedPreset->save();
+                                }
+                                
+                                return back()->with('success', __('Preset cloned successfully!'));
+                            } catch (\Exception $e) {
+                                \Log::error('Trading preset clone error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString()
+                                ]);
+                                return back()->with('error', __('Failed to clone preset. Please try again.'));
+                            }
+                        })->name('clone');
                     });
                 }
 
@@ -290,6 +416,23 @@ Route::name('user.')->group(function () {
                             $title = 'Create Filter Strategy';
                             return view('trading-management::user.filter-strategy.create', compact('title'));
                         })->name('create');
+                        
+                        Route::post('/{id}/clone', function ($id) {
+                            try {
+                                $strategy = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::findOrFail($id);
+                                
+                                if (!$strategy->canBeClonedBy(auth()->id())) {
+                                    return back()->with('error', __('This strategy cannot be cloned.'));
+                                }
+                                
+                                $clonedStrategy = $strategy->cloneForUser(auth()->id());
+                                
+                                return back()->with('success', __('Strategy cloned successfully!'));
+                            } catch (\Exception $e) {
+                                \Log::error('Filter strategy clone error: ' . $e->getMessage());
+                                return back()->with('error', __('Failed to clone strategy. Please try again.'));
+                            }
+                        })->name('clone');
                     });
                 }
 
@@ -361,6 +504,28 @@ Route::name('user.')->group(function () {
                             $title = 'Create AI Model Profile';
                             return view('trading-management::user.ai-analysis.profiles.create', compact('title'));
                         })->name('create');
+                        
+                        Route::post('/{id}/clone', function ($id) {
+                            try {
+                                $profile = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::findOrFail($id);
+                                
+                                if (!$profile->canBeClonedBy(auth()->id())) {
+                                    return back()->with('error', __('This AI profile cannot be cloned.'));
+                                }
+                                
+                                // Clone using replicate
+                                $clonedProfile = $profile->replicate();
+                                $clonedProfile->created_by_user_id = auth()->id();
+                                $clonedProfile->visibility = 'PRIVATE';
+                                $clonedProfile->name = $profile->name . ' (Copy)';
+                                $clonedProfile->save();
+                                
+                                return back()->with('success', __('AI profile cloned successfully!'));
+                            } catch (\Exception $e) {
+                                \Log::error('AI model profile clone error: ' . $e->getMessage());
+                                return back()->with('error', __('Failed to clone AI profile. Please try again.'));
+                            }
+                        })->name('clone');
                     });
                 }
 
@@ -624,6 +789,95 @@ Route::name('user.')->group(function () {
                                 ]);
                             }
                         })->name('insights.index');
+                        
+                        // Smart Risk Settings Update
+                        Route::post('/settings/update', function (Request $request) {
+                            try {
+                                $validated = $request->validate([
+                                    'enabled' => 'nullable|boolean',
+                                    'min_provider_score' => 'nullable|numeric|min:0|max:100',
+                                    'slippage_buffer_enabled' => 'nullable|boolean',
+                                    'dynamic_lot_enabled' => 'nullable|boolean',
+                                ]);
+                                
+                                $settings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings_' . auth()->id(), [
+                                    'enabled' => false,
+                                    'min_provider_score' => 70,
+                                    'slippage_buffer_enabled' => false,
+                                    'dynamic_lot_enabled' => false,
+                                ]);
+                                
+                                $settings = array_merge($settings, $validated);
+                                \Illuminate\Support\Facades\Cache::put('smart_risk_settings_' . auth()->id(), $settings, now()->addYear());
+                                
+                                return back()->with('success', __('Smart Risk settings updated successfully.'));
+                            } catch (\Exception $e) {
+                                \Log::error('SRM settings update error: ' . $e->getMessage());
+                                return back()->with('error', __('Failed to update settings. Please try again.'));
+                            }
+                        })->name('settings.update');
+                    });
+                }
+                
+                // Exchange Connections (Data Connections for users)
+                if (\App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'exchange_connection')) {
+                    Route::prefix('exchange-connections')->name('exchange-connections.')->group(function () {
+                        Route::get('/create', function () {
+                            try {
+                                $title = 'Create Data Connection';
+                                $presets = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::where(function($query) {
+                                    $query->where('created_by_user_id', auth()->id())
+                                          ->orWhereNull('created_by_user_id');
+                                })->get();
+                                
+                                return view('trading-management::user.exchange-connections.create', compact('title', 'presets'));
+                            } catch (\Exception $e) {
+                                \Log::error('Exchange connection create error: ' . $e->getMessage());
+                                return back()->with('error', __('Failed to load create form.'));
+                            }
+                        })->name('create');
+                        
+                        Route::post('/', function (Request $request) {
+                            try {
+                                $validated = $request->validate([
+                                    'name' => 'required|string|max:255',
+                                    'connection_type' => 'required|in:DATA_ONLY,EXECUTION_ONLY,BOTH',
+                                    'exchange_type' => 'required|in:CRYPTO_EXCHANGE,FX_BROKER',
+                                    'exchange_name' => 'required|string',
+                                    'credentials' => 'required|array',
+                                    'preset_id' => 'nullable|exists:trading_presets,id',
+                                ]);
+                                
+                                // Encrypt credentials
+                                $encryptedCredentials = encrypt(json_encode($validated['credentials']));
+                                
+                                $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::create([
+                                    'user_id' => auth()->id(),
+                                    'is_admin_owned' => false,
+                                    'name' => $validated['name'],
+                                    'connection_type' => $validated['connection_type'],
+                                    'exchange_type' => $validated['exchange_type'],
+                                    'provider' => $validated['exchange_name'], // Use exchange_name as provider
+                                    'exchange_name' => $validated['exchange_name'],
+                                    'credentials' => $encryptedCredentials,
+                                    'preset_id' => $validated['preset_id'] ?? null,
+                                    'is_active' => false,
+                                    'status' => 'PENDING_TEST',
+                                    'data_fetching_enabled' => $validated['connection_type'] === 'DATA_ONLY' || $validated['connection_type'] === 'BOTH',
+                                    'trade_execution_enabled' => $validated['connection_type'] === 'EXECUTION_ONLY' || $validated['connection_type'] === 'BOTH',
+                                ]);
+                                
+                                return redirect()->route('user.trading.configuration.index', ['tab' => 'data-connections'])
+                                    ->with('success', __('Data connection created successfully.'));
+                            } catch (\Illuminate\Validation\ValidationException $e) {
+                                return back()->withErrors($e->errors())->withInput();
+                            } catch (\Exception $e) {
+                                \Log::error('Exchange connection store error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString()
+                                ]);
+                                return back()->with('error', __('Failed to create connection. Please try again.'))->withInput();
+                            }
+                        })->name('store');
                     });
                 }
             }
@@ -718,6 +972,7 @@ Route::name('user.')->group(function () {
             Route::get('subscription-log', [LogController::class, 'subscriptionLog'])->name('subscription');
 
             Route::get('refferal', [LogController::class, 'refferalLog'])->name('refferalLog');
+            }); // End check_onboarding middleware group
         });
     });
 });

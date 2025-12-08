@@ -97,4 +97,9 @@ class User extends Authenticatable
         return $this->hasMany(Trade::class,'user_id');
     }
 
+    public function onboardingProgress()
+    {
+        return $this->hasOne(UserOnboardingProgress::class);
+    }
+
 }

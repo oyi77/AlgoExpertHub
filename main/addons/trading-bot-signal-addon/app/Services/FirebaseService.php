@@ -23,7 +23,12 @@ class FirebaseService
         // Check if we should use REST API (client auth) or Admin SDK (service account)
         if ($this->authService->isAuthenticated()) {
             $this->useRestApi = true;
-            Log::info('Using Firebase REST API with client authentication');
+            // Only log once per process lifecycle to reduce log spam (use static flag)
+            static $logged = false;
+            if (!$logged) {
+                Log::debug('Using Firebase REST API with client authentication');
+                $logged = true;
+            }
         } else {
             $this->initializeFirebase();
         }

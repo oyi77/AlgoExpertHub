@@ -54,5 +54,11 @@ class AddonServiceProvider extends ServiceProvider
                     require __DIR__ . '/routes/web.php';
                 });
         }
+
+        // Register console commands (always register, needed for scheduler even when not in console)
+        $this->commands([
+            \Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessTelegramMtprotoChannels::class,
+            \Addons\MultiChannelSignalAddon\App\Console\Commands\ProcessTradingBotChannels::class,
+        ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\CheckOnboarding;
 use App\Http\Middleware\DemoMiddleware;
 use App\Http\Middleware\Inactive;
 use App\Http\Middleware\isEmailVerified;
@@ -83,5 +84,6 @@ class Kernel extends HttpKernel
         'is_email_verified' => isEmailVerified::class,
         '2fa' => LoginSecurityMiddleware::class,
         'kyc' => KycMiddleware::class,
+        'check_onboarding' => CheckOnboarding::class,
     ];
 }

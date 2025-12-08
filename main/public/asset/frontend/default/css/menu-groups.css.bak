@@ -1,0 +1,139 @@
+/**
+ * Menu Groups Styling
+ * Consistent with admin panel menu structure
+ */
+
+/* Menu Group Headers (nav-label) - Match admin panel style */
+.sidebar-menu .nav-label {
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 15px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+.sidebar-menu .nav-label:first-child {
+    margin-top: 0;
+}
+
+.sidebar-menu .nav-label i {
+    font-size: 12px;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+/* Menu items with span for better styling */
+.sidebar-menu > li > a {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-menu > li > a > span {
+    margin-left: 10px;
+}
+
+/* Submenu Styling */
+.sidebar-menu .has_submenu > a {
+    position: relative;
+}
+
+.sidebar-menu .has_submenu > a::after {
+    content: "\f107";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-menu .has_submenu.open > a::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.sidebar-menu .submenu {
+    display: none;
+    padding-left: 0;
+    background: rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+.sidebar-menu .has_submenu.open > .submenu {
+    display: block;
+}
+
+.sidebar-menu .submenu li {
+    padding-left: 50px;
+}
+
+.sidebar-menu .submenu li a {
+    padding: 10px 20px;
+    font-size: 14px;
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu .submenu li a:hover,
+.sidebar-menu .submenu li.active a {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 25px;
+}
+
+/* Mobile Menu Adjustments */
+@media (max-width: 991px) {
+    .sidebar-menu .submenu {
+        background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-menu .submenu li {
+        padding-left: 40px;
+    }
+}
+
+/* Onboarding Checklist Widget Styling */
+.onboarding-checklist-widget {
+    border-left: 4px solid #007bff;
+}
+
+.onboarding-checklist-widget .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.onboarding-checklist-widget .card-header h5 {
+    color: white;
+    font-weight: 600;
+}
+
+.onboarding-checklist-widget .progress-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.onboarding-checklist-widget .list-unstyled li {
+    transition: all 0.3s ease;
+}
+
+.onboarding-checklist-widget .list-unstyled li:hover {
+    padding-left: 5px;
+}
+
+.onboarding-checklist-widget .list-unstyled li a {
+    color: #333;
+    font-weight: 500;
+}
+
+.onboarding-checklist-widget .list-unstyled li a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+

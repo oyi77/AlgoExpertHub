@@ -36,8 +36,8 @@ class ConfigurationSeeder extends Seeder
             'preloader_status' => false,
             'analytics_status' => false,
             'allow_modal' => true,
-            'button_text' => "Lorem, ipsum.",
-            'cookie_text' => "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Delectus, autem.",
+            'button_text' => "Accept All",
+            'cookie_text' => "We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. By clicking 'Accept All', you consent to our use of cookies. You can decline non-essential cookies if you prefer.",
             'allow_recaptcha' => false,            
 
             'tdio_allow' => false,

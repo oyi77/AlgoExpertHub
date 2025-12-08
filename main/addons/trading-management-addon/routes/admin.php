@@ -113,6 +113,16 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             Route::post('/metaapi-account-status', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getMetaApiAccountStatus'])->name('metaapi-account-status');
             Route::get('/{exchangeConnection}/monitor-metaapi', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'monitorMetaApi'])->name('monitor-metaapi');
             Route::post('/{exchangeConnection}/generate-account-token', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'generateAccountToken'])->name('generate-account-token');
+            Route::post('/{exchangeConnection}/test-stream-market-data', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testStreamMarketData'])->name('test-stream-market-data');
+            Route::post('/{exchangeConnection}/test-stream-positions', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testStreamPositions'])->name('test-stream-positions');
+            Route::post('/{exchangeConnection}/test-stream-orders', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testStreamOrders'])->name('test-stream-orders');
+            Route::post('/{exchangeConnection}/test-stream-balance', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testStreamBalance'])->name('test-stream-balance');
+            
+            // Real-time streaming endpoints (SSE)
+            Route::get('/{exchangeConnection}/stream-market-data', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'streamMarketData'])->name('stream-market-data');
+            Route::get('/{exchangeConnection}/stream-positions', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'streamPositions'])->name('stream-positions');
+            Route::get('/{exchangeConnection}/stream-orders', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'streamOrders'])->name('stream-orders');
+            Route::get('/{exchangeConnection}/stream-balance', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'streamBalance'])->name('stream-balance');
             
             // CCXT exchanges endpoint
             Route::get('/ccxt-exchanges', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'getCcxtExchanges'])->name('ccxt-exchanges');

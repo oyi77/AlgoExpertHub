@@ -1144,5 +1144,549 @@ class ExchangeConnectionController extends Controller
             ], 400);
         }
     }
+
+    /**
+     * Test streaming market data
+     */
+    /**
+     * Get default symbol based on connection type
+     */
+    protected function getDefaultSymbol(ExchangeConnection $exchangeConnection, $adapter = null): string
+    {
+        // Try to get available symbols from adapter
+        if ($adapter && method_exists($adapter, 'getAvailableSymbols')) {
+            try {
+                $availableSymbols = $adapter->getAvailableSymbols();
+                if (!empty($availableSymbols)) {
+                    // For FX brokers, prefer XAUUSD or XAUUSDc
+                    if ($exchangeConnection->connection_type === 'FX_BROKER') {
+                        $preferredSymbols = ['XAUUSDc', 'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY'];
+                        foreach ($preferredSymbols as $prefSymbol) {
+                            if (in_array($prefSymbol, $availableSymbols)) {
+                                return $prefSymbol;
+                            }
+                        }
+                        // If preferred not found, return first available
+                        return $availableSymbols[0];
+                    } else {
+                        // For crypto exchanges, prefer BTCUSDT, BTC/USDT, etc.
+                        $preferredSymbols = ['BTCUSDT', 'BTC/USDT', 'BTC-USDT', 'BTC_USDT'];
+                        foreach ($preferredSymbols as $prefSymbol) {
+                            if (in_array($prefSymbol, $availableSymbols)) {
+                                return $prefSymbol;
+                            }
+                        }
+                        // Try case-insensitive match
+                        foreach ($availableSymbols as $sym) {
+                            if (stripos($sym, 'BTC') !== false && stripos($sym, 'USDT') !== false) {
+                                return $sym;
+                            }
+                        }
+                        // If preferred not found, return first available
+                        return $availableSymbols[0];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fall back to defaults if fetching symbols fails
+            }
+        }
+
+        // Fallback to connection-type-based defaults
+        if ($exchangeConnection->connection_type === 'FX_BROKER') {
+            return 'XAUUSDc'; // Try XAUUSDc first (common on many brokers)
+        } else {
+            return 'BTCUSDT'; // Default for crypto exchanges
+        }
+    }
+
+    public function testStreamMarketData(ExchangeConnection $exchangeConnection, Request $request)
+    {
+        try {
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Market data streaming is only available for MetaApi connections',
+                ], 400);
+            }
+
+            $adapter = $this->getAdapter($exchangeConnection);
+            $defaultSymbol = $this->getDefaultSymbol($exchangeConnection, $adapter);
+            $symbol = $request->input('symbol', $defaultSymbol);
+            $timeframe = $request->input('timeframe', 'H1');
+
+            // Test market data by fetching historical data (streaming requires WebSocket setup)
+            // For testing purposes, we'll fetch recent candles to verify connection works
+            if (method_exists($adapter, 'fetchOHLCV')) {
+                $data = $adapter->fetchOHLCV($symbol, $timeframe, 10);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Market data connection verified. Fetched ' . count($data) . ' candles.',
+                    'data' => [
+                        'symbol' => $symbol,
+                        'timeframe' => $timeframe,
+                        'candles' => $data,
+                        'count' => count($data),
+                        'note' => 'To enable real-time streaming, use MetaApiStreamingService with WebSocket connection'
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Market data fetching not available for this adapter',
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to test market data stream: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test streaming positions
+     */
+    public function testStreamPositions(ExchangeConnection $exchangeConnection)
+    {
+        try {
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Position streaming is only available for MetaApi connections',
+                ], 400);
+            }
+
+            $adapter = $this->getAdapter($exchangeConnection);
+            
+            if (method_exists($adapter, 'fetchPositions')) {
+                $positions = $adapter->fetchPositions();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Positions retrieved successfully',
+                    'data' => $positions,
+                    'count' => is_array($positions) ? count($positions) : 0,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Position fetching not available for this adapter',
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to test position stream: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test streaming order history
+     */
+    public function testStreamOrders(ExchangeConnection $exchangeConnection)
+    {
+        try {
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order streaming is only available for MetaApi connections',
+                ], 400);
+            }
+
+            $adapter = $this->getAdapter($exchangeConnection);
+            
+            if (method_exists($adapter, 'fetchOrders')) {
+                $orders = $adapter->fetchOrders();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Orders retrieved successfully',
+                    'data' => $orders,
+                    'count' => is_array($orders) ? count($orders) : 0,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Order fetching not available for this adapter',
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to test order stream: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Test balance state
+     */
+    public function testStreamBalance(ExchangeConnection $exchangeConnection)
+    {
+        try {
+            $adapter = $this->getAdapter($exchangeConnection);
+            
+            // Try fetchBalance first (returns normalized balance data)
+            if (method_exists($adapter, 'fetchBalance')) {
+                $balance = $adapter->fetchBalance();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Balance retrieved successfully',
+                    'data' => $balance,
+                ]);
+            } elseif (method_exists($adapter, 'getAccountInfo')) {
+                $accountInfo = $adapter->getAccountInfo();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Balance retrieved successfully',
+                    'data' => $accountInfo,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Balance retrieval not available for this adapter',
+            ], 400);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to test balance: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Real-time streaming endpoints (SSE)
+     */
+
+    /**
+     * Stream market data (SSE)
+     */
+    public function streamMarketData(ExchangeConnection $exchangeConnection, Request $request)
+    {
+        if ($exchangeConnection->provider !== 'metaapi') {
+            return response('Market data streaming only available for MetaApi connections', 400);
+        }
+
+        $adapter = $this->getAdapter($exchangeConnection);
+        $defaultSymbol = $this->getDefaultSymbol($exchangeConnection, $adapter);
+        $symbol = $request->input('symbol', $defaultSymbol);
+        $timeframe = $request->input('timeframe', 'H1');
+
+        // Disable output buffering
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Set headers for SSE
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        set_time_limit(0);
+        ignore_user_abort(false);
+
+        // Send initial connection message
+        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Market data stream connected', 'symbol' => $symbol, 'timeframe' => $timeframe]) . "\n\n";
+        flush();
+
+        $updateCount = 0;
+        $lastData = null;
+
+        try {
+            $adapter = $this->getAdapter($exchangeConnection);
+
+            while (true) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                // Send keepalive every 30 seconds
+                if ($updateCount % 10 == 0 && $updateCount > 0) {
+                    echo ": keepalive\n\n";
+                    flush();
+                }
+
+                try {
+                    if (method_exists($adapter, 'fetchOHLCV')) {
+                        $data = $adapter->fetchOHLCV($symbol, $timeframe, 5); // Get last 5 candles
+                        
+                        // Only send if data changed
+                        if ($data !== $lastData) {
+                            echo "data: " . json_encode([
+                                'type' => 'update',
+                                'symbol' => $symbol,
+                                'timeframe' => $timeframe,
+                                'data' => $data,
+                                'count' => count($data),
+                                'timestamp' => now()->toIso8601String(),
+                            ]) . "\n\n";
+                            flush();
+                            $lastData = $data;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    echo "data: " . json_encode([
+                        'type' => 'error',
+                        'message' => $e->getMessage(),
+                        'timestamp' => now()->toIso8601String(),
+                    ]) . "\n\n";
+                    flush();
+                }
+
+                $updateCount++;
+                sleep(3); // Update every 3 seconds
+            }
+        } catch (\Exception $e) {
+            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
+            flush();
+        }
+
+        return response('', 200);
+    }
+
+    /**
+     * Stream positions (SSE)
+     */
+    public function streamPositions(ExchangeConnection $exchangeConnection)
+    {
+        if ($exchangeConnection->provider !== 'metaapi') {
+            return response('Position streaming only available for MetaApi connections', 400);
+        }
+
+        // Disable output buffering
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Set headers for SSE
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        set_time_limit(0);
+        ignore_user_abort(false);
+
+        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Positions stream connected']) . "\n\n";
+        flush();
+
+        $updateCount = 0;
+        $lastData = null;
+
+        try {
+            $adapter = $this->getAdapter($exchangeConnection);
+
+            while (true) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                if ($updateCount % 10 == 0 && $updateCount > 0) {
+                    echo ": keepalive\n\n";
+                    flush();
+                }
+
+                try {
+                    if (method_exists($adapter, 'fetchPositions')) {
+                        $data = $adapter->fetchPositions();
+                        
+                        // Only send if data changed
+                        if (json_encode($data) !== json_encode($lastData)) {
+                            echo "data: " . json_encode([
+                                'type' => 'update',
+                                'positions' => $data,
+                                'count' => is_array($data) ? count($data) : 0,
+                                'timestamp' => now()->toIso8601String(),
+                            ]) . "\n\n";
+                            flush();
+                            $lastData = $data;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    echo "data: " . json_encode([
+                        'type' => 'error',
+                        'message' => $e->getMessage(),
+                        'timestamp' => now()->toIso8601String(),
+                    ]) . "\n\n";
+                    flush();
+                }
+
+                $updateCount++;
+                sleep(3); // Update every 3 seconds
+            }
+        } catch (\Exception $e) {
+            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
+            flush();
+        }
+
+        return response('', 200);
+    }
+
+    /**
+     * Stream orders (SSE)
+     */
+    public function streamOrders(ExchangeConnection $exchangeConnection)
+    {
+        if ($exchangeConnection->provider !== 'metaapi') {
+            return response('Order streaming only available for MetaApi connections', 400);
+        }
+
+        // Disable output buffering
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Set headers for SSE
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        set_time_limit(0);
+        ignore_user_abort(false);
+
+        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Orders stream connected']) . "\n\n";
+        flush();
+
+        $updateCount = 0;
+        $lastData = null;
+
+        try {
+            $adapter = $this->getAdapter($exchangeConnection);
+
+            while (true) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                if ($updateCount % 10 == 0 && $updateCount > 0) {
+                    echo ": keepalive\n\n";
+                    flush();
+                }
+
+                try {
+                    if (method_exists($adapter, 'fetchOrders')) {
+                        $data = $adapter->fetchOrders();
+                        
+                        // Only send if data changed
+                        if (json_encode($data) !== json_encode($lastData)) {
+                            echo "data: " . json_encode([
+                                'type' => 'update',
+                                'orders' => $data,
+                                'count' => is_array($data) ? count($data) : 0,
+                                'timestamp' => now()->toIso8601String(),
+                            ]) . "\n\n";
+                            flush();
+                            $lastData = $data;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    echo "data: " . json_encode([
+                        'type' => 'error',
+                        'message' => $e->getMessage(),
+                        'timestamp' => now()->toIso8601String(),
+                    ]) . "\n\n";
+                    flush();
+                }
+
+                $updateCount++;
+                sleep(3); // Update every 3 seconds
+            }
+        } catch (\Exception $e) {
+            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
+            flush();
+        }
+
+        return response('', 200);
+    }
+
+    /**
+     * Stream balance (SSE)
+     */
+    public function streamBalance(ExchangeConnection $exchangeConnection)
+    {
+        // Disable output buffering
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // Set headers for SSE
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Connection: keep-alive');
+        header('X-Accel-Buffering: no');
+
+        set_time_limit(0);
+        ignore_user_abort(false);
+
+        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Balance stream connected']) . "\n\n";
+        flush();
+
+        $updateCount = 0;
+        $lastData = null;
+
+        try {
+            $adapter = $this->getAdapter($exchangeConnection);
+
+            while (true) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                if ($updateCount % 10 == 0 && $updateCount > 0) {
+                    echo ": keepalive\n\n";
+                    flush();
+                }
+
+                try {
+                    $data = null;
+                    if (method_exists($adapter, 'fetchBalance')) {
+                        $data = $adapter->fetchBalance();
+                    } elseif (method_exists($adapter, 'getAccountInfo')) {
+                        $data = $adapter->getAccountInfo();
+                    }
+                    
+                    // Only send if data changed
+                    if ($data && json_encode($data) !== json_encode($lastData)) {
+                        echo "data: " . json_encode([
+                            'type' => 'update',
+                            'balance' => $data,
+                            'timestamp' => now()->toIso8601String(),
+                        ]) . "\n\n";
+                        flush();
+                        $lastData = $data;
+                    }
+                } catch (\Exception $e) {
+                    echo "data: " . json_encode([
+                        'type' => 'error',
+                        'message' => $e->getMessage(),
+                        'timestamp' => now()->toIso8601String(),
+                    ]) . "\n\n";
+                    flush();
+                }
+
+                $updateCount++;
+                sleep(3); // Update every 3 seconds
+            }
+        } catch (\Exception $e) {
+            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
+            flush();
+        }
+
+        return response('', 200);
+    }
 }
 

@@ -49,6 +49,13 @@ return [
         'provisioning_base_url' => env('METAAPI_PROVISIONING_BASE_URL', 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai'),
         'billing_base_url' => env('METAAPI_BILLING_BASE_URL', 'https://billing-api-v1.agiliumtrade.agiliumtrade.ai'),
         'timeout' => env('METAAPI_TIMEOUT', 30), // seconds
+        'streaming' => [
+            'websocket_url' => env('METAAPI_WEBSOCKET_URL', 'https://mt-client-api-v1.london.agiliumtrade.ai'), // Socket.IO URL (HTTPS, not WSS)
+            'redis_prefix' => env('METAAPI_REDIS_PREFIX', 'metaapi:stream'),
+            'stream_ttl' => env('METAAPI_STREAM_TTL', 60), // seconds
+            'reconnect_delay' => env('METAAPI_RECONNECT_DELAY', 5), // seconds
+            'max_reconnect_attempts' => env('METAAPI_MAX_RECONNECT_ATTEMPTS', 10),
+        ],
     ],
 
     /*

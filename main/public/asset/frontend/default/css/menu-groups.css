@@ -1,0 +1,238 @@
+/**
+ * Menu Groups Styling
+ * Consistent with admin panel menu structure
+ */
+
+/* Menu Group Headers (nav-label) - Match admin panel style */
+.sidebar-menu .nav-label {
+    padding: 18px 15px 10px 15px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-top: 24px !important;
+    margin-bottom: 10px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    display: flex !important;
+    align-items: center;
+    pointer-events: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-menu .nav-label:first-child {
+    margin-top: 0 !important;
+}
+
+.sidebar-menu .nav-label i {
+    font-size: 12px;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+/* Override main.css margin-top for menu items */
+.sidebar-menu > li + li {
+    margin-top: 0 !important;
+}
+
+/* Menu items with span for better styling */
+.sidebar-menu > li > a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 14px 15px !important;
+    margin-bottom: 6px !important;
+    margin-top: 0 !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-height: 48px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sidebar-menu > li > a:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Icon styling - reduce width to give more space for text */
+.sidebar-menu > li > a > i {
+    width: 24px !important;
+    min-width: 24px;
+    font-size: 1.1rem !important;
+    margin-right: 12px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Text span - ensure it takes remaining space and doesn't overflow */
+.sidebar-menu > li > a > span {
+    flex: 1;
+    min-width: 0; /* Allow text to shrink */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    padding-right: 10px; /* Space to prevent text from being covered by arrow */
+    position: relative;
+    z-index: 1; /* Ensure text is above arrow */
+}
+
+/* Ensure menu items have proper spacing */
+.sidebar-menu > li:not(.nav-label) {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Active menu item styling */
+.sidebar-menu > li.active > a,
+.sidebar-menu > li.open > a {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    font-weight: 500;
+}
+
+.sidebar-menu > li.active > a > i,
+.sidebar-menu > li.open > a > i {
+    opacity: 1;
+}
+
+/* Submenu Styling - Accordion (Harmonika) */
+.sidebar-menu .has_submenu > a {
+    position: relative;
+    cursor: pointer;
+    padding-right: 45px !important; /* Space for arrow */
+}
+
+.sidebar-menu .has_submenu > a.menu-toggle::after {
+    content: "\f107";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    z-index: 0; /* Arrow behind text */
+    pointer-events: none; /* Don't block clicks on text */
+}
+
+.sidebar-menu .has_submenu.open > a.menu-toggle::after {
+    transform: translateY(-50%) rotate(180deg);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Remove double arrow - only show one arrow */
+.sidebar-menu .has_submenu > a:not(.menu-toggle)::after {
+    display: none;
+}
+
+/* Remove arrow for unified_page items (they don't have submenu) */
+.sidebar-menu > li:not(.has_submenu) > a::after,
+.sidebar-menu > li:not(.has_submenu) > a::before {
+    display: none !important;
+}
+
+.sidebar-menu .submenu {
+    display: none;
+    padding-left: 0;
+    background: rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+.sidebar-menu .has_submenu.open > .submenu {
+    display: block;
+}
+
+.sidebar-menu .submenu li {
+    padding-left: 50px;
+}
+
+.sidebar-menu .submenu li a {
+    padding: 10px 20px;
+    font-size: 14px;
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu .submenu li a:hover,
+.sidebar-menu .submenu li.active a {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 25px;
+}
+
+/* Mobile Menu Adjustments */
+@media (max-width: 991px) {
+    .sidebar-menu .nav-label {
+        padding: 10px 15px;
+        font-size: 10px;
+    }
+    
+    .sidebar-menu .submenu {
+        background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-menu .submenu li {
+        padding-left: 40px;
+    }
+    
+    /* Touch-friendly menu items on mobile */
+    .sidebar-menu > li > a {
+        padding: 12px 20px;
+        min-height: 44px; /* iOS touch target size */
+    }
+    
+    /* Ensure submenu items are touch-friendly */
+    .sidebar-menu .submenu li a {
+        padding: 12px 20px;
+        min-height: 44px;
+    }
+    
+    /* Collapsible groups on mobile */
+    .sidebar-menu .has_submenu > a {
+        padding-right: 50px; /* Space for chevron */
+    }
+}
+
+/* Onboarding Checklist Widget Styling */
+.onboarding-checklist-widget {
+    border-left: 4px solid #007bff;
+}
+
+.onboarding-checklist-widget .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.onboarding-checklist-widget .card-header h5 {
+    color: white;
+    font-weight: 600;
+}
+
+.onboarding-checklist-widget .progress-bar {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.onboarding-checklist-widget .list-unstyled li {
+    transition: all 0.3s ease;
+}
+
+.onboarding-checklist-widget .list-unstyled li:hover {
+    padding-left: 5px;
+}
+
+.onboarding-checklist-widget .list-unstyled li a {
+    color: #333;
+    font-weight: 500;
+}
+
+.onboarding-checklist-widget .list-unstyled li a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+

@@ -7,7 +7,7 @@ use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
 use Addons\TradingManagement\Modules\TradingBot\Services\TechnicalAnalysisService;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradeDecisionEngine;
 use Addons\TradingManagement\Modules\TradingBot\Services\PositionMonitoringService;
-use Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter;
+use Addons\TradingManagement\Modules\TradingBot\Workers\TradingBotStrategyWorker;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -22,6 +22,7 @@ class ProcessMarketStreamBotWorker
     protected TechnicalAnalysisService $analysisService;
     protected TradeDecisionEngine $decisionEngine;
     protected PositionMonitoringService $positionService;
+    protected TradingBotStrategyWorker $strategyWorker;
 
     public function __construct(TradingBot $bot)
     {
@@ -29,6 +30,7 @@ class ProcessMarketStreamBotWorker
         $this->analysisService = app(TechnicalAnalysisService::class);
         $this->decisionEngine = app(TradeDecisionEngine::class);
         $this->positionService = app(PositionMonitoringService::class);
+        $this->strategyWorker = new TradingBotStrategyWorker($bot);
     }
 
     /**
@@ -85,134 +87,25 @@ class ProcessMarketStreamBotWorker
 
     /**
      * Analyze market and make trading decisions
+     * 
+     * Now uses TradingBotStrategyWorker which consumes from shared streams
      */
     protected function analyzeMarket(): void
     {
         try {
-            // 1. Stream market data
-            $ohlcv = $this->streamMarketData();
-            
-            if (empty($ohlcv)) {
-                Log::warning('No market data received', ['bot_id' => $this->bot->id]);
-                return;
-            }
-
-            // 2. Calculate technical indicators
-            $indicators = $this->analysisService->calculateIndicators($ohlcv, $this->bot->filterStrategy);
-            
-            // 3. Analyze signals
-            $analysis = $this->analysisService->analyzeSignals($indicators);
-            
-            // 4. Make trading decision
-            $decision = $this->decisionEngine->shouldEnterTrade($analysis, $this->bot);
-            
-            // 5. Execute trade if conditions met
-            if ($decision['should_enter']) {
-                $this->executeTrade($decision, $ohlcv);
-            }
+            // Use strategy worker which handles:
+            // - Subscribing to shared streams
+            // - Consuming streamed data from Redis
+            // - Applying technical analysis
+            // - Making trading decisions
+            // - Dispatching to Filter & Analysis Worker
+            $this->strategyWorker->run();
 
             // Update last analysis time
             $this->bot->update(['last_market_analysis_at' => now()]);
 
         } catch (\Exception $e) {
             Log::error('Failed to analyze market', [
-                'bot_id' => $this->bot->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Stream market data from data connection
-     * 
-     * @return array OHLCV candles
-     */
-    protected function streamMarketData(): array
-    {
-        if (!$this->bot->dataConnection) {
-            return [];
-        }
-
-        $symbols = $this->bot->getStreamingSymbols();
-        $timeframes = $this->bot->getStreamingTimeframes();
-
-        if (empty($symbols) || empty($timeframes)) {
-            return [];
-        }
-
-        // Use first symbol and timeframe for now
-        $symbol = $symbols[0];
-        $timeframe = $timeframes[0];
-
-        try {
-            $connection = $this->bot->dataConnection;
-            $credentials = $connection->credentials ?? [];
-            $provider = $connection->provider;
-            $adapter = new CcxtAdapter($credentials, $provider);
-            $result = $adapter->fetchCandles($symbol, $timeframe, 100);
-            if (!isset($result['success']) || !$result['success']) {
-                return [];
-            }
-            return $result['data'] ?? [];
-        } catch (\Exception $e) {
-            Log::error('Failed to stream market data', [
-                'bot_id' => $this->bot->id,
-                'symbol' => $symbol,
-                'timeframe' => $timeframe,
-                'error' => $e->getMessage(),
-            ]);
-            return [];
-        }
-    }
-
-    /**
-     * Execute trade based on decision
-     * 
-     * @param array $decision
-     * @param array $ohlcv
-     */
-    protected function executeTrade(array $decision, array $ohlcv): void
-    {
-        try {
-            // Get current price
-            $currentPrice = end($ohlcv)['close'] ?? null;
-            if (!$currentPrice) {
-                return;
-            }
-
-            // Calculate position size
-            $quantity = $this->decisionEngine->calculatePositionSize($this->bot, null, $currentPrice);
-            
-            // Apply risk management
-            $decision = $this->decisionEngine->applyRiskManagement($decision, $this->bot, $currentPrice);
-
-            $symbol = $this->bot->getStreamingSymbols()[0] ?? null;
-            if (!$symbol) {
-                return;
-            }
-
-            TradingBotPosition::create([
-                'bot_id' => $this->bot->id,
-                'symbol' => $symbol,
-                'direction' => $decision['direction'],
-                'entry_price' => $currentPrice,
-                'current_price' => $currentPrice,
-                'stop_loss' => $decision['stop_loss'] ?? null,
-                'take_profit' => $decision['take_profit'] ?? null,
-                'quantity' => $quantity,
-                'status' => 'open',
-                'opened_at' => now(),
-            ]);
-
-            Log::info('Trading bot trade executed', [
-                'bot_id' => $this->bot->id,
-                'direction' => $decision['direction'],
-                'quantity' => $quantity,
-                'price' => $currentPrice,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to execute trade', [
                 'bot_id' => $this->bot->id,
                 'error' => $e->getMessage(),
             ]);

@@ -68,6 +68,69 @@
         </div>
     </div>
 
+    <!-- Horizon Supervisor Status -->
+    @if(isset($horizonSupervisorStatus) && $horizonSupervisorStatus)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }}">
+                <div class="card-header bg-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }} text-white">
+                    <h5 class="mb-0">
+                        <i class="las la-shield-alt"></i> {{ __('Horizon Cron Supervisor') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td><strong>{{ __('Status') }}:</strong></td>
+                                    <td>
+                                        <span class="badge badge-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }}">
+                                            {{ $horizonSupervisorStatus['enabled'] ? __('Active') : __('Inactive') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{{ __('Schedule') }}:</strong></td>
+                                    <td>{{ __('Every :minutes minutes', ['minutes' => $horizonSupervisorStatus['schedule_minutes']]) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>{{ __('System Supervisor') }}:</strong></td>
+                                    <td>
+                                        <span class="badge badge-{{ $horizonSupervisorStatus['use_system_supervisor'] ? 'info' : 'secondary' }}">
+                                            {{ $horizonSupervisorStatus['use_system_supervisor'] ? __('Enabled') : __('Disabled') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @if($horizonSupervisorStatus['last_run'])
+                                <tr>
+                                    <td><strong>{{ __('Last Run') }}:</strong></td>
+                                    <td>{{ $horizonSupervisorStatus['last_run'] }}</td>
+                                </tr>
+                                @endif
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'info' }} mb-0">
+                                @if($horizonSupervisorStatus['use_system_supervisor'])
+                                    <i class="las la-info-circle"></i> 
+                                    {{ __('System Supervisor is enabled. Cron supervisor is disabled.') }}
+                                @elseif($horizonSupervisorStatus['enabled'])
+                                    <i class="las la-check-circle"></i> 
+                                    {{ __('Cron supervisor is active. Horizon will be automatically restarted if it stops running.') }}
+                                @else
+                                    <i class="las la-exclamation-circle"></i> 
+                                    {{ __('Cron supervisor is disabled. Enable it in .env: HORIZON_CRON_SUPERVISOR_ENABLED=true') }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Main Content -->
     <div class="row">
         <div class="col-12">
