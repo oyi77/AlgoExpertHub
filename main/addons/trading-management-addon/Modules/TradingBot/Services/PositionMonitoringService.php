@@ -124,10 +124,50 @@ class PositionMonitoringService
                 'closed_at' => now(),
             ]);
 
-            // Close actual position on exchange if linked
-            if ($position->executionPosition) {
-                // Use execution engine to close position
-                // This would call the execution service
+            // Close linked ExecutionPosition if exists
+            if ($position->executionPosition && $position->executionPosition->isOpen()) {
+                try {
+                    $executionPosition = $position->executionPosition;
+                    $connection = $executionPosition->connection;
+                    
+                    if ($connection) {
+                        // Get adapter and close on exchange
+                        $adapterFactory = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class);
+                        $adapter = $adapterFactory->create($connection->provider, $connection->credentials ?? []);
+                        
+                        if (method_exists($adapter, 'closePosition')) {
+                            $result = $adapter->closePosition($executionPosition->order_id);
+                            if (!$result['success']) {
+                                Log::warning('Failed to close ExecutionPosition on exchange', [
+                                    'execution_position_id' => $executionPosition->id,
+                                    'error' => $result['error'] ?? 'Unknown error',
+                                ]);
+                            }
+                        }
+                    }
+                    
+                    // Update ExecutionPosition status
+                    $executionPosition->update([
+                        'status' => 'closed',
+                        'closed_at' => now(),
+                        'closed_reason' => $this->mapCloseReason($reason),
+                        'current_price' => $position->current_price,
+                    ]);
+                    
+                    // Update PnL
+                    $executionPosition->updatePnL($position->current_price);
+                    
+                    Log::info('ExecutionPosition closed via TradingBotPosition', [
+                        'execution_position_id' => $executionPosition->id,
+                        'bot_position_id' => $position->id,
+                        'reason' => $reason,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to close ExecutionPosition', [
+                        'bot_position_id' => $position->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             Log::info('Trading bot position closed', [
@@ -238,5 +278,20 @@ class PositionMonitoringService
             'tp_closed' => $tpClosed,
             'total_checked' => $openPositions->count(),
         ];
+    }
+
+    /**
+     * Map TradingBotPosition close_reason to ExecutionPosition closed_reason
+     */
+    protected function mapCloseReason(string $botReason): string
+    {
+        $mapping = [
+            'take_profit_hit' => 'tp',
+            'stop_loss_hit' => 'sl',
+            'manual_close' => 'manual',
+            'liquidation' => 'liquidation',
+        ];
+
+        return $mapping[$botReason] ?? 'manual';
     }
 }
