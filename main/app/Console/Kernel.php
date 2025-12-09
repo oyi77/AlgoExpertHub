@@ -57,6 +57,13 @@ class Kernel extends ConsoleKernel
                     ->everyMinute()
                     ->withoutOverlapping();
             }
+
+            // Test exchange connection health every 5 minutes
+            if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Jobs\TestConnectionHealthJob::class)) {
+                $schedule->job(\Addons\TradingManagement\Modules\ExchangeConnection\Jobs\TestConnectionHealthJob::class)
+                    ->everyFiveMinutes()
+                    ->withoutOverlapping();
+            }
         }
 
         // AlgoExpert++ Addon - System Health
@@ -111,7 +118,7 @@ class Kernel extends ConsoleKernel
         if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'execution')) {
             // Monitor positions every minute
             if (class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\MonitorPositionsJob::class)) {
-                $schedule->job(\Addons\TradingManagement\Modules\PositionMonitoring\Jobs\MonitorPositionsJob::class)
+                $schedule->job(new \Addons\TradingManagement\Modules\PositionMonitoring\Jobs\MonitorPositionsJob())
                     ->everyMinute()
                     ->withoutOverlapping();
             }

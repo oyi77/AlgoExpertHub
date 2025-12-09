@@ -406,8 +406,11 @@ class MetaApiStreamingService
                 $timeframe = $candle['timeframe'];
                 $cacheKey = $this->getCacheKey($symbol, $timeframe);
                 
-                // Store candle data
+                // Store candle data in Redis (for real-time consumption)
                 Redis::setex($cacheKey, $this->streamTtl, json_encode($candle));
+                
+                // Also store in market_data table for historical data and indicator calculation
+                $this->storeCandleInDatabase($candle);
             }
         }
 
@@ -570,5 +573,70 @@ class MetaApiStreamingService
     public function getSubscribedSymbols(): array
     {
         return array_keys($this->subscribedSymbols);
+    }
+
+    /**
+     * Store candle in database via MarketDataService
+     */
+    protected function storeCandleInDatabase(array $candle): void
+    {
+        try {
+            // Get data connection for this account
+            $dataConnection = \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::where('credentials->account_id', $this->accountId)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$dataConnection) {
+                return; // No data connection found for this account
+            }
+
+            // Convert MetaAPI candle format to OHLCV array
+            $timestamp = $this->parseTimestamp($candle['time'] ?? $candle['brokerTime'] ?? null);
+            if (!$timestamp) {
+                return; // Invalid timestamp
+            }
+
+            $ohlcv = [
+                'timestamp' => $timestamp,
+                'open' => (float) ($candle['open'] ?? 0),
+                'high' => (float) ($candle['high'] ?? 0),
+                'low' => (float) ($candle['low'] ?? 0),
+                'close' => (float) ($candle['close'] ?? 0),
+                'volume' => (int) ($candle['volume'] ?? $candle['tickVolume'] ?? 0),
+            ];
+
+            // Store via MarketDataService
+            $marketDataService = app(\Addons\TradingManagement\Modules\MarketData\Services\MarketDataService::class);
+            $marketDataService->store($dataConnection, $candle['symbol'], $candle['timeframe'], [$ohlcv]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to store candle in database', [
+                'account_id' => $this->accountId,
+                'symbol' => $candle['symbol'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Parse timestamp from MetaAPI format
+     */
+    protected function parseTimestamp($time): ?int
+    {
+        if (!$time) {
+            return null;
+        }
+
+        if (is_numeric($time)) {
+            // Already a timestamp (milliseconds or seconds)
+            return $time < 10000000000 ? $time * 1000 : $time;
+        }
+
+        if (is_string($time)) {
+            // ISO 8601 string
+            $timestamp = strtotime($time);
+            return $timestamp ? $timestamp * 1000 : null;
+        }
+
+        return null;
     }
 }

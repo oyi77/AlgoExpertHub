@@ -66,7 +66,14 @@ class TradingBotPosition extends Model
     {
         // Link to execution_positions if table exists
         if (\Schema::hasTable('execution_positions')) {
-            return $this->belongsTo(\Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class, 'execution_position_id');
+            // Try new model first
+            if (class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class)) {
+                return $this->belongsTo(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class, 'execution_position_id');
+            }
+            // Fallback to old model
+            if (class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class)) {
+                return $this->belongsTo(\Addons\TradingExecutionEngine\App\Models\ExecutionPosition::class, 'execution_position_id');
+            }
         }
         return null;
     }

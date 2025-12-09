@@ -17,5 +17,10 @@ class BroadcastServiceProvider extends ServiceProvider
         Broadcast::routes();
 
         require base_path('routes/channels.php');
+        
+        // Load addon broadcast channels
+        if (file_exists(base_path('addons/trading-management-addon/routes/channels.php'))) {
+            require base_path('addons/trading-management-addon/routes/channels.php');
+        }
     }
 }

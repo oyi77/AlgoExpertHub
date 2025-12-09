@@ -88,6 +88,7 @@ class TradingBotController extends Controller
         $data['presets'] = $this->botService->getAvailablePresets();
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
+        $data['expertAdvisors'] = $this->botService->getAvailableExpertAdvisors();
         $data['dataConnections'] = collect(); // Will be populated based on selected exchange connection
 
         return view('trading-management::backend.trading-bots.create', $data);
@@ -333,6 +334,9 @@ class TradingBotController extends Controller
 
         try {
             $this->botService->resume($bot, null, auth()->guard('admin')->id());
+            
+            // Restart worker process
+            $this->workerService->startWorker($bot);
             
             return redirect()
                 ->back()

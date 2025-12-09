@@ -48,12 +48,33 @@ class TradingBotStrategyWorker
             return; // No data available yet
         }
 
-        // 3. Apply technical analysis
-        $indicators = $this->analysisService->calculateIndicators($marketData, $this->bot->filterStrategy);
-        $analysis = $this->analysisService->analyzeSignals($indicators);
+        // 3. Check if bot has Expert Advisor - if yes, use EA instead of technical analysis
+        if ($this->bot->expert_advisor_id && $this->bot->expertAdvisor) {
+            $eaService = app(\Addons\TradingManagement\Modules\ExpertAdvisor\Services\EaExecutionService::class);
+            $eaResult = $eaService->executeEa($this->bot->expertAdvisor, $this->bot, $marketData);
+            
+            if ($eaResult['signal'] !== 'hold') {
+                // EA provided signal, use it
+                $decision = [
+                    'should_enter' => true,
+                    'direction' => $eaResult['signal'],
+                    'confidence' => $eaResult['confidence'] ?? 0.8,
+                    'entry_price' => $eaResult['entry_price'] ?? $marketData[0]['close'] ?? 0,
+                    'stop_loss' => $eaResult['sl'],
+                    'take_profit' => $eaResult['tp'],
+                ];
+            } else {
+                // EA says hold, skip
+                return;
+            }
+        } else {
+            // 3. Apply technical analysis (if no EA)
+            $indicators = $this->analysisService->calculateIndicators($marketData, $this->bot->filterStrategy);
+            $analysis = $this->analysisService->analyzeSignals($indicators);
 
-        // 4. Make trading decision
-        $decision = $this->decisionEngine->shouldEnterTrade($analysis, $this->bot);
+            // 4. Make trading decision
+            $decision = $this->decisionEngine->shouldEnterTrade($analysis, $this->bot);
+        }
 
         // 5. If decision to trade, dispatch to Filter & Analysis Worker
         if ($decision['should_enter']) {

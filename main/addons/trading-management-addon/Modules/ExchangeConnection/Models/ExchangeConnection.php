@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\Searchable;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Shared\Traits\HasEncryptedCredentials;
+use Addons\TradingManagement\Shared\Traits\ConnectionHealthCheck;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ExchangeConnection extends Model
 {
-    use HasFactory, Searchable, HasEncryptedCredentials;
+    use HasFactory, Searchable, HasEncryptedCredentials, ConnectionHealthCheck;
 
     protected $table = 'execution_connections';
 

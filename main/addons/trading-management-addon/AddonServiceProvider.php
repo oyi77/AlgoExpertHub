@@ -101,6 +101,13 @@ class AddonServiceProvider extends ServiceProvider
                 \Addons\TradingManagement\Modules\TradingBot\Observers\BotSignalObserver::class
             );
         }
+
+        // Register ExchangeConnectionObserver for automatic health checks
+        if ($this->isModuleEnabled('exchange_connection')) {
+            \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::observe(
+                \Addons\TradingManagement\Modules\ExchangeConnection\Observers\ExchangeConnectionObserver::class
+            );
+        }
     }
 
     /**
@@ -115,6 +122,14 @@ class AddonServiceProvider extends ServiceProvider
             \Addons\TradingManagement\Modules\TradingBot\Events\BotStatusChanged::class,
             \Addons\TradingManagement\Modules\TradingBot\Listeners\LogBotStatusChange::class
         );
+
+        // Register Copy Trading listeners
+        if ($this->isModuleEnabled('copy_trading')) {
+            // Register observer for ExecutionPosition (handles both created and updated)
+            \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::observe(
+                \Addons\TradingManagement\Modules\CopyTrading\Observers\ExecutionPositionObserver::class
+            );
+        }
     }
 
     /**
@@ -140,6 +155,34 @@ class AddonServiceProvider extends ServiceProvider
         if ($this->isModuleEnabled('market_data')) {
             $this->app->singleton(
                 \Addons\TradingManagement\Modules\MarketData\Services\MarketDataService::class
+            );
+        }
+
+        // Exchange Connection services
+        if ($this->isModuleEnabled('exchange_connection')) {
+            $this->app->singleton(
+                \Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService::class
+            );
+        }
+
+        // Position Monitoring services
+        if ($this->isModuleEnabled('position_monitoring')) {
+            $this->app->singleton(
+                \Addons\TradingManagement\Modules\PositionMonitoring\Services\PositionControlService::class
+            );
+        }
+
+        // Copy Trading services
+        if ($this->isModuleEnabled('copy_trading')) {
+            $this->app->singleton(
+                \Addons\TradingManagement\Modules\CopyTrading\Services\TradeCopyService::class
+            );
+        }
+
+        // Expert Advisor services
+        if ($this->isModuleEnabled('expert_advisor')) {
+            $this->app->singleton(
+                \Addons\TradingManagement\Modules\ExpertAdvisor\Services\EaExecutionService::class
             );
         }
     }
@@ -179,11 +222,13 @@ class AddonServiceProvider extends ServiceProvider
                 ->group(__DIR__ . '/routes/user.php');
         }
 
-        // API routes (if needed)
-        // Route::prefix('api/trading-management')
-        //     ->middleware('api')
-        //     ->name('api.trading-management.')
-        //     ->group(__DIR__ . '/routes/api.php');
+        // API routes
+        if (file_exists(__DIR__ . '/routes/api.php')) {
+            Route::prefix('api/trading-management')
+                ->middleware('api')
+                ->name('api.trading-management.')
+                ->group(__DIR__ . '/routes/api.php');
+        }
     }
 
     /**

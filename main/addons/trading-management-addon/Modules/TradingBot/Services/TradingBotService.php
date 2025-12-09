@@ -6,9 +6,11 @@ use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotExecutionLog;
 use Addons\TradingManagement\Modules\TradingBot\Events\BotStatusChanged;
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
+use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
+use Addons\TradingManagement\Modules\ExpertAdvisor\Models\ExpertAdvisor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -94,6 +96,23 @@ class TradingBotService
     public function delete(TradingBot $bot): bool
     {
         return DB::transaction(function () use ($bot) {
+            // Stop worker if running
+            if ($bot->isRunning() && $bot->worker_pid) {
+                try {
+                    $workerService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService::class);
+                    $workerService->stopWorker($bot);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to stop worker before delete', [
+                        'bot_id' => $bot->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            // Close all open positions (optional - could be configurable)
+            // For now, we'll just mark bot as deleted (soft delete)
+            // Positions remain open for user to manage manually
+
             \Log::info('Trading bot deleted', [
                 'bot_id' => $bot->id,
                 'name' => $bot->name,
@@ -315,6 +334,17 @@ class TradingBotService
         if ($aiProfileId) {
             AiModelProfile::findOrFail($aiProfileId);
         }
+
+        // Validate expert advisor (optional)
+        if (isset($data['expert_advisor_id'])) {
+            $eaId = $data['expert_advisor_id'];
+        } else {
+            $eaId = $bot?->expert_advisor_id;
+        }
+
+        if ($eaId) {
+            ExpertAdvisor::findOrFail($eaId);
+        }
     }
 
     /**
@@ -406,6 +436,32 @@ class TradingBotService
     }
 
     /**
+     * Get available expert advisors for current user/admin
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAvailableExpertAdvisors()
+    {
+        $query = ExpertAdvisor::where('status', 'active');
+
+        if (Auth::guard('admin')->check()) {
+            $adminId = Auth::guard('admin')->id();
+            $query->where(function ($q) use ($adminId) {
+                $q->where('admin_id', $adminId)
+                  ->orWhere('is_admin_owned', true);
+            });
+        } else {
+            // Users see their own + public
+            $query->where(function ($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhere('visibility', 'public');
+            });
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    /**
      * Get available data connections for bot (matching connection type)
      * 
      * @param TradingBot $bot
@@ -454,6 +510,16 @@ class TradingBotService
             return ['valid' => false, 'message' => 'Exchange connection is required'];
         }
 
+        // Verify exchange connection is stabilized
+        $connectionService = app(ExchangeConnectionService::class);
+        if (!$connectionService->isStabilized($bot->exchangeConnection)) {
+            return ['valid' => false, 'message' => 'Exchange connection must be stabilized before starting bot. Please test the connection first.'];
+        }
+
+        if (!$bot->exchangeConnection->is_active) {
+            return ['valid' => false, 'message' => 'Exchange connection must be active'];
+        }
+
         if (!$bot->tradingPreset) {
             return ['valid' => false, 'message' => 'Trading preset is required'];
         }
@@ -461,6 +527,10 @@ class TradingBotService
         if ($bot->requiresDataConnection()) {
             if (!$bot->dataConnection) {
                 return ['valid' => false, 'message' => 'Data connection is required for MARKET_STREAM_BASED mode'];
+            }
+
+            if (!$bot->dataConnection->is_active) {
+                return ['valid' => false, 'message' => 'Data connection must be active'];
             }
 
             if (empty($bot->getStreamingSymbols())) {
@@ -477,6 +547,21 @@ class TradingBotService
             
             if ($exchangeType !== $dataType) {
                 return ['valid' => false, 'message' => 'Data connection type must match exchange connection type'];
+            }
+        }
+
+        // Validate expert advisor if assigned
+        if ($bot->expert_advisor_id) {
+            if (!$bot->expertAdvisor) {
+                return ['valid' => false, 'message' => 'Expert advisor not found'];
+            }
+
+            if (!$bot->expertAdvisor->isActive()) {
+                return ['valid' => false, 'message' => 'Expert advisor must be active'];
+            }
+
+            if (!$bot->expertAdvisor->fileExists()) {
+                return ['valid' => false, 'message' => 'Expert advisor file not found'];
             }
         }
 

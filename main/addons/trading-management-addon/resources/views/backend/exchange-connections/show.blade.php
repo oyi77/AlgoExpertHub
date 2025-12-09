@@ -173,29 +173,6 @@
                 </div>
             </div>
 
-            <!-- Trade Execution Tests -->
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card border-success h-100">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-bolt"></i> Trade Execution</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <button class="list-group-item list-group-item-action" onclick="testExecution('balance')">
-                                <i class="fas fa-wallet text-primary"></i> Test Fetch Balance
-                            </button>
-                            <button class="list-group-item list-group-item-action" onclick="testExecution('positions')">
-                                <i class="fas fa-chart-line text-success"></i> Test Fetch Positions
-                            </button>
-                            <button class="list-group-item list-group-item-action" onclick="testExecution('test_order')">
-                                <i class="fas fa-shopping-cart text-warning"></i> Test Place Order (Dry Run)
-                            </button>
-                        </div>
-                        <div id="executionResult" class="mt-3" style="max-height: 300px; overflow-y: auto;"></div>
-                    </div>
-                </div>
-            </div>
-
             @if(strtolower($connection->provider) === 'metaapi')
             <!-- Data Fetch Tests (One-time) -->
             <div class="col-lg-4 col-md-6 mb-4">
@@ -216,6 +193,9 @@
                             </button>
                             <button class="list-group-item list-group-item-action" onclick="testFetchBalance()">
                                 <i class="fas fa-wallet text-primary"></i> Test Balance Fetch
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="testExecution('test_order')">
+                                <i class="fas fa-shopping-cart text-warning"></i> Test Place Order (Dry Run)
                             </button>
                         </div>
                         <div id="fetchResult" class="mt-3" style="max-height: 300px; overflow-y: auto;"></div>
@@ -614,7 +594,7 @@ function testDataFetch() {
 
 // Test Execution
 function testExecution(testType) {
-    const resultDiv = document.getElementById('executionResult');
+    const resultDiv = document.getElementById('fetchResult');
     
     const labels = {
         'balance': 'Fetching account balance',

@@ -97,6 +97,7 @@ class TradingBotController extends Controller
         $data['presets'] = $this->botService->getAvailablePresets();
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
+        $data['expertAdvisors'] = $this->botService->getAvailableExpertAdvisors();
 
         return view('trading-management::user.trading-bots.create', $data);
     }
@@ -113,6 +114,7 @@ class TradingBotController extends Controller
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
+            'expert_advisor_id' => 'nullable|exists:expert_advisors,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
             'is_paper_trading' => 'boolean',
         ]);
@@ -138,7 +140,7 @@ class TradingBotController extends Controller
      */
     public function show($id): View
     {
-        $bot = TradingBot::with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
+        $bot = TradingBot::with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile', 'expertAdvisor'])
             ->forUser(auth()->id())
             ->findOrFail($id);
 
@@ -167,6 +169,7 @@ class TradingBotController extends Controller
         $data['presets'] = $this->botService->getAvailablePresets();
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
+        $data['expertAdvisors'] = $this->botService->getAvailableExpertAdvisors();
 
         return view('trading-management::user.trading-bots.edit', $data);
     }
@@ -185,6 +188,7 @@ class TradingBotController extends Controller
             'trading_preset_id' => 'required|exists:trading_presets,id',
             'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
+            'expert_advisor_id' => 'nullable|exists:expert_advisors,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
             'is_paper_trading' => 'boolean',
         ]);
@@ -423,6 +427,9 @@ class TradingBotController extends Controller
 
         try {
             $this->botService->resume($bot, auth()->id(), null);
+            
+            // Restart worker process
+            $this->workerService->startWorker($bot);
             
             return redirect()
                 ->back()

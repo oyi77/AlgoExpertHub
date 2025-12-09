@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backen
 use App\Http\Controllers\Controller;
 use App\Services\GlobalConfigurationService;
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
+use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\DataProvider\Services\MetaApiProvisioningService;
 use Addons\TradingManagement\Modules\ExchangeConnection\Services\CcxtExchangeService;
@@ -19,6 +20,13 @@ use Illuminate\Support\Facades\Crypt;
  */
 class ExchangeConnectionController extends Controller
 {
+    protected ExchangeConnectionService $connectionService;
+
+    public function __construct(ExchangeConnectionService $connectionService)
+    {
+        $this->connectionService = $connectionService;
+    }
+
     public function index()
     {
         $title = 'Exchange Connections';
@@ -508,7 +516,20 @@ class ExchangeConnectionController extends Controller
     public function activateConnection(ExchangeConnection $exchangeConnection)
     {
         try {
-            // Verify connection is tested and ready
+            // Verify connection is stabilized (tested and ready)
+            if (!$this->connectionService->isStabilized($exchangeConnection)) {
+                // Try to stabilize first
+                $stabilizeResult = $this->connectionService->stabilize($exchangeConnection);
+                
+                if (!$stabilizeResult['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Connection is not stabilized. ' . $stabilizeResult['message'] . ' Please test the connection first.',
+                    ], 400);
+                }
+            }
+
+            // Verify connection is not in error state
             if ($exchangeConnection->status === 'error') {
                 return response()->json([
                     'success' => false,

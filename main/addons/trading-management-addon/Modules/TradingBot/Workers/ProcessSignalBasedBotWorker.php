@@ -154,27 +154,25 @@ class ProcessSignalBasedBotWorker
             // Determine direction
             $direction = in_array($signal->direction, ['buy', 'long']) ? 'buy' : 'sell';
 
-            // Calculate position size (would use trading preset)
-            $quantity = 0.01; // Placeholder
+            // Get trading preset for position sizing
+            $preset = $this->bot->tradingPreset;
+            $quantity = $preset ? $this->calculatePositionSize($preset, $signal) : 0.01;
 
-            // Place order via execution engine (delegated)
-
-            // Create position record
-            DB::table('trading_bot_positions')->insert([
+            // Prepare execution data
+            $executionData = [
+                'connection_id' => $this->bot->exchangeConnection->id,
                 'bot_id' => $this->bot->id,
                 'signal_id' => $signal->id,
                 'symbol' => $signal->pair->name ?? 'UNKNOWN',
                 'direction' => $direction,
+                'quantity' => $quantity,
                 'entry_price' => $signal->open_price,
-                'current_price' => $signal->open_price,
                 'stop_loss' => $signal->sl,
                 'take_profit' => $signal->tp,
-                'quantity' => $quantity,
-                'status' => 'open',
-                'opened_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            ];
+
+            // Dispatch execution job (creates both ExecutionPosition and TradingBotPosition)
+            \Addons\TradingManagement\Modules\Execution\Jobs\ExecutionJob::dispatch($executionData);
 
             Log::info('Trading bot signal executed', [
                 'bot_id' => $this->bot->id,

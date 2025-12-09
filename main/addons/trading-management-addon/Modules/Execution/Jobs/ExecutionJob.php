@@ -149,10 +149,10 @@ class ExecutionJob implements ShouldQueue
                 $executionLogId = $executionLog->id;
             }
 
-            ExecutionPosition::create([
+            $executionPosition = ExecutionPosition::create([
                 'connection_id' => $connection->id,
                 'execution_log_id' => $executionLogId,
-                'signal_id' => null, // Bot execution, not signal-based
+                'signal_id' => $this->executionData['signal_id'] ?? null,
                 'symbol' => $this->executionData['symbol'],
                 'direction' => $this->executionData['direction'],
                 'entry_price' => $this->executionData['entry_price'],
@@ -163,9 +163,90 @@ class ExecutionJob implements ShouldQueue
                 'status' => 'open',
                 'order_id' => $result['order_id'] ?? null,
             ]);
+
+            // If this is a bot execution, also create TradingBotPosition
+            if (isset($this->executionData['bot_id'])) {
+                $this->createTradingBotPosition($executionPosition);
+            }
+
+            // If this is a copy trading execution, update CopyTradingExecution
+            if (isset($this->executionData['copy_trading_execution_id'])) {
+                $this->updateCopyTradingExecution($executionPosition);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to create position record', [
                 'connection_id' => $connection->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Create TradingBotPosition linked to ExecutionPosition
+     */
+    protected function createTradingBotPosition(ExecutionPosition $executionPosition): void
+    {
+        try {
+            if (!\Schema::hasTable('trading_bot_positions')) {
+                return; // Table doesn't exist yet
+            }
+
+            \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::create([
+                'bot_id' => $this->executionData['bot_id'],
+                'signal_id' => $this->executionData['signal_id'] ?? null,
+                'execution_position_id' => $executionPosition->id,
+                'symbol' => $this->executionData['symbol'],
+                'direction' => $this->executionData['direction'],
+                'entry_price' => $this->executionData['entry_price'],
+                'current_price' => $this->executionData['entry_price'],
+                'stop_loss' => $this->executionData['stop_loss'],
+                'take_profit' => $this->executionData['take_profit'],
+                'quantity' => $this->executionData['quantity'],
+                'status' => 'open',
+                'opened_at' => now(),
+            ]);
+
+            Log::info('TradingBotPosition created', [
+                'bot_id' => $this->executionData['bot_id'],
+                'execution_position_id' => $executionPosition->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create TradingBotPosition', [
+                'bot_id' => $this->executionData['bot_id'] ?? null,
+                'execution_position_id' => $executionPosition->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Update CopyTradingExecution with follower execution log
+     */
+    protected function updateCopyTradingExecution(ExecutionPosition $executionPosition): void
+    {
+        try {
+            if (!\Schema::hasTable('copy_trading_executions')) {
+                return;
+            }
+
+            $copyExecution = \Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution::find(
+                $this->executionData['copy_trading_execution_id']
+            );
+
+            if ($copyExecution) {
+                $copyExecution->update([
+                    'follower_execution_log_id' => $executionPosition->execution_log_id,
+                    'status' => 'executed',
+                ]);
+
+                Log::info('CopyTradingExecution updated', [
+                    'execution_id' => $copyExecution->id,
+                    'follower_execution_log_id' => $executionPosition->execution_log_id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to update CopyTradingExecution', [
+                'copy_trading_execution_id' => $this->executionData['copy_trading_execution_id'] ?? null,
                 'error' => $e->getMessage(),
             ]);
         }

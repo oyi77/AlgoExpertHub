@@ -1,0 +1,201 @@
+<?php
+
+namespace Addons\TradingManagement\Modules\ExchangeConnection\Services;
+
+use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter;
+use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * ExchangeConnectionService
+ * 
+ * Service for managing exchange connections with health checks and stabilization
+ */
+class ExchangeConnectionService
+{
+    /**
+     * Test connection health
+     * 
+     * @param ExchangeConnection $connection
+     * @return array ['success' => bool, 'message' => string, 'data' => array]
+     */
+    public function testConnection(ExchangeConnection $connection): array
+    {
+        try {
+            $adapter = $this->getAdapter($connection);
+            
+            if (!$adapter) {
+                return [
+                    'success' => false,
+                    'message' => 'Unsupported connection type or provider',
+                    'data' => [],
+                ];
+            }
+
+            // Update status to testing
+            $connection->update(['status' => 'testing']);
+
+            // Test based on connection type
+            $result = $this->performHealthCheck($adapter, $connection);
+
+            // Update connection status based on result
+            if ($result['success']) {
+                $connection->markAsActive();
+            } else {
+                $connection->markAsError($result['message']);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Connection test failed', [
+                'connection_id' => $connection->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $connection->markAsError($e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => [],
+            ];
+        }
+    }
+
+    /**
+     * Perform health check based on adapter type
+     * 
+     * @param mixed $adapter
+     * @param ExchangeConnection $connection
+     * @return array
+     */
+    protected function performHealthCheck($adapter, ExchangeConnection $connection): array
+    {
+        // Try testConnection method first
+        if (method_exists($adapter, 'testConnection')) {
+            return $adapter->testConnection();
+        }
+
+        // Fallback: Try to fetch balance or account info
+        if (method_exists($adapter, 'fetchBalance')) {
+            try {
+                $balance = $adapter->fetchBalance();
+                return [
+                    'success' => true,
+                    'message' => 'Connection test successful',
+                    'data' => ['balance' => $balance],
+                ];
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to fetch balance: ' . $e->getMessage(),
+                    'data' => [],
+                ];
+            }
+        }
+
+        if (method_exists($adapter, 'getAccountInfo')) {
+            try {
+                $accountInfo = $adapter->getAccountInfo();
+                return [
+                    'success' => true,
+                    'message' => 'Connection test successful',
+                    'data' => ['account_info' => $accountInfo],
+                ];
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to get account info: ' . $e->getMessage(),
+                    'data' => [],
+                ];
+            }
+        }
+
+        // If no test method available, return success (connection exists)
+        return [
+            'success' => true,
+            'message' => 'Connection test completed (no specific test method available)',
+            'data' => [],
+        ];
+    }
+
+    /**
+     * Get adapter instance for connection
+     * 
+     * @param ExchangeConnection $connection
+     * @return mixed|null
+     */
+    protected function getAdapter(ExchangeConnection $connection)
+    {
+        // Crypto exchanges always use CCXT adapter
+        if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+            return new CcxtAdapter(
+                $connection->credentials,
+                $connection->provider
+            );
+        }
+        
+        // For FX brokers (MT4/MT5), select adapter based on provider
+        if ($connection->provider === 'metaapi') {
+            return new MetaApiAdapter($connection->credentials);
+        } elseif ($connection->provider === 'mtapi_grpc' || 
+                  (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+            $credentials = $connection->credentials;
+            $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
+            
+            if (!empty($globalSettings['base_url'])) {
+                $credentials['base_url'] = $globalSettings['base_url'];
+            }
+            if (!empty($globalSettings['timeout'])) {
+                $credentials['timeout'] = $globalSettings['timeout'];
+            }
+            
+            return new MtapiGrpcAdapter($credentials);
+        } else {
+            // Default: MTAPI REST adapter
+            return new MtapiAdapter($connection->credentials);
+        }
+    }
+
+    /**
+     * Verify connection is stabilized (tested and active)
+     * 
+     * @param ExchangeConnection $connection
+     * @return bool
+     */
+    public function isStabilized(ExchangeConnection $connection): bool
+    {
+        // Connection must be active and tested recently
+        return $connection->isActive() && 
+               $connection->last_tested_at && 
+               $connection->last_tested_at->isAfter(now()->subHours(24));
+    }
+
+    /**
+     * Stabilize connection (test and activate if successful)
+     * 
+     * @param ExchangeConnection $connection
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function stabilize(ExchangeConnection $connection): array
+    {
+        $result = $this->testConnection($connection);
+        
+        if ($result['success']) {
+            // Only mark as active if user explicitly enables it
+            // Don't auto-activate on test
+            return [
+                'success' => true,
+                'message' => 'Connection stabilized and ready for activation',
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => $result['message'] ?? 'Connection test failed',
+        ];
+    }
+}

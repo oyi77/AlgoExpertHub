@@ -9,6 +9,7 @@ use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnectio
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
+use Addons\TradingManagement\Modules\ExpertAdvisor\Models\ExpertAdvisor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,7 +31,7 @@ class TradingBot extends Model
     protected $fillable = [
         'user_id', 'admin_id',
         'name', 'description',
-        'exchange_connection_id', 'data_connection_id', 'trading_preset_id', 'filter_strategy_id', 'ai_model_profile_id',
+        'exchange_connection_id', 'data_connection_id', 'trading_preset_id', 'filter_strategy_id', 'ai_model_profile_id', 'expert_advisor_id',
         'trading_mode', 'status',
         'is_active', 'is_paper_trading',
         'total_executions', 'successful_executions', 'failed_executions',
@@ -108,6 +109,11 @@ class TradingBot extends Model
     public function aiModelProfile()
     {
         return $this->belongsTo(AiModelProfile::class, 'ai_model_profile_id');
+    }
+
+    public function expertAdvisor()
+    {
+        return $this->belongsTo(ExpertAdvisor::class, 'expert_advisor_id');
     }
 
     public function creator()
