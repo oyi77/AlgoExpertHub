@@ -68,6 +68,199 @@
         </div>
     </div>
 
+    <!-- Octane Quick Status Card -->
+    @if(isset($octaneStatus))
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-card stats-card-{{ $octaneStatus['available'] && $octaneStatus['running'] ? 'success' : ($octaneStatus['available'] ? 'warning' : 'secondary') }}" style="margin-bottom: 0;">
+                <div class="stats-icon"><i class="las la-rocket"></i></div>
+                <div class="stats-content">
+                    <p class="stats-label">{{ __('Octane Status') }}</p>
+                    <h4 class="stats-value">
+                        @if(!$octaneStatus['available'])
+                            <span class="badge badge-secondary">{{ __('Not Installed') }}</span>
+                        @elseif($octaneStatus['running'])
+                            <span class="badge badge-success">{{ __('Running') }}</span>
+                            @if(isset($octaneStatus['server']))
+                                <small class="text-muted">({{ ucfirst($octaneStatus['server']) }})</small>
+                            @endif
+                        @else
+                            <span class="badge badge-warning">{{ __('Stopped') }}</span>
+                        @endif
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Octane Status -->
+    @if(isset($octaneStatus))
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{{ $octaneStatus['available'] && $octaneStatus['running'] ? 'success' : ($octaneStatus['available'] ? 'warning' : 'secondary') }}">
+                <div class="card-header bg-{{ $octaneStatus['available'] && $octaneStatus['running'] ? 'success' : ($octaneStatus['available'] ? 'warning' : 'secondary') }} text-white">
+                    <h5 class="mb-0">
+                        <i class="las la-rocket"></i> {{ __('Laravel Octane') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td><strong>{{ __('Status') }}:</strong></td>
+                                    <td>
+                                        @if(!$octaneStatus['available'])
+                                            <span class="badge badge-secondary">{{ __('Not Installed') }}</span>
+                                        @elseif($octaneStatus['running'])
+                                            <span class="badge badge-success">{{ __('Running') }}</span>
+                                        @else
+                                            <span class="badge badge-warning">{{ __('Stopped') }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @if($octaneStatus['available'])
+                                <tr>
+                                    <td><strong>{{ __('Server') }}:</strong></td>
+                                    <td>
+                                        <span class="badge badge-info">{{ ucfirst($octaneStatus['server'] ?? 'Unknown') }}</span>
+                                    </td>
+                                </tr>
+                                @if(isset($octaneStatus['workers']))
+                                <tr>
+                                    <td><strong>{{ __('Workers') }}:</strong></td>
+                                    <td>{{ $octaneStatus['workers'] ?? 'N/A' }}</td>
+                                </tr>
+                                @endif
+                                @if(isset($octaneStatus['port']))
+                                <tr>
+                                    <td><strong>{{ __('Port') }}:</strong></td>
+                                    <td>{{ $octaneStatus['port'] ?? 'N/A' }}</td>
+                                </tr>
+                                @endif
+                                @if(isset($octaneStatus['config']['max_requests']))
+                                <tr>
+                                    <td><strong>{{ __('Max Requests') }}:</strong></td>
+                                    <td>{{ $octaneStatus['config']['max_requests'] ?? 'N/A' }}</td>
+                                </tr>
+                                @endif
+                                @endif
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-{{ $octaneStatus['available'] && $octaneStatus['running'] ? 'success' : ($octaneStatus['available'] ? 'warning' : 'info') }} mb-0">
+                                @if(!$octaneStatus['available'])
+                                    <i class="las la-info-circle"></i> 
+                                    {{ __('Laravel Octane is not installed. Install it with: composer require laravel/octane') }}
+                                @elseif($octaneStatus['running'])
+                                    <i class="las la-check-circle"></i> 
+                                    {{ __('Octane server is running and serving requests.') }}
+                                @elseif(isset($octaneStatus['error']))
+                                    <i class="las la-exclamation-triangle"></i> 
+                                    {{ __('Error: ') }}{{ $octaneStatus['error'] }}
+                                @else
+                                    <i class="las la-exclamation-circle"></i> 
+                                    {{ __('Octane server is stopped. Start it with: php artisan octane:start') }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Horizon Status -->
+    @if(isset($horizonStats))
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'secondary') }}">
+                <div class="card-header bg-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'secondary') }} text-white">
+                    <h5 class="mb-0">
+                        <i class="las la-tachometer-alt"></i> {{ __('Laravel Horizon') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td><strong>{{ __('Status') }}:</strong></td>
+                                    <td>
+                                        @if(!$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed']))
+                                            <span class="badge badge-secondary">{{ __('Not Installed') }}</span>
+                                        @elseif($horizonStats['active'])
+                                            <span class="badge badge-success">{{ __('Active') }}</span>
+                                        @else
+                                            <span class="badge badge-warning">{{ __('Inactive') }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @if($horizonStats['available'])
+                                @if(isset($horizonStats['processes']))
+                                <tr>
+                                    <td><strong>{{ __('Processes') }}:</strong></td>
+                                    <td>{{ $horizonStats['processes'] ?? 0 }}</td>
+                                </tr>
+                                @endif
+                                @if(isset($horizonStats['throughput']))
+                                <tr>
+                                    <td><strong>{{ __('Throughput') }}:</strong></td>
+                                    <td>{{ number_format($horizonStats['throughput'] ?? 0) }} {{ __('jobs/min') }}</td>
+                                </tr>
+                                @endif
+                                @if(isset($horizonStats['diagnostics']['queue_connection']))
+                                <tr>
+                                    <td><strong>{{ __('Queue Connection') }}:</strong></td>
+                                    <td>
+                                        <span class="badge badge-{{ $horizonStats['diagnostics']['queue_connection'] === 'redis' ? 'success' : 'warning' }}">
+                                            {{ $horizonStats['diagnostics']['queue_connection'] ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endif
+                                @if(isset($horizonStats['diagnostics']['redis_connected']))
+                                <tr>
+                                    <td><strong>{{ __('Redis Connection') }}:</strong></td>
+                                    <td>
+                                        <span class="badge badge-{{ $horizonStats['diagnostics']['redis_connected'] ? 'success' : 'danger' }}">
+                                            {{ $horizonStats['diagnostics']['redis_connected'] ? __('Connected') : __('Disconnected') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endif
+                                @endif
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'info') }} mb-0">
+                                @if(isset($horizonStats['message']))
+                                    <i class="las la-{{ $horizonStats['active'] ? 'check-circle' : 'exclamation-circle' }}"></i> 
+                                    {{ __($horizonStats['message']) }}
+                                @elseif(!$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed']))
+                                    <i class="las la-info-circle"></i> 
+                                    {{ __('Laravel Horizon is not installed. Install it with: composer require laravel/horizon') }}
+                                @elseif($horizonStats['active'])
+                                    <i class="las la-check-circle"></i> 
+                                    {{ __('Horizon is running and processing jobs.') }}
+                                @elseif(isset($horizonStats['error']))
+                                    <i class="las la-exclamation-triangle"></i> 
+                                    {{ __('Error: ') }}{{ $horizonStats['error'] }}
+                                @else
+                                    <i class="las la-exclamation-circle"></i> 
+                                    {{ __('Horizon is not running. Start it with: php artisan horizon') }}
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Horizon Supervisor Status -->
     @if(isset($horizonSupervisorStatus) && $horizonSupervisorStatus)
     <div class="row mb-4">
@@ -158,6 +351,7 @@
     .stats-card-success .stats-icon { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
     .stats-card-info .stats-icon { background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%); }
     .stats-card-warning .stats-icon { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); }
+    .stats-card-secondary .stats-icon { background: linear-gradient(135deg, #6c757d 0%, #545b62 100%); }
     .stats-label { font-size: 0.875rem; color: #6c757d; margin: 0 0 0.5rem 0; font-weight: 500; }
     .stats-value { font-size: 1.5rem; font-weight: 700; margin: 0; color: #212529; }
     .main-content-wrapper { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden; padding: 0; }

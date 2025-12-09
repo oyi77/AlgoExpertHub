@@ -5,9 +5,9 @@
                 <div class="cookies-card__icon mb-4">
                     <i class="fas fa-cookie-bite text-dark"></i>
                 </div>
-                <p class="cookies-card__content cookie-consent__message text-white mb-4">{{__(Config::config()->cookie_text)}}</p>
+                <p class="cookies-card__content cookie-consent__message text-white mb-4">{{__(optional(Config::config())->cookie_text ?? 'We use cookies to enhance your browsing experience.')}}</p>
                 <div class="cookies-card__btn">
-                    <a href="javascript:void(0)" class="cookies-btn js-cookie-consent-agree cookie-consent__agree">{{ __(Config::config()->button_text) }}</a>
+                    <a href="javascript:void(0)" class="cookies-btn js-cookie-consent-agree cookie-consent__agree">{{ __(optional(Config::config())->button_text ?? 'Accept All') }}</a>
                     <a href="javascript:void(0)" class="cookies-btn decline-cookie__consent">{{ __('Decline') }}</a>
                 </div>
             </div>

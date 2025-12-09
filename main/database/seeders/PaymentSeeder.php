@@ -37,7 +37,8 @@ class PaymentSeeder extends Seeder
             $plan = $plans->random();
             $gateway = $gateways->random();
             
-            $amount = $plan->price;
+            // Ensure amount is never null (amount column is NOT NULL)
+            $amount = $plan->price ?? 0;
             $rate = $gateway->rate ?? 1;
             $charge = $gateway->charge ?? 0;
             $total = ($amount * $rate) + $charge;

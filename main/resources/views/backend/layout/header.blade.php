@@ -1,8 +1,8 @@
  <!-- Nav header start -->
  <div class="nav-header">
-     <a href="{{route('admin.home')}}" class="brand-logo">
-         <img class="brand-title" src="{{ Config::fetchImage('logo', Config::config()->logo) }}" alt="">
-     </a>
+    <a href="{{route('admin.home')}}" class="brand-logo">
+        <img class="brand-title" src="{{ Config::fetchImage('logo', optional(Config::config())->logo ?? '') }}" alt="">
+    </a>
      <div class="nav-control">
          <div class="hamburger">
              <span class="line"></span><span class="line"></span><span class="line"></span>
@@ -20,9 +20,9 @@
                     <button type="button" class="sidebar-open">
                          <span class="line"></span>
                      </button>
-                     <a href="{{ route('admin.home') }}" class="mobile-brand-logo">
-                         <img class="brand-title" src="{{ Config::fetchImage('icon', Config::config()->favicon) }}" alt="">
-                     </a>
+                    <a href="{{ route('admin.home') }}" class="mobile-brand-logo">
+                        <img class="brand-title" src="{{ Config::fetchImage('icon', optional(Config::config())->favicon ?? '') }}" alt="">
+                    </a>
                      <div class="header-search d-lg-block d-none">
                         <button type="button" class="header-search-res-btn">
                             <i data-feather="search"></i>

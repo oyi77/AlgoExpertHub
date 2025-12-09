@@ -108,6 +108,13 @@ class AddonServiceProvider extends ServiceProvider
                 \Addons\TradingManagement\Modules\ExchangeConnection\Observers\ExchangeConnectionObserver::class
             );
         }
+
+        // Register ExecutionPositionObserver for TradingBot position sync
+        if ($this->isModuleEnabled('execution') && class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class)) {
+            \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::observe(
+                \Addons\TradingManagement\Modules\TradingBot\Observers\ExecutionPositionObserver::class
+            );
+        }
     }
 
     /**

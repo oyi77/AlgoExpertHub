@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class BacktestSeeder extends Seeder
 {
@@ -14,6 +15,17 @@ class BacktestSeeder extends Seeder
      */
     public function run()
     {
+        // Check if tables exist
+        if (!Schema::hasTable('backtests')) {
+            $this->command->warn('Backtests table not found. Skipping seeder.');
+            return;
+        }
+
+        if (!Schema::hasTable('backtest_results')) {
+            $this->command->warn('Backtest results table not found. Skipping seeder.');
+            return;
+        }
+
         // Check if models exist
         if (!class_exists(\Addons\TradingManagement\Modules\Backtesting\Models\Backtest::class)) {
             $this->command->warn('Backtest model not found. Skipping seeder.');

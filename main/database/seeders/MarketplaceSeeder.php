@@ -3,12 +3,22 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 
 class MarketplaceSeeder extends Seeder
 {
     public function run()
     {
+        // Check if tables exist
+        $requiredTables = ['bot_templates', 'template_backtests', 'signal_source_templates', 'complete_bots', 'trader_profiles'];
+        foreach ($requiredTables as $table) {
+            if (!Schema::hasTable($table)) {
+                $this->command->warn("Marketplace table '{$table}' not found. Skipping marketplace seeding.");
+                return;
+            }
+        }
+
         // Check if models exist
         if (!class_exists(\Addons\TradingManagement\Modules\Marketplace\Models\BotTemplate::class)) {
             $this->command->warn('Marketplace models not found. Skipping marketplace seeding.');

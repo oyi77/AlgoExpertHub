@@ -151,9 +151,12 @@ class Helper
             $html = str_replace("%" . $key . "%", $value, $html);
         }
 
-        if (self::config()->email_method == 'php') {
-            $headers = "From: $general->appname <$general->email_sent_from> \r\n";
-            $headers .= "Reply-To: $general->appname <$general->email_sent_from> \r\n";
+        $emailMethod = optional($general)->email_method ?? 'smtp';
+        if ($emailMethod == 'php') {
+            $appname = optional($general)->appname ?? 'App';
+            $emailFrom = optional($general)->email_sent_from ?? 'noreply@example.com';
+            $headers = "From: $appname <$emailFrom> \r\n";
+            $headers .= "Reply-To: $appname <$emailFrom> \r\n";
             $headers .= "MIME-Version: 1.0\r\n";
             $headers .= "Content-Type: text/html; charset=utf-8\r\n";
             @mail($data['email'], $template->subject, $html, $headers);
@@ -177,12 +180,15 @@ class Helper
         $general = self::config();
 
         if (!isset($data['email'])) {
-            $data['email'] = $general->email_sent_from;
+            $data['email'] = optional($general)->email_sent_from ?? 'noreply@example.com';
         }
 
-        if (self::config()->email_method == 'php') {
-            $headers = "From: $general->appname <$general->email_sent_from> \r\n";
-            $headers .= "Reply-To: $general->appname <$general->email_sent_from> \r\n";
+        $emailMethod = optional($general)->email_method ?? 'smtp';
+        if ($emailMethod == 'php') {
+            $appname = optional($general)->appname ?? 'App';
+            $emailFrom = optional($general)->email_sent_from ?? 'noreply@example.com';
+            $headers = "From: $appname <$emailFrom> \r\n";
+            $headers .= "Reply-To: $appname <$emailFrom> \r\n";
             $headers .= "MIME-Version: 1.0\r\n";
             $headers .= "Content-Type: text/html; charset=utf-8\r\n";
             @mail($data['email'], $data['subject'], $data['message'], $headers);
@@ -204,20 +210,21 @@ class Helper
 
     public static function pagination()
     {
-        return self::config()->pagination;
+        return optional(self::config())->pagination ?? 10;
     }
 
     public static function formatter($number)
     {
-        $config = self::config()->decimal_precision;
+        $config = optional(self::config())->decimal_precision ?? 2;
+        $currency = optional(self::config())->currency ?? 'USD';
 
-        return number_format($number, $config) . ' ' . self::config()->currency;
+        return number_format($number, $config) . ' ' . $currency;
     }
 
 
     public static function formatOnlyNumber($number)
     {
-        $config = self::config()->decimal_precision;
+        $config = optional(self::config())->decimal_precision ?? 2;
 
         return number_format($number, $config);
     }
@@ -376,11 +383,12 @@ class Helper
     public static function builder($section, $collection = false)
     {
 
+        $theme = optional(self::config())->theme ?? 'default';
         if ($collection) {
-            return Content::where('type', 'iteratable')->where('theme', self::config()->theme)->where('name', $section)->get();
+            return Content::where('type', 'iteratable')->where('theme', $theme)->where('name', $section)->get();
         }
 
-        return Content::where('type', 'non_iteratable')->where('theme', self::config()->theme)->where('name', $section)->first();
+        return Content::where('type', 'non_iteratable')->where('theme', $theme)->where('name', $section)->first();
     }
 
     public static function media($section, $key,  $type = false, $id = null)

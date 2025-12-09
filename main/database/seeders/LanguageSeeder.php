@@ -21,8 +21,8 @@ class LanguageSeeder extends Seeder
         ];
 
         foreach ($languages as $lang) {
-            Language::firstOrCreate(
-                ['code' => $lang['code']],
+            Language::updateOrCreate(
+                ['name' => $lang['name']],
                 $lang
             );
         }

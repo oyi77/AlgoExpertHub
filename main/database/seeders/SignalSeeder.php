@@ -63,9 +63,11 @@ class SignalSeeder extends Seeder
                 : $basePrice * (1 - rand(20, 100) / 1000); // 2-10% below for sell
 
             $isPublished = rand(0, 10) > 2; // 80% published
+            // published_date is NOT NULL, so always set a value
+            // For drafts, use current time; for published, use past date
             $publishedDate = $isPublished 
                 ? Carbon::now()->subDays(rand(0, 30))->subHours(rand(0, 23))
-                : null;
+                : Carbon::now();
 
             $signal = Signal::create([
                 'title' => "{$pair->name} {$direction} signal - " . strtoupper($timeframe->name),

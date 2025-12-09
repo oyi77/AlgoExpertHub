@@ -39,6 +39,9 @@ class PerformanceController extends Controller
         // Get Horizon stats and supervisor status
         $horizonStats = $this->systemHealthService->getHorizonStats();
         $horizonSupervisorStatus = $this->systemHealthService->getHorizonSupervisorStatus();
+        
+        // Get Octane status
+        $octaneStatus = $this->systemHealthService->getOctaneStatus();
 
         $data = [
             'title' => 'Performance Settings',
@@ -51,6 +54,7 @@ class PerformanceController extends Controller
             'seederCount' => $seederCount,
             'horizonStats' => $horizonStats,
             'horizonSupervisorStatus' => $horizonSupervisorStatus,
+            'octaneStatus' => $octaneStatus,
         ];
 
         return view('algoexpert-plus::backend.system-tools.performance', $data);

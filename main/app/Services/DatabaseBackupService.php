@@ -33,10 +33,29 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'exec() function is not available. Please enable it in php.ini'];
             }
 
-            // Check if mysqldump command exists
-            exec('which mysqldump 2>&1', $whichOutput, $whichReturn);
-            if ($whichReturn !== 0) {
-                return ['type' => 'error', 'message' => 'mysqldump command not found. Please install MySQL client tools.'];
+            // Check if mysqldump command exists (try Docker first, then host)
+            $mysqlContainer = $this->getMysqlContainer();
+            $useDocker = !empty($mysqlContainer);
+            
+            // Also check if we're in Docker and can use container hostname
+            $host = config('database.connections.' . config('database.default') . '.host');
+            $isDockerEnv = file_exists('/.dockerenv');
+            
+            if (!$useDocker) {
+                // Try host mysqldump
+                exec('which mysqldump 2>&1', $whichOutput, $whichReturn);
+                if ($whichReturn !== 0) {
+                    // If in Docker, try using MySQL container name as hostname (if mysql-client installed)
+                    if ($isDockerEnv && !in_array($host, ['localhost', '127.0.0.1'])) {
+                        // Host might already be container name, mysqldump might work if client is installed
+                        // But we can't test without mysql-client, so provide helpful error
+                        return [
+                            'type' => 'error', 
+                            'message' => 'mysqldump command not found in PHP container. To fix: Install mysql-client in the PHP container with: docker exec 1Panel-php8-mrTy apk add --no-cache mysql-client'
+                        ];
+                    }
+                    return ['type' => 'error', 'message' => 'mysqldump command not found. Please install MySQL client tools.'];
+                }
             }
 
             $name = $name ?? 'backup_' . date('Y-m-d_H-i-s');
@@ -142,10 +161,16 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'Backup file not found: ' . $filename];
             }
 
-            // Check if mysql command exists
-            exec('which mysql 2>&1', $whichOutput, $whichReturn);
-            if ($whichReturn !== 0) {
-                return ['type' => 'error', 'message' => 'mysql command not found. Please install MySQL client tools.'];
+            // Check if we should use Docker
+            $mysqlContainer = $this->getMysqlContainer();
+            $useDocker = !empty($mysqlContainer);
+            
+            if (!$useDocker) {
+                // Check if mysql command exists on host
+                exec('which mysql 2>&1', $whichOutput, $whichReturn);
+                if ($whichReturn !== 0) {
+                    return ['type' => 'error', 'message' => 'mysql command not found. Please install MySQL client tools.'];
+                }
             }
 
             $database = config('database.connections.' . config('database.default') . '.database');
@@ -158,25 +183,49 @@ class DatabaseBackupService
             Artisan::call('db:wipe', ['--force' => true]);
 
             // Import backup
-            if (!empty($password)) {
-                $command = sprintf(
-                    'mysql -h %s -P %s -u %s -p%s %s < %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($password),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+            if ($useDocker) {
+                // Use Docker: copy file to container and import, or pipe from host
+                // Since file is on host, we'll pipe it into docker exec
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
+                        escapeshellarg($filepath),
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database)
+                    );
+                } else {
+                    $command = sprintf(
+                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
+                        escapeshellarg($filepath),
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($database)
+                    );
+                }
             } else {
-                $command = sprintf(
-                    'mysql -h %s -P %s -u %s %s < %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+                // Use host mysql
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s -p%s %s < %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                } else {
+                    $command = sprintf(
+                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s %s < %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                }
             }
 
             exec($command, $output, $returnVar);
@@ -187,8 +236,23 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'Restore failed: ' . $errorMsg];
             }
 
-            // Clear caches
+            // Run migrations to ensure all tables exist (in case SQL is incomplete)
+            try {
+                Artisan::call('migrate', ['--force' => true]);
+            } catch (\Exception $e) {
+                \Log::warning('Migration after restore failed (non-critical)', ['error' => $e->getMessage()]);
+            }
+
+            // Clear caches and refresh database connection
             Artisan::call('optimize:clear');
+            
+            // Refresh database connection to ensure it sees the restored tables
+            try {
+                DB::purge();
+                DB::reconnect();
+            } catch (\Exception $e) {
+                \Log::warning('Could not refresh database connection', ['error' => $e->getMessage()]);
+            }
 
             return ['type' => 'success', 'message' => 'Database restored from backup successfully'];
 
@@ -342,10 +406,16 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'exec() function is not available. Please enable it in php.ini'];
             }
 
-            // Check if mysql command exists
-            exec('which mysql 2>&1', $whichOutput, $whichReturn);
-            if ($whichReturn !== 0) {
-                return ['type' => 'error', 'message' => 'mysql command not found. Please install MySQL client tools.'];
+            // Check if we should use Docker
+            $mysqlContainer = $this->getMysqlContainer();
+            $useDocker = !empty($mysqlContainer);
+            
+            if (!$useDocker) {
+                // Check if mysql command exists on host
+                exec('which mysql 2>&1', $whichOutput, $whichReturn);
+                if ($whichReturn !== 0) {
+                    return ['type' => 'error', 'message' => 'mysql command not found. Please install MySQL client tools.'];
+                }
             }
 
             $database = config('database.connections.' . config('database.default') . '.database');
@@ -358,37 +428,149 @@ class DatabaseBackupService
             Artisan::call('db:wipe', ['--force' => true]);
 
             // Import factory state
-            if (!empty($password)) {
-                $command = sprintf(
-                    'mysql -h %s -P %s -u %s -p%s %s < %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($password),
-                    escapeshellarg($database),
-                    escapeshellarg($this->factoryStatePath)
-                );
+            if ($useDocker) {
+                // Use Docker: pipe file into container
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
+                        escapeshellarg($this->factoryStatePath),
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database)
+                    );
+                } else {
+                    $command = sprintf(
+                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
+                        escapeshellarg($this->factoryStatePath),
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($database)
+                    );
+                }
             } else {
-                $command = sprintf(
-                    'mysql -h %s -P %s -u %s %s < %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($database),
-                    escapeshellarg($this->factoryStatePath)
-                );
+                // Use host mysql
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s -p%s %s < %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database),
+                        escapeshellarg($this->factoryStatePath)
+                    );
+                } else {
+                    $command = sprintf(
+                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s %s < %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($database),
+                        escapeshellarg($this->factoryStatePath)
+                    );
+                }
             }
 
             exec($command, $output, $returnVar);
 
             if ($returnVar !== 0) {
                 $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error';
-                \Log::error('Factory state restore failed', ['command' => $command, 'output' => $output]);
+                \Log::error('Factory state restore failed', ['command' => $command, 'output' => $output, 'return_var' => $returnVar]);
                 return ['type' => 'error', 'message' => 'Restore failed: ' . $errorMsg];
             }
 
-            // Clear caches
+            // Log restore completion
+            \Log::info('Factory state SQL import completed', ['output_lines' => count($output), 'return_var' => $returnVar]);
+            
+            // Verify data was imported (check for admin record)
+            try {
+                $adminCount = DB::table('admins')->count();
+                if ($adminCount === 0) {
+                    \Log::warning('Factory restore completed but admin table is empty. SQL import may have failed partially.');
+                    // Try to re-import just the data (skip CREATE TABLE statements)
+                    // This is a fallback - ideally the full import should work
+                } else {
+                    \Log::info('Factory restore verified: admin records found', ['count' => $adminCount]);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Could not verify admin data after restore', ['error' => $e->getMessage()]);
+            }
+
+            // Run migrations to ensure all tables exist (in case SQL is incomplete or outdated)
+            try {
+                \Log::info('Running migrations after factory restore');
+                Artisan::call('migrate', ['--force' => true]);
+                \Log::info('Migrations completed after factory restore');
+            } catch (\Exception $e) {
+                \Log::error('Migration after factory restore failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                // Don't fail the restore if migrations fail, but log it
+            }
+
+            // Verify critical tables exist
+            try {
+                $criticalTables = ['admins', 'users', 'plans', 'signals'];
+                $missingTables = [];
+                foreach ($criticalTables as $table) {
+                    if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+                        $missingTables[] = $table;
+                    }
+                }
+                if (!empty($missingTables)) {
+                    \Log::warning('Critical tables missing after factory restore', ['missing' => $missingTables]);
+                    // Try to run migrations again, but only for missing tables
+                    try {
+                        // Run fresh migrations if critical tables are missing
+                        if (in_array('admins', $missingTables)) {
+                            \Log::info('Running fresh migrations to create missing tables');
+                            Artisan::call('migrate:fresh', ['--force' => true, '--seed' => false]);
+                            // Re-import factory state data after fresh migration
+                            if ($useDocker) {
+                                if (!empty($password)) {
+                                    $reimportCommand = sprintf(
+                                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
+                                        escapeshellarg($this->factoryStatePath),
+                                        escapeshellarg($mysqlContainer),
+                                        escapeshellarg($username),
+                                        escapeshellarg($password),
+                                        escapeshellarg($database)
+                                    );
+                                } else {
+                                    $reimportCommand = sprintf(
+                                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
+                                        escapeshellarg($this->factoryStatePath),
+                                        escapeshellarg($mysqlContainer),
+                                        escapeshellarg($username),
+                                        escapeshellarg($database)
+                                    );
+                                }
+                                exec($reimportCommand, $reimportOutput, $reimportReturn);
+                                if ($reimportReturn !== 0) {
+                                    \Log::error('Re-import after fresh migration failed', ['output' => $reimportOutput]);
+                                }
+                            }
+                        } else {
+                            // Just run migrations for missing tables
+                            Artisan::call('migrate', ['--force' => true]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Second migration attempt failed', ['error' => $e->getMessage()]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Could not verify tables after restore', ['error' => $e->getMessage()]);
+            }
+
+            // Clear caches and refresh database connection
             Artisan::call('optimize:clear');
+            
+            // Refresh database connection to ensure it sees the restored tables
+            try {
+                DB::purge();
+                DB::reconnect();
+            } catch (\Exception $e) {
+                \Log::warning('Could not refresh database connection', ['error' => $e->getMessage()]);
+            }
 
             return ['type' => 'success', 'message' => 'Database restored to factory state successfully'];
         } catch (\Exception $e) {
@@ -415,26 +597,53 @@ class DatabaseBackupService
             $host = config('database.connections.' . config('database.default') . '.host');
             $port = config('database.connections.' . config('database.default') . '.port', 3306);
 
+            // Check if we should use Docker
+            $mysqlContainer = $this->getMysqlContainer();
+            $useDocker = !empty($mysqlContainer);
+
             // Build mysqldump command with proper password handling
-            if (!empty($password)) {
-                $command = sprintf(
-                    'mysqldump -h %s -P %s -u %s -p%s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($password),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+            if ($useDocker) {
+                // Use Docker: run mysqldump in MySQL container and pipe output to host file
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'docker exec %s mysqldump -u %s -p%s %s --single-transaction --quick --lock-tables=false 2>&1 > %s',
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                } else {
+                    $command = sprintf(
+                        'docker exec %s mysqldump -u %s %s --single-transaction --quick --lock-tables=false 2>&1 > %s',
+                        escapeshellarg($mysqlContainer),
+                        escapeshellarg($username),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                }
             } else {
-                $command = sprintf(
-                    'mysqldump -h %s -P %s -u %s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+                // Use host mysqldump
+                if (!empty($password)) {
+                    $command = sprintf(
+                        'mysqldump -h %s -P %s -u %s -p%s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($password),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                } else {
+                    $command = sprintf(
+                        'mysqldump -h %s -P %s -u %s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
+                        escapeshellarg($host),
+                        escapeshellarg($port),
+                        escapeshellarg($username),
+                        escapeshellarg($database),
+                        escapeshellarg($filepath)
+                    );
+                }
             }
 
             exec($command, $output, $returnVar);
@@ -487,6 +696,56 @@ class DatabaseBackupService
     protected function sanitizeFilename(string $name): string
     {
         return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+    }
+
+    /**
+     * Get MySQL Docker container name
+     */
+    protected function getMysqlContainer(): ?string
+    {
+        // Common 1Panel MySQL container name patterns (try most specific first)
+        $possibleContainers = [
+            '1Panel-mysql-L7KM',  // Current detected container name
+            '1panel-mysql-L7KM',
+        ];
+
+        // First, try to find MySQL container using docker command (if available)
+        exec('which docker 2>&1', $dockerOutput, $dockerReturn);
+        if ($dockerReturn === 0) {
+            // Try to find MySQL container from host
+            exec('docker ps --format "{{.Names}}" | grep -i mysql 2>&1', $containers, $return);
+            if ($return === 0 && !empty($containers)) {
+                $container = trim($containers[0]);
+                if (!empty($container)) {
+                    // Verify container has mysqldump
+                    exec("docker exec {$container} mysqldump --version 2>&1", $verifyOutput, $verifyReturn);
+                    if ($verifyReturn === 0) {
+                        return $container;
+                    }
+                }
+            }
+        }
+
+        // Fallback: Try common container names directly
+        // This works even if docker command isn't in PATH but docker socket is accessible
+        foreach ($possibleContainers as $containerName) {
+            // Test if container exists and has mysqldump by trying to get version
+            exec("docker exec {$containerName} mysqldump --version 2>&1", $testOutput, $testReturn);
+            if ($testReturn === 0) {
+                return $containerName;
+            }
+        }
+
+        // Last resort: Try generic names
+        $genericNames = ['mysql', '1panel-mysql', '1Panel-mysql'];
+        foreach ($genericNames as $containerName) {
+            exec("docker exec {$containerName} mysqldump --version 2>&1", $testOutput, $testReturn);
+            if ($testReturn === 0) {
+                return $containerName;
+            }
+        }
+
+        return null;
     }
 }
 

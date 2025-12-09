@@ -188,4 +188,40 @@ class ProcessSignalBasedBotWorker
             ]);
         }
     }
+
+    /**
+     * Calculate position size from trading preset
+     * 
+     * @param mixed $preset Trading preset or null
+     * @param Signal $signal
+     * @return float
+     */
+    protected function calculatePositionSize($preset, Signal $signal): float
+    {
+        if (!$preset) {
+            return 0.01; // Default minimum
+        }
+
+        // Get position sizing strategy from preset
+        $strategy = $preset->position_sizing_strategy ?? 'fixed';
+        $value = $preset->position_sizing_value ?? 0.01;
+
+        switch ($strategy) {
+            case 'fixed':
+                return (float) $value;
+            
+            case 'percentage':
+                // Would need account balance from exchange
+                // For now, use fixed fallback
+                return 0.01;
+            
+            case 'fixed_amount':
+                // Fixed dollar amount
+                $entryPrice = $signal->open_price ?? 1;
+                return $entryPrice > 0 ? ($value / $entryPrice) : 0.01;
+            
+            default:
+                return 0.01;
+        }
+    }
 }

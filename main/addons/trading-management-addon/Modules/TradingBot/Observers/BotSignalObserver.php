@@ -4,9 +4,10 @@ namespace Addons\TradingManagement\Modules\TradingBot\Observers;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Services\BotExecutionService;
-use Addons\TradingExecutionEngine\App\Jobs\ExecuteSignalJob;
+use Addons\TradingManagement\Modules\Execution\Jobs\ExecutionJob;
 use App\Models\Signal;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 /**
  * BotSignalObserver
@@ -90,15 +91,50 @@ class BotSignalObserver
                     }
                 }
 
-                // Execute through bot
-                // Use existing ExecuteSignalJob but pass bot_id in options
-                $options = [
-                    'trading_bot_id' => $bot->id,
-                    'is_paper_trading' => $this->botExecutionService->isPaperTrading($bot),
+                // Check if already executed this signal
+                $existingPosition = DB::table('trading_bot_positions')
+                    ->where('bot_id', $bot->id)
+                    ->where('signal_id', $signal->id)
+                    ->where('status', 'open')
+                    ->first();
+
+                if ($existingPosition) {
+                    Log::info('Bot already executed this signal', [
+                        'bot_id' => $bot->id,
+                        'signal_id' => $signal->id,
+                    ]);
+                    continue; // Already executed
+                }
+
+                // Determine direction
+                $direction = in_array($signal->direction, ['buy', 'long']) ? 'buy' : 'sell';
+
+                // Calculate position size from trading preset
+                $preset = $bot->tradingPreset;
+                $quantity = $this->calculatePositionSize($preset, $signal);
+
+                // Prepare execution data for new ExecutionJob
+                $executionData = [
+                    'connection_id' => $bot->exchange_connection_id,
+                    'bot_id' => $bot->id,
+                    'signal_id' => $signal->id,
+                    'symbol' => $signal->pair->name ?? 'UNKNOWN',
+                    'direction' => $direction,
+                    'quantity' => $quantity,
+                    'entry_price' => $signal->open_price,
+                    'stop_loss' => $signal->sl,
+                    'take_profit' => $signal->tp,
                 ];
 
-                // Dispatch job with bot context
-                ExecuteSignalJob::dispatch($signal, $bot->exchange_connection_id, $options);
+                // Dispatch new ExecutionJob (creates both ExecutionPosition and TradingBotPosition)
+                ExecutionJob::dispatch($executionData);
+
+                Log::info('Trading bot signal execution dispatched', [
+                    'bot_id' => $bot->id,
+                    'signal_id' => $signal->id,
+                    'direction' => $direction,
+                    'quantity' => $quantity,
+                ]);
             }
         } catch (\Exception $e) {
             Log::error("Bot signal observer error", [
@@ -106,6 +142,42 @@ class BotSignalObserver
                 'signal_id' => $signal->id,
                 'trace' => $e->getTraceAsString(),
             ]);
+        }
+    }
+
+    /**
+     * Calculate position size from trading preset
+     * 
+     * @param mixed $preset Trading preset or null
+     * @param Signal $signal
+     * @return float
+     */
+    protected function calculatePositionSize($preset, Signal $signal): float
+    {
+        if (!$preset) {
+            return 0.01; // Default minimum
+        }
+
+        // Get position sizing strategy from preset
+        $strategy = $preset->position_sizing_strategy ?? 'fixed';
+        $value = $preset->position_sizing_value ?? 0.01;
+
+        switch ($strategy) {
+            case 'fixed':
+                return (float) $value;
+            
+            case 'percentage':
+                // Would need account balance from exchange
+                // For now, use fixed fallback
+                return 0.01;
+            
+            case 'fixed_amount':
+                // Fixed dollar amount
+                $entryPrice = $signal->open_price ?? 1;
+                return $entryPrice > 0 ? ($value / $entryPrice) : 0.01;
+            
+            default:
+                return 0.01;
         }
     }
 }

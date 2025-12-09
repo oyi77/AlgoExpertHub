@@ -85,10 +85,17 @@
                         <h5 class="mb-3"><i class="fas fa-bolt"></i> Manual Trade Execution</h5>
 
                         @php
-                            $activeConnections = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('trade_execution_enabled', true)
-                                ->where('is_active', true)
-                                ->where('status', 'active')
-                                ->get();
+                            // Check if column exists before querying
+                            $hasTradeExecutionColumn = \Illuminate\Support\Facades\Schema::hasColumn('execution_connections', 'trade_execution_enabled');
+                            
+                            $query = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', true)
+                                ->where('status', 'active');
+                            
+                            if ($hasTradeExecutionColumn) {
+                                $query->where('trade_execution_enabled', true);
+                            }
+                            
+                            $activeConnections = $query->get();
                         @endphp
 
                         @if($activeConnections->count() > 0)
