@@ -67,12 +67,24 @@ class ProcessSignalBasedBotWorker
     {
         try {
             // Get signals published since last check
-            // This would ideally use events, but for polling we check recent signals
+            // Check signals from last 10 minutes to catch any missed by observer
             $signals = Signal::where('is_published', 1)
-                ->where('published_date', '>=', now()->subMinutes(5))
+                ->whereNotNull('published_date')
+                ->where('published_date', '>=', now()->subMinutes(10))
+                ->with(['pair', 'time', 'market'])
                 ->get();
 
             foreach ($signals as $signal) {
+                // Skip if already executed by this bot
+                $alreadyExecuted = DB::table('trading_bot_positions')
+                    ->where('bot_id', $this->bot->id)
+                    ->where('signal_id', $signal->id)
+                    ->exists();
+
+                if ($alreadyExecuted) {
+                    continue;
+                }
+
                 // Validate signal matches bot criteria
                 if ($this->validateSignal($signal)) {
                     $this->executeSignal($signal);
@@ -82,6 +94,7 @@ class ProcessSignalBasedBotWorker
             Log::error('Failed to listen for signals', [
                 'bot_id' => $this->bot->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
@@ -140,7 +153,7 @@ class ProcessSignalBasedBotWorker
     protected function executeSignal(Signal $signal): void
     {
         try {
-            // Check if already executed this signal
+            // Double-check if already executed this signal (race condition protection)
             $existingPosition = DB::table('trading_bot_positions')
                 ->where('bot_id', $this->bot->id)
                 ->where('signal_id', $signal->id)
@@ -148,7 +161,21 @@ class ProcessSignalBasedBotWorker
                 ->first();
 
             if ($existingPosition) {
+                Log::debug('Signal already executed by bot', [
+                    'bot_id' => $this->bot->id,
+                    'signal_id' => $signal->id,
+                    'position_id' => $existingPosition->id,
+                ]);
                 return; // Already executed
+            }
+
+            // Verify bot still has active connection
+            if (!$this->bot->exchangeConnection || !$this->bot->exchangeConnection->is_active) {
+                Log::warning('Cannot execute signal - exchange connection not active', [
+                    'bot_id' => $this->bot->id,
+                    'signal_id' => $signal->id,
+                ]);
+                return;
             }
 
             // Determine direction
@@ -157,6 +184,15 @@ class ProcessSignalBasedBotWorker
             // Get trading preset for position sizing
             $preset = $this->bot->tradingPreset;
             $quantity = $preset ? $this->calculatePositionSize($preset, $signal) : 0.01;
+
+            if ($quantity <= 0) {
+                Log::warning('Invalid position size calculated', [
+                    'bot_id' => $this->bot->id,
+                    'signal_id' => $signal->id,
+                    'quantity' => $quantity,
+                ]);
+                return;
+            }
 
             // Prepare execution data
             $executionData = [
@@ -174,10 +210,13 @@ class ProcessSignalBasedBotWorker
             // Dispatch execution job (creates both ExecutionPosition and TradingBotPosition)
             \Addons\TradingManagement\Modules\Execution\Jobs\ExecutionJob::dispatch($executionData);
 
-            Log::info('Trading bot signal executed', [
+            Log::info('Trading bot signal execution dispatched', [
                 'bot_id' => $this->bot->id,
+                'bot_name' => $this->bot->name,
                 'signal_id' => $signal->id,
                 'direction' => $direction,
+                'quantity' => $quantity,
+                'symbol' => $executionData['symbol'],
             ]);
 
         } catch (\Exception $e) {
@@ -185,6 +224,7 @@ class ProcessSignalBasedBotWorker
                 'bot_id' => $this->bot->id,
                 'signal_id' => $signal->id ?? null,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

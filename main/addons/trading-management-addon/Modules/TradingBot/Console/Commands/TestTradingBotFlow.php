@@ -40,6 +40,11 @@ class TestTradingBotFlow extends Command
         $this->info("Testing Trading Bot: {$bot->name} (ID: {$bot->id})");
         $this->newLine();
 
+        // Always verify infrastructure first
+        if ($phase === 'all' || $phase === 'infrastructure') {
+            $this->testInfrastructure();
+        }
+
         if ($phase === 'all' || $phase === 'worker') {
             $this->testWorkerStartup($bot);
         }
@@ -65,6 +70,79 @@ class TestTradingBotFlow extends Command
         }
 
         $this->info("Testing completed!");
+    }
+
+    /**
+     * Test Infrastructure (scheduled jobs, queue, observers)
+     */
+    protected function testInfrastructure()
+    {
+        $this->info("=== Infrastructure Verification ===");
+
+        // Check scheduled jobs
+        $this->info("Checking scheduled jobs...");
+        try {
+            $scheduleList = \Artisan::call('schedule:list');
+            $output = \Artisan::output();
+            
+            $hasMonitorPositions = strpos($output, 'MonitorPositionsJob') !== false;
+            $hasMonitorWorkers = strpos($output, 'MonitorTradingBotWorkersJob') !== false;
+
+            if ($hasMonitorPositions) {
+                $this->info("✅ MonitorPositionsJob scheduled");
+            } else {
+                $this->error("❌ MonitorPositionsJob not scheduled");
+            }
+
+            if ($hasMonitorWorkers) {
+                $this->info("✅ MonitorTradingBotWorkersJob scheduled");
+            } else {
+                $this->error("❌ MonitorTradingBotWorkersJob not scheduled");
+            }
+        } catch (\Exception $e) {
+            $this->warn("⚠️  Could not check scheduled jobs: " . $e->getMessage());
+        }
+
+        // Check queue
+        $this->info("Checking queue...");
+        try {
+            $connection = config('queue.default');
+            $this->info("   Queue connection: {$connection}");
+
+            if ($connection === 'database') {
+                $pendingJobs = \DB::table('jobs')->whereNull('reserved_at')->count();
+                $failedJobs = \DB::table('failed_jobs')->count();
+                
+                $this->info("   ✅ Pending jobs: {$pendingJobs}");
+                
+                if ($failedJobs > 0) {
+                    $this->warn("   ⚠️  Failed jobs: {$failedJobs}");
+                } else {
+                    $this->info("   ✅ No failed jobs");
+                }
+            }
+        } catch (\Exception $e) {
+            $this->error("❌ Queue check failed: " . $e->getMessage());
+        }
+
+        // Check observer registration
+        $this->info("Checking observer registration...");
+        try {
+            // Check if BotSignalObserver is registered
+            $observers = \App\Models\Signal::getObservableEvents();
+            $this->info("   ✅ Signal model has observable events");
+            
+            // We can't directly check if observer is registered, but we can verify it exists
+            if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Observers\BotSignalObserver::class)) {
+                $this->info("   ✅ BotSignalObserver class exists");
+            } else {
+                $this->error("   ❌ BotSignalObserver class not found");
+            }
+        } catch (\Exception $e) {
+            $this->warn("   ⚠️  Could not verify observer: " . $e->getMessage());
+        }
+
+        $this->newLine();
     }
 
     /**
@@ -147,29 +225,82 @@ class TestTradingBotFlow extends Command
     {
         $this->info("=== Phase 2-3: Signal Execution ===");
 
-        // Check if bot is running
+        // Check if bot is running or can be started
         if ($bot->status !== 'running') {
             $this->warn("Bot is not running. Current status: {$bot->status}");
-            $this->info("Please start the bot first using: php artisan trading-bot:test-flow {$bot->id} --phase=worker");
+            
+            // Check if bot has prerequisites
+            if (!$bot->exchange_connection_id) {
+                $this->error("❌ Bot has no exchange connection configured");
+                return;
+            }
+            
+            if (!$bot->trading_preset_id) {
+                $this->error("❌ Bot has no trading preset configured");
+                return;
+            }
+
+            if (!$this->confirm('Start bot now?', false)) {
+                $this->info("Please start the bot first using: php artisan trading-bot:test-flow {$bot->id} --phase=worker");
+                return;
+            }
+
+            try {
+                $bot->update(['status' => 'running']);
+                $this->workerService->startWorker($bot);
+                $this->info("✅ Bot started");
+                sleep(2);
+            } catch (\Exception $e) {
+                $this->error("❌ Failed to start bot: " . $e->getMessage());
+                return;
+            }
+        }
+
+        // Verify worker is running
+        if (!$this->workerService->isWorkerRunning($bot)) {
+            $this->error("❌ Worker is not running for this bot");
+            $this->info("   Worker should be maintained by MonitorTradingBotWorkersJob");
             return;
         }
+
+        $this->info("✅ Worker is running");
 
         // Check for existing signals
         $this->info("Checking for published signals...");
-        $signals = \App\Models\Signal::where('is_published', 1)
-            ->where('published_date', '>=', now()->subMinutes(10))
-            ->get();
+        
+        // Check signals matching bot criteria
+        $query = \App\Models\Signal::where('is_published', 1)
+            ->where('published_date', '>=', now()->subMinutes(10));
+
+        if ($bot->symbol) {
+            $query->whereHas('pair', function($q) use ($bot) {
+                $q->where('name', 'LIKE', "%{$bot->symbol}%");
+            });
+        }
+
+        if ($bot->timeframe) {
+            $query->whereHas('time', function($q) use ($bot) {
+                $q->where('name', 'LIKE', "%{$bot->timeframe}%");
+            });
+        }
+
+        $signals = $query->get();
 
         if ($signals->count() === 0) {
-            $this->warn("⚠️  No published signals found in last 10 minutes");
+            $this->warn("⚠️  No published signals found in last 10 minutes matching bot criteria");
+            $this->info("   Bot criteria:");
+            $this->info("   - Symbol: " . ($bot->symbol ?: 'Any'));
+            $this->info("   - Timeframe: " . ($bot->timeframe ?: 'Any'));
+            $this->info("");
             $this->info("   To test signal execution:");
             $this->info("   1. Create a signal matching bot's symbol/timeframe");
             $this->info("   2. Publish the signal (set is_published=1)");
-            $this->info("   3. Wait for worker to process (check logs)");
+            $this->info("   3. BotSignalObserver should trigger ExecutionJob dispatch");
+            $this->info("   4. Check logs: tail -f storage/logs/laravel.log | grep ExecutionJob");
             return;
         }
 
-        $this->info("✅ Found {$signals->count()} published signal(s)");
+        $this->info("✅ Found {$signals->count()} published signal(s) matching criteria");
 
         // Check queue for ExecutionJob
         $this->info("Checking queue for ExecutionJob...");
@@ -178,21 +309,40 @@ class TestTradingBotFlow extends Command
             ->get();
 
         $executionJobs = 0;
+        $botExecutionJobs = 0;
+        
         foreach ($pendingJobs as $job) {
             $payload = json_decode($job->payload, true);
-            if (strpos($payload['displayName'] ?? '', 'ExecutionJob') !== false) {
+            $displayName = $payload['displayName'] ?? '';
+            
+            if (strpos($displayName, 'ExecutionJob') !== false) {
                 $executionJobs++;
+                
+                // Try to check if it's for this bot
+                $data = $payload['data']['command'] ?? null;
+                if ($data && is_string($data)) {
+                    $unserialized = @unserialize($data);
+                    if ($unserialized && isset($unserialized['executionData']['bot_id'])) {
+                        if ($unserialized['executionData']['bot_id'] == $bot->id) {
+                            $botExecutionJobs++;
+                        }
+                    }
+                }
             }
         }
 
         if ($executionJobs > 0) {
             $this->info("✅ Found {$executionJobs} ExecutionJob(s) in queue");
+            if ($botExecutionJobs > 0) {
+                $this->info("   ✅ {$botExecutionJobs} for this bot");
+            }
         } else {
             $this->warn("⚠️  No ExecutionJob found in queue");
-            $this->info("   This might be normal if:");
+            $this->info("   Possible reasons:");
             $this->info("   - Signal doesn't match bot criteria");
             $this->info("   - Filter strategy rejected the signal");
-            $this->info("   - Worker hasn't processed signal yet");
+            $this->info("   - BotSignalObserver hasn't processed signal yet");
+            $this->info("   - Bot already executed this signal");
         }
 
         // Check for positions
@@ -206,10 +356,69 @@ class TestTradingBotFlow extends Command
         if ($positions->count() > 0) {
             $this->info("✅ Found {$positions->count()} open position(s)");
             foreach ($positions as $position) {
-                $this->info("   - Position ID: {$position->id}, Symbol: {$position->symbol}, Direction: {$position->direction}");
+                $signalInfo = $position->signal_id ? " (Signal: {$position->signal_id})" : "";
+                $this->info("   - Position ID: {$position->id}, Symbol: {$position->symbol}, Direction: {$position->direction}{$signalInfo}");
             }
         } else {
             $this->warn("⚠️  No open positions found");
+        }
+
+        // Check recent execution logs
+        $this->info("Checking recent execution logs...");
+        $recentExecutions = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id)
+            ->where('created_at', '>=', now()->subHours(1))
+            ->count();
+
+        if ($recentExecutions > 0) {
+            $this->info("✅ Found {$recentExecutions} execution(s) in last hour");
+        } else {
+            $this->line("   No executions in last hour");
+        }
+
+        $this->newLine();
+    }
+
+    /**
+     * Test Phase: Execution (verify ExecutionJob processing)
+     */
+    protected function testExecution(TradingBot $bot)
+    {
+        $this->info("=== Phase: Execution Verification ===");
+
+        // Check if ExecutionJob class exists
+        if (!class_exists(\Addons\TradingManagement\Modules\Execution\Jobs\ExecutionJob::class)) {
+            $this->error("❌ ExecutionJob class not found");
+            return;
+        }
+        $this->info("✅ ExecutionJob class exists");
+
+        // Check if connection is active
+        if (!$bot->exchangeConnection) {
+            $this->error("❌ Bot has no exchange connection");
+            return;
+        }
+
+        if (!$bot->exchangeConnection->is_active) {
+            $this->warn("⚠️  Exchange connection is inactive");
+        } else {
+            $this->info("✅ Exchange connection is active");
+        }
+
+        // Check adapter creation
+        $this->info("Checking adapter creation...");
+        try {
+            $adapterFactory = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class);
+            $connection = $bot->exchangeConnection;
+            $adapter = $adapterFactory->create($connection->provider, $connection->credentials ?? []);
+            
+            if ($adapter) {
+                $this->info("✅ Adapter created successfully");
+                $this->info("   Type: " . get_class($adapter));
+            } else {
+                $this->error("❌ Failed to create adapter");
+            }
+        } catch (\Exception $e) {
+            $this->error("❌ Adapter creation failed: " . $e->getMessage());
         }
 
         $this->newLine();
@@ -243,8 +452,9 @@ class TestTradingBotFlow extends Command
         $this->info("   Run 'php artisan schedule:list' to see scheduled jobs");
 
         // Check recent position updates
-        $recentUpdates = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('status', 'open')
-            ->where('last_price_update_at', '>=', now()->subMinutes(5))
+        $recentUpdates = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::where('bot_id', $bot->id)
+            ->where('status', 'open')
+            ->where('updated_at', '>=', now()->subMinutes(5))
             ->count();
 
         if ($recentUpdates > 0) {
@@ -253,6 +463,22 @@ class TestTradingBotFlow extends Command
             $this->warn("⚠️  No position updates in last 5 minutes");
             $this->info("   MonitorPositionsJob should run every minute");
             $this->info("   Check logs: tail -f storage/logs/laravel.log | grep MonitorPositionsJob");
+            $this->info("   Or run manually: php artisan schedule:run");
+        }
+
+        // Check PositionMonitoringService
+        $this->info("Testing PositionMonitoringService...");
+        try {
+            $positionService = app(\Addons\TradingManagement\Modules\TradingBot\Services\PositionMonitoringService::class);
+            
+            // Test monitoring positions
+            $result = $positionService->monitorPositions($bot);
+            $this->info("   ✅ monitorPositions() executed");
+            $this->info("      - Checked: {$result['total_checked']}");
+            $this->info("      - SL closed: {$result['sl_closed']}");
+            $this->info("      - TP closed: {$result['tp_closed']}");
+        } catch (\Exception $e) {
+            $this->error("   ❌ PositionMonitoringService failed: " . $e->getMessage());
         }
 
         // Display position details

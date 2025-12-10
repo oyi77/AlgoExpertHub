@@ -31,8 +31,9 @@ class BotExecutionService
      */
     public function getActiveBotsForSignal(Signal $signal)
     {
-        // Get all active bots
+        // Get all active bots that are running
         $bots = TradingBot::active()
+            ->where('status', 'running')
             ->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
             ->get();
 
