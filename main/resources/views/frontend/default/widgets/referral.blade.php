@@ -11,7 +11,7 @@
                 </div>
             </div>
         </div>
-        <div class="row gy-5">
+        <div class="row gy-5 justify-content-center">
             @for ($i = 0; $i < count($invest->level ?? []); $i++)
                 
             <div class="col-lg-3 col-6 d-flex justify-content-center">

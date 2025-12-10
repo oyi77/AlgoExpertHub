@@ -131,7 +131,76 @@
 
 
 @push('external-script')
-    <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}?v={{ time() }}" onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js';"></script>
+    <!-- ApexCharts Library - Load with fallback -->
+    <script>
+        (function() {
+            // Global ApexCharts loading state
+            window.__apexchartsLoading = window.__apexchartsLoading || { loaded: false, loading: false };
+            
+            // Check if already loaded
+            if (typeof ApexCharts !== 'undefined') {
+                window.__apexchartsLoading.loaded = true;
+                return;
+            }
+            
+            // If another script is loading it, wait for it
+            if (window.__apexchartsLoading.loading) {
+                return;
+            }
+            
+            window.__apexchartsLoading.loading = true;
+
+            var scripts = [
+                '{{ Config::jsLib('frontend', 'lib/apex.min.js') }}?v={{ time() }}',
+                'https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js',
+                'https://unpkg.com/apexcharts@3.44.0/dist/apexcharts.min.js'
+            ];
+
+            function tryLoadScript(index) {
+                if (index >= scripts.length) {
+                    console.warn('ApexCharts: All CDN sources failed. Charts will not be available.');
+                    window.__apexchartsLoading.loading = false;
+                    return;
+                }
+
+                var script = document.createElement('script');
+                script.src = scripts[index];
+                script.async = false;
+                script.onload = function() {
+                    // Wait a bit for ApexCharts to initialize
+                    var checkInterval = setInterval(function() {
+                        if (typeof ApexCharts !== 'undefined') {
+                            clearInterval(checkInterval);
+                            window.__apexchartsLoading.loaded = true;
+                            window.__apexchartsLoading.loading = false;
+                            window.dispatchEvent(new Event('apexcharts-loaded'));
+                        }
+                    }, 50);
+                    
+                    // Timeout after 3 seconds
+                    setTimeout(function() {
+                        clearInterval(checkInterval);
+                        if (typeof ApexCharts === 'undefined') {
+                            tryLoadScript(index + 1);
+                        }
+                    }, 3000);
+                };
+                script.onerror = function() {
+                    tryLoadScript(index + 1);
+                };
+                
+                // Insert at beginning of head for priority loading
+                if (document.head.firstChild) {
+                    document.head.insertBefore(script, document.head.firstChild);
+                } else {
+                    document.head.appendChild(script);
+                }
+            }
+
+            tryLoadScript(0);
+        })();
+    </script>
 @endpush
 
 @push('script')
@@ -152,15 +221,36 @@
                 }
             }
 
-            function waitForApexCharts(callback, maxAttempts = 20, attempt = 0) {
-                if (typeof ApexCharts !== 'undefined') {
+            function waitForApexCharts(callback, maxAttempts = 100, attempt = 0) {
+                // Check if already loaded
+                if (typeof ApexCharts !== 'undefined' || (window.__apexchartsLoading && window.__apexchartsLoading.loaded)) {
                     callback();
-                } else if (attempt < maxAttempts) {
+                    return;
+                }
+                
+                // Listen for custom event (only register once)
+                if (attempt === 0) {
+                    window.addEventListener('apexcharts-loaded', function() {
+                        if (typeof ApexCharts !== 'undefined') {
+                            callback();
+                        }
+                    }, { once: true });
+                }
+                
+                if (attempt < maxAttempts) {
                     setTimeout(function() {
                         waitForApexCharts(callback, maxAttempts, attempt + 1);
                     }, 100);
                 } else {
-                    console.error('ApexCharts library failed to load');
+                    // Last attempt - give extra time and try one more time
+                    setTimeout(function() {
+                        if (typeof ApexCharts !== 'undefined') {
+                            callback();
+                    } else {
+                        // Silent failure - charts just won't work if library doesn't load
+                        // User can refresh page to retry
+                    }
+                }, 1500);
                 }
             }
 

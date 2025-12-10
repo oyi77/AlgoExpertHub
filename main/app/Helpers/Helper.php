@@ -608,8 +608,10 @@ class Helper
 
         $dropdownsBuilder = '';
 
+        $homeText = __('Home');
+        $homeText = ucfirst(strtolower(trim($homeText))); // Ensure first letter is capitalized
         $nonDropdownsBuilder = "<li class='nav-item'>
-        <a class='nav-link' href='" . $home . "'>" . __('Home') . "</a>
+        <a class='nav-link' href='" . $home . "'>" . $homeText . "</a>
     </li>";
         $html = '';
 
