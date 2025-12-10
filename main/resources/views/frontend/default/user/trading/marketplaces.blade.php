@@ -37,9 +37,12 @@
                             <a class="nav-link {{ $activeCategory === 'filter-strategies' ? 'active' : '' }}" 
                                id="filter-strategies-tab" 
                                data-bs-toggle="tab" 
-                               onclick="switchTab('filter-strategies')"
+                               data-bs-target="#filter-strategies"
+                               onclick="switchTab('filter-strategies'); return false;"
                                href="#filter-strategies" 
-                               role="tab">
+                               role="tab"
+                               aria-controls="filter-strategies"
+                               aria-selected="{{ $activeCategory === 'filter-strategies' ? 'true' : 'false' }}">
                                 <i class="las la-filter me-1"></i> {{ __('Filter Strategies') }}
                             </a>
                         </li>
@@ -151,8 +154,72 @@
                         <!-- Filter Strategies Category -->
                         <div class="tab-pane fade {{ $activeCategory === 'filter-strategies' ? 'show active' : '' }}" 
                              id="filter-strategies" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             aria-labelledby="filter-strategies-tab"
+                             @if($activeCategory === 'filter-strategies')
+                             style="display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 500px !important; padding: 1.5rem !important; position: relative !important;"
+                             @endif>
+                            @php
+                                // Debug: Log items count - ONLY for filter-strategies category
+                                // This block only executes when this tab pane is rendered
+                                $itemsCount = isset($items) ? $items->count() : 0;
+                                $itemsTotal = isset($items) ? $items->total() : 0;
+                                $hasItems = isset($items) && $items->count() > 0;
+                                \Log::info('Marketplace View: Filter strategies tab pane', [
+                                    'items_set' => isset($items),
+                                    'items_count' => $itemsCount,
+                                    'items_total' => $itemsTotal,
+                                    'has_items' => $hasItems,
+                                    'active_category_from_controller' => $activeCategory ?? 'unknown',
+                                    'tab_pane_id' => 'filter-strategies',
+                                    'tab_pane_class' => $activeCategory === 'filter-strategies' ? 'show active' : '',
+                                    'items_type' => isset($items) ? get_class($items) : 'not set',
+                                    'request_category' => request()->get('category', 'not set')
+                                ]);
+                            @endphp
+                            
+                            {{-- Debug output (remove after testing) --}}
+                            @if(config('app.debug'))
+                                <div class="alert alert-info mb-3">
+                                    <strong>Debug Info:</strong><br>
+                                    Items Set: {{ isset($items) ? 'Yes' : 'No' }}<br>
+                                    Items Count: {{ $itemsCount ?? 0 }}<br>
+                                    Items Total: {{ $itemsTotal ?? 0 }}<br>
+                                    Has Items: {{ $hasItems ? 'Yes' : 'No' }}<br>
+                                    Active Category: {{ $activeCategory ?? 'unknown' }}<br>
+                                    Tab Pane Class: {{ $activeCategory === 'filter-strategies' ? 'show active' : '' }}
+                                </div>
+                            @endif
+                            
+                            {{-- Force render test to verify tab pane is visible - ALWAYS SHOW --}}
+                            <div class="alert alert-warning mb-3" id="filter-strategies-test-alert" style="display: block !important; visibility: visible !important; min-height: 80px !important; padding: 1rem !important; background-color: #ffc107 !important; border: 2px solid #ff9800 !important;">
+                                <strong style="font-size: 1.2rem;">🔍 TEST RENDER - Filter Strategies Tab Pane</strong><br>
+                                <strong>Items count:</strong> {{ isset($items) ? $items->count() : 0 }}<br>
+                                <strong>Items total:</strong> {{ isset($items) ? $items->total() : 'N/A' }}<br>
+                                <strong>Active category:</strong> {{ $activeCategory ?? 'unknown' }}<br>
+                                <small style="color: #000;">If you see this yellow box, the tab pane IS rendering!</small>
+                            </div>
+                            
+                            {{-- Debug: Show items info even if empty --}}
+                            <div class="alert alert-secondary mb-3" style="min-height: 100px !important; padding: 1rem !important;">
+                                <strong>Debug Info:</strong><br>
+                                Items isset: {{ isset($items) ? 'Yes' : 'No' }}<br>
+                                Items count: {{ isset($items) ? $items->count() : 'N/A' }}<br>
+                                Items total: {{ isset($items) ? $items->total() : 'N/A' }}<br>
+                                Items type: {{ isset($items) ? get_class($items) : 'N/A' }}<br>
+                                Condition check: {{ (isset($items) && $items->count() > 0) ? 'TRUE - Will render items' : 'FALSE - Will show empty state' }}<br>
+                                @if(isset($items) && $items->count() > 0)
+                                    <strong style="color: green;">✅ Items will be rendered below!</strong>
+                                @else
+                                    <strong style="color: red;">❌ Items will NOT be rendered (empty state will show)</strong>
+                                @endif
+                            </div>
+                            
+                            {{-- Force render at least one item to test --}}
                             @if(isset($items) && $items->count() > 0)
+                                <div class="alert alert-success mb-3">
+                                    <strong>✅ CONDITION PASSED:</strong> Rendering {{ $items->count() }} items...
+                                </div>
                                 <div class="row gy-3 marketplace-grid">
                                     @foreach($items as $item)
                                     <div class="col-md-4">
@@ -205,6 +272,7 @@
                                 <div class="text-center marketplace-empty-state">
                                     <i class="las la-filter la-3x text-muted mb-3"></i>
                                     <p class="text-muted">{{ __('No filter strategies available in marketplace.') }}</p>
+                                    <p class="text-muted small">Debug: items isset = {{ isset($items) ? 'Yes' : 'No' }}, count = {{ isset($items) ? $items->count() : 'N/A' }}</p>
                                 </div>
                             @endif
                         </div>
@@ -490,6 +558,66 @@
         margin-bottom: 1rem;
     }
     
+    /* Force tab pane visibility - override Bootstrap defaults */
+    .tab-content .tab-pane.show.active {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure tab content container is visible */
+    #marketplaceTabContent {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* CRITICAL: Override Bootstrap's .fade:not(.show) which sets display:none */
+    .tab-pane.fade:not(.show) {
+        display: none !important;
+    }
+    
+    /* Force filter-strategies tab pane to be visible - override ALL Bootstrap rules */
+    #filter-strategies.tab-pane.show.active,
+    #filter-strategies.tab-pane.fade.show.active {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        min-height: 500px !important;
+        padding: 1.5rem !important;
+        overflow: visible !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+    
+    /* Force filter-strategies tab pane even without show/active classes - for debugging */
+    #filter-strategies.tab-pane,
+    #filter-strategies.tab-pane.fade {
+        min-height: 500px !important;
+        padding: 1.5rem !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Ensure test alerts are visible */
+    #filter-strategies .alert,
+    #filter-strategies-test-alert {
+        display: block !important;
+        visibility: visible !important;
+        min-height: 100px !important;
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+        opacity: 1 !important;
+    }
+    
+    /* Force test alert specifically */
+    #filter-strategies-test-alert {
+        background-color: #ffc107 !important;
+        border: 3px solid #ff9800 !important;
+        min-height: 120px !important;
+        font-size: 1.1rem !important;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .marketplace-card .sp_site_card {
@@ -517,6 +645,22 @@
     $(function() {
         'use strict'
         
+        // CRITICAL: Force filter-strategies tab pane visible IMMEDIATELY if it's the active category
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category') || '{{ $activeCategory ?? "trading-presets" }}';
+        
+        if (categoryParam === 'filter-strategies') {
+            const filterStrategiesPane = document.getElementById('filter-strategies');
+            if (filterStrategiesPane) {
+                // Force visibility IMMEDIATELY before any other scripts run
+                filterStrategiesPane.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 500px !important; padding: 1.5rem !important; position: relative !important;';
+                console.log('Marketplace: CRITICAL - Forced filter-strategies pane visible immediately', {
+                    offsetHeight: filterStrategiesPane.offsetHeight,
+                    offsetWidth: filterStrategiesPane.offsetWidth
+                });
+            }
+        }
+        
         // Function to switch tabs and update URL
         function switchTab(categoryName) {
             const url = new URL(window.location);
@@ -527,18 +671,174 @@
         // Make switchTab available globally
         window.switchTab = switchTab;
         
-        const urlParams = new URLSearchParams(window.location.search);
-        const categoryParam = urlParams.get('category');
+        // Debug: Log tab initialization
+        console.log('Marketplace: Initializing tabs', {
+            categoryParam: categoryParam,
+            activeCategory: '{{ $activeCategory ?? "unknown" }}'
+        });
         
+        // Activate the correct tab - but don't override if already active from server-side
         if (categoryParam) {
             const tabLink = $('#marketplaceTabs a[href="#' + categoryParam + '"]');
-            if (tabLink.length) {
-                const tab = new bootstrap.Tab(tabLink[0]);
-                tab.show();
+            const tabPane = $('#' + categoryParam);
+            
+            console.log('Marketplace: Tab elements', {
+                tabLinkExists: tabLink.length > 0,
+                tabPaneExists: tabPane.length > 0,
+                tabPaneHasShow: tabPane.hasClass('show'),
+                tabPaneHasActive: tabPane.hasClass('active'),
+                tabPaneIsVisible: tabPane.is(':visible')
+            });
+            
+            if (tabLink.length && tabPane.length) {
+                // Only activate if not already active (preserve server-side active state)
+                if (!tabLink.hasClass('active')) {
+                    // Remove active class from all tabs and panes
+                    $('#marketplaceTabs .nav-link').removeClass('active');
+                    $('.tab-pane').removeClass('show active');
+                    
+                    // Activate the correct tab link
+                    tabLink.addClass('active');
+                    tabPane.addClass('show active');
+                    
+                    // Also trigger Bootstrap tab if available
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                        const tab = new bootstrap.Tab(tabLink[0]);
+                        tab.show();
+                    }
+                } else {
+                    // Already active from server-side, just ensure pane is visible
+                    if (!tabPane.hasClass('show')) {
+                        tabPane.addClass('show active');
+                    }
+                }
+                
+                // Force visibility - use direct DOM manipulation with setProperty for !important
+                const paneElement = tabPane[0];
+                if (paneElement) {
+                    paneElement.style.setProperty('display', 'block', 'important');
+                    paneElement.style.setProperty('visibility', 'visible', 'important');
+                    paneElement.style.setProperty('opacity', '1', 'important');
+                    paneElement.style.setProperty('position', 'relative', 'important');
+                }
+                
+                // Also check and fix parent elements
+                const tabContent = tabPane.closest('.tab-content');
+                if (tabContent.length) {
+                    const contentElement = tabContent[0];
+                    if (contentElement) {
+                        contentElement.style.setProperty('display', 'block', 'important');
+                        contentElement.style.setProperty('visibility', 'visible', 'important');
+                    }
+                    console.log('Marketplace: Tab content parent', {
+                        exists: tabContent.length > 0,
+                        isVisible: tabContent.is(':visible'),
+                        display: tabContent.css('display'),
+                        computedDisplay: contentElement ? window.getComputedStyle(contentElement).display : 'N/A'
+                    });
+                }
+                
+                // Use setTimeout to ensure styles are applied after any other scripts
+                setTimeout(function() {
+                    if (paneElement) {
+                        paneElement.style.setProperty('display', 'block', 'important');
+                        paneElement.style.setProperty('visibility', 'visible', 'important');
+                    }
+                    
+                    // Check if test alert exists in DOM
+                    const testAlert = document.getElementById('filter-strategies-test-alert');
+                    const testAlertExists = testAlert !== null;
+                    const testAlertVisible = testAlert ? testAlert.offsetHeight > 0 : false;
+                    
+                    // Check all children of tab pane
+                    const children = paneElement ? Array.from(paneElement.children) : [];
+                    const childrenInfo = children.map(function(child, index) {
+                        return {
+                            index: index,
+                            tagName: child.tagName,
+                            className: child.className,
+                            id: child.id,
+                            offsetHeight: child.offsetHeight,
+                            offsetWidth: child.offsetWidth,
+                            display: window.getComputedStyle(child).display,
+                            visibility: window.getComputedStyle(child).visibility
+                        };
+                    });
+                    
+                    console.log('Marketplace: Tab pane after activation (delayed)', {
+                        hasShow: tabPane.hasClass('show'),
+                        hasActive: tabPane.hasClass('active'),
+                        isVisible: tabPane.is(':visible'),
+                        display: tabPane.css('display'),
+                        visibility: tabPane.css('visibility'),
+                        computedDisplay: paneElement ? window.getComputedStyle(paneElement).display : 'N/A',
+                        computedVisibility: paneElement ? window.getComputedStyle(paneElement).visibility : 'N/A',
+                        offsetHeight: paneElement ? paneElement.offsetHeight : 0,
+                        offsetWidth: paneElement ? paneElement.offsetWidth : 0,
+                        testAlertExists: testAlertExists,
+                        testAlertVisible: testAlertVisible,
+                        childrenCount: children.length,
+                        childrenInfo: childrenInfo
+                    });
+                    
+                    // If test alert exists but pane has no height, force it
+                    if (testAlertExists && paneElement && paneElement.offsetHeight === 0) {
+                        console.warn('Marketplace: Test alert exists but pane has no height! Forcing dimensions...');
+                        
+                        // Force pane dimensions
+                        paneElement.style.setProperty('min-height', '400px', 'important');
+                        paneElement.style.setProperty('padding', '1.5rem', 'important');
+                        paneElement.style.setProperty('display', 'block', 'important');
+                        paneElement.style.setProperty('visibility', 'visible', 'important');
+                        paneElement.style.setProperty('opacity', '1', 'important');
+                        paneElement.style.setProperty('position', 'relative', 'important');
+                        
+                        // Force test alert to be visible
+                        if (testAlert) {
+                            testAlert.style.setProperty('display', 'block', 'important');
+                            testAlert.style.setProperty('visibility', 'visible', 'important');
+                            testAlert.style.setProperty('min-height', '100px', 'important');
+                            testAlert.style.setProperty('padding', '1rem', 'important');
+                            testAlert.style.setProperty('margin-bottom', '1rem', 'important');
+                            console.log('Marketplace: Test alert forced visibility', {
+                                offsetHeight: testAlert.offsetHeight,
+                                offsetWidth: testAlert.offsetWidth,
+                                display: window.getComputedStyle(testAlert).display,
+                                visibility: window.getComputedStyle(testAlert).visibility
+                            });
+                        }
+                        
+                        // Force all children to be visible
+                        children.forEach(function(child) {
+                            child.style.setProperty('display', 'block', 'important');
+                            child.style.setProperty('visibility', 'visible', 'important');
+                        });
+                        
+                        // Re-check after forcing
+                        setTimeout(function() {
+                            console.log('Marketplace: After forcing dimensions', {
+                                paneOffsetHeight: paneElement.offsetHeight,
+                                paneOffsetWidth: paneElement.offsetWidth,
+                                testAlertOffsetHeight: testAlert ? testAlert.offsetHeight : 0,
+                                testAlertOffsetWidth: testAlert ? testAlert.offsetWidth : 0
+                            });
+                        }, 50);
+                    }
+                }, 100);
+                
+                console.log('Marketplace: Tab pane after activation', {
+                    hasShow: tabPane.hasClass('show'),
+                    hasActive: tabPane.hasClass('active'),
+                    isVisible: tabPane.is(':visible'),
+                    display: tabPane.css('display'),
+                    visibility: tabPane.css('visibility'),
+                    computedDisplay: window.getComputedStyle(tabPane[0]).display,
+                    computedVisibility: window.getComputedStyle(tabPane[0]).visibility
+                });
             }
         }
         
-        // Old event handler - keep for compatibility
+        // Event handler for tab clicks
         $('#marketplaceTabs a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
             const targetId = $(e.target).attr('href').replace('#', '');
             const url = new URL(window.location);

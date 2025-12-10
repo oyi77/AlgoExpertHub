@@ -180,12 +180,69 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.trading-management.config.exchange-connections.show', $conn) }}" class="btn btn-sm btn-success" title="Test & Preview">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.trading-management.config.exchange-connections.edit', $conn) }}" class="btn btn-sm btn-info" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('admin.trading-management.config.exchange-connections.show', $conn) }}" class="btn btn-sm btn-success" title="Test & Preview">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('admin.trading-management.config.exchange-connections.edit', $conn) }}" class="btn btn-sm btn-info" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-warning" title="Transfer Ownership" data-toggle="modal" data-target="#transferModal{{ $conn->id }}">
+                                            <i class="fas fa-user-friends"></i>
+                                        </button>
+                                        <form action="{{ route('admin.trading-management.config.exchange-connections.destroy', $conn) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this connection? This action cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- Transfer Ownership Modal -->
+                                    <div class="modal fade" id="transferModal{{ $conn->id }}" tabindex="-1" role="dialog" aria-labelledby="transferModalLabel{{ $conn->id }}" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="transferModalLabel{{ $conn->id }}">Transfer Ownership - {{ $conn->name }}</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <form action="{{ route('admin.trading-management.config.exchange-connections.transfer-ownership', $conn) }}" method="POST">
+                                                    @csrf
+                                                    <div class="modal-body">
+                                                        <div class="form-group">
+                                                            <label for="user_id{{ $conn->id }}">Select User</label>
+                                                            <select name="user_id" id="user_id{{ $conn->id }}" class="form-control" required>
+                                                                <option value="">-- Select User --</option>
+                                                                @foreach(\App\Models\User::orderBy('username')->get() as $user)
+                                                                    <option value="{{ $user->id }}" {{ $conn->user_id == $user->id ? 'selected' : '' }}>
+                                                                        {{ $user->username }} ({{ $user->email }})
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <small class="form-text text-muted">Select the user who will own this connection.</small>
+                                                        </div>
+                                                        <div class="alert alert-info">
+                                                            <strong>Current Owner:</strong><br>
+                                                            @if($conn->is_admin_owned)
+                                                                <span class="badge badge-info">Admin</span>
+                                                            @elseif($conn->user)
+                                                                <span class="badge badge-success">User: {{ $conn->user->username }} ({{ $conn->user->email }})</span>
+                                                            @else
+                                                                <span class="badge badge-secondary">No Owner</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Transfer Ownership</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                             @endforeach

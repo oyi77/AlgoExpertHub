@@ -5,8 +5,10 @@ namespace Addons\TradingManagement\Modules\TradingBot\Controllers\User;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotService;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService;
+use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -15,11 +17,16 @@ class TradingBotController extends Controller
 {
     protected TradingBotService $botService;
     protected TradingBotWorkerService $workerService;
+    protected TradingBotMonitoringService $monitoringService;
 
-    public function __construct(TradingBotService $botService, TradingBotWorkerService $workerService)
-    {
+    public function __construct(
+        TradingBotService $botService, 
+        TradingBotWorkerService $workerService,
+        TradingBotMonitoringService $monitoringService
+    ) {
         $this->botService = $botService;
         $this->workerService = $workerService;
+        $this->monitoringService = $monitoringService;
     }
 
     /**
@@ -147,9 +154,43 @@ class TradingBotController extends Controller
         $data['title'] = $bot->name;
         $data['bot'] = $bot;
 
-        // Get recent executions (if execution_logs has trading_bot_id)
-        // TODO: Add relationship when execution_logs table is updated
-        $data['recentExecutions'] = collect(); // Placeholder
+        // Get execution logs for this bot through exchange connection
+        if ($bot->exchange_connection_id) {
+            try {
+                $data['executions'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id)
+                    ->with(['signal', 'executionConnection'])
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(20);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to load executions for bot', [
+                    'bot_id' => $bot->id,
+                    'error' => $e->getMessage()
+                ]);
+                $data['executions'] = \Illuminate\Pagination\Paginator::empty();
+            }
+        } else {
+            $data['executions'] = \Illuminate\Pagination\Paginator::empty();
+        }
+
+        // Get monitoring data
+        try {
+            $data['workerStatus'] = $this->monitoringService->getWorkerStatus($bot);
+            $data['botMetrics'] = $this->monitoringService->getBotMetrics($bot);
+            $data['openPositions'] = $this->monitoringService->getOpenPositions($bot);
+            $data['positionStats'] = $this->monitoringService->calculatePositionStats($bot);
+            $data['queueStats'] = $this->monitoringService->getQueueStats($bot->id);
+        } catch (\Exception $e) {
+            \Log::error('Failed to load monitoring data for bot', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage()
+            ]);
+            // Provide default values
+            $data['workerStatus'] = ['status' => 'stopped', 'is_running' => false];
+            $data['botMetrics'] = [];
+            $data['openPositions'] = [];
+            $data['positionStats'] = [];
+            $data['queueStats'] = [];
+        }
 
         return view('trading-management::user.trading-bots.show', $data);
     }
@@ -439,5 +480,74 @@ class TradingBotController extends Controller
                 ->back()
                 ->with('error', 'Failed to resume bot: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get worker status (AJAX)
+     */
+    public function workerStatus($id): JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+        
+        $workerStatus = $this->monitoringService->getWorkerStatus($bot);
+        $metrics = $this->monitoringService->getBotMetrics($bot);
+        
+        return response()->json([
+            'success' => true,
+            'worker_status' => $workerStatus,
+            'metrics' => $metrics,
+        ]);
+    }
+
+    /**
+     * Get positions (AJAX)
+     */
+    public function positions($id): JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+        
+        $openPositions = $this->monitoringService->getOpenPositions($bot);
+        $positionStats = $this->monitoringService->calculatePositionStats($bot);
+        
+        return response()->json([
+            'success' => true,
+            'positions' => $openPositions,
+            'stats' => $positionStats,
+        ]);
+    }
+
+    /**
+     * Get logs (AJAX)
+     */
+    public function logs($id, Request $request): JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+        
+        $limit = $request->get('limit', 50);
+        $level = $request->get('level');
+        
+        $logs = $this->monitoringService->getBotLogs($bot->id, $limit, $level);
+        
+        return response()->json([
+            'success' => true,
+            'logs' => $logs,
+        ]);
+    }
+
+    /**
+     * Get metrics (AJAX)
+     */
+    public function metrics($id): JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+        
+        $metrics = $this->monitoringService->getBotMetrics($bot);
+        $queueStats = $this->monitoringService->getQueueStats($bot->id);
+        
+        return response()->json([
+            'success' => true,
+            'metrics' => $metrics,
+            'queue_stats' => $queueStats,
+        ]);
     }
 }

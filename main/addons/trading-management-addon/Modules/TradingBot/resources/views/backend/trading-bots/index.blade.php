@@ -166,19 +166,74 @@
                                             ${{ number_format($bot->total_profit, 2) }}
                                         </td>
                                         <td>
-                                            <div class="btn-group">
-                                                <a href="{{ route('admin.trading-management.trading-bots.show', $bot->id) }}" class="btn btn-sm btn-info">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('admin.trading-management.trading-bots.show', $bot->id) }}" class="btn btn-sm btn-info" title="View">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('admin.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
+                                                <a href="{{ route('admin.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary" title="Edit">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('admin.trading-management.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm btn-{{ $bot->is_active ? 'warning' : 'success' }}">
+                                                    <button type="submit" class="btn btn-sm btn-{{ $bot->is_active ? 'warning' : 'success' }}" title="{{ $bot->is_active ? 'Pause' : 'Start' }}">
                                                         <i class="fa fa-{{ $bot->is_active ? 'pause' : 'play' }}"></i>
                                                     </button>
                                                 </form>
+                                                <button type="button" class="btn btn-sm btn-warning" title="Transfer Ownership" data-toggle="modal" data-target="#transferModal{{ $bot->id }}">
+                                                    <i class="fas fa-user-friends"></i>
+                                                </button>
+                                                <form action="{{ route('admin.trading-management.trading-bots.destroy', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this trading bot? This action cannot be undone.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            
+                                            <!-- Transfer Ownership Modal -->
+                                            <div class="modal fade" id="transferModal{{ $bot->id }}" tabindex="-1" role="dialog" aria-labelledby="transferModalLabel{{ $bot->id }}" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="transferModalLabel{{ $bot->id }}">Transfer Ownership - {{ $bot->name }}</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="{{ route('admin.trading-management.trading-bots.transfer-ownership', $bot->id) }}" method="POST">
+                                                            @csrf
+                                                            <div class="modal-body">
+                                                                <div class="form-group">
+                                                                    <label for="user_id{{ $bot->id }}">Select User</label>
+                                                                    <select name="user_id" id="user_id{{ $bot->id }}" class="form-control" required>
+                                                                        <option value="">-- Select User --</option>
+                                                                        @foreach(\App\Models\User::orderBy('username')->get() as $user)
+                                                                            <option value="{{ $user->id }}" {{ $bot->user_id == $user->id ? 'selected' : '' }}>
+                                                                                {{ $user->username }} ({{ $user->email }})
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <small class="form-text text-muted">Select the user who will own this trading bot.</small>
+                                                                </div>
+                                                                <div class="alert alert-info">
+                                                                    <strong>Current Owner:</strong><br>
+                                                                    @if($bot->admin)
+                                                                        <span class="badge badge-info">Admin: {{ $bot->admin->username }}</span>
+                                                                    @elseif($bot->user)
+                                                                        <span class="badge badge-success">User: {{ $bot->user->username }} ({{ $bot->user->email }})</span>
+                                                                    @else
+                                                                        <span class="badge badge-secondary">No Owner</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary">Transfer Ownership</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

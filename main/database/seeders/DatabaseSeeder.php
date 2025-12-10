@@ -57,6 +57,7 @@ class DatabaseSeeder extends Seeder
             AiConnectionSeeder::class,        // AI Connections (after AIProviderSeeder)
             AiModelProfileSeeder::class,      // AI Model Profiles
             FilterStrategySeeder::class,      // Filter Strategies
+            RulebookEaStrategySeeder::class,  // RULEBOOK EA Multi-Timeframe Strategy (after FilterStrategySeeder)
             ChannelSourceSeeder::class,        // Channel Sources
             SignalAnalyticSeeder::class,        // Signal Analytics (after ChannelSourceSeeder, SignalSeeder)
             ExecutionConnectionSeeder::class,  // Execution Connections

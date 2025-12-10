@@ -363,7 +363,10 @@ class TradingBotService
                   ->orWhere('is_admin_owned', true); // Admin can use admin-owned connections
             });
         } else {
-            $query->where('user_id', Auth::id());
+            // Users can only see their own connections (not admin-owned)
+            $query->where('user_id', Auth::id())
+                  ->where('is_admin_owned', false)
+                  ->whereNull('admin_id'); // Ensure admin_id is null for user-owned connections
         }
 
         return $query->orderBy('name')->get();
@@ -442,7 +445,64 @@ class TradingBotService
      */
     public function getAvailableExpertAdvisors()
     {
-        $query = ExpertAdvisor::where('status', 'active');
+        try {
+            // Check if table exists
+            if (!Schema::hasTable('expert_advisors')) {
+                Log::warning('expert_advisors table does not exist. Migration may not have been run.', [
+                    'hint' => 'Run: php artisan migrate --path=addons/trading-management-addon/database/migrations/2025_12_06_100001_create_expert_advisors_table.php'
+                ]);
+                return collect([]);
+            }
+
+            $query = ExpertAdvisor::where('status', 'active');
+
+            if (Auth::guard('admin')->check()) {
+                $adminId = Auth::guard('admin')->id();
+                $query->where(function ($q) use ($adminId) {
+                    $q->where('admin_id', $adminId)
+                      ->orWhere('is_admin_owned', true);
+                });
+            } else {
+                // Users see their own + public
+                $query->where(function ($q) {
+                    $q->where('user_id', Auth::id())
+                      ->orWhere('visibility', 'public');
+                });
+            }
+
+            return $query->orderBy('name')->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle table not found or other database errors gracefully
+            if (str_contains($e->getMessage(), "doesn't exist") || str_contains($e->getMessage(), 'Base table or view not found')) {
+                Log::warning('expert_advisors table does not exist. Migration may not have been run.', [
+                    'error' => $e->getMessage(),
+                    'hint' => 'Run: php artisan migrate --path=addons/trading-management-addon/database/migrations/2025_12_06_100001_create_expert_advisors_table.php'
+                ]);
+                return collect([]);
+            }
+            throw $e; // Re-throw if it's a different database error
+        } catch (\Throwable $e) {
+            Log::error('Failed to get available expert advisors', [
+                'error' => $e->getMessage(),
+            ]);
+            return collect([]); // Return empty collection on any error
+        }
+    }
+
+    /**
+     * Get available data connections for creating a bot
+     * Since connections are unified, show all active exchange connections
+     * (data_fetching_enabled is optional - unified connections can be used for both)
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAvailableDataConnectionsForCreate()
+    {
+        $query = ExchangeConnection::where('is_active', true);
+        
+        // Since connections are unified, we show all active connections
+        // The data_fetching_enabled flag is optional - if set, prefer those, but show all active ones
+        // This allows users to use any connection for data fetching
 
         if (Auth::guard('admin')->check()) {
             $adminId = Auth::guard('admin')->id();
@@ -451,11 +511,10 @@ class TradingBotService
                   ->orWhere('is_admin_owned', true);
             });
         } else {
-            // Users see their own + public
-            $query->where(function ($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhere('visibility', 'public');
-            });
+            // Users can only see their own connections (not admin-owned)
+            $query->where('user_id', Auth::id())
+                  ->where('is_admin_owned', false)
+                  ->whereNull('admin_id'); // Ensure admin_id is null for user-owned connections
         }
 
         return $query->orderBy('name')->get();
@@ -525,28 +584,105 @@ class TradingBotService
         }
 
         if ($bot->requiresDataConnection()) {
-            if (!$bot->dataConnection) {
-                return ['valid' => false, 'message' => 'Data connection is required for MARKET_STREAM_BASED mode'];
+            // For MARKET_STREAM_BASED mode, we need a data connection
+            // If no separate data connection is set, use exchange connection as fallback
+            $dataConn = $bot->dataConnection;
+            
+            // Fallback: use exchange connection as data connection if compatible
+            if (!$dataConn && $bot->exchangeConnection) {
+                // Auto-assign exchange connection as data connection
+                $bot->update(['data_connection_id' => $bot->exchange_connection_id]);
+                $bot->refresh();
+                $dataConn = $bot->dataConnection;
+                Log::info('Auto-assigned exchange connection as data connection', [
+                    'bot_id' => $bot->id,
+                    'connection_id' => $bot->exchange_connection_id
+                ]);
+            }
+            
+            if (!$dataConn) {
+                return [
+                    'valid' => false, 
+                    'message' => 'Data connection is required for MARKET_STREAM_BASED mode. Please edit the bot and assign a data connection, or ensure the exchange connection supports data streaming.'
+                ];
             }
 
-            if (!$bot->dataConnection->is_active) {
+            if (!$dataConn->is_active) {
                 return ['valid' => false, 'message' => 'Data connection must be active'];
             }
 
-            if (empty($bot->getStreamingSymbols())) {
-                return ['valid' => false, 'message' => 'Streaming symbols are required for MARKET_STREAM_BASED mode'];
+            // Get streaming symbols - use defaults if not configured
+            $streamingSymbols = $bot->getStreamingSymbols();
+            if (empty($streamingSymbols)) {
+                // Try to get default symbols from exchange connection
+                $defaultSymbols = null;
+                if ($dataConn) {
+                    try {
+                        // Try different methods to get symbols
+                        if (method_exists($dataConn, 'getAvailableSymbols')) {
+                            $availableSymbols = $dataConn->getAvailableSymbols();
+                            if (!empty($availableSymbols) && is_array($availableSymbols)) {
+                                // Use first 5 symbols as default
+                                $defaultSymbols = array_slice($availableSymbols, 0, 5);
+                            }
+                        } elseif (isset($dataConn->config['default_symbols']) && is_array($dataConn->config['default_symbols'])) {
+                            $defaultSymbols = array_slice($dataConn->config['default_symbols'], 0, 5);
+                        } elseif ($dataConn->exchange_name) {
+                            // Use common symbols based on exchange type
+                            if ($dataConn->connection_type === 'CRYPTO_EXCHANGE') {
+                                $defaultSymbols = ['BTC/USDT', 'ETH/USDT', 'BNB/USDT'];
+                            } else {
+                                // FX broker - use common pairs
+                                $defaultSymbols = ['EUR/USD', 'GBP/USD', 'USD/JPY'];
+                            }
+                        }
+                        
+                        if ($defaultSymbols) {
+                            $bot->update(['streaming_symbols' => $defaultSymbols]);
+                            $streamingSymbols = $defaultSymbols;
+                            Log::info('Auto-assigned default streaming symbols', [
+                                'bot_id' => $bot->id,
+                                'symbols' => $defaultSymbols
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to get available symbols from connection', [
+                            'bot_id' => $bot->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+                
+                if (empty($streamingSymbols)) {
+                    return [
+                        'valid' => false, 
+                        'message' => 'Streaming symbols are required for MARKET_STREAM_BASED mode. Please edit the bot and configure streaming symbols in the "Market Stream Configuration" section.'
+                    ];
+                }
             }
 
-            if (empty($bot->getStreamingTimeframes())) {
-                return ['valid' => false, 'message' => 'Streaming timeframes are required for MARKET_STREAM_BASED mode'];
+            // Get streaming timeframes - use defaults if not configured
+            $streamingTimeframes = $bot->getStreamingTimeframes();
+            if (empty($streamingTimeframes)) {
+                // Use default timeframes
+                $defaultTimeframes = ['1h', '4h', '1d'];
+                $bot->update(['streaming_timeframes' => $defaultTimeframes]);
+                $streamingTimeframes = $defaultTimeframes;
+                Log::info('Auto-assigned default streaming timeframes', [
+                    'bot_id' => $bot->id,
+                    'timeframes' => $defaultTimeframes
+                ]);
             }
 
             // Validate data connection type matches exchange connection type
             $exchangeType = $bot->getConnectionType();
-            $dataType = $bot->dataConnection->connection_type === 'CRYPTO_EXCHANGE' ? 'crypto' : 'fx';
+            $dataType = $dataConn->connection_type === 'CRYPTO_EXCHANGE' ? 'crypto' : 'fx';
             
             if ($exchangeType !== $dataType) {
-                return ['valid' => false, 'message' => 'Data connection type must match exchange connection type'];
+                return [
+                    'valid' => false, 
+                    'message' => 'Data connection type must match exchange connection type. Exchange: ' . $exchangeType . ', Data: ' . $dataType
+                ];
             }
         }
 

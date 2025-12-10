@@ -50,10 +50,16 @@ class MenuConfigService
      * @param User $user
      * @return array
      */
-    public function getMenuForUser(User $user): array
+    public function getMenuForUser(User $user, bool $forceRefresh = false): array
     {
         // Cache menu structure per user
         $cacheKey = 'user_menu_' . $user->id;
+        
+        // Force refresh if requested (for debugging)
+        if ($forceRefresh) {
+            Cache::tags(['menu', 'user_' . $user->id])->forget($cacheKey);
+            Cache::forget($cacheKey);
+        }
         
         return Cache::tags(['menu', 'user_' . $user->id])
             ->remember($cacheKey, 3600, function () use ($user) {
@@ -64,6 +70,16 @@ class MenuConfigService
                 
                 // Allow addons to inject menu items
                 $menu = $this->injectAddonMenus($menu, $user);
+                
+                // Filter out Trading Configuration menu if it exists (safety check)
+                if (isset($menu['trading']['items'])) {
+                    $menu['trading']['items'] = array_filter($menu['trading']['items'], function($item) {
+                        $route = $item['route'] ?? '';
+                        return $route !== 'user.trading.configuration.index';
+                    });
+                    // Re-index array
+                    $menu['trading']['items'] = array_values($menu['trading']['items']);
+                }
                 
                 return $menu;
             });
@@ -96,27 +112,21 @@ class MenuConfigService
             'type' => 'unified_page',
             'tabs' => [
                 'connections' => __('Connections'),
-                'executions' => __('Executions'),
-                'open-positions' => __('Open Positions'),
-                'closed-positions' => __('Closed Positions'),
-                'analytics' => __('Analytics'),
                 'trading-bots' => __('Trading Bots'),
             ],
-        ];
-
-        // Trading Configuration (unified page)
-        $items[] = [
-            'route' => 'user.trading.configuration.index',
-            'label' => __('Trading Configuration'),
-            'icon' => 'fas fa-cog',
-            'tooltip' => __('Configure risk presets, filter strategies, and AI model profiles'),
-            'type' => 'unified_page',
-            'tabs' => [
-                'data-connections' => __('Data Connections'),
-                'risk-presets' => __('Risk Presets'),
-                'smart-risk' => __('Smart Risk Management'),
-                'filter-strategies' => __('Filter Strategies'),
-                'ai-profiles' => __('AI Model Profiles'),
+            'children' => [
+                [
+                    'route' => 'user.trading.execution-log.index',
+                    'label' => __('Execution Log'),
+                    'icon' => 'fas fa-list',
+                    'tooltip' => __('View all trade execution logs and monitor execution status'),
+                ],
+                [
+                    'route' => 'user.trading.configurations.index',
+                    'label' => __('Configurations'),
+                    'icon' => 'fas fa-cog',
+                    'tooltip' => __('Configure risk presets, filter strategies, and AI model profiles'),
+                ],
             ],
         ];
 
@@ -294,6 +304,9 @@ class MenuConfigService
      */
     public function clearCache(User $user): void
     {
+        $cacheKey = 'user_menu_' . $user->id;
+        Cache::forget($cacheKey);
+        Cache::tags(['menu', 'user_' . $user->id])->forget($cacheKey);
         Cache::tags(['menu', 'user_' . $user->id])->flush();
     }
 
@@ -304,7 +317,20 @@ class MenuConfigService
      */
     public function clearAllCache(): void
     {
+        // Clear all menu-related cache
         Cache::tags(['menu'])->flush();
+        // Also try to clear by pattern (if using file cache)
+        try {
+            $cacheDir = storage_path('framework/cache/data');
+            if (is_dir($cacheDir)) {
+                $files = glob($cacheDir . '/*user_menu*');
+                foreach ($files as $file) {
+                    @unlink($file);
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore errors
+        }
     }
 }
 

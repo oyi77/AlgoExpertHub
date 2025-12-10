@@ -181,6 +181,17 @@ Route::name('user.')->group(function () {
                     Route::get('/', [\App\Http\Controllers\User\Trading\TradingOperationsController::class, 'index'])->name('index');
                 });
 
+                // Execution Log (sub menu from Trading Operations)
+                Route::prefix('execution-log')->name('execution-log.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\ExecutionLogController::class, 'index'])->name('index');
+                    Route::post('manual-trade', [\App\Http\Controllers\User\Trading\ExecutionLogController::class, 'manualTrade'])->name('manual-trade');
+                });
+
+                // Configurations (sub menu from Trading Operations)
+                Route::prefix('configurations')->name('configurations.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\User\Trading\TradingConfigurationsController::class, 'index'])->name('index');
+                });
+
                 // Trading Configuration (unified page with tabs)
                 Route::prefix('configuration')->name('configuration.')->group(function () {
                     Route::get('/', [\App\Http\Controllers\User\Trading\TradingConfigurationController::class, 'index'])->name('index');
@@ -836,6 +847,33 @@ Route::name('user.')->group(function () {
                                 return back()->with('error', __('Failed to load create form.'));
                             }
                         })->name('create');
+                        
+                        Route::get('/{exchangeConnection}', function ($id) {
+                            try {
+                                $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('id', $id)
+                                    ->where('user_id', auth()->id())
+                                    ->where('is_admin_owned', false)
+                                    ->firstOrFail();
+                                
+                                $title = 'Exchange Connection - ' . $connection->name;
+                                
+                                // Try to use addon view, fallback to redirect to operations page
+                                if (view()->exists('trading-management::user.exchange-connections.show')) {
+                                    return view('trading-management::user.exchange-connections.show', compact('title', 'connection'));
+                                } else {
+                                    // Fallback: redirect to operations page with connection info
+                                    return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
+                                        ->with('info', __('Connection details: ') . $connection->name);
+                                }
+                            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                                return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
+                                    ->with('error', __('Connection not found or you do not have permission to view it.'));
+                            } catch (\Exception $e) {
+                                \Log::error('Exchange connection show error: ' . $e->getMessage());
+                                return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
+                                    ->with('error', __('Failed to load connection details.'));
+                            }
+                        })->name('show');
                         
                         Route::post('/', function (Request $request) {
                             try {

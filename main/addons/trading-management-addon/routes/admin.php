@@ -33,6 +33,7 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
     Route::get('/{exchangeConnection}/edit', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'edit'])->name('edit');
     Route::put('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'update'])->name('update');
     Route::delete('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'destroy'])->name('destroy');
+    Route::post('/{exchangeConnection}/transfer-ownership', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'transferOwnership'])->name('transfer-ownership');
     
     // Testing endpoints
     Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
@@ -96,6 +97,7 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             Route::get('/{exchangeConnection}/edit', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'edit'])->name('edit');
             Route::put('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'update'])->name('update');
             Route::delete('/{exchangeConnection}', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'destroy'])->name('destroy');
+            Route::post('/{exchangeConnection}/transfer-ownership', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'transferOwnership'])->name('transfer-ownership');
             
             // Testing endpoints
             Route::post('/test-data-fetch', [\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class, 'testDataFetch'])->name('test-data-fetch');
@@ -224,15 +226,43 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             $title = 'Strategy Management';
             
             try {
-                $filterStrategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::with('owner')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(20, ['*'], 'filter_page');
+                // Query all strategies (no filters)
+                $filterStrategiesQuery = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::with('owner')
+                    ->orderBy('created_at', 'desc');
+                
+                // Debug: Check total count before pagination
+                $totalCount = $filterStrategiesQuery->count();
+                $rulebookExists = $filterStrategiesQuery->clone()->where('name', 'LIKE', '%RULEBOOK%')->exists();
+                
+                \Log::info('Filter strategies query', [
+                    'total_count' => $totalCount,
+                    'rulebook_exists' => $rulebookExists,
+                    'query_sql' => $filterStrategiesQuery->toSql()
+                ]);
+                
+                $filterStrategies = $filterStrategiesQuery->paginate(20, ['*'], 'filter_page');
+                
+                // Debug: Log after pagination
+                \Log::info('Filter strategies paginated', [
+                    'current_page' => $filterStrategies->currentPage(),
+                    'per_page' => $filterStrategies->perPage(),
+                    'total' => $filterStrategies->total(),
+                    'count' => $filterStrategies->count(),
+                    'has_more' => $filterStrategies->hasMorePages(),
+                    'names' => $filterStrategies->pluck('name')->toArray(),
+                    'ids' => $filterStrategies->pluck('id')->toArray()
+                ]);
                 
                 $aiProfiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::with('owner')
                     ->orderBy('created_at', 'desc')
                     ->paginate(20, ['*'], 'ai_page');
             } catch (\Exception $e) {
-                \Log::error('Trading strategy error', ['error' => $e->getMessage()]);
+                \Log::error('Trading strategy error', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
                 $filterStrategies = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                 $aiProfiles = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
             }
@@ -346,6 +376,8 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
 
     // 6. Trading Bots (Coinrule-like bot builder)
     Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
+        // AJAX endpoints
+        Route::get('/exchange-symbols', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'getExchangeSymbols'])->name('exchange-symbols');
         Route::get('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'index'])->name('index');
         Route::get('/create', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'create'])->name('create');
         Route::post('/', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'store'])->name('store');
@@ -353,14 +385,25 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/{id}/edit', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'edit'])->name('edit');
         Route::put('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'update'])->name('update');
         Route::delete('/{id}', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/transfer-ownership', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'transferOwnership'])->name('transfer-ownership');
         Route::post('/{id}/toggle-active', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'toggleActive'])->name('toggle-active');
         Route::post('/{id}/start', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'start'])->name('start');
         Route::post('/{id}/stop', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'stop'])->name('stop');
         Route::post('/{id}/pause', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'pause'])->name('pause');
         Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'resume'])->name('resume');
+        
+        // Monitoring endpoints (AJAX)
+        Route::get('/{id}/worker-status', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'workerStatus'])->name('worker-status');
+        Route::get('/{id}/positions', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'positions'])->name('positions');
+        Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'logs'])->name('logs');
+        Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'metrics'])->name('metrics');
     });
 
-    // 7. Marketplace (Bot Templates & Trader Profiles)
+    // 7. System Health
+    Route::get('system-health', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingManagementController::class, 'systemHealth'])
+        ->name('system-health');
+
+    // 8. Marketplace (Bot Templates & Trader Profiles)
     Route::prefix('marketplace')->name('marketplace.')->group(function () {
         // Bot Templates
         Route::get('bots', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\BotMarketplaceController::class, 'index'])->name('bots.index');

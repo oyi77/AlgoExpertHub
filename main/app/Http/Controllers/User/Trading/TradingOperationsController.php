@@ -23,71 +23,46 @@ class TradingOperationsController extends Controller
         if ($data['tradingManagementEnabled']) {
             // Connections tab
             if ($data['activeTab'] === 'connections') {
-                if (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
-                    $data['connections'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('user_id', Auth::id())
-                        ->where('is_admin_owned', false)
-                        ->with(['preset', 'user'])
-                        ->latest()
-                        ->paginate(20, ['*'], 'connections_page');
+                // Try ExchangeConnection first (new unified model), fallback to ExecutionConnection
+                $connectionModel = null;
+                if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
+                    $connectionModel = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class;
+                } elseif (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
+                    $connectionModel = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class;
                 }
-            }
-
-            // Executions tab
-            if ($data['activeTab'] === 'executions') {
-                if (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::class)) {
-                    $data['executions'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::whereHas('connection', function($q) {
-                            $q->where('user_id', Auth::id());
-                        })
-                        ->with(['connection', 'signal'])
-                        ->latest()
-                        ->paginate(20, ['*'], 'executions_page');
-                }
-            }
-
-            // Open Positions tab
-            if ($data['activeTab'] === 'open-positions') {
-                if (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionPosition::class)) {
-                    $data['openPositions'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionPosition::whereHas('connection', function($q) {
-                            $q->where('user_id', Auth::id());
-                        })
-                        ->where('status', 'open')
-                        ->with(['connection', 'signal'])
-                        ->latest()
-                        ->paginate(20, ['*'], 'open_positions_page');
-                }
-            }
-
-            // Closed Positions tab
-            if ($data['activeTab'] === 'closed-positions') {
-                if (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionPosition::class)) {
-                    $data['closedPositions'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionPosition::whereHas('connection', function($q) {
-                            $q->where('user_id', Auth::id());
-                        })
-                        ->where('status', 'closed')
-                        ->with(['connection', 'signal'])
-                        ->latest()
-                        ->paginate(20, ['*'], 'closed_positions_page');
-                }
-            }
-
-            // Analytics tab
-            if ($data['activeTab'] === 'analytics') {
-                if (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionAnalytic::class)) {
-                    $data['analytics'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionAnalytic::whereHas('connection', function($q) {
-                            $q->where('user_id', Auth::id());
-                        })
-                        ->latest()
-                        ->paginate(20, ['*'], 'analytics_page');
+                
+                if ($connectionModel) {
+                    try {
+                        $data['connections'] = $connectionModel::where('user_id', Auth::id())
+                            ->where('is_admin_owned', false)
+                            ->with(['preset', 'user'])
+                            ->latest()
+                            ->paginate(20, ['*'], 'connections_page');
+                    } catch (\Exception $e) {
+                        \Log::error('TradingOperations: Error loading connections', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        $data['connections'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
                 }
             }
 
             // Trading Bots tab
             if ($data['activeTab'] === 'trading-bots') {
                 if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {
-                    $data['bots'] = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::where('user_id', Auth::id())
-                        ->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
-                        ->latest()
-                        ->paginate(20, ['*'], 'bots_page');
+                    try {
+                        $data['bots'] = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::where('user_id', Auth::id())
+                            ->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
+                            ->latest()
+                            ->paginate(20, ['*'], 'bots_page');
+                    } catch (\Exception $e) {
+                        \Log::error('TradingOperations: Error loading trading bots', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        $data['bots'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
                 }
             }
         }

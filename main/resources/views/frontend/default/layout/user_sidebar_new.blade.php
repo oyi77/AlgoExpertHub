@@ -10,7 +10,8 @@
     $user = auth()->user();
     
     // Use cached menu (getMenuForUser includes caching)
-    $menuStructure = $menuConfig->getMenuForUser($user);
+    // Force refresh to ensure Trading Configuration is removed
+    $menuStructure = $menuConfig->getMenuForUser($user, true);
     
     // Final safety check: Ensure trading menu exists if user has active plan
     $onboardingService = app(\App\Services\UserOnboardingService::class);
@@ -100,6 +101,12 @@
                     @foreach($group['items'] as $item)
                         @php
                             $itemRoute = $item['route'] ?? null;
+                            
+                            // Skip Trading Configuration menu item
+                            if ($itemRoute === 'user.trading.configuration.index') {
+                                continue;
+                            }
+                            
                             $routeUrl = '#';
                             if ($itemRoute) {
                                 try {
@@ -110,16 +117,58 @@
                             }
                         @endphp
                         @if(isset($item['type']) && $item['type'] === 'unified_page')
-                            {{-- Unified Page with Tabs (no submenu in sidebar, direct link) --}}
-                            <li class="{{ Config::singleMenu($itemRoute ?? '') }}">
-                                <a href="{{ $routeUrl }}" 
-                                   data-bs-toggle="tooltip" 
-                                   data-bs-placement="right" 
-                                   title="{{ $item['tooltip'] ?? $item['label'] ?? 'N/A' }}">
-                                    <i class="{{ $item['icon'] ?? 'fas fa-circle' }}"></i>
-                                    <span>{{ $item['label'] ?? 'N/A' }}</span>
-                                </a>
-                            </li>
+                            {{-- Unified Page with Tabs (with optional submenu) --}}
+                            @if(isset($item['children']) && is_array($item['children']) && count($item['children']) > 0)
+                                {{-- Has submenu (children) --}}
+                                @php
+                                    $submenuRoutes = collect($item['children'])->pluck('route')->toArray();
+                                    $isSubmenuActive = in_array(request()->route()->getName() ?? '', $submenuRoutes) || Config::singleMenu($itemRoute ?? '');
+                                @endphp
+                                <li class="has_submenu {{ $isSubmenuActive ? 'open' : '' }}">
+                                    <a href="{{ $routeUrl }}" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="right" 
+                                       title="{{ $item['tooltip'] ?? $item['label'] ?? 'N/A' }}">
+                                        <i class="{{ $item['icon'] ?? 'fas fa-circle' }}"></i>
+                                        <span>{{ $item['label'] ?? 'N/A' }}</span>
+                                    </a>
+                                    <ul class="submenu">
+                                        @foreach($item['children'] as $child)
+                                            @php
+                                                $childRoute = $child['route'] ?? null;
+                                                $childUrl = '#';
+                                                if ($childRoute) {
+                                                    try {
+                                                        $childUrl = route($childRoute);
+                                                    } catch (\Exception $e) {
+                                                        $childUrl = '#';
+                                                    }
+                                                }
+                                            @endphp
+                                            <li class="{{ Config::singleMenu($childRoute ?? '') }}">
+                                                <a href="{{ $childUrl }}" 
+                                                   data-bs-toggle="tooltip" 
+                                                   data-bs-placement="right" 
+                                                   title="{{ $child['tooltip'] ?? $child['label'] ?? 'N/A' }}">
+                                                    <i class="{{ $child['icon'] ?? 'fas fa-circle' }}"></i>
+                                                    <span>{{ $child['label'] ?? 'N/A' }}</span>
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @else
+                                {{-- No submenu, direct link --}}
+                                <li class="{{ Config::singleMenu($itemRoute ?? '') }}">
+                                    <a href="{{ $routeUrl }}" 
+                                       data-bs-toggle="tooltip" 
+                                       data-bs-placement="right" 
+                                       title="{{ $item['tooltip'] ?? $item['label'] ?? 'N/A' }}">
+                                        <i class="{{ $item['icon'] ?? 'fas fa-circle' }}"></i>
+                                        <span>{{ $item['label'] ?? 'N/A' }}</span>
+                                    </a>
+                                </li>
+                            @endif
                         @elseif(isset($item['type']) && $item['type'] === 'marketplace')
                             {{-- Marketplace - Show as accordion menu --}}
                             <li class="has_submenu {{ Config::singleMenu($itemRoute ?? '') ? 'open' : '' }}">
