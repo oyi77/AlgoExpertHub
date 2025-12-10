@@ -1,5 +1,9 @@
-name: 'AI Connections'
-description: 'Endpoints for managing and using AI connections.'
+name: 'AI Connection'
+description: |-
+  Endpoints for managing and using AI connections.
+
+  These endpoints allow consumer addons to interact with AI connections
+  for executing AI calls, testing connections, and tracking usage.
 endpoints:
   -
     custom: []
@@ -8,8 +12,12 @@ endpoints:
     uri: 'api/ai-connections/providers/{provider}/connections'
     metadata:
       custom: []
-      groupName: 'AI Connections'
-      groupDescription: 'Endpoints for managing and using AI connections.'
+      groupName: 'AI Connection'
+      groupDescription: |-
+        Endpoints for managing and using AI connections.
+
+        These endpoints allow consumer addons to interact with AI connections
+        for executing AI calls, testing connections, and tracking usage.
       subgroup: ''
       subgroupDescription: ''
       title: 'Get available connections for a provider'
@@ -57,7 +65,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -68,8 +76,12 @@ endpoints:
     uri: api/ai-connections/execute
     metadata:
       custom: []
-      groupName: 'AI Connections'
-      groupDescription: 'Endpoints for managing and using AI connections.'
+      groupName: 'AI Connection'
+      groupDescription: |-
+        Endpoints for managing and using AI connections.
+
+        These endpoints allow consumer addons to interact with AI connections
+        for executing AI calls, testing connections, and tracking usage.
       subgroup: ''
       subgroupDescription: ''
       title: 'Execute AI call'
@@ -162,7 +174,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -173,8 +185,12 @@ endpoints:
     uri: 'api/ai-connections/test/{connection_id}'
     metadata:
       custom: []
-      groupName: 'AI Connections'
-      groupDescription: 'Endpoints for managing and using AI connections.'
+      groupName: 'AI Connection'
+      groupDescription: |-
+        Endpoints for managing and using AI connections.
+
+        These endpoints allow consumer addons to interact with AI connections
+        for executing AI calls, testing connections, and tracking usage.
       subgroup: ''
       subgroupDescription: ''
       title: 'Test a connection'
@@ -191,7 +207,7 @@ endpoints:
         name: connection_id
         description: 'The ID of the connection.'
         required: true
-        example: 17
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -209,7 +225,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      connection_id: 17
+      connection_id: 1
       connection: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -227,7 +243,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -238,8 +254,12 @@ endpoints:
     uri: api/ai-connections/track-usage
     metadata:
       custom: []
-      groupName: 'AI Connections'
-      groupDescription: 'Endpoints for managing and using AI connections.'
+      groupName: 'AI Connection'
+      groupDescription: |-
+        Endpoints for managing and using AI connections.
+
+        These endpoints allow consumer addons to interact with AI connections
+        for executing AI calls, testing connections, and tracking usage.
       subgroup: ''
       subgroupDescription: ''
       title: 'Track usage (manual tracking if needed)'
@@ -326,7 +346,7 @@ endpoints:
         name: error_message
         description: 'Error message if any.'
         required: false
-        example: consequatur
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -339,7 +359,7 @@ endpoints:
       cost: 0.0025
       success: true
       response_time_ms: 120
-      error_message: consequatur
+      error_message: architecto
     fileParameters: []
     responses:
       -
@@ -352,7 +372,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

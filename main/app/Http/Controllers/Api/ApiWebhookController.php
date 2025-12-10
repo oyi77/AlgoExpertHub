@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * @group Webhooks
- * Ingestion endpoints for external providers.
+ * API webhook endpoint for external providers.
+ * 
+ * This endpoint receives custom API webhook requests and processes them as trading signals.
+ * Supports signature verification for security. No authentication required - uses channel source ID.
  */
 class ApiWebhookController extends Controller
 {
@@ -22,11 +25,35 @@ class ApiWebhookController extends Controller
      * @param int $channelSourceId
      * @return \Illuminate\Http\JsonResponse
      * @urlParam channelSourceId integer required The channel source ID. Example: 1
-     * @header X-Signature A signature header used to verify payload integrity.
-     * @bodyParam message mixed The signal message; if JSON, the whole payload will be parsed for common fields.
-     * @response 200 {"ok": true}
-     * @response 400 {"error": "Invalid channel type"}
-     * @response 401 {"error": "Invalid signature"}
+     * @header X-Signature string optional HMAC-SHA256 signature for payload verification
+     * @header Signature string optional Alternative signature header name
+     * @bodyParam message string optional Signal message. Example: EUR/USD BUY 1.1000 SL 1.0950 TP 1.1100
+     * @bodyParam text string optional Alternative message field name
+     * @bodyParam content string optional Alternative message field name
+     * @bodyParam body string optional Alternative message field name
+     * @bodyParam signal string optional Alternative message field name
+     * @bodyParam data string optional Alternative message field name
+     * @response 200 {
+     *   "ok": true
+     * }
+     * @response 400 {
+     *   "error": "Invalid channel type"
+     * }
+     * @response 400 {
+     *   "error": "Channel is not active"
+     * }
+     * @response 400 {
+     *   "error": "No message found in payload"
+     * }
+     * @response 401 {
+     *   "error": "Invalid signature"
+     * }
+     * @response 404 {
+     *   "error": "Channel not found"
+     * }
+     * @response 500 {
+     *   "error": "Internal server error"
+     * }
      */
     public function handle(Request $request, $channelSourceId)
     {

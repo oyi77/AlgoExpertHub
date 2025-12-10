@@ -9,9 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 /**
- * ExchangeConnectionStatusController
- * 
- * API endpoints for real-time connection status checks
+ * @group Trading Management
+ * Exchange connection status and management endpoints
  */
 class ExchangeConnectionStatusController extends Controller
 {
@@ -23,9 +22,30 @@ class ExchangeConnectionStatusController extends Controller
     }
 
     /**
-     * Get connection status
+     * Get Connection Status
      * 
-     * GET /api/exchange-connections/{id}/status
+     * Get real-time status and health information for an exchange connection
+     * 
+     * @param ExchangeConnection $connection
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam connection integer required Exchange connection ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "connection_id": 1,
+     *     "name": "Binance Main",
+     *     "status": "connected",
+     *     "is_active": true,
+     *     "health": "healthy",
+     *     "is_stabilized": true,
+     *     "last_tested_at": "2023-01-01T00:00:00.000000Z",
+     *     "last_error": null,
+     *     "can_fetch_data": true,
+     *     "can_execute_trades": true,
+     *     "can_copy_trade": true
+     *   }
+     * }
      */
     public function status(ExchangeConnection $connection): JsonResponse
     {
@@ -51,9 +71,28 @@ class ExchangeConnectionStatusController extends Controller
     }
 
     /**
-     * Test connection (trigger health check)
+     * Test Connection
      * 
-     * POST /api/exchange-connections/{id}/test
+     * Trigger a health check test for an exchange connection
+     * 
+     * @param ExchangeConnection $connection
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam connection integer required Exchange connection ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Connection test successful",
+     *   "data": {
+     *     "connection_id": 1,
+     *     "status": "connected",
+     *     "is_active": true,
+     *     "last_tested_at": "2023-01-01T00:00:00.000000Z"
+     *   }
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Connection test failed"
+     * }
      */
     public function test(ExchangeConnection $connection): JsonResponse
     {
@@ -72,9 +111,24 @@ class ExchangeConnectionStatusController extends Controller
     }
 
     /**
-     * Verify connection is stabilized
+     * Check Connection Stabilized
      * 
-     * GET /api/exchange-connections/{id}/stabilized
+     * Verify if connection is stabilized and ready for trading
+     * 
+     * @param ExchangeConnection $connection
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam connection integer required Exchange connection ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "connection_id": 1,
+     *     "is_stabilized": true,
+     *     "status": "connected",
+     *     "is_active": true,
+     *     "last_tested_at": "2023-01-01T00:00:00.000000Z"
+     *   }
+     * }
      */
     public function stabilized(ExchangeConnection $connection): JsonResponse
     {

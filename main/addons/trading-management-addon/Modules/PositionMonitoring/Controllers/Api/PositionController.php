@@ -11,9 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 /**
- * PositionController
- * 
- * API endpoints for real-time position and balance control
+ * @group Trading Management
+ * Trading bot position and balance management endpoints
  */
 class PositionController extends Controller
 {
@@ -25,9 +24,34 @@ class PositionController extends Controller
     }
 
     /**
-     * Get all positions for trading bot
+     * List Positions
      * 
-     * GET /api/trading-bots/{id}/positions
+     * Get all positions for a trading bot
+     * 
+     * @param TradingBot $bot
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam bot integer required Trading bot ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "symbol": "EUR/USD",
+     *       "direction": "buy",
+     *       "entry_price": "1.1000",
+     *       "current_price": "1.1050",
+     *       "stop_loss": "1.0950",
+     *       "take_profit": "1.1100",
+     *       "quantity": 0.1,
+     *       "status": "open",
+     *       "profit_loss": "50.00",
+     *       "profit_loss_percentage": 5.0,
+     *       "opened_at": "2023-01-01T00:00:00.000000Z",
+     *       "closed_at": null
+     *     }
+     *   ]
+     * }
      */
     public function index(TradingBot $bot): JsonResponse
     {
@@ -58,9 +82,34 @@ class PositionController extends Controller
     }
 
     /**
-     * Update position TP/SL
+     * Update Position
      * 
-     * PATCH /api/trading-bots/{id}/positions/{position_id}
+     * Update stop loss or take profit for a position
+     * 
+     * @param TradingBot $bot
+     * @param TradingBotPosition $position
+     * @param Request $request
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam bot integer required Trading bot ID. Example: 1
+     * @urlParam position integer required Position ID. Example: 1
+     * @bodyParam stop_loss decimal optional New stop loss price. Example: 1.0950
+     * @bodyParam take_profit decimal optional New take profit price. Example: 1.1100
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Position updated successfully",
+     *   "data": {
+     *     "position": {...}
+     *   }
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Update failed"
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Position does not belong to this bot"
+     * }
      */
     public function update(TradingBot $bot, TradingBotPosition $position, Request $request): JsonResponse
     {
@@ -96,9 +145,33 @@ class PositionController extends Controller
     }
 
     /**
-     * Close position manually
+     * Close Position
      * 
-     * POST /api/trading-bots/{id}/positions/{position_id}/close
+     * Manually close an open position
+     * 
+     * @param TradingBot $bot
+     * @param TradingBotPosition $position
+     * @param Request $request
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam bot integer required Trading bot ID. Example: 1
+     * @urlParam position integer required Position ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Position closed successfully",
+     *   "data": {
+     *     "position": {...},
+     *     "profit_loss": "50.00"
+     *   }
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Position is already closed"
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "Position does not belong to this bot"
+     * }
      */
     public function close(TradingBot $bot, TradingBotPosition $position, Request $request): JsonResponse
     {
@@ -137,9 +210,27 @@ class PositionController extends Controller
     }
 
     /**
-     * Get current balance
+     * Get Balance
      * 
-     * GET /api/trading-bots/{id}/balance
+     * Get current account balance for a trading bot's exchange connection
+     * 
+     * @param TradingBot $bot
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam bot integer required Trading bot ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "balance": "10000.00",
+     *     "currency": "USD",
+     *     "available": "9500.00",
+     *     "in_use": "500.00"
+     *   }
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Bot has no exchange connection"
+     * }
      */
     public function balance(TradingBot $bot): JsonResponse
     {

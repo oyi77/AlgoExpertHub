@@ -10,11 +10,28 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * @group Webhooks
- * Telegram ingestion endpoint.
+ * Telegram webhook endpoint for receiving channel updates.
+ * 
+ * This endpoint receives Telegram updates and processes them as trading signals.
+ * No authentication required - uses channel source ID for identification.
  *
  * @urlParam channelSourceId integer required The channel source ID. Example: 1
- * @response 200 {"status":"ok"}
- * @response 404 {"status":"error","message":"Invalid channel"}
+ * @bodyParam update_id integer required Telegram update ID. Example: 123456789
+ * @bodyParam message object optional Message object (for private messages)
+ * @bodyParam channel_post object optional Channel post object (for channel messages)
+ * @response 200 {
+ *   "status": "ok"
+ * }
+ * @response 200 {
+ *   "status": "ignored"
+ * }
+ * @response 404 {
+ *   "status": "error",
+ *   "message": "Invalid channel"
+ * }
+ * @response 500 {
+ *   "status": "error"
+ * }
  */
 class TelegramWebhookController extends Controller
 {

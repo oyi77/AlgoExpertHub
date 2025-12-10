@@ -9,6 +9,10 @@ use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @group Page Builder
+ * Page builder content management endpoints
+ */
 class PageBuilderApiController extends Controller
 {
     protected $pageBuilderService;
@@ -19,7 +23,26 @@ class PageBuilderApiController extends Controller
     }
 
     /**
-     * Save pagebuilder content
+     * Save Page Content
+     * 
+     * Save page builder content for a page
+     * 
+     * @param Request $request
+     * @param int $pageId
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam pageId integer required Page ID. Example: 1
+     * @bodyParam content json required Page builder content JSON. Example: {"blocks": [...]}
+     * @bodyParam html string optional Generated HTML content
+     * @bodyParam css string optional Custom CSS
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Content saved successfully"
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Failed to save content: ..."
+     * }
      */
     public function saveContent(Request $request, $pageId)
     {
@@ -97,7 +120,30 @@ class PageBuilderApiController extends Controller
     }
 
     /**
-     * Get pagebuilder content
+     * Get Page Content
+     * 
+     * Retrieve page builder content for a page
+     * 
+     * @param int $pageId
+     * @return JsonResponse
+     * @authenticated
+     * @urlParam pageId integer required Page ID. Example: 1
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "content": {...},
+     *     "html": "...",
+     *     "css": "..."
+     *   }
+     * }
+     * @response 200 {
+     *   "success": true,
+     *   "data": null
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Failed to get content: ..."
+     * }
      */
     public function getContent($pageId)
     {

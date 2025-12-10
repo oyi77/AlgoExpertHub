@@ -1,5 +1,9 @@
 name: Webhooks
-description: 'Telegram ingestion endpoint.'
+description: |-
+  Telegram webhook endpoint for receiving channel updates.
+
+  This endpoint receives Telegram updates and processes them as trading signals.
+  No authentication required - uses channel source ID for identification.
 endpoints:
   -
     custom: []
@@ -9,7 +13,11 @@ endpoints:
     metadata:
       custom: []
       groupName: Webhooks
-      groupDescription: 'Telegram ingestion endpoint.'
+      groupDescription: |-
+        Telegram webhook endpoint for receiving channel updates.
+
+        This endpoint receives Telegram updates and processes them as trading signals.
+        No authentication required - uses channel source ID for identification.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -36,15 +44,51 @@ endpoints:
       channelSourceId: 1
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+    bodyParameters:
+      update_id:
+        custom: []
+        name: update_id
+        description: 'Telegram update ID.'
+        required: true
+        example: 123456789
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      message:
+        custom: []
+        name: message
+        description: 'optional Message object (for private messages)'
+        required: false
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      channel_post:
+        custom: []
+        name: channel_post
+        description: 'optional Channel post object (for channel messages)'
+        required: false
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      update_id: 123456789
+      message: []
+      channel_post: []
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null
@@ -56,7 +100,11 @@ endpoints:
     metadata:
       custom: []
       groupName: Webhooks
-      groupDescription: 'Ingestion endpoints for external providers.'
+      groupDescription: |-
+        API webhook endpoint for external providers.
+
+        This endpoint receives custom API webhook requests and processes them as trading signals.
+        Supports signature verification for security. No authentication required - uses channel source ID.
       subgroup: ''
       subgroupDescription: ''
       title: 'Handle API webhook requests.'
@@ -65,7 +113,8 @@ endpoints:
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
-      X-Signature: 'A signature header used to verify payload integrity.'
+      X-Signature: 'string optional HMAC-SHA256 signature for payload verification'
+      Signature: 'string optional Alternative signature header name'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -88,41 +137,146 @@ endpoints:
       message:
         custom: []
         name: message
-        description: 'The signal message; if JSON, the whole payload will be parsed for common fields.'
+        description: 'optional Signal message.'
         required: false
-        example: consequatur
-        type: mixed
+        example: 'EUR/USD BUY 1.1000 SL 1.0950 TP 1.1100'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      text:
+        custom: []
+        name: text
+        description: 'optional Alternative message field name'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      content:
+        custom: []
+        name: content
+        description: 'optional Alternative message field name'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      body:
+        custom: []
+        name: body
+        description: 'optional Alternative message field name'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      signal:
+        custom: []
+        name: signal
+        description: 'optional Alternative message field name'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      data:
+        custom: []
+        name: data
+        description: 'optional Alternative message field name'
+        required: false
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      message: consequatur
+      message: 'EUR/USD BUY 1.1000 SL 1.0950 TP 1.1100'
+      text: architecto
+      content: architecto
+      body: architecto
+      signal: architecto
+      data: architecto
     fileParameters: []
     responses:
       -
         custom: []
         status: 200
-        content: '{"ok": true}'
+        content: |-
+          {
+            "ok": true
+          }
         headers: []
         description: ''
       -
         custom: []
         status: 400
-        content: '{"error": "Invalid channel type"}'
+        content: |-
+          {
+            "error": "Invalid channel type"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "error": "Channel is not active"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "error": "No message found in payload"
+          }
         headers: []
         description: ''
       -
         custom: []
         status: 401
-        content: '{"error": "Invalid signature"}'
+        content: |-
+          {
+            "error": "Invalid signature"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "error": "Channel not found"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+            "error": "Internal server error"
+          }
         headers: []
         description: ''
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

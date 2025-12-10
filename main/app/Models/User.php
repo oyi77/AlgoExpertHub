@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Searchable;
+    use HasFactory, Searchable, HasApiTokens;
 
     protected $casts = [
         'address' => 'object',

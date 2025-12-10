@@ -62,7 +62,16 @@ return [
     ],
     'groups' => [
         'default' => 'Endpoints',
-        'order' => [],
+        'order' => [
+            'Authentication',
+            'User APIs',
+            'Admin APIs',
+            'Webhooks',
+            'Trading Management',
+            'AI Connection',
+            'Page Builder',
+            'Multi-Channel Signal',
+        ],
     ],
     'logo' => false,
     'last_updated' => 'Last updated: {date:F j, Y}',

@@ -1,27 +1,51 @@
-name: Endpoints
-description: ''
+name: 'Trading Management'
+description: 'Exchange connection status and management endpoints'
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/user
+    uri: 'api/trading-management/exchange-connections/{connection_id}/status'
     metadata:
       custom: []
-      groupName: Endpoints
-      groupDescription: ''
+      groupName: 'Trading Management'
+      groupDescription: 'Exchange connection status and management endpoints'
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
+      title: 'Get Connection Status'
+      description: 'Get real-time status and health information for an exchange connection'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
+    urlParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The ID of the connection.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      connection:
+        custom: []
+        name: connection
+        description: 'Exchange connection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      connection_id: 1
+      connection: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -30,21 +54,617 @@ endpoints:
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api/user could not be found."
+            "success": true,
+            "data": {
+              "connection_id": 1,
+              "name": "Binance Main",
+              "status": "connected",
+              "is_active": true,
+              "health": "healthy",
+              "is_stabilized": true,
+              "last_tested_at": "2023-01-01T00:00:00.000000Z",
+              "last_error": null,
+              "can_fetch_data": true,
+              "can_execute_trades": true,
+              "can_copy_trade": true
+            }
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/trading-management/exchange-connections/{connection_id}/test'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Exchange connection status and management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Test Connection'
+      description: 'Trigger a health check test for an exchange connection'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The ID of the connection.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      connection:
+        custom: []
+        name: connection
+        description: 'Exchange connection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      connection_id: 1
+      connection: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Connection test successful",
+            "data": {
+              "connection_id": 1,
+              "status": "connected",
+              "is_active": true,
+              "last_tested_at": "2023-01-01T00:00:00.000000Z"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "success": false,
+            "message": "Connection test failed"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/trading-management/exchange-connections/{connection_id}/stabilized'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Exchange connection status and management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Check Connection Stabilized'
+      description: 'Verify if connection is stabilized and ready for trading'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      connection_id:
+        custom: []
+        name: connection_id
+        description: 'The ID of the connection.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      connection:
+        custom: []
+        name: connection
+        description: 'Exchange connection ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      connection_id: 1
+      connection: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "connection_id": 1,
+              "is_stabilized": true,
+              "status": "connected",
+              "is_active": true,
+              "last_tested_at": "2023-01-01T00:00:00.000000Z"
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/trading-management/trading-bots/{bot_id}/positions'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Trading bot position and balance management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Positions'
+      description: 'Get all positions for a trading bot'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      bot_id:
+        custom: []
+        name: bot_id
+        description: 'The ID of the bot.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      bot:
+        custom: []
+        name: bot
+        description: 'Trading bot ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      bot_id: 1
+      bot: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [
+              {
+                "id": 1,
+                "symbol": "EUR/USD",
+                "direction": "buy",
+                "entry_price": "1.1000",
+                "current_price": "1.1050",
+                "stop_loss": "1.0950",
+                "take_profit": "1.1100",
+                "quantity": 0.1,
+                "status": "open",
+                "profit_loss": "50.00",
+                "profit_loss_percentage": 5.0,
+                "opened_at": "2023-01-01T00:00:00.000000Z",
+                "closed_at": null
+              }
+            ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/trading-management/trading-bots/{bot_id}/positions/{id}'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Trading bot position and balance management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update Position'
+      description: 'Update stop loss or take profit for a position'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      bot_id:
+        custom: []
+        name: bot_id
+        description: 'The ID of the bot.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the position.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      bot:
+        custom: []
+        name: bot
+        description: 'Trading bot ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      position:
+        custom: []
+        name: position
+        description: 'Position ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      bot_id: 1
+      id: 1
+      bot: 1
+      position: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      stop_loss:
+        custom: []
+        name: stop_loss
+        description: 'optional New stop loss price.'
+        required: false
+        example: '1.0950'
+        type: decimal
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      take_profit:
+        custom: []
+        name: take_profit
+        description: 'optional New take profit price.'
+        required: false
+        example: '1.1100'
+        type: decimal
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      stop_loss: '1.0950'
+      take_profit: '1.1100'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Position updated successfully",
+            "data": {
+              "position": {...}
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "success": false,
+            "message": "Update failed"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "success": false,
+            "message": "Position does not belong to this bot"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/trading-management/trading-bots/{bot_id}/positions/{position_id}/close'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Trading bot position and balance management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Close Position'
+      description: 'Manually close an open position'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      bot_id:
+        custom: []
+        name: bot_id
+        description: 'The ID of the bot.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      position_id:
+        custom: []
+        name: position_id
+        description: 'The ID of the position.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      bot:
+        custom: []
+        name: bot
+        description: 'Trading bot ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      position:
+        custom: []
+        name: position
+        description: 'Position ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      bot_id: 1
+      position_id: 1
+      bot: 1
+      position: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Position closed successfully",
+            "data": {
+              "position": {...},
+              "profit_loss": "50.00"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "success": false,
+            "message": "Position is already closed"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "success": false,
+            "message": "Position does not belong to this bot"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/trading-management/trading-bots/{bot_id}/balance'
+    metadata:
+      custom: []
+      groupName: 'Trading Management'
+      groupDescription: 'Trading bot position and balance management endpoints'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Balance'
+      description: "Get current account balance for a trading bot's exchange connection"
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      bot_id:
+        custom: []
+        name: bot_id
+        description: 'The ID of the bot.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      bot:
+        custom: []
+        name: bot
+        description: 'Trading bot ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      bot_id: 1
+      bot: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "balance": "10000.00",
+              "currency": "USD",
+              "available": "9500.00",
+              "in_use": "500.00"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 400
+        content: |-
+          {
+            "success": false,
+            "message": "Bot has no exchange connection"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

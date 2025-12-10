@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
- * @group AI Connections
+ * @group AI Connection
  * Endpoints for managing and using AI connections.
+ * 
+ * These endpoints allow consumer addons to interact with AI connections
+ * for executing AI calls, testing connections, and tracking usage.
  * @authenticated
  */
 class AiConnectionApiController extends Controller

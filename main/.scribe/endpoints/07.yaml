@@ -1,0 +1,156 @@
+name: 'Reference Data'
+description: 'Reference data endpoints (currency pairs, timeframes, markets)'
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/currency-pairs
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Currency Pairs'
+      description: 'Get all active currency pairs'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [
+              {
+                "id": 1,
+                "name": "EUR/USD",
+                "status": 1
+              }
+            ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/timeframes
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Timeframes'
+      description: 'Get all active timeframes'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [
+              {
+                "id": 1,
+                "name": "1H",
+                "status": 1
+              }
+            ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/markets
+    metadata:
+      custom: []
+      groupName: 'Reference Data'
+      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Markets'
+      description: 'Get all active markets'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [
+              {
+                "id": 1,
+                "name": "Forex",
+                "status": 1
+              }
+            ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
