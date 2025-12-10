@@ -122,6 +122,10 @@ class UserController extends Controller
      * @return JsonResponse
      * @authenticated
      * @urlParam id integer required User ID. Example: 1
+     * @bodyParam phone string optional Phone number. Example: +1234567890
+     * @bodyParam username string optional Username. Example: john_doe
+     * @bodyParam email string optional Email address. Example: user@example.com
+     * @bodyParam status integer optional Status (0 or 1). Example: 1
      * @response 200 {
      *   "success": true,
      *   "message": "User updated successfully"
@@ -129,6 +133,7 @@ class UserController extends Controller
      */
     public function update(AdminUserRequest $request, $id): JsonResponse
     {
+        // Merge user ID into request for validation
         $request->merge(['user' => $id]);
         $isSuccess = $this->userservice->update($request);
 

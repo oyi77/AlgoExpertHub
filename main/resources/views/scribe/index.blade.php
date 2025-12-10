@@ -194,6 +194,9 @@
                                                                                 <li class="tocify-item level-2" data-unique="admin-apis-GETapi-admin-users--id-">
                                 <a href="#admin-apis-GETapi-admin-users--id-">Get User Details</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-apis-PUTapi-admin-users--id-">
+                                <a href="#admin-apis-PUTapi-admin-users--id-">Update User</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="admin-apis-POSTapi-admin-users--id--status">
                                 <a href="#admin-apis-POSTapi-admin-users--id--status">Toggle User Status</a>
                             </li>
@@ -2218,7 +2221,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "city=New York"\
     --form "zip=10001"\
     --form "state=NY"\
-    --form "image=@/tmp/phprln448145rr23FcABaD" </code></pre></div>
+    --form "image=@/tmp/phps7me1fio9p47eFnCdGL" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2286,7 +2289,7 @@ $response = $client-&gt;put(
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phprln448145rr23FcABaD', 'r')
+                'contents' =&gt; fopen('/tmp/phps7me1fio9p47eFnCdGL', 'r')
             ],
         ],
     ]
@@ -2307,7 +2310,7 @@ files = {
   'city': (None, 'New York'),
   'zip': (None, '10001'),
   'state': (None, 'NY'),
-  'image': open('/tmp/phprln448145rr23FcABaD', 'rb')}
+  'image': open('/tmp/phps7me1fio9p47eFnCdGL', 'rb')}
 payload = {
     "phone": "+1234567890",
     "telegram_id": "123456789",
@@ -2433,7 +2436,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>optional Profile image Example: <code>/tmp/phprln448145rr23FcABaD</code></p>
+<p>optional Profile image Example: <code>/tmp/phps7me1fio9p47eFnCdGL</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>phone</code></b>&nbsp;&nbsp;
@@ -7950,6 +7953,262 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                    <h2 id="admin-apis-PUTapi-admin-users--id-">Update User</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Update user information</p>
+
+<span id="example-requests-PUTapi-admin-users--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "https://aitradepulse.com/api/admin/users/1" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"phone\": \"+1234567890\",
+    \"username\": \"john_doe\",
+    \"email\": \"user@example.com\",
+    \"status\": 1
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/users/1"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "phone": "+1234567890",
+    "username": "john_doe",
+    "email": "user@example.com",
+    "status": 1
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/users/1';
+$response = $client-&gt;put(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'phone' =&gt; '+1234567890',
+            'username' =&gt; 'john_doe',
+            'email' =&gt; 'user@example.com',
+            'status' =&gt; 1,
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/users/1'
+payload = {
+    "phone": "+1234567890",
+    "username": "john_doe",
+    "email": "user@example.com",
+    "status": 1
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('PUT', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-admin-users--id-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;User updated successfully&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-PUTapi-admin-users--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-admin-users--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-admin-users--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-admin-users--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-admin-users--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-admin-users--id-" data-method="PUT"
+      data-path="api/admin/users/{id}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-admin-users--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-admin-users--id-"
+                    onclick="tryItOut('PUTapi-admin-users--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-admin-users--id-"
+                    onclick="cancelTryOut('PUTapi-admin-users--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-admin-users--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/admin/users/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-admin-users--id-"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-admin-users--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-admin-users--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="id"                data-endpoint="PUTapi-admin-users--id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>User ID. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>phone</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="phone"                data-endpoint="PUTapi-admin-users--id-"
+               value="+1234567890"
+               data-component="body">
+    <br>
+<p>optional Phone number. Example: <code>+1234567890</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="username"                data-endpoint="PUTapi-admin-users--id-"
+               value="john_doe"
+               data-component="body">
+    <br>
+<p>optional Username. Example: <code>john_doe</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="email"                data-endpoint="PUTapi-admin-users--id-"
+               value="user@example.com"
+               data-component="body">
+    <br>
+<p>optional Email address. Example: <code>user@example.com</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="status"                data-endpoint="PUTapi-admin-users--id-"
+               value="1"
+               data-component="body">
+    <br>
+<p>optional Status (0 or 1). Example: <code>1</code></p>
+        </div>
+        </form>
+
                     <h2 id="admin-apis-POSTapi-admin-users--id--status">Toggle User Status</h2>
 
 <p>
@@ -10380,7 +10639,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "time_frame_id=1"\
     --form "market_id=1"\
     --form "plan_ids[]=1"\
-    --form "image=@/tmp/phpr1mk1m44hl1acjPAhdH" </code></pre></div>
+    --form "image=@/tmp/phppkq41c999oeidmBkfAP" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -10488,7 +10747,7 @@ $response = $client-&gt;post(
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phpr1mk1m44hl1acjPAhdH', 'r')
+                'contents' =&gt; fopen('/tmp/phppkq41c999oeidmBkfAP', 'r')
             ],
         ],
     ]
@@ -10517,7 +10776,7 @@ files = {
   'time_frame_id': (None, '1'),
   'market_id': (None, '1'),
   'plan_ids[]': (None, '1'),
-  'image': open('/tmp/phpr1mk1m44hl1acjPAhdH', 'rb')}
+  'image': open('/tmp/phppkq41c999oeidmBkfAP', 'rb')}
 payload = {
     "title": "EUR\/USD Buy Signal",
     "plans": "architecto",
@@ -10738,7 +10997,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Example: <code>/tmp/phpr1mk1m44hl1acjPAhdH</code></p>
+<p>Must be an image. Example: <code>/tmp/phppkq41c999oeidmBkfAP</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
@@ -11035,7 +11294,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "tp=4326.41688"\
     --form "direction=sell"\
     --form "market=architecto"\
-    --form "image=@/tmp/phphd7e2c81mveebIiGpkH" </code></pre></div>
+    --form "image=@/tmp/phpg7brtkghu8896fBIjKP" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -11118,7 +11377,7 @@ $response = $client-&gt;put(
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phphd7e2c81mveebIiGpkH', 'r')
+                'contents' =&gt; fopen('/tmp/phpg7brtkghu8896fBIjKP', 'r')
             ],
         ],
     ]
@@ -11142,7 +11401,7 @@ files = {
   'tp': (None, '4326.41688'),
   'direction': (None, 'sell'),
   'market': (None, 'architecto'),
-  'image': open('/tmp/phphd7e2c81mveebIiGpkH', 'rb')}
+  'image': open('/tmp/phpg7brtkghu8896fBIjKP', 'rb')}
 payload = {
     "title": "b",
     "plans": "architecto",
@@ -11368,7 +11627,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Example: <code>/tmp/phphd7e2c81mveebIiGpkH</code></p>
+<p>Must be an image. Example: <code>/tmp/phpg7brtkghu8896fBIjKP</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
@@ -15922,7 +16181,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "message=Thank you for contacting us"\
-    --form "file=@/tmp/phpa515reirgvup7ABOCpJ" </code></pre></div>
+    --form "file=@/tmp/phprivqn29bl8t7bbLnkIc" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -15965,7 +16224,7 @@ $response = $client-&gt;post(
             ],
             [
                 'name' =&gt; 'file',
-                'contents' =&gt; fopen('/tmp/phpa515reirgvup7ABOCpJ', 'r')
+                'contents' =&gt; fopen('/tmp/phprivqn29bl8t7bbLnkIc', 'r')
             ],
         ],
     ]
@@ -15981,7 +16240,7 @@ import json
 url = 'https://aitradepulse.com/api/admin/tickets/1/reply'
 files = {
   'message': (None, 'Thank you for contacting us'),
-  'file': open('/tmp/phpa515reirgvup7ABOCpJ', 'rb')}
+  'file': open('/tmp/phprivqn29bl8t7bbLnkIc', 'rb')}
 payload = {
     "message": "Thank you for contacting us"
 }
@@ -16127,7 +16386,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>optional Attachment file Example: <code>/tmp/phpa515reirgvup7ABOCpJ</code></p>
+<p>optional Attachment file Example: <code>/tmp/phprivqn29bl8t7bbLnkIc</code></p>
         </div>
         </form>
 

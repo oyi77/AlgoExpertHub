@@ -24,11 +24,17 @@ class AdminUserRequest extends FormRequest
      */
     public function rules()
     {
+        $userId = request()->user ?? request()->route('id') ?? request()->route('user');
+        $user = $userId ? User::find($userId) : null;
 
-        $user = User::find(request()->user);
+        $rules = [];
 
-        return [
-            'phone' => 'unique:users,phone,' . $user->id
-        ];
+        if (request()->has('phone')) {
+            $rules['phone'] = $user 
+                ? 'unique:users,phone,' . $user->id
+                : 'unique:users,phone';
+        }
+
+        return $rules;
     }
 }
