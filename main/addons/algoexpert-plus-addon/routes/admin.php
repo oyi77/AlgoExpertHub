@@ -31,4 +31,6 @@ Route::prefix('algoexpert-plus')->name('algoexpert-plus.')->group(function () {
     
     // Embedded Horizon dashboard
     Route::get('/horizon', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\HorizonController::class, 'index'])->name('horizon');
+    Route::post('/horizon/test-job', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\HorizonController::class, 'testJob'])->name('horizon.test-job');
+    Route::post('/horizon/clear-failed', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\HorizonController::class, 'clearFailedJobs'])->name('horizon.clear-failed');
 });

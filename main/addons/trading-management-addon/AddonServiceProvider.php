@@ -275,6 +275,9 @@ class AddonServiceProvider extends ServiceProvider
             \Addons\TradingManagement\Modules\TradingBot\Console\Commands\TradingBotWorker::class,
             \Addons\TradingManagement\Modules\DataProvider\Console\Commands\MetaApiStreamWorkerCommand::class,
             \Addons\TradingManagement\Console\Commands\TestMetaApiConnection::class,
+            \Addons\TradingManagement\Modules\TradingBot\Console\Commands\TestTradingBotFlow::class,
+            \Addons\TradingManagement\Modules\TradingBot\Console\Commands\TestTradingBotExecution::class,
+            \Addons\TradingManagement\Modules\TradingBot\Console\Commands\VerifyTestProjBot::class,
         ]);
     }
 

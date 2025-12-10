@@ -24,6 +24,7 @@ class PageService
             PageSection::create([
                 'page_id' => $page->id,
                 'sections' => $section
+                // sections_hash will be auto-set by model boot method
             ]);
         }
 
@@ -60,6 +61,7 @@ class PageService
             PageSection::create([
                 'page_id' => $page->id,
                 'sections' => $section
+                // sections_hash will be auto-set by model boot method
             ]);
         }
 

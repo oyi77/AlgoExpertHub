@@ -123,8 +123,45 @@ class TradingBotController extends Controller
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
             'expert_advisor_id' => 'nullable|exists:expert_advisors,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
+            'data_connection_id' => 'nullable|exists:execution_connections,id', // Changed to execution_connections (unified connection)
+            'streaming_symbols' => 'nullable|array',
+            'streaming_symbols.*' => 'nullable|string',
+            'streaming_symbols_manual' => 'nullable|string', // Manual entry fallback
+            'streaming_timeframes' => 'nullable|array',
+            'streaming_timeframes.*' => 'nullable|string',
+            'market_analysis_interval' => 'nullable|integer|min:10',
+            'position_monitoring_interval' => 'nullable|integer|min:1',
             'is_paper_trading' => 'boolean',
         ]);
+
+        // Auto-fill data_connection_id from exchange_connection_id if not provided and MARKET_STREAM_BASED
+        if (isset($validated['trading_mode']) && $validated['trading_mode'] === 'MARKET_STREAM_BASED') {
+            if (empty($validated['data_connection_id']) && !empty($validated['exchange_connection_id'])) {
+                $validated['data_connection_id'] = $validated['exchange_connection_id'];
+            }
+        }
+
+        // Process streaming_symbols and streaming_timeframes
+        if (isset($validated['streaming_symbols']) && is_array($validated['streaming_symbols'])) {
+            $validated['streaming_symbols'] = array_filter(array_map('trim', $validated['streaming_symbols']));
+        }
+        
+        // If manual entry is provided and streaming_symbols is empty, parse manual entry
+        if (empty($validated['streaming_symbols']) && !empty($validated['streaming_symbols_manual'])) {
+            $manualText = trim($validated['streaming_symbols_manual']);
+            $validated['streaming_symbols'] = array_filter(
+                array_map('trim', preg_split('/[\r\n,]+/', $manualText))
+            );
+        }
+        // Ensure symbols are unique and clean
+        if (isset($validated['streaming_symbols']) && is_array($validated['streaming_symbols'])) {
+            $validated['streaming_symbols'] = array_unique(array_filter(array_map('strtoupper', array_map('trim', $validated['streaming_symbols']))));
+        }
+        unset($validated['streaming_symbols_manual']); // Remove manual field after processing
+        
+        if (isset($validated['streaming_timeframes']) && is_array($validated['streaming_timeframes'])) {
+            $validated['streaming_timeframes'] = array_filter(array_map('trim', $validated['streaming_timeframes']));
+        }
 
         $validated['is_paper_trading'] = $validated['is_paper_trading'] ?? true; // Default to paper trading for demo
 
@@ -200,7 +237,9 @@ class TradingBotController extends Controller
      */
     public function edit($id): View
     {
-        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+        $bot = TradingBot::forUser(auth()->id())
+            ->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile', 'expertAdvisor', 'dataConnection'])
+            ->findOrFail($id);
 
         $data['title'] = 'Edit Trading Bot';
         $data['bot'] = $bot;
@@ -211,6 +250,15 @@ class TradingBotController extends Controller
         $data['filterStrategies'] = $this->botService->getAvailableFilterStrategies();
         $data['aiProfiles'] = $this->botService->getAvailableAiProfiles();
         $data['expertAdvisors'] = $this->botService->getAvailableExpertAdvisors();
+        
+        // Get data connections for MARKET_STREAM_BASED mode
+        try {
+            $data['dataConnections'] = \Addons\TradingManagement\Modules\DataProvider\Models\DataConnection::where('user_id', auth()->id())
+                ->where('status', 'active')
+                ->get();
+        } catch (\Exception $e) {
+            $data['dataConnections'] = collect([]);
+        }
 
         return view('trading-management::user.trading-bots.edit', $data);
     }
@@ -231,8 +279,45 @@ class TradingBotController extends Controller
             'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
             'expert_advisor_id' => 'nullable|exists:expert_advisors,id',
             'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
+            'data_connection_id' => 'nullable|exists:execution_connections,id', // Changed to execution_connections (unified connection)
+            'streaming_symbols' => 'nullable|array',
+            'streaming_symbols.*' => 'nullable|string',
+            'streaming_symbols_manual' => 'nullable|string', // Manual entry fallback
+            'streaming_timeframes' => 'nullable|array',
+            'streaming_timeframes.*' => 'nullable|string',
+            'market_analysis_interval' => 'nullable|integer|min:10',
+            'position_monitoring_interval' => 'nullable|integer|min:1',
             'is_paper_trading' => 'boolean',
         ]);
+
+        // Auto-fill data_connection_id from exchange_connection_id if not provided and MARKET_STREAM_BASED
+        if (isset($validated['trading_mode']) && $validated['trading_mode'] === 'MARKET_STREAM_BASED') {
+            if (empty($validated['data_connection_id']) && !empty($validated['exchange_connection_id'])) {
+                $validated['data_connection_id'] = $validated['exchange_connection_id'];
+            }
+        }
+
+        // Process streaming_symbols and streaming_timeframes similar to backend controller
+        if (isset($validated['streaming_symbols']) && is_array($validated['streaming_symbols'])) {
+            $validated['streaming_symbols'] = array_filter(array_map('trim', $validated['streaming_symbols']));
+        }
+        
+        // If manual entry is provided and streaming_symbols is empty, parse manual entry
+        if (empty($validated['streaming_symbols']) && !empty($validated['streaming_symbols_manual'])) {
+            $manualText = trim($validated['streaming_symbols_manual']);
+            $validated['streaming_symbols'] = array_filter(
+                array_map('trim', preg_split('/[\r\n,]+/', $manualText))
+            );
+        }
+        // Ensure symbols are unique and clean
+        if (isset($validated['streaming_symbols']) && is_array($validated['streaming_symbols'])) {
+            $validated['streaming_symbols'] = array_unique(array_filter(array_map('strtoupper', array_map('trim', $validated['streaming_symbols']))));
+        }
+        unset($validated['streaming_symbols_manual']); // Remove manual field after processing
+        
+        if (isset($validated['streaming_timeframes']) && is_array($validated['streaming_timeframes'])) {
+            $validated['streaming_timeframes'] = array_filter(array_map('trim', $validated['streaming_timeframes']));
+        }
 
         try {
             $this->botService->update($bot, $validated);
@@ -460,6 +545,54 @@ class TradingBotController extends Controller
     }
 
     /**
+     * Restart trading bot
+     */
+    public function restart($id): RedirectResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            \Log::info('Restarting trading bot (user)', [
+                'bot_id' => $bot->id,
+                'bot_name' => $bot->name,
+                'user_id' => auth()->id(),
+                'current_status' => $bot->status,
+            ]);
+
+            // Stop worker if running
+            if ($bot->isRunning() || $bot->isPaused()) {
+                $this->workerService->stopWorker($bot);
+            }
+
+            // Restart via service (stop then start)
+            $this->botService->restart($bot, auth()->id(), null);
+            
+            // Start worker process
+            $pid = $this->workerService->startWorker($bot);
+            
+            \Log::info('Trading bot restarted successfully (user)', [
+                'bot_id' => $bot->id,
+                'user_id' => auth()->id(),
+                'worker_pid' => $pid,
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot restarted successfully! Worker PID: ' . $pid);
+        } catch (\Exception $e) {
+            \Log::error('Failed to restart trading bot (user)', [
+                'bot_id' => $bot->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to restart bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Resume trading bot
      */
     public function resume($id): RedirectResponse
@@ -549,5 +682,67 @@ class TradingBotController extends Controller
             'metrics' => $metrics,
             'queue_stats' => $queueStats,
         ]);
+    }
+
+    /**
+     * Get available symbols from exchange connection (AJAX)
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getExchangeSymbols(Request $request): JsonResponse
+    {
+        $connectionId = $request->get('connection_id');
+        
+        if (!$connectionId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection ID is required',
+                'symbols' => []
+            ], 400);
+        }
+
+        try {
+            // Only allow user to access their own connections
+            $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('id', $connectionId)
+                ->where('user_id', auth()->id())
+                ->where('is_admin_owned', false)
+                ->firstOrFail();
+            
+            if (!$connection->isActive()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection is not active',
+                    'symbols' => []
+                ], 400);
+            }
+
+            // Use the same logic as backend controller
+            $backendController = new \Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController(
+                $this->botService,
+                $this->workerService,
+                $this->monitoringService
+            );
+            
+            return $backendController->getExchangeSymbols($request);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection not found or you do not have permission to access it',
+                'symbols' => []
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get exchange symbols (user)', [
+                'connection_id' => $connectionId,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load symbols: ' . $e->getMessage(),
+                'symbols' => []
+            ], 500);
+        }
     }
 }

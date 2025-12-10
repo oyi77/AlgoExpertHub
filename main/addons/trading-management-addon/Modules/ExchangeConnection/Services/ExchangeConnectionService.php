@@ -180,16 +180,23 @@ class ExchangeConnectionService
      * @param ExchangeConnection $connection
      * @return array ['success' => bool, 'message' => string]
      */
-    public function stabilize(ExchangeConnection $connection): array
+    public function stabilize(ExchangeConnection $connection, bool $autoActivate = false): array
     {
         $result = $this->testConnection($connection);
         
         if ($result['success']) {
-            // Only mark as active if user explicitly enables it
-            // Don't auto-activate on test
+            // If autoActivate is true (e.g., when starting bot), activate the connection
+            if ($autoActivate && !$connection->is_active) {
+                $connection->update([
+                    'status' => 'active',
+                    'is_active' => true,
+                    'last_tested_at' => now(),
+                ]);
+            }
+            
             return [
                 'success' => true,
-                'message' => 'Connection stabilized and ready for activation',
+                'message' => $autoActivate ? 'Connection stabilized and activated' : 'Connection stabilized and ready for activation',
             ];
         }
 

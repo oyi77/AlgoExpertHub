@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\Helper;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -34,16 +35,18 @@ class DatabaseBackupService
             }
 
             // Check if mysqldump command exists (try Docker first, then host)
-            $mysqlContainer = $this->getMysqlContainer();
+            $mysqlContainer = Helper::getMysqlContainer();
             $useDocker = !empty($mysqlContainer);
             
             // Also check if we're in Docker and can use container hostname
             $host = config('database.connections.' . config('database.default') . '.host');
-            $isDockerEnv = file_exists('/.dockerenv');
+            $isDockerEnv = Helper::isDockerEnvironment();
             
             if (!$useDocker) {
                 // Try host mysqldump
-                exec('which mysqldump 2>&1', $whichOutput, $whichReturn);
+                $whichOutput = [];
+                $whichReturn = 0;
+                Helper::execCommand('which mysqldump 2>&1', null, $whichOutput, $whichReturn);
                 if ($whichReturn !== 0) {
                     // If in Docker, try using MySQL container name as hostname (if mysql-client installed)
                     if ($isDockerEnv && !in_array($host, ['localhost', '127.0.0.1'])) {
@@ -77,28 +80,30 @@ class DatabaseBackupService
             $port = config('database.connections.' . config('database.default') . '.port', 3306);
 
             // Build mysqldump command with proper password handling
-            if (!empty($password)) {
-                $command = sprintf(
-                    'mysqldump -h %s -P %s -u %s -p%s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($password),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+            $args = [];
+            if ($useDocker) {
+                // Docker: use container mysql credentials
+                if (!empty($password)) {
+                    $args = ['-u', $username, "-p{$password}", $database, '--single-transaction', '--quick', '--lock-tables=false'];
+                } else {
+                    $args = ['-u', $username, $database, '--single-transaction', '--quick', '--lock-tables=false'];
+                }
+                $baseCommand = Helper::buildMysqlCommand('mysqldump', $args);
+                $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2>&1';
             } else {
-                $command = sprintf(
-                    'mysqldump -h %s -P %s -u %s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                    escapeshellarg($host),
-                    escapeshellarg($port),
-                    escapeshellarg($username),
-                    escapeshellarg($database),
-                    escapeshellarg($filepath)
-                );
+                // Host: use connection credentials
+                if (!empty($password)) {
+                    $args = ['-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database, '--single-transaction', '--quick', '--lock-tables=false'];
+                } else {
+                    $args = ['-h', $host, '-P', (string)$port, '-u', $username, $database, '--single-transaction', '--quick', '--lock-tables=false'];
+                }
+                $baseCommand = Helper::buildMysqlCommand('mysqldump', $args);
+                $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2>&1';
             }
 
-            exec($command, $output, $returnVar);
+            $output = [];
+            $returnVar = 0;
+            Helper::execCommand($command, null, $output, $returnVar);
 
             if ($returnVar !== 0) {
                 $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error';
@@ -162,7 +167,7 @@ class DatabaseBackupService
             }
 
             // Check if we should use Docker
-            $mysqlContainer = $this->getMysqlContainer();
+            $mysqlContainer = Helper::getMysqlContainer();
             $useDocker = !empty($mysqlContainer);
             
             if (!$useDocker) {
@@ -184,51 +189,28 @@ class DatabaseBackupService
 
             // Import backup
             if ($useDocker) {
-                // Use Docker: copy file to container and import, or pipe from host
-                // Since file is on host, we'll pipe it into docker exec
+                // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
-                        escapeshellarg($filepath),
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $command = sprintf(
-                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
-                        escapeshellarg($filepath),
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($database)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-u', $username, $database];
                 }
+                $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
+                $command = sprintf('cat %s | %s 2>&1', escapeshellarg($filepath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s -p%s %s < %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $command = sprintf(
-                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s %s < %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
+                $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
+                $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($filepath));
             }
 
-            exec($command, $output, $returnVar);
+            $output = [];
+            $returnVar = 0;
+            Helper::execCommand($command, null, $output, $returnVar);
 
             if ($returnVar !== 0) {
                 $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error';
@@ -407,12 +389,14 @@ class DatabaseBackupService
             }
 
             // Check if we should use Docker
-            $mysqlContainer = $this->getMysqlContainer();
+            $mysqlContainer = Helper::getMysqlContainer();
             $useDocker = !empty($mysqlContainer);
             
             if (!$useDocker) {
                 // Check if mysql command exists on host
-                exec('which mysql 2>&1', $whichOutput, $whichReturn);
+                $whichOutput = [];
+                $whichReturn = 0;
+                Helper::execCommand('which mysql 2>&1', null, $whichOutput, $whichReturn);
                 if ($whichReturn !== 0) {
                     return ['type' => 'error', 'message' => 'mysql command not found. Please install MySQL client tools.'];
                 }
@@ -431,48 +415,26 @@ class DatabaseBackupService
             if ($useDocker) {
                 // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
-                        escapeshellarg($this->factoryStatePath),
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $command = sprintf(
-                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
-                        escapeshellarg($this->factoryStatePath),
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($database)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-u', $username, $database];
                 }
+                $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
+                $command = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s -p%s %s < %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database),
-                        escapeshellarg($this->factoryStatePath)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $command = sprintf(
-                        'mysql --ssl-mode=DISABLED -h %s -P %s -u %s %s < %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($database),
-                        escapeshellarg($this->factoryStatePath)
-                    );
+                    $args = ['--ssl-mode=DISABLED', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
+                $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
+                $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($this->factoryStatePath));
             }
 
-            exec($command, $output, $returnVar);
+            $output = [];
+            $returnVar = 0;
+            Helper::execCommand($command, null, $output, $returnVar);
 
             if ($returnVar !== 0) {
                 $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error';
@@ -527,24 +489,15 @@ class DatabaseBackupService
                             // Re-import factory state data after fresh migration
                             if ($useDocker) {
                                 if (!empty($password)) {
-                                    $reimportCommand = sprintf(
-                                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s -p%s %s 2>&1',
-                                        escapeshellarg($this->factoryStatePath),
-                                        escapeshellarg($mysqlContainer),
-                                        escapeshellarg($username),
-                                        escapeshellarg($password),
-                                        escapeshellarg($database)
-                                    );
+                                    $args = ['--ssl-mode=DISABLED', '-u', $username, "-p{$password}", $database];
                                 } else {
-                                    $reimportCommand = sprintf(
-                                        'cat %s | docker exec -i %s mysql --ssl-mode=DISABLED -u %s %s 2>&1',
-                                        escapeshellarg($this->factoryStatePath),
-                                        escapeshellarg($mysqlContainer),
-                                        escapeshellarg($username),
-                                        escapeshellarg($database)
-                                    );
+                                    $args = ['--ssl-mode=DISABLED', '-u', $username, $database];
                                 }
-                                exec($reimportCommand, $reimportOutput, $reimportReturn);
+                                $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
+                                $reimportCommand = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);
+                                $reimportOutput = [];
+                                $reimportReturn = 0;
+                                Helper::execCommand($reimportCommand, null, $reimportOutput, $reimportReturn);
                                 if ($reimportReturn !== 0) {
                                     \Log::error('Re-import after fresh migration failed', ['output' => $reimportOutput]);
                                 }
@@ -598,55 +551,33 @@ class DatabaseBackupService
             $port = config('database.connections.' . config('database.default') . '.port', 3306);
 
             // Check if we should use Docker
-            $mysqlContainer = $this->getMysqlContainer();
+            $mysqlContainer = Helper::getMysqlContainer();
             $useDocker = !empty($mysqlContainer);
 
             // Build mysqldump command with proper password handling
             if ($useDocker) {
                 // Use Docker: run mysqldump in MySQL container and pipe output to host file
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'docker exec %s mysqldump -u %s -p%s %s --single-transaction --quick --lock-tables=false 2>&1 > %s',
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['-u', $username, "-p{$password}", $database, '--single-transaction', '--quick', '--lock-tables=false'];
                 } else {
-                    $command = sprintf(
-                        'docker exec %s mysqldump -u %s %s --single-transaction --quick --lock-tables=false 2>&1 > %s',
-                        escapeshellarg($mysqlContainer),
-                        escapeshellarg($username),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['-u', $username, $database, '--single-transaction', '--quick', '--lock-tables=false'];
                 }
+                $baseCommand = Helper::buildMysqlCommand('mysqldump', $args);
+                $command = "{$baseCommand} 2>&1 > " . escapeshellarg($filepath);
             } else {
                 // Use host mysqldump
                 if (!empty($password)) {
-                    $command = sprintf(
-                        'mysqldump -h %s -P %s -u %s -p%s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($password),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database, '--single-transaction', '--quick', '--lock-tables=false'];
                 } else {
-                    $command = sprintf(
-                        'mysqldump -h %s -P %s -u %s %s --single-transaction --quick --lock-tables=false > %s 2>&1',
-                        escapeshellarg($host),
-                        escapeshellarg($port),
-                        escapeshellarg($username),
-                        escapeshellarg($database),
-                        escapeshellarg($filepath)
-                    );
+                    $args = ['-h', $host, '-P', (string)$port, '-u', $username, $database, '--single-transaction', '--quick', '--lock-tables=false'];
                 }
+                $baseCommand = Helper::buildMysqlCommand('mysqldump', $args);
+                $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2>&1';
             }
 
-            exec($command, $output, $returnVar);
+            $output = [];
+            $returnVar = 0;
+            Helper::execCommand($command, null, $output, $returnVar);
 
             if ($returnVar !== 0) {
                 $errorMsg = !empty($output) ? implode("\n", $output) : 'Unknown error';
@@ -698,54 +629,5 @@ class DatabaseBackupService
         return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
     }
 
-    /**
-     * Get MySQL Docker container name
-     */
-    protected function getMysqlContainer(): ?string
-    {
-        // Common 1Panel MySQL container name patterns (try most specific first)
-        $possibleContainers = [
-            '1Panel-mysql-L7KM',  // Current detected container name
-            '1panel-mysql-L7KM',
-        ];
-
-        // First, try to find MySQL container using docker command (if available)
-        exec('which docker 2>&1', $dockerOutput, $dockerReturn);
-        if ($dockerReturn === 0) {
-            // Try to find MySQL container from host
-            exec('docker ps --format "{{.Names}}" | grep -i mysql 2>&1', $containers, $return);
-            if ($return === 0 && !empty($containers)) {
-                $container = trim($containers[0]);
-                if (!empty($container)) {
-                    // Verify container has mysqldump
-                    exec("docker exec {$container} mysqldump --version 2>&1", $verifyOutput, $verifyReturn);
-                    if ($verifyReturn === 0) {
-                        return $container;
-                    }
-                }
-            }
-        }
-
-        // Fallback: Try common container names directly
-        // This works even if docker command isn't in PATH but docker socket is accessible
-        foreach ($possibleContainers as $containerName) {
-            // Test if container exists and has mysqldump by trying to get version
-            exec("docker exec {$containerName} mysqldump --version 2>&1", $testOutput, $testReturn);
-            if ($testReturn === 0) {
-                return $containerName;
-            }
-        }
-
-        // Last resort: Try generic names
-        $genericNames = ['mysql', '1panel-mysql', '1Panel-mysql'];
-        foreach ($genericNames as $containerName) {
-            exec("docker exec {$containerName} mysqldump --version 2>&1", $testOutput, $testReturn);
-            if ($testReturn === 0) {
-                return $containerName;
-            }
-        }
-
-        return null;
-    }
 }
 

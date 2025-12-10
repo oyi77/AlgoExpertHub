@@ -364,12 +364,36 @@ class TradingBotService
             });
         } else {
             // Users can only see their own connections (not admin-owned)
-            $query->where('user_id', Auth::id())
-                  ->where('is_admin_owned', false)
-                  ->whereNull('admin_id'); // Ensure admin_id is null for user-owned connections
+            $userId = Auth::id();
+            if (!$userId) {
+                Log::warning('getAvailableConnections: No authenticated user ID');
+                return collect([]);
+            }
+            
+            $query->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                  ->where('is_admin_owned', false);
+            });
+            // Don't require admin_id to be null - user_id is the primary identifier for user-owned connections
+            
+            Log::debug('getAvailableConnections: Filtering for user', [
+                'user_id' => $userId,
+                'query_sql' => $query->toSql(),
+                'query_bindings' => $query->getBindings(),
+            ]);
         }
 
-        return $query->orderBy('name')->get();
+        $connections = $query->orderBy('name')->get();
+        
+        Log::debug('getAvailableConnections: Result', [
+            'count' => $connections->count(),
+            'connection_ids' => $connections->pluck('id')->toArray(),
+            'connection_names' => $connections->pluck('name')->toArray(),
+            'is_admin' => Auth::guard('admin')->check(),
+            'user_id' => Auth::id(),
+        ]);
+
+        return $connections;
     }
 
     /**
@@ -512,9 +536,12 @@ class TradingBotService
             });
         } else {
             // Users can only see their own connections (not admin-owned)
-            $query->where('user_id', Auth::id())
-                  ->where('is_admin_owned', false)
-                  ->whereNull('admin_id'); // Ensure admin_id is null for user-owned connections
+            $userId = Auth::id();
+            $query->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                  ->where('is_admin_owned', false);
+            });
+            // Don't require admin_id to be null - user_id is the primary identifier
         }
 
         return $query->orderBy('name')->get();
@@ -572,7 +599,20 @@ class TradingBotService
         // Verify exchange connection is stabilized
         $connectionService = app(ExchangeConnectionService::class);
         if (!$connectionService->isStabilized($bot->exchangeConnection)) {
-            return ['valid' => false, 'message' => 'Exchange connection must be stabilized before starting bot. Please test the connection first.'];
+            // Try to auto-stabilize by testing and activating the connection
+            $stabilizeResult = $connectionService->stabilize($bot->exchangeConnection, true); // autoActivate = true
+            
+            if (!$stabilizeResult['success']) {
+                return ['valid' => false, 'message' => 'Exchange connection must be stabilized before starting bot. Connection test failed: ' . ($stabilizeResult['message'] ?? 'Unknown error') . '. Please test the connection manually first.'];
+            }
+            
+            // Refresh connection to get updated last_tested_at and is_active
+            $bot->exchangeConnection->refresh();
+            
+            // Check again after stabilization attempt
+            if (!$connectionService->isStabilized($bot->exchangeConnection)) {
+                return ['valid' => false, 'message' => 'Exchange connection test completed but connection is still not stabilized. Please ensure the connection is active and tested successfully.'];
+            }
         }
 
         if (!$bot->exchangeConnection->is_active) {
@@ -845,6 +885,28 @@ class TradingBotService
 
             return $bot->fresh();
         });
+    }
+
+    /**
+     * Restart trading bot (stop then start)
+     * 
+     * @param TradingBot $bot
+     * @param int|null $executedByUserId
+     * @param int|null $executedByAdminId
+     * @return TradingBot
+     */
+    public function restart(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
+    {
+        // Stop first
+        if ($bot->isRunning() || $bot->isPaused()) {
+            $this->stop($bot, $executedByUserId, $executedByAdminId);
+            
+            // Wait a moment for worker to stop gracefully
+            sleep(2);
+        }
+        
+        // Then start
+        return $this->start($bot, $executedByUserId, $executedByAdminId);
     }
 
     /**

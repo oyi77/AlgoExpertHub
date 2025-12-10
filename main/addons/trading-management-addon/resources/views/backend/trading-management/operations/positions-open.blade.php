@@ -54,22 +54,22 @@
                                 <th>P&L</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="positions-tbody">
                             @foreach($positions as $position)
-                            <tr>
+                            <tr data-position-id="{{ $position->id }}">
                                 <td>{{ $position->created_at->format('Y-m-d H:i') }}</td>
                                 <td>{{ $position->connection->name ?? 'N/A' }}</td>
                                 <td>{{ $position->symbol }}</td>
                                 <td>
-                                    @if(in_array($position->direction, ['BUY', 'LONG']))
-                                    <span class="badge badge-success">{{ $position->direction }}</span>
+                                    @if(in_array($position->direction, ['BUY', 'LONG', 'buy', 'long']))
+                                    <span class="badge badge-success">{{ strtoupper($position->direction) }}</span>
                                     @else
-                                    <span class="badge badge-danger">{{ $position->direction }}</span>
+                                    <span class="badge badge-danger">{{ strtoupper($position->direction) }}</span>
                                     @endif
                                 </td>
-                                <td>{{ $position->lot_size }}</td>
+                                <td>{{ $position->quantity ?? $position->lot_size }}</td>
                                 <td>{{ $position->entry_price }}</td>
-                                <td>{{ $position->current_price }}</td>
+                                <td class="position-current-price" data-position-id="{{ $position->id }}">{{ $position->current_price ?? $position->entry_price }}</td>
                                 <td>{{ $position->sl_price }}</td>
                                 <td>{{ $position->tp_price }}</td>
                                 <td>
@@ -82,7 +82,8 @@
                                         <div class="progress" style="height: 20px;">
                                             @foreach($openTps as $tp)
                                                 @php
-                                                    $distance = abs($position->current_price - $tp->tp_price);
+                                                    $currentPrice = $position->current_price ?? $position->entry_price;
+                                                    $distance = abs($currentPrice - $tp->tp_price);
                                                     $totalDistance = abs($position->entry_price - $tp->tp_price);
                                                     $progress = $totalDistance > 0 ? (1 - ($distance / $totalDistance)) * 100 : 0;
                                                     $progress = max(0, min(100, $progress));
@@ -99,8 +100,11 @@
                                         <span class="text-muted">Single TP</span>
                                     @endif
                                 </td>
-                                <td class="{{ $position->pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                    ${{ number_format($position->pnl, 2) }}
+                                <td class="position-pnl {{ $position->pnl >= 0 ? 'text-success' : 'text-danger' }}" data-position-id="{{ $position->id }}">
+                                    $<span class="pnl-amount">{{ number_format($position->pnl, 2) }}</span>
+                                    <small class="d-block text-muted position-pnl-percentage" data-position-id="{{ $position->id }}">
+                                        ({{ number_format($position->pnl_percentage ?? 0, 2) }}%)
+                                    </small>
                                 </td>
                             </tr>
                             @endforeach
@@ -116,5 +120,104 @@
         </div>
     </div>
 </div>
+
+@push('script')
+<script>
+(function() {
+    'use strict';
+    
+    // Get all position IDs from the table
+    function getPositionIds() {
+        const rows = document.querySelectorAll('#positions-tbody tr[data-position-id]');
+        return Array.from(rows).map(row => parseInt(row.getAttribute('data-position-id')));
+    }
+    
+    // Update position data in the table
+    function updatePositions(updates) {
+        updates.forEach(function(update) {
+            // Update current price
+            const currentPriceCell = document.querySelector(`.position-current-price[data-position-id="${update.id}"]`);
+            if (currentPriceCell) {
+                const oldPrice = parseFloat(currentPriceCell.textContent.trim());
+                const newPrice = parseFloat(update.current_price);
+                currentPriceCell.textContent = newPrice.toFixed(8);
+                
+                // Add visual indicator if price changed
+                if (oldPrice !== newPrice) {
+                    currentPriceCell.classList.add('price-updated');
+                    setTimeout(() => {
+                        currentPriceCell.classList.remove('price-updated');
+                    }, 1000);
+                }
+            }
+            
+            // Update P/L
+            const pnlCell = document.querySelector(`.position-pnl[data-position-id="${update.id}"]`);
+            if (pnlCell) {
+                const pnlAmount = pnlCell.querySelector('.pnl-amount');
+                const pnlPercentage = pnlCell.querySelector('.position-pnl-percentage');
+                
+                if (pnlAmount) {
+                    pnlAmount.textContent = parseFloat(update.pnl).toFixed(2);
+                }
+                
+                if (pnlPercentage) {
+                    pnlPercentage.textContent = '(' + parseFloat(update.pnl_percentage).toFixed(2) + '%)';
+                }
+                
+                // Update color based on P/L
+                pnlCell.classList.remove('text-success', 'text-danger');
+                pnlCell.classList.add(parseFloat(update.pnl) >= 0 ? 'text-success' : 'text-danger');
+            }
+        });
+    }
+    
+    // Fetch position updates
+    function fetchPositionUpdates() {
+        const positionIds = getPositionIds();
+        
+        if (positionIds.length === 0) {
+            return;
+        }
+        
+        fetch('{{ route("admin.trading-management.operations.positions.updates") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                position_ids: positionIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                updatePositions(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Failed to fetch position updates:', error);
+        });
+    }
+    
+    // Start polling every 5 seconds
+    if (getPositionIds().length > 0) {
+        // Initial fetch
+        fetchPositionUpdates();
+        
+        // Poll every 5 seconds
+        setInterval(fetchPositionUpdates, 5000);
+    }
+})();
+</script>
+<style>
+.price-updated {
+    background-color: #fff3cd !important;
+    transition: background-color 0.3s ease;
+}
+</style>
+@endpush
 @endsection
 

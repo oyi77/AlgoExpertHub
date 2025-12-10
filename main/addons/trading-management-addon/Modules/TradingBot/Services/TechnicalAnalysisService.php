@@ -39,6 +39,22 @@ class TechnicalAnalysisService
                     $indicators[$indicatorConfig['type']] = $indicator;
                 }
             }
+        } else {
+            // If no filter strategy, calculate default indicators for basic analysis
+            // This ensures the bot can make decisions even without a filter strategy
+            Log::debug('TechnicalAnalysisService: No filter strategy, calculating default indicators', [
+                'candle_count' => count($ohlcv),
+            ]);
+            
+            // Calculate basic indicators if we have enough data
+            if (count($ohlcv) >= 20) {
+                $indicators['SMA'] = $this->calculateSMA($ohlcv, 20);
+                $indicators['EMA'] = $this->calculateEMA($ohlcv, 20);
+            }
+            
+            if (count($ohlcv) >= 15) {
+                $indicators['RSI'] = $this->calculateRSI($ohlcv, 14);
+            }
         }
 
         return $indicators;
@@ -59,14 +75,21 @@ class TechnicalAnalysisService
         }
 
         try {
-            return match ($indicatorType) {
-                'SMA' => $this->calculateSMA($ohlcv, $params['period'] ?? 20),
-                'EMA' => $this->calculateEMA($ohlcv, $params['period'] ?? 20),
-                'RSI' => $this->calculateRSI($ohlcv, $params['period'] ?? 14),
-                'MACD' => $this->calculateMACD($ohlcv, $params),
-                'BB' => $this->calculateBollingerBands($ohlcv, $params),
-                'STOCH' => $this->calculateStochastic($ohlcv, $params),
-                default => null,
+            switch ($indicatorType) {
+                case 'SMA':
+                    return $this->calculateSMA($ohlcv, $params['period'] ?? 20);
+                case 'EMA':
+                    return $this->calculateEMA($ohlcv, $params['period'] ?? 20);
+                case 'RSI':
+                    return $this->calculateRSI($ohlcv, $params['period'] ?? 14);
+                case 'MACD':
+                    return $this->calculateMACD($ohlcv, $params);
+                case 'BB':
+                    return $this->calculateBollingerBands($ohlcv, $params); 
+                case 'STOCH':
+                    return $this->calculateStochastic($ohlcv, $params);
+                default:
+                    return null;
             };
         } catch (\Exception $e) {
             Log::error('Failed to calculate indicator', [

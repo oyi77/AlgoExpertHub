@@ -214,6 +214,7 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         // Positions tabs
         Route::get('positions/open', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'openPositions'])->name('positions.open');
         Route::get('positions/closed', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'closedPositions'])->name('positions.closed');
+        Route::post('positions/updates', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'getPositionUpdates'])->name('positions.updates');
         
         // Analytics tab
         Route::get('analytics', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'analytics'])->name('analytics');
@@ -391,12 +392,14 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('/{id}/stop', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'stop'])->name('stop');
         Route::post('/{id}/pause', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'pause'])->name('pause');
         Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'resume'])->name('resume');
+        Route::post('/{id}/restart', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'restart'])->name('restart');
         
         // Monitoring endpoints (AJAX)
         Route::get('/{id}/worker-status', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'workerStatus'])->name('worker-status');
         Route::get('/{id}/positions', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'positions'])->name('positions');
         Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'logs'])->name('logs');
         Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'metrics'])->name('metrics');
+        Route::post('/{id}/test-execution', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'testExecution'])->name('test-execution');
     });
 
     // 7. System Health

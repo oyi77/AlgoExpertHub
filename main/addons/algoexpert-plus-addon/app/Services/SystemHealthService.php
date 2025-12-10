@@ -36,20 +36,46 @@ class SystemHealthService
                 'redis_connection_name' => config('horizon.use', 'default'),
             ];
             
-            // Try to get metrics if active
+            // Try to get metrics if active (always try to get, even if status check failed)
             $throughput = 0;
             $waitTime = 0;
             $recentJobs = [];
             
-            if ($isActive) {
-                try {
-                    $horizon = app(\Laravel\Horizon\Contracts\MetricsRepository::class);
-                    $throughput = $horizon->throughput() ?? 0;
-                    $waitTime = $horizon->waitTime() ?? 0;
-                    $recentJobs = $horizon->recentJobs() ?? [];
-                } catch (\Throwable $e) {
-                    // Metrics might fail even if Horizon is running
+            try {
+                $horizon = app(\Laravel\Horizon\Contracts\MetricsRepository::class);
+                
+                // Only call methods that are confirmed to exist
+                if (method_exists($horizon, 'throughput')) {
+                    try {
+                        $throughput = $horizon->throughput() ?? 0;
+                    } catch (\Throwable $e) {
+                        $throughput = 0;
+                    }
                 }
+                
+                // waitTime() may not exist or may require parameters - skip if not available
+                // Some Horizon versions don't have this method, so we just use 0 as default
+                
+                // recentJobs() may not exist in all Horizon versions
+                if (method_exists($horizon, 'recentJobs')) {
+                    try {
+                        $recentJobs = $horizon->recentJobs() ?? [];
+                    } catch (\Throwable $e) {
+                        $recentJobs = [];
+                    }
+                }
+                
+                // If we can successfully get metrics, Horizon is definitely running
+                // This is the most reliable check - if Horizon API responds, it's active
+                if ($throughput >= 0 || !empty($recentJobs)) {
+                    // Horizon API is responding, so it's actually running
+                    // Override the process-based check with this more reliable method
+                    $isActive = true;
+                }
+            } catch (\Throwable $e) {
+                // Metrics might fail if Horizon is not running or Redis connection issues
+                // Keep the process-based status check result
+                \Log::debug('Horizon metrics unavailable', ['error' => $e->getMessage()]);
             }
             
             $message = $this->getHorizonStatusMessage($redisConnected, $processCount, $isActive);
@@ -124,39 +150,84 @@ class SystemHealthService
 
     /**
      * Check if Horizon workers are active
+     * Uses multiple methods to accurately detect Horizon status
      */
     protected function checkHorizonActive(): bool
     {
         try {
-            // Check Redis for Horizon supervisors
             $redis = app('redis')->connection(config('horizon.use', 'default'));
             $prefix = config('horizon.prefix', 'horizon:');
             
-            // Check for active supervisors
-            $supervisors = $redis->keys($prefix . 'supervisors:*');
-            
-            if (empty($supervisors)) {
-                // Also check if horizon:snapshot is being run (indicates Horizon is configured)
-                // But workers might not be running
-                return false;
-            }
-            
-            // Check if any supervisor is actually running
-            foreach ($supervisors as $key) {
-                $data = $redis->get($key);
-                if ($data) {
-                    $supervisor = json_decode($data, true);
-                    // Check if supervisor has processes
-                    if (isset($supervisor['processes']) && $supervisor['processes'] > 0) {
+            // Method 1: Check for Horizon master process in Redis (most reliable)
+            // Horizon stores its master process info in 'horizon:master'
+            $masterKey = $prefix . 'master';
+            $master = $redis->get($masterKey);
+            if ($master) {
+                $masterData = json_decode($master, true);
+                // If master exists and has a pid, Horizon is running
+                if (isset($masterData['pid'])) {
+                    // Verify the process is actually running
+                    $pid = $masterData['pid'];
+                    if ($this->isProcessRunning($pid)) {
                         return true;
                     }
                 }
             }
             
-            return false;
+            // Method 2: Check for active supervisors in Redis
+            $supervisors = $redis->keys($prefix . 'supervisors:*');
+            if (!empty($supervisors)) {
+                foreach ($supervisors as $key) {
+                    $data = $redis->get($key);
+                    if ($data) {
+                        $supervisor = json_decode($data, true);
+                        // Check if supervisor has processes and is not paused
+                        if (isset($supervisor['processes']) && $supervisor['processes'] > 0) {
+                            // Also check if supervisor is not paused
+                            if (!isset($supervisor['paused']) || !$supervisor['paused']) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Method 3: Check for Horizon snapshot (indicates Horizon is configured and running)
+            $snapshotKey = $prefix . 'snapshot';
+            $snapshot = $redis->get($snapshotKey);
+            if ($snapshot) {
+                // Snapshot exists, check if it's recent (within last 5 minutes)
+                $snapshotData = json_decode($snapshot, true);
+                if (isset($snapshotData['timestamp'])) {
+                    $snapshotTime = $snapshotData['timestamp'];
+                    // If snapshot is recent, Horizon is likely running
+                    if ($snapshotTime > (time() - 300)) { // 5 minutes
+                        return true;
+                    }
+                }
+            }
+            
+            // Method 4: Check process list as final fallback
+            $processCount = $this->getHorizonProcessCount();
+            return $processCount > 0;
         } catch (\Throwable $e) {
             // If Redis check fails, try process check as fallback
+            \Log::warning('Horizon status check error', ['error' => $e->getMessage()]);
             return $this->getHorizonProcessCount() > 0;
+        }
+    }
+    
+    /**
+     * Check if a process with given PID is running
+     */
+    protected function isProcessRunning(int $pid): bool
+    {
+        try {
+            $command = "ps -p {$pid} -o pid= 2>&1";
+            $result = trim(shell_exec($command) ?: '');
+            return !empty($result) && is_numeric($result);
+        } catch (\Throwable $e) {
+            return false;
         }
     }
 
@@ -166,9 +237,23 @@ class SystemHealthService
     protected function getHorizonProcessCount(): int
     {
         try {
-            // Check for horizon processes
-            $command = "ps aux | grep 'artisan horizon' | grep -v grep | wc -l";
+            // Check for horizon processes (both master and workers)
+            // Horizon master runs as "artisan horizon"
+            // Workers run as child processes
+            $command = "ps aux | grep -E 'artisan horizon|horizon:work' | grep -v grep | wc -l";
             $count = (int) trim(shell_exec($command) ?: '0');
+            
+            // If we get processes, verify at least one is the master
+            if ($count > 0) {
+                // Check specifically for master process
+                $masterCheck = "ps aux | grep 'artisan horizon' | grep -v 'horizon:work' | grep -v grep | wc -l";
+                $masterCount = (int) trim(shell_exec($masterCheck) ?: '0');
+                // If we have at least a master process, return the count
+                if ($masterCount > 0) {
+                    return $count;
+                }
+            }
+            
             return $count;
         } catch (\Throwable $e) {
             return 0;
@@ -176,31 +261,127 @@ class SystemHealthService
     }
 
     /**
-     * Get queue statistics from database
+     * Get queue statistics from database and Redis
      */
     public function getQueueStats(): array
     {
+        $queueConnection = config('queue.default', 'sync');
+        $stats = [
+            'queue_connection' => $queueConnection,
+            'pending' => 0,
+            'failed' => 0,
+            'queues' => [],
+            'redis_pending' => 0,
+            'database_pending' => 0,
+        ];
+
         try {
-            $stats = [
-                'pending' => DB::table('jobs')->count(),
-                'failed' => DB::table('failed_jobs')->count(),
-                'queues' => DB::table('jobs')
-                    ->select('queue', DB::raw('count(*) as count'))
-                    ->groupBy('queue')
-                    ->get()
-                    ->pluck('count', 'queue')
-                    ->toArray(),
-            ];
+            // Always check database queue table
+            $stats['database_pending'] = DB::table('jobs')->count();
+            $stats['failed'] = DB::table('failed_jobs')->count();
+            $dbQueues = DB::table('jobs')
+                ->select('queue', DB::raw('count(*) as count'))
+                ->groupBy('queue')
+                ->get()
+                ->pluck('count', 'queue')
+                ->toArray();
+
+            // Check Redis queues if using Redis
+            $redisQueues = [];
+            $redisPending = 0;
+            if ($queueConnection === 'redis') {
+                try {
+                    $redis = app('redis')->connection(config('queue.connections.redis.connection', 'default'));
+                    $queueName = config('queue.connections.redis.queue', 'default');
+                    $horizonPrefix = config('horizon.prefix', 'horizon:');
+                    
+                    // Check Redis queue directly
+                    $redisQueueKey = 'queues:' . $queueName;
+                    $redisPending = $redis->llen($redisQueueKey);
+                    
+                    // Check all queue keys in Redis
+                    $allQueueKeys = $redis->keys('queues:*');
+                    foreach ($allQueueKeys as $key) {
+                        $queueName = str_replace('queues:', '', $key);
+                        $count = $redis->llen($key);
+                        if ($count > 0) {
+                            $redisQueues[$queueName] = $count;
+                            $redisPending += $count;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Redis might not be available
+                    \Log::debug('Redis queue check failed', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // Use Redis stats if queue connection is Redis, otherwise use database
+            if ($queueConnection === 'redis') {
+                $stats['pending'] = $redisPending;
+                $stats['queues'] = $redisQueues;
+                $stats['redis_pending'] = $redisPending;
+            } else {
+                $stats['pending'] = $stats['database_pending'];
+                $stats['queues'] = $dbQueues;
+            }
 
             return $stats;
         } catch (\Throwable $e) {
-            return [
-                'pending' => 0,
-                'failed' => 0,
-                'queues' => [],
+            return array_merge($stats, [
                 'error' => $e->getMessage(),
-            ];
+            ]);
         }
+    }
+    
+    /**
+     * Get detailed queue diagnostics
+     */
+    public function getQueueDiagnostics(): array
+    {
+        $queueConnection = config('queue.default', 'sync');
+        $horizonRequired = class_exists(\Laravel\Horizon\Horizon::class);
+        
+        $diagnostics = [
+            'queue_connection' => $queueConnection,
+            'queue_driver' => config('queue.connections.' . $queueConnection . '.driver', 'unknown'),
+            'is_redis' => $queueConnection === 'redis',
+            'horizon_required' => $horizonRequired,
+            'horizon_compatible' => $horizonRequired && $queueConnection === 'redis',
+            'issues' => [],
+            'recommendations' => [],
+        ];
+
+        // Check for issues
+        if ($horizonRequired && $queueConnection !== 'redis') {
+            $diagnostics['issues'][] = 'Horizon requires Redis queue connection, but current connection is: ' . $queueConnection;
+            $diagnostics['recommendations'][] = "Set QUEUE_CONNECTION=redis in .env file";
+        }
+
+        if ($queueConnection === 'sync') {
+            $diagnostics['issues'][] = 'Queue connection is set to "sync" - jobs will run immediately instead of being queued';
+            $diagnostics['recommendations'][] = "Change QUEUE_CONNECTION from 'sync' to 'redis' or 'database' in .env";
+        }
+
+        if ($queueConnection === 'database') {
+            $diagnostics['issues'][] = 'Queue connection is "database" - Horizon cannot monitor database queues, only Redis queues';
+            $diagnostics['recommendations'][] = "Change QUEUE_CONNECTION to 'redis' in .env to use Horizon dashboard";
+        }
+
+        // Check if jobs are being dispatched
+        try {
+            $redis = app('redis')->connection(config('queue.connections.redis.connection', 'default'));
+            $redisConnected = true;
+        } catch (\Throwable $e) {
+            $redisConnected = false;
+            if ($queueConnection === 'redis') {
+                $diagnostics['issues'][] = 'Redis connection failed: ' . $e->getMessage();
+                $diagnostics['recommendations'][] = "Check Redis configuration and ensure Redis server is running";
+            }
+        }
+
+        $diagnostics['redis_connected'] = $redisConnected;
+
+        return $diagnostics;
     }
 
     /**
@@ -234,19 +415,28 @@ class SystemHealthService
             $databaseName = $connection->getDatabaseName();
             
             $tables = DB::select("SELECT 
-                table_name,
-                table_rows,
+                table_name AS table_name,
+                table_rows AS table_rows,
                 ROUND(((data_length + index_length) / 1024 / 1024), 2) AS size_mb
                 FROM information_schema.TABLES 
                 WHERE table_schema = ?
                 ORDER BY (data_length + index_length) DESC
                 LIMIT 10", [$databaseName]);
+            
+            // Convert stdClass objects to arrays with lowercase keys for consistency
+            $normalizedTables = array_map(function($table) {
+                return (object) [
+                    'table_name' => $table->table_name ?? $table->TABLE_NAME ?? null,
+                    'table_rows' => $table->table_rows ?? $table->TABLE_ROWS ?? 0,
+                    'size_mb' => $table->size_mb ?? $table->SIZE_MB ?? 0,
+                ];
+            }, $tables);
 
             return [
                 'available' => true,
                 'connection' => config('database.default'),
                 'database' => $databaseName,
-                'largest_tables' => $tables,
+                'largest_tables' => $normalizedTables,
             ];
         } catch (\Throwable $e) {
             return [

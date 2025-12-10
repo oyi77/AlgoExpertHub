@@ -172,45 +172,58 @@
     </div>
     @endif
 
-    <!-- Horizon Status -->
-    @if(isset($horizonStats))
+    <!-- Horizon Status (Unified) -->
+    @if(isset($horizonStats) || (isset($horizonSupervisorStatus) && $horizonSupervisorStatus))
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'secondary') }}">
-                <div class="card-header bg-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'secondary') }} text-white">
-                    <h5 class="mb-0">
-                        <i class="las la-tachometer-alt"></i> {{ __('Laravel Horizon') }}
-                    </h5>
+            @php
+                $isHorizonActive = isset($horizonStats) && $horizonStats['available'] && ($horizonStats['active'] ?? false);
+                $isCronActive = isset($horizonSupervisorStatus) && ($horizonSupervisorStatus['enabled'] ?? false);
+                $isSystemSupervisor = isset($horizonSupervisorStatus) && ($horizonSupervisorStatus['use_system_supervisor'] ?? false);
+                $overallStatus = $isHorizonActive ? 'success' : ($isHorizonActive === false && isset($horizonStats) ? 'warning' : 'secondary');
+            @endphp
+            <div class="card border-{{ $overallStatus }}">
+                <div class="card-header bg-{{ $overallStatus }} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="las la-tachometer-alt"></i> {{ __('Laravel Horizon') }}
+                        </h5>
+                        @if($isHorizonActive)
+                            <a href="{{ route('admin.algoexpert-plus.horizon') }}" class="btn btn-light btn-sm">
+                                <i class="las la-external-link-alt"></i> {{ __('Open Dashboard') }}
+                            </a>
+                        @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <!-- Main Status Column -->
+                        <div class="col-lg-6 mb-3 mb-lg-0">
+                            <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="las la-server"></i> {{ __('Worker Status') }}
+                            </h6>
                             <table class="table table-sm table-borderless mb-0">
                                 <tr>
-                                    <td><strong>{{ __('Status') }}:</strong></td>
+                                    <td width="40%"><strong>{{ __('Status') }}:</strong></td>
                                     <td>
-                                        @if(!$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed']))
+                                        @if(!isset($horizonStats) || !$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed']))
                                             <span class="badge badge-secondary">{{ __('Not Installed') }}</span>
-                                        @elseif($horizonStats['active'])
+                                        @elseif($isHorizonActive)
                                             <span class="badge badge-success">{{ __('Active') }}</span>
                                         @else
                                             <span class="badge badge-warning">{{ __('Inactive') }}</span>
                                         @endif
                                     </td>
                                 </tr>
-                                @if($horizonStats['available'])
-                                @if(isset($horizonStats['processes']))
+                                @if(isset($horizonStats) && $horizonStats['available'])
                                 <tr>
                                     <td><strong>{{ __('Processes') }}:</strong></td>
                                     <td>{{ $horizonStats['processes'] ?? 0 }}</td>
                                 </tr>
-                                @endif
-                                @if(isset($horizonStats['throughput']))
                                 <tr>
                                     <td><strong>{{ __('Throughput') }}:</strong></td>
                                     <td>{{ number_format($horizonStats['throughput'] ?? 0) }} {{ __('jobs/min') }}</td>
                                 </tr>
-                                @endif
                                 @if(isset($horizonStats['diagnostics']['queue_connection']))
                                 <tr>
                                     <td><strong>{{ __('Queue Connection') }}:</strong></td>
@@ -234,87 +247,95 @@
                                 @endif
                             </table>
                         </div>
-                        <div class="col-md-6">
-                            <div class="alert alert-{{ $horizonStats['available'] && $horizonStats['active'] ? 'success' : ($horizonStats['available'] ? 'warning' : 'info') }} mb-0">
-                                @if(isset($horizonStats['message']))
-                                    <i class="las la-{{ $horizonStats['active'] ? 'check-circle' : 'exclamation-circle' }}"></i> 
-                                    {{ __($horizonStats['message']) }}
-                                @elseif(!$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed']))
-                                    <i class="las la-info-circle"></i> 
-                                    {{ __('Laravel Horizon is not installed. Install it with: composer require laravel/horizon') }}
-                                @elseif($horizonStats['active'])
-                                    <i class="las la-check-circle"></i> 
-                                    {{ __('Horizon is running and processing jobs.') }}
-                                @elseif(isset($horizonStats['error']))
-                                    <i class="las la-exclamation-triangle"></i> 
-                                    {{ __('Error: ') }}{{ $horizonStats['error'] }}
-                                @else
-                                    <i class="las la-exclamation-circle"></i> 
-                                    {{ __('Horizon is not running. Start it with: php artisan horizon') }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    <!-- Horizon Supervisor Status -->
-    @if(isset($horizonSupervisorStatus) && $horizonSupervisorStatus)
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }}">
-                <div class="card-header bg-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }} text-white">
-                    <h5 class="mb-0">
-                        <i class="las la-shield-alt"></i> {{ __('Horizon Cron Supervisor') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
+                        <!-- Supervisor Column -->
+                        <div class="col-lg-6">
+                            <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <i class="las la-shield-alt"></i> {{ __('Supervisor Management') }}
+                            </h6>
                             <table class="table table-sm table-borderless mb-0">
+                                @if(isset($horizonSupervisorStatus) && $horizonSupervisorStatus)
                                 <tr>
-                                    <td><strong>{{ __('Status') }}:</strong></td>
+                                    <td width="40%"><strong>{{ __('Cron Supervisor') }}:</strong></td>
                                     <td>
-                                        <span class="badge badge-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'secondary' }}">
-                                            {{ $horizonSupervisorStatus['enabled'] ? __('Active') : __('Inactive') }}
-                                        </span>
+                                        @if($isSystemSupervisor)
+                                            <span class="badge badge-info">{{ __('N/A (System Supervisor Active)') }}</span>
+                                        @else
+                                            <span class="badge badge-{{ $isCronActive ? 'success' : 'secondary' }}">
+                                                {{ $isCronActive ? __('Active') : __('Inactive') }}
+                                            </span>
+                                        @endif
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>{{ __('Schedule') }}:</strong></td>
-                                    <td>{{ __('Every :minutes minutes', ['minutes' => $horizonSupervisorStatus['schedule_minutes']]) }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>{{ __('System Supervisor') }}:</strong></td>
                                     <td>
-                                        <span class="badge badge-{{ $horizonSupervisorStatus['use_system_supervisor'] ? 'info' : 'secondary' }}">
-                                            {{ $horizonSupervisorStatus['use_system_supervisor'] ? __('Enabled') : __('Disabled') }}
+                                        <span class="badge badge-{{ $isSystemSupervisor ? 'info' : 'secondary' }}">
+                                            {{ $isSystemSupervisor ? __('Enabled') : __('Disabled') }}
                                         </span>
                                     </td>
                                 </tr>
-                                @if($horizonSupervisorStatus['last_run'])
+                                @if(!$isSystemSupervisor)
                                 <tr>
-                                    <td><strong>{{ __('Last Run') }}:</strong></td>
+                                    <td><strong>{{ __('Check Interval') }}:</strong></td>
+                                    <td>{{ __('Every :minutes minutes', ['minutes' => $horizonSupervisorStatus['schedule_minutes'] ?? 3]) }}</td>
+                                </tr>
+                                @if(isset($horizonSupervisorStatus['last_run']) && $horizonSupervisorStatus['last_run'])
+                                <tr>
+                                    <td><strong>{{ __('Last Check') }}:</strong></td>
                                     <td>{{ $horizonSupervisorStatus['last_run'] }}</td>
+                                </tr>
+                                @endif
+                                @endif
+                                @else
+                                <tr>
+                                    <td colspan="2" class="text-muted">{{ __('Supervisor information not available') }}</td>
                                 </tr>
                                 @endif
                             </table>
                         </div>
-                        <div class="col-md-6">
-                            <div class="alert alert-{{ $horizonSupervisorStatus['enabled'] ? 'success' : 'info' }} mb-0">
-                                @if($horizonSupervisorStatus['use_system_supervisor'])
-                                    <i class="las la-info-circle"></i> 
-                                    {{ __('System Supervisor is enabled. Cron supervisor is disabled.') }}
-                                @elseif($horizonSupervisorStatus['enabled'])
-                                    <i class="las la-check-circle"></i> 
-                                    {{ __('Cron supervisor is active. Horizon will be automatically restarted if it stops running.') }}
-                                @else
-                                    <i class="las la-exclamation-circle"></i> 
-                                    {{ __('Cron supervisor is disabled. Enable it in .env: HORIZON_CRON_SUPERVISOR_ENABLED=true') }}
-                                @endif
+                    </div>
+
+                    <!-- Status Message -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            @php
+                                $alertType = 'info';
+                                $alertMessage = '';
+                                $alertIcon = 'info-circle';
+                                
+                                if (!isset($horizonStats) || !$horizonStats['available'] || (isset($horizonStats['installed']) && !$horizonStats['installed'])) {
+                                    $alertType = 'info';
+                                    $alertIcon = 'info-circle';
+                                    $alertMessage = __('Laravel Horizon is not installed. Install it with: composer require laravel/horizon');
+                                } elseif ($isHorizonActive) {
+                                    $alertType = 'success';
+                                    $alertIcon = 'check-circle';
+                                    if ($isSystemSupervisor) {
+                                        $alertMessage = __('Horizon is running via System Supervisor and processing jobs normally.');
+                                    } else {
+                                        $alertMessage = __('Horizon is running and processing jobs. ' . ($isCronActive ? 'Cron supervisor is monitoring and will auto-restart if needed.' : ''));
+                                    }
+                                } elseif (isset($horizonStats['message'])) {
+                                    $alertType = $isHorizonActive ? 'success' : 'warning';
+                                    $alertIcon = $isHorizonActive ? 'check-circle' : 'exclamation-circle';
+                                    $alertMessage = $horizonStats['message'];
+                                    if ($isSystemSupervisor && !$isHorizonActive) {
+                                        $alertMessage .= ' ' . __('Ensure System Supervisor is configured to run Horizon.');
+                                    }
+                                } elseif ($isSystemSupervisor) {
+                                    $alertType = 'info';
+                                    $alertIcon = 'info-circle';
+                                    $alertMessage = __('System Supervisor is enabled. Horizon should be managed by your system supervisor configuration. Ensure Horizon worker is configured in supervisor.');
+                                } else {
+                                    $alertType = 'warning';
+                                    $alertIcon = 'exclamation-circle';
+                                    $alertMessage = __('Horizon is not running. ' . ($isCronActive ? 'Cron supervisor is active and will attempt to restart it.' : 'Start it with: php artisan horizon or enable cron supervisor.'));
+                                }
+                            @endphp
+                            <div class="alert alert-{{ $alertType }} mb-0">
+                                <i class="las la-{{ $alertIcon }}"></i> 
+                                {{ $alertMessage }}
                             </div>
                         </div>
                     </div>

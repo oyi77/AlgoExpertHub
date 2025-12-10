@@ -72,10 +72,20 @@ class PageSeeder extends Seeder
                 $pageData
             );
 
-            // Create page sections
-            foreach ($sections as $section) {
-                PageSection::firstOrCreate(
-                    ['page_id' => $page->id, 'sections' => $section]
+            // Create page sections (prevent duplicates) with proper order
+            foreach ($sections as $index => $section) {
+                // Calculate hash for uniqueness check
+                $sectionsHash = hash('sha256', $section);
+                
+                PageSection::updateOrCreate(
+                    [
+                        'page_id' => $page->id,
+                        'sections_hash' => $sectionsHash
+                    ],
+                    [
+                        'sections' => $section,
+                        'order' => $index + 1
+                    ]
                 );
             }
         }

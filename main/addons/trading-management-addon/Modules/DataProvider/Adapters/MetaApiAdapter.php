@@ -655,18 +655,12 @@ class MetaApiAdapter implements DataProviderInterface
         // Map direction to MetaAPI order type
         $orderType = strtolower($direction) === 'buy' ? 'ORDER_TYPE_BUY' : 'ORDER_TYPE_SELL';
 
+        // For market orders, actionType should be the order type itself (not ORDER_TYPE_MARKET)
         $body = [
-            'actionType' => 'ORDER_TYPE_MARKET',
+            'actionType' => $orderType,
             'symbol' => $symbol,
             'volume' => $volume,
         ];
-
-        // Set order type based on direction
-        if ($orderType === 'ORDER_TYPE_BUY') {
-            $body['type'] = 'ORDER_TYPE_BUY';
-        } else {
-            $body['type'] = 'ORDER_TYPE_SELL';
-        }
 
         // Add SL/TP if provided
         if ($sl !== null) {

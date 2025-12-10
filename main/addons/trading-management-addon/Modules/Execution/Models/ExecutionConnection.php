@@ -131,5 +131,13 @@ class ExecutionConnection extends Model
     {
         return !is_null($this->data_connection_id);
     }
+
+    /**
+     * Check if can execute trades
+     */
+    public function canExecuteTrades(): bool
+    {
+        return $this->is_active && $this->status === 'active';
+    }
 }
 

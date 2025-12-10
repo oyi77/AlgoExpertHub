@@ -76,6 +76,12 @@
                                         </button>
                                     </form>
                                 @elseif($isRunning)
+                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restart this bot?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-info btn-lg">
+                                            <i class="fa fa-redo"></i> Restart Bot
+                                        </button>
+                                    </form>
                                     <form action="{{ route('user.trading-management.trading-bots.pause', $bot->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-warning btn-lg">
@@ -89,6 +95,12 @@
                                         </button>
                                     </form>
                                 @elseif($isPaused)
+                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restart this bot?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-info btn-lg">
+                                            <i class="fa fa-redo"></i> Restart Bot
+                                        </button>
+                                    </form>
                                     <form action="{{ route('user.trading-management.trading-bots.resume', $bot->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-success btn-lg">
@@ -255,8 +267,8 @@
                         <tbody>
                             @foreach($executions as $execution)
                                 <tr>
-                                    <td>{{ $execution->signal->title ?? 'N/A' }}</td>
-                                    <td>{{ $execution->symbol ?? 'N/A' }}</td>
+                                    <td>{{ $execution->signal?->title ?? 'N/A' }}</td>
+                                    <td>{{ $execution->symbol ?: 'N/A' }}</td>
                                     <td>{{ $execution->side ? strtoupper($execution->side) : 'N/A' }}</td>
                                     <td>
                                         <span class="badge bg-{{ in_array($execution->status, ['SUCCESS', 'filled']) ? 'success' : 'warning' }}">
@@ -651,9 +663,19 @@
                             container.innerHTML = '<div class="text-muted">No logs found</div>';
                         } else {
                             container.innerHTML = data.logs.map(log => {
-                                const levelClass = log.level === 'error' ? 'text-danger' : (log.level === 'warning' ? 'text-warning' : 'text-info');
-                                return `<div class="${levelClass}">[${log.timestamp || 'N/A'}] [${(log.level || 'info').toUpperCase()}] ${log.message || log.raw || ''}</div>`;
-                            }).join('');
+                                // Skip logs with invalid format
+                                if (log.level === 'unknown' && !log.timestamp) {
+                                    return '';
+                                }
+                                const levelClass = log.level === 'error' ? 'text-danger' : (log.level === 'warning' ? 'text-warning' : (log.level === 'info' ? 'text-info' : 'text-muted'));
+                                const level = (log.level || 'info').toUpperCase();
+                                const message = log.message || log.raw || '';
+                                // Only show if we have a valid message
+                                if (!message || message.trim() === '') {
+                                    return '';
+                                }
+                                return `<div class="${levelClass}">[${log.timestamp || 'N/A'}] [${level}] ${message}</div>`;
+                            }).filter(html => html !== '').join('');
                             container.scrollTop = container.scrollHeight;
                         }
                     }

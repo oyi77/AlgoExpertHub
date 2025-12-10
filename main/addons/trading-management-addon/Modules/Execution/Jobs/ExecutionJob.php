@@ -33,18 +33,41 @@ class ExecutionJob implements ShouldQueue
 
     public function handle()
     {
+        Log::info('ExecutionJob: Starting trade execution', [
+            'bot_id' => $this->executionData['bot_id'] ?? null,
+            'connection_id' => $this->executionData['connection_id'] ?? null,
+            'symbol' => $this->executionData['symbol'] ?? null,
+            'direction' => $this->executionData['direction'] ?? null,
+            'quantity' => $this->executionData['quantity'] ?? null,
+        ]);
+        
         try {
             $connection = ExecutionConnection::find($this->executionData['connection_id']);
-            if (!$connection || !$connection->canExecuteTrades()) {
-                Log::warning('Connection not available for execution', [
+            if (!$connection) {
+                Log::error('ExecutionJob: Connection not found', [
                     'connection_id' => $this->executionData['connection_id'],
                 ]);
                 return;
             }
+            
+            if (!$connection->canExecuteTrades()) {
+                Log::warning('ExecutionJob: Connection not available for execution', [
+                    'connection_id' => $connection->id,
+                    'is_active' => $connection->is_active ?? false,
+                    'status' => $connection->status ?? null,
+                ]);
+                return;
+            }
 
-            // Get adapter for connection
-            $adapterFactory = app(AdapterFactory::class);
-            $adapter = $adapterFactory->create($connection->provider, $connection->credentials ?? []);
+            // Get adapter for connection - create directly based on connection type
+            $adapter = $this->createAdapter($connection);
+
+            Log::info('ExecutionJob: Adapter created, executing trade', [
+                'connection_id' => $connection->id,
+                'provider' => $connection->provider,
+                'symbol' => $this->executionData['symbol'],
+                'direction' => $this->executionData['direction'],
+            ]);
 
             // Execute trade
             $result = $this->executeTrade($adapter, $connection);
@@ -53,23 +76,32 @@ class ExecutionJob implements ShouldQueue
                 // Create position record
                 $this->createPosition($connection, $result);
                 
-                Log::info('Trade executed successfully', [
+                Log::info('ExecutionJob: Trade executed successfully', [
                     'connection_id' => $connection->id,
                     'bot_id' => $this->executionData['bot_id'] ?? null,
                     'order_id' => $result['order_id'] ?? null,
+                    'position_id' => $result['position_id'] ?? null,
+                    'symbol' => $this->executionData['symbol'],
+                    'direction' => $this->executionData['direction'],
+                    'quantity' => $this->executionData['quantity'],
                 ]);
             } else {
-                Log::error('Trade execution failed', [
+                Log::error('ExecutionJob: Trade execution failed', [
                     'connection_id' => $connection->id,
                     'bot_id' => $this->executionData['bot_id'] ?? null,
+                    'symbol' => $this->executionData['symbol'],
+                    'direction' => $this->executionData['direction'],
                     'error' => $result['error'] ?? 'Unknown error',
+                    'result' => $result,
                 ]);
             }
 
         } catch (\Exception $e) {
-            Log::error('Execution job failed', [
+            Log::error('ExecutionJob: Execution job failed with exception', [
                 'execution_data' => $this->executionData,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
@@ -89,8 +121,24 @@ class ExecutionJob implements ShouldQueue
             $takeProfit = $this->executionData['take_profit'] ?? null;
             $entryPrice = $this->executionData['entry_price'] ?? null;
 
+            Log::info('ExecutionJob: Preparing trade order', [
+                'connection_id' => $connection->id,
+                'symbol' => $symbol,
+                'direction' => $direction,
+                'quantity' => $quantity,
+                'entry_price' => $entryPrice,
+                'stop_loss' => $stopLoss,
+                'take_profit' => $takeProfit,
+            ]);
+
             // Determine order type (market or limit)
             $orderType = $entryPrice ? 'limit' : 'market';
+
+            Log::info('ExecutionJob: Placing order', [
+                'order_type' => $orderType,
+                'symbol' => $symbol,
+                'direction' => $direction,
+            ]);
 
             if ($orderType === 'limit') {
                 $result = $adapter->placeLimitOrder(
@@ -113,6 +161,12 @@ class ExecutionJob implements ShouldQueue
                 );
             }
 
+            Log::info('ExecutionJob: Order placed, received result', [
+                'success' => $result['success'] ?? false,
+                'order_id' => $result['orderId'] ?? $result['order_id'] ?? null,
+                'position_id' => $result['positionId'] ?? $result['position_id'] ?? null,
+            ]);
+
             return [
                 'success' => $result['success'] ?? false,
                 'order_id' => $result['orderId'] ?? $result['order_id'] ?? null,
@@ -121,6 +175,13 @@ class ExecutionJob implements ShouldQueue
             ];
 
         } catch (\Exception $e) {
+            Log::error('ExecutionJob: Exception during trade execution', [
+                'symbol' => $this->executionData['symbol'] ?? null,
+                'direction' => $this->executionData['direction'] ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
@@ -142,17 +203,23 @@ class ExecutionJob implements ShouldQueue
                 $executionLog = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::create([
                     'connection_id' => $connection->id,
                     'signal_id' => null, // Bot execution, not signal-based
-                    'status' => $result['success'] ? 'success' : 'failed',
-                    'message' => 'Bot execution',
+                    'status' => $result['success'] ? 'executed' : 'failed',
+                    'execution_type' => $entryPrice ? 'limit' : 'market',
+                    'symbol' => $this->executionData['symbol'] ?? '',
+                    'direction' => $this->executionData['direction'] ?? '',
+                    'quantity' => $this->executionData['quantity'] ?? 0,
+                    'entry_price' => $this->executionData['entry_price'] ?? null,
+                    'sl_price' => $this->executionData['stop_loss'] ?? null,
+                    'tp_price' => $this->executionData['take_profit'] ?? null,
                     'executed_at' => now(),
                 ]);
                 $executionLogId = $executionLog->id;
             }
 
-            $executionPosition = ExecutionPosition::create([
+            // Prepare position data
+            $positionData = [
                 'connection_id' => $connection->id,
                 'execution_log_id' => $executionLogId,
-                'signal_id' => $this->executionData['signal_id'] ?? null,
                 'symbol' => $this->executionData['symbol'],
                 'direction' => $this->executionData['direction'],
                 'entry_price' => $this->executionData['entry_price'],
@@ -162,11 +229,38 @@ class ExecutionJob implements ShouldQueue
                 'quantity' => $this->executionData['quantity'],
                 'status' => 'open',
                 'order_id' => $result['order_id'] ?? null,
-            ]);
+            ];
+            
+            // Only set signal_id if column is nullable OR if we have a signal_id value
+            $signalId = $this->executionData['signal_id'] ?? null;
+            if ($signalId !== null) {
+                // We have a signal_id, use it
+                $positionData['signal_id'] = $signalId;
+            } else {
+                // Check if signal_id column is nullable before setting it to null
+                $prefix = \Illuminate\Support\Facades\Schema::getConnection()->getTablePrefix();
+                $tableName = $prefix . 'execution_positions';
+                try {
+                    $columnInfo = \Illuminate\Support\Facades\DB::select("SHOW COLUMNS FROM `{$tableName}` WHERE Field = 'signal_id'");
+                    if (!empty($columnInfo) && isset($columnInfo[0]->Null) && $columnInfo[0]->Null === 'YES') {
+                        $positionData['signal_id'] = null; // Bot execution, not signal-based
+                    }
+                    // If NOT NULL and we don't have signal_id, skip it (will fail gracefully or use default)
+                } catch (\Exception $e) {
+                    Log::warning('ExecutionPosition: Could not check signal_id column nullability', [
+                        'error' => $e->getMessage()
+                    ]);
+                    // Try to set null anyway (migration might have run but check failed)
+                    $positionData['signal_id'] = null;
+                }
+            }
+            
+            $executionPosition = ExecutionPosition::create($positionData);
 
-            // If this is a bot execution, also create TradingBotPosition
+            // If this is a bot execution, also create TradingBotPosition and update bot stats
             if (isset($this->executionData['bot_id'])) {
                 $this->createTradingBotPosition($executionPosition);
+                $this->updateBotStatistics($this->executionData['bot_id'], $result['success']);
             }
 
             // If this is a copy trading execution, update CopyTradingExecution
@@ -247,6 +341,106 @@ class ExecutionJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to update CopyTradingExecution', [
                 'copy_trading_execution_id' => $this->executionData['copy_trading_execution_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Create adapter for execution connection
+     */
+    protected function createAdapter(ExecutionConnection $connection)
+    {
+        $provider = $connection->provider ?? $connection->exchange_name ?? 'binance';
+        $type = $connection->type ?? 'crypto';
+        $connectionType = $connection->connection_type ?? null;
+        
+        // For new ExchangeConnection model (has connection_type)
+        if ($connectionType === 'CRYPTO_EXCHANGE') {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
+                $connection->credentials ?? [],
+                $provider
+            );
+        }
+        
+        // For legacy ExecutionConnection (has type field)
+        if ($type === 'crypto' || (!$connectionType && $type === 'crypto')) {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
+                $connection->credentials ?? [],
+                $provider
+            );
+        }
+        
+        // FX/Broker connections (MT4/MT5)
+        if ($provider === 'metaapi' || strpos(strtolower($provider), 'metaapi') !== false) {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
+                $connection->credentials ?? []
+            );
+        } elseif ($provider === 'mtapi_grpc' || 
+                  (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+            $credentials = $connection->credentials ?? [];
+            $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
+            
+            if (!empty($globalSettings['base_url'])) {
+                $credentials['base_url'] = $globalSettings['base_url'];
+            }
+            if (!empty($globalSettings['timeout'])) {
+                $credentials['timeout'] = $globalSettings['timeout'];
+            }
+            
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
+        } else {
+            // Default: MTAPI REST adapter
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
+                $connection->credentials ?? []
+            );
+        }
+    }
+
+    /**
+     * Update bot statistics after trade execution
+     */
+    protected function updateBotStatistics(int $botId, bool $success): void
+    {
+        try {
+            $bot = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::find($botId);
+            if (!$bot) {
+                return;
+            }
+
+            // Recalculate from database (more accurate)
+            $executionQuery = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id);
+            $bot->total_executions = $executionQuery->count();
+            $bot->successful_executions = (clone $executionQuery)->whereIn('status', ['executed', 'success', 'filled', 'completed'])->count();
+            $bot->failed_executions = (clone $executionQuery)->whereIn('status', ['failed', 'rejected', 'cancelled'])->count();
+            
+            // Recalculate win rate
+            if ($bot->total_executions > 0) {
+                $bot->win_rate = ($bot->successful_executions / $bot->total_executions) * 100;
+            } else {
+                $bot->win_rate = 0;
+            }
+            
+            // Update profit from TradingBotPosition
+            if (\Schema::hasTable('trading_bot_positions')) {
+                $positions = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::where('bot_id', $botId)->get();
+                $bot->total_profit = $positions->sum('profit_loss') ?? 0;
+            } else {
+                $bot->total_profit = 0;
+            }
+            
+            $bot->save();
+            
+            Log::info('Bot statistics updated', [
+                'bot_id' => $botId,
+                'total_executions' => $bot->total_executions,
+                'successful_executions' => $bot->successful_executions,
+                'win_rate' => $bot->win_rate,
+                'total_profit' => $bot->total_profit,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update bot statistics', [
+                'bot_id' => $botId,
                 'error' => $e->getMessage(),
             ]);
         }

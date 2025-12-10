@@ -875,6 +875,33 @@ Route::name('user.')->group(function () {
                             }
                         })->name('show');
                         
+                        // Test connection route
+                        Route::post('/{exchangeConnection}/test', function ($id) {
+                            try {
+                                $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('id', $id)
+                                    ->where('user_id', auth()->id())
+                                    ->where('is_admin_owned', false)
+                                    ->firstOrFail();
+                                
+                                // Use service container to resolve controller with dependencies
+                                $controller = app(\Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend\ExchangeConnectionController::class);
+                                return $controller->testConnection($connection);
+                            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => __('Connection not found or you do not have permission to test it.')
+                                ], 404);
+                            } catch (\Exception $e) {
+                                \Log::error('Exchange connection test error: ' . $e->getMessage(), [
+                                    'trace' => $e->getTraceAsString()
+                                ]);
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => __('Failed to test connection: ') . $e->getMessage()
+                                ], 500);
+                            }
+                        })->name('test');
+                        
                         Route::post('/', function (Request $request) {
                             try {
                                 $validated = $request->validate([

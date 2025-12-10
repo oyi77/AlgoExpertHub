@@ -196,9 +196,9 @@
                             <tbody>
                                 @foreach($database_stats['largest_tables'] as $table)
                                 <tr>
-                                    <td>{{ $table->table_name }}</td>
-                                    <td>{{ number_format($table->table_rows) }}</td>
-                                    <td>{{ number_format($table->size_mb, 2) }}</td>
+                                    <td>{{ $table->table_name ?? $table->TABLE_NAME ?? 'N/A' }}</td>
+                                    <td>{{ number_format($table->table_rows ?? $table->TABLE_ROWS ?? 0) }}</td>
+                                    <td>{{ number_format($table->size_mb ?? $table->SIZE_MB ?? 0, 2) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

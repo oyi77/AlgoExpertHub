@@ -49,7 +49,7 @@ class TradingBotController extends Controller
         ];
 
         // Admin can see all bots (user + admin owned)
-        $data['bots'] = TradingBot::with(['user', 'admin', 'exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
+        $botsQuery = TradingBot::with(['user', 'admin', 'exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
             ->when($filters['is_active'] !== null, function ($query) use ($filters) {
                 return $query->where('is_active', $filters['is_active']);
             })
@@ -66,8 +66,14 @@ class TradingBotController extends Controller
                 return $query->where('name', 'like', '%' . $filters['search'] . '%')
                     ->orWhere('description', 'like', '%' . $filters['search'] . '%');
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($filters['per_page']);
+            ->orderBy('created_at', 'desc');
+        
+        $data['bots'] = $botsQuery->paginate($filters['per_page']);
+        
+        // Calculate actual stats for each bot from database
+        foreach ($data['bots'] as $bot) {
+            $this->calculateBotStats($bot);
+        }
 
         // Statistics
         $allBots = TradingBot::withTrashed()->get();
@@ -178,12 +184,37 @@ class TradingBotController extends Controller
         // Get execution logs for this bot through exchange connection
         // Since execution_logs doesn't have trading_bot_id, we query through the bot's exchange connection
         if ($bot->exchange_connection_id) {
-            $data['executions'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id)
-                ->with(['signal', 'executionConnection'])
+            $executionQuery = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id);
+            
+            // Calculate actual statistics from ExecutionLog table (status enum: 'pending', 'executed', 'failed', 'cancelled', 'partial')
+            $data['actualTotalExecutions'] = $executionQuery->count();
+            $data['actualSuccessfulExecutions'] = (clone $executionQuery)->whereIn('status', ['executed', 'success', 'SUCCESS', 'filled', 'completed'])->count();
+            $data['actualFailedExecutions'] = (clone $executionQuery)->whereIn('status', ['failed', 'FAILED', 'rejected', 'cancelled'])->count();
+            
+            // Calculate win rate
+            $data['actualWinRate'] = $data['actualTotalExecutions'] > 0 
+                ? ($data['actualSuccessfulExecutions'] / $data['actualTotalExecutions']) * 100 
+                : 0;
+            
+            // Get paginated executions for display
+            $data['executions'] = $executionQuery->with(['signal', 'executionConnection'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         } else {
             $data['executions'] = \Illuminate\Pagination\Paginator::empty();
+            $data['actualTotalExecutions'] = 0;
+            $data['actualSuccessfulExecutions'] = 0;
+            $data['actualFailedExecutions'] = 0;
+            $data['actualWinRate'] = 0;
+        }
+        
+        // Calculate profit from TradingBotPosition table
+        if (Schema::hasTable('trading_bot_positions')) {
+            $positions = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::where('bot_id', $bot->id)->get();
+            $data['actualTotalProfit'] = $positions->sum('profit_loss') ?? 0;
+            $data['actualTotalExecutions'] = max($data['actualTotalExecutions'], $positions->count()); // Use positions count if higher
+        } else {
+            $data['actualTotalProfit'] = 0;
         }
 
         // Get monitoring data
@@ -324,8 +355,12 @@ class TradingBotController extends Controller
                 'user_id' => $user->id,
                 'admin_id' => null,
                 'is_admin_owned' => false,
-                'created_by_user_id' => $user->id, // Also update created_by_user_id for consistency
             ];
+            
+            // Only update created_by_user_id if column exists
+            if (Schema::hasColumn($bot->getTable(), 'created_by_user_id')) {
+                $updateData['created_by_user_id'] = $user->id;
+            }
             
             // Ensure bot is not marked as template/default template so it appears in user panel
             if (Schema::hasColumn($bot->getTable(), 'is_default_template')) {
@@ -396,15 +431,50 @@ class TradingBotController extends Controller
         $bot = TradingBot::findOrFail($id);
 
         try {
+            \Log::info('Starting trading bot', [
+                'bot_id' => $bot->id,
+                'bot_name' => $bot->name,
+                'is_active' => $bot->is_active,
+                'status' => $bot->status,
+                'trading_mode' => $bot->trading_mode,
+            ]);
+
+            // Validate before starting
+            $validation = $this->botService->validateForStart($bot);
+            if (!$validation['valid']) {
+                \Log::warning('Bot validation failed', [
+                    'bot_id' => $bot->id,
+                    'message' => $validation['message'],
+                ]);
+                return redirect()
+                    ->back()
+                    ->with('error', 'Cannot start bot: ' . $validation['message']);
+            }
+
             $this->botService->start($bot, null, auth()->guard('admin')->id());
             
+            \Log::info('Bot service started, now starting worker', [
+                'bot_id' => $bot->id,
+            ]);
+            
             // Start worker process
-            $this->workerService->startWorker($bot);
+            $pid = $this->workerService->startWorker($bot);
+            
+            \Log::info('Trading bot and worker started successfully', [
+                'bot_id' => $bot->id,
+                'worker_pid' => $pid,
+            ]);
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot started successfully!');
+                ->with('success', 'Trading bot started successfully! Worker PID: ' . $pid);
         } catch (\Exception $e) {
+            \Log::error('Failed to start trading bot', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return redirect()
                 ->back()
                 ->with('error', 'Failed to start bot: ' . $e->getMessage());
@@ -452,6 +522,51 @@ class TradingBotController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Failed to pause bot: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Restart trading bot
+     */
+    public function restart($id): RedirectResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+
+        try {
+            \Log::info('Restarting trading bot', [
+                'bot_id' => $bot->id,
+                'bot_name' => $bot->name,
+                'current_status' => $bot->status,
+            ]);
+
+            // Stop worker if running
+            if ($bot->isRunning() || $bot->isPaused()) {
+                $this->workerService->stopWorker($bot);
+            }
+
+            // Restart via service (stop then start)
+            $this->botService->restart($bot, null, auth()->guard('admin')->id());
+            
+            // Start worker process
+            $pid = $this->workerService->startWorker($bot);
+            
+            \Log::info('Trading bot restarted successfully', [
+                'bot_id' => $bot->id,
+                'worker_pid' => $pid,
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('success', 'Trading bot restarted successfully! Worker PID: ' . $pid);
+        } catch (\Exception $e) {
+            \Log::error('Failed to restart trading bot', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to restart bot: ' . $e->getMessage());
         }
     }
 
@@ -528,6 +643,83 @@ class TradingBotController extends Controller
             'success' => true,
             'logs' => $logs,
         ]);
+    }
+
+    /**
+     * Test execution flow (AJAX)
+     */
+    public function testExecution($id): JsonResponse
+    {
+        $bot = TradingBot::findOrFail($id);
+        
+        try {
+            // Run the test execution command
+            $exitCode = \Artisan::call('trading-bot:test-execution', [
+                'bot_id' => $bot->id,
+                '--force' => true,
+            ]);
+            
+            $output = \Artisan::output();
+            
+            if ($exitCode === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Test execution completed successfully. Check logs for details.',
+                    'output' => $output,
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Test execution failed. Check logs for details.',
+                    'output' => $output,
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Test execution failed', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Test execution error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate bot statistics from database
+     */
+    protected function calculateBotStats(TradingBot $bot): void
+    {
+        // Get executions from ExecutionLog via connection
+        if ($bot->exchange_connection_id) {
+            $executionQuery = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::where('connection_id', $bot->exchange_connection_id);
+            $totalExecutions = $executionQuery->count();
+            $successfulExecutions = (clone $executionQuery)->whereIn('status', ['success', 'SUCCESS', 'filled', 'completed', 'executed'])->count();
+            
+            // Update bot model attributes (for display, not saved to DB)
+            $bot->total_executions = $totalExecutions;
+            $bot->successful_executions = $successfulExecutions;
+            $bot->win_rate = $totalExecutions > 0 ? ($successfulExecutions / $totalExecutions) * 100 : 0;
+        } else {
+            $bot->total_executions = 0;
+            $bot->successful_executions = 0;
+            $bot->win_rate = 0;
+        }
+        
+        // Get profit from TradingBotPosition
+        if (Schema::hasTable('trading_bot_positions')) {
+            $positions = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::where('bot_id', $bot->id)->get();
+            $bot->total_profit = $positions->sum('profit_loss') ?? 0;
+            
+            // Use positions count if higher than execution logs count
+            if ($positions->count() > $bot->total_executions) {
+                $bot->total_executions = $positions->count();
+            }
+        } else {
+            $bot->total_profit = 0;
+        }
     }
 
     /**

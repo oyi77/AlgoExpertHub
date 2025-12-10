@@ -73,11 +73,15 @@ Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::post('/{id}/stop', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'stop'])->name('stop');
     Route::post('/{id}/pause', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'pause'])->name('pause');
     Route::post('/{id}/resume', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'resume'])->name('resume');
+    Route::post('/{id}/restart', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'restart'])->name('restart');
     
     // AJAX endpoints for monitoring
     Route::get('/{id}/worker-status', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'workerStatus'])->name('worker-status');
     Route::get('/{id}/positions', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'positions'])->name('positions');
     Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'logs'])->name('logs');
     Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'metrics'])->name('metrics');
+    
+    // AJAX endpoint for loading symbols from exchange connection
+    Route::get('/exchange-symbols', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'getExchangeSymbols'])->name('exchange-symbols');
 });
 

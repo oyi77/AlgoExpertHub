@@ -77,12 +77,22 @@ trait HasEncryptedCredentials
             
             return is_array($decoded) ? $decoded : [];
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-            \Log::error("Failed to decrypt credentials - DecryptException", [
-                'model' => get_class($this),
-                'id' => $this->id ?? 'unknown',
-                'error' => $e->getMessage(),
-                'value_length' => strlen($value ?? '')
-            ]);
+            // Suppress repeated error logs for same connection (log once per hour max)
+            $logKey = 'decrypt_error_logged_' . get_class($this) . '_' . ($this->id ?? 'unknown');
+            $lastLogged = \Cache::get($logKey, 0);
+            $now = time();
+            
+            // Only log if last log was more than 1 hour ago
+            if ($now - $lastLogged > 3600) {
+                \Log::warning("Failed to decrypt credentials - DecryptException (credentials may be corrupted or encrypted with different APP_KEY)", [
+                    'model' => get_class($this),
+                    'id' => $this->id ?? 'unknown',
+                    'error' => $e->getMessage(),
+                    'value_length' => strlen($value ?? ''),
+                    'hint' => 'This may happen if APP_KEY was changed. Please re-enter credentials for this connection.',
+                ]);
+                \Cache::put($logKey, $now, 3600); // Cache for 1 hour
+            }
             return [];
         } catch (\Throwable $th) {
             \Log::error("Failed to decrypt credentials", [

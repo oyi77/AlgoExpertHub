@@ -85,6 +85,40 @@ class TradingOperationsController extends Controller
     }
 
     /**
+     * Get position updates (API endpoint for real-time updates)
+     */
+    public function getPositionUpdates(Request $request)
+    {
+        $positionIds = $request->input('position_ids', []);
+        
+        if (empty($positionIds)) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $positions = ExecutionPosition::whereIn('id', $positionIds)
+            ->where('status', 'open')
+            ->get();
+
+        $updates = $positions->map(function ($position) {
+            return [
+                'id' => $position->id,
+                'current_price' => $position->current_price,
+                'pnl' => $position->pnl,
+                'pnl_percentage' => $position->pnl_percentage,
+                'last_price_update_at' => $position->last_price_update_at ? $position->last_price_update_at->toIso8601String() : null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $updates
+        ]);
+    }
+
+    /**
      * Closed positions
      */
     public function closedPositions(Request $request)
@@ -215,17 +249,40 @@ class TradingOperationsController extends Controller
      */
     public function manualTrade(Request $request)
     {
-        $validated = $request->validate([
-            'connection_id' => 'required|exists:execution_connections,id',
-            'symbol' => 'required|string',
-            'direction' => 'required|in:BUY,SELL,LONG,SHORT',
-            'lot_size' => 'required|numeric|min:0.01',
-            'order_type' => 'required|in:market,limit',
-            'entry_price' => 'nullable|numeric',
-            'sl_price' => 'nullable|numeric',
-            'tp_price' => 'nullable|numeric',
-            'notes' => 'nullable|string',
-        ]);
+        // Force JSON response for this endpoint (always AJAX)
+        $isAjax = $request->ajax() 
+            || $request->expectsJson() 
+            || $request->wantsJson()
+            || $request->header('X-Requested-With') === 'XMLHttpRequest'
+            || $request->header('Accept') === 'application/json'
+            || str_contains($request->header('Accept', ''), 'application/json');
+        
+        // Merge JSON body into request if present (for fetch/axios requests)
+        if ($request->isJson() && $request->json()->all()) {
+            $request->merge($request->json()->all());
+        }
+        
+        // Validate request - always return JSON for this endpoint
+        try {
+            $validated = $request->validate([
+                'connection_id' => 'required|exists:execution_connections,id',
+                'symbol' => 'required|string',
+                'direction' => 'required|in:BUY,SELL,LONG,SHORT',
+                'lot_size' => 'required|numeric|min:0.01',
+                'order_type' => 'required|in:market,limit',
+                'entry_price' => 'nullable|numeric',
+                'sl_price' => 'nullable|numeric',
+                'tp_price' => 'nullable|numeric',
+                'notes' => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Always return JSON for this endpoint
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         try {
             $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::findOrFail($validated['connection_id']);
@@ -295,30 +352,131 @@ class TradingOperationsController extends Controller
 
                 $orderId = $result['orderId'] ?? $result['positionId'] ?? 'ORDER_' . time();
                 $positionId = $result['positionId'] ?? null;
+                
+                // Determine entry price
+                $entryPrice = null;
+                if ($orderType === 'limit' && !empty($validated['entry_price'])) {
+                    // For limit orders, use the provided entry price
+                    $entryPrice = (float) $validated['entry_price'];
+                } else {
+                    // For market orders, try to get execution price from result or fetch position
+                    // Check if result data contains openPrice
+                    if (isset($result['data']['openPrice']) && $result['data']['openPrice'] > 0) {
+                        $entryPrice = (float) $result['data']['openPrice'];
+                    } elseif ($positionId && method_exists($adapter, 'fetchPositions')) {
+                        // Fetch positions to get the openPrice for this position
+                        try {
+                            $positions = $adapter->fetchPositions();
+                            foreach ($positions as $pos) {
+                                if (($pos['id'] ?? null) == $positionId || 
+                                    ($pos['symbol'] ?? null) === $validated['symbol']) {
+                                    $entryPrice = (float) ($pos['openPrice'] ?? 0);
+                                    break;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to fetch position for entry price', [
+                                'position_id' => $positionId,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Fallback: try to get current price using fetchCurrentPrice or fetchPositions
+                    if (!$entryPrice || $entryPrice <= 0) {
+                        try {
+                            // Try fetchCurrentPrice first (for CCXT adapters)
+                            if (method_exists($adapter, 'fetchCurrentPrice')) {
+                                $priceResult = $adapter->fetchCurrentPrice($validated['symbol']);
+                                if (isset($priceResult['success']) && $priceResult['success']) {
+                                    $priceData = $priceResult['data'] ?? [];
+                                    // Use 'last' price, or 'bid' for sell, 'ask' for buy
+                                    if (isset($priceData['last']) && $priceData['last'] > 0) {
+                                        $entryPrice = (float) $priceData['last'];
+                                    } elseif ($direction === 'buy' && isset($priceData['ask']) && $priceData['ask'] > 0) {
+                                        $entryPrice = (float) $priceData['ask'];
+                                    } elseif ($direction === 'sell' && isset($priceData['bid']) && $priceData['bid'] > 0) {
+                                        $entryPrice = (float) $priceData['bid'];
+                                    }
+                                }
+                            }
+                            // If still no price, try fetching positions again (might have been created by now)
+                            if ((!$entryPrice || $entryPrice <= 0) && method_exists($adapter, 'fetchPositions')) {
+                                $positions = $adapter->fetchPositions();
+                                // Find the most recent position for this symbol
+                                foreach ($positions as $pos) {
+                                    if (($pos['symbol'] ?? null) === $validated['symbol']) {
+                                        $posOpenPrice = (float) ($pos['openPrice'] ?? 0);
+                                        if ($posOpenPrice > 0) {
+                                            $entryPrice = $posOpenPrice;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            \Log::warning('Failed to get current price for entry', [
+                                'symbol' => $validated['symbol'],
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                }
+                
+                // If still no entry price, log warning but continue (will be updated by monitoring job)
+                if (!$entryPrice || $entryPrice <= 0) {
+                    \Log::warning('Could not determine entry price for manual trade', [
+                        'order_id' => $orderId,
+                        'position_id' => $positionId,
+                        'symbol' => $validated['symbol'],
+                        'order_type' => $orderType
+                    ]);
+                    $entryPrice = 0; // Will be updated by monitoring job
+                }
 
-                // Update execution log
+                // Update execution log with entry price
                 $log->update([
                     'status' => 'executed',
                     'order_id' => $orderId,
+                    'entry_price' => $entryPrice,
                     'executed_at' => now(),
                 ]);
 
                 // Create position if we have a position ID or if it's a market order (which creates position immediately)
                 if ($positionId || $orderType === 'market') {
-                    ExecutionPosition::create([
-                        'signal_id' => null,
+                    // Check if signal_id column is nullable before setting it to null
+                    $positionData = [
                         'connection_id' => $connection->id,
                         'execution_log_id' => $log->id,
                         'order_id' => $orderId,
                         'symbol' => $validated['symbol'],
                         'direction' => $direction,
                         'quantity' => $validated['lot_size'],
-                        'entry_price' => $validated['entry_price'] ?? 0,
-                        'current_price' => $validated['entry_price'] ?? 0,
+                        'entry_price' => $entryPrice,
+                        'current_price' => $entryPrice, // Set current price to entry price initially
                         'sl_price' => $validated['sl_price'],
                         'tp_price' => $validated['tp_price'],
                         'status' => 'open',
-                    ]);
+                    ];
+                    
+                    // Only set signal_id to null if column is nullable
+                    $prefix = \Illuminate\Support\Facades\Schema::getConnection()->getTablePrefix();
+                    $tableName = $prefix . 'execution_positions';
+                    try {
+                        $columnInfo = \Illuminate\Support\Facades\DB::select("SHOW COLUMNS FROM `{$tableName}` WHERE Field = 'signal_id'");
+                        if (!empty($columnInfo) && isset($columnInfo[0]->Null) && $columnInfo[0]->Null === 'YES') {
+                            $positionData['signal_id'] = null; // Manual trade, no signal
+                        }
+                        // If NOT NULL, we need migration - but don't fail, let it use a default or skip
+                    } catch (\Exception $e) {
+                        \Log::warning('ExecutionPosition: Could not check signal_id column nullability', [
+                            'error' => $e->getMessage()
+                        ]);
+                        // Try to set null anyway (migration might have run but check failed)
+                        $positionData['signal_id'] = null;
+                    }
+                    
+                    ExecutionPosition::create($positionData);
                 }
 
                 // Update connection last used timestamp

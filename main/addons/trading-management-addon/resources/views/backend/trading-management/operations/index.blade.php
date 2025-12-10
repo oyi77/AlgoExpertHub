@@ -312,24 +312,27 @@
                                         <th>P&L</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @foreach($openPositions as $pos)
-                                    <tr>
-                                        <td>{{ $pos->symbol }}</td>
-                                        <td>
-                                            <span class="badge {{ in_array($pos->direction, ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
-                                                {{ strtoupper($pos->direction) }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $pos->entry_price }}</td>
-                                        <td>{{ $pos->current_price }}</td>
-                                        <td>{{ $pos->quantity }}</td>
-                                        <td class="{{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}">
-                                            ${{ number_format($pos->pnl, 2) }}
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
+                        <tbody id="positions-tbody-inline">
+                            @foreach($openPositions as $pos)
+                            <tr data-position-id="{{ $pos->id }}">
+                                <td>{{ $pos->symbol }}</td>
+                                <td>
+                                    <span class="badge {{ in_array(strtolower($pos->direction), ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
+                                        {{ strtoupper($pos->direction) }}
+                                    </span>
+                                </td>
+                                <td>{{ $pos->entry_price }}</td>
+                                <td class="position-current-price" data-position-id="{{ $pos->id }}">{{ $pos->current_price ?? $pos->entry_price }}</td>
+                                <td>{{ $pos->quantity }}</td>
+                                <td class="position-pnl {{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}" data-position-id="{{ $pos->id }}">
+                                    $<span class="pnl-amount">{{ number_format($pos->pnl, 2) }}</span>
+                                    <small class="d-block text-muted position-pnl-percentage" data-position-id="{{ $pos->id }}">
+                                        ({{ number_format($pos->pnl_percentage ?? 0, 2) }}%)
+                                    </small>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
                             </table>
                         </div>
                         <div class="mt-3">
@@ -455,6 +458,8 @@ function executeManualTrade() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         },
         body: JSON.stringify({
@@ -469,7 +474,21 @@ function executeManualTrade() {
             notes: notes
         })
     })
-    .then(response => response.json())
+    .then(async response => {
+        // Handle redirects (302, etc.)
+        if (response.redirected || response.status === 302) {
+            throw new Error('Request was redirected. Please check your session and try again.');
+        }
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+        }
+        
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             resultDiv.innerHTML = `<div class="alert alert-success">
@@ -486,15 +505,41 @@ function executeManualTrade() {
             // Reset form
             document.getElementById('manualTradeForm').reset();
             document.getElementById('confirmTrade').checked = false;
-            
-            // Reload page after 2 seconds to show updated stats
-            setTimeout(() => location.reload(), 2000);
         } else {
-            resultDiv.innerHTML = `<div class="alert alert-danger">
+            // Build error message with validation errors if present
+            let errorHtml = `<div class="alert alert-danger">
                 <i class="fas fa-times-circle"></i> <strong>Trade Execution Failed</strong>
-                <hr>
-                <p class="mb-0">${data.message}</p>
-            </div>`;
+                <hr>`;
+            
+            // Check if there are validation errors
+            if (data.errors && typeof data.errors === 'object') {
+                errorHtml += `<p class="mb-2"><strong>${data.message || 'Validation failed'}:</strong></p><ul class="mb-0">`;
+                
+                // Display each field's errors
+                for (const [field, messages] of Object.entries(data.errors)) {
+                    // Format field name (lot_size -> Lot Size, entry_price -> Entry Price)
+                    const fieldName = field.split('_').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ');
+                    
+                    // Display each error message for this field
+                    if (Array.isArray(messages)) {
+                        messages.forEach(msg => {
+                            errorHtml += `<li><strong>${fieldName}:</strong> ${msg}</li>`;
+                        });
+                    } else {
+                        errorHtml += `<li><strong>${fieldName}:</strong> ${messages}</li>`;
+                    }
+                }
+                
+                errorHtml += `</ul>`;
+            } else {
+                // No validation errors, just show the message
+                errorHtml += `<p class="mb-0">${data.message || 'An error occurred'}</p>`;
+            }
+            
+            errorHtml += `</div>`;
+            resultDiv.innerHTML = errorHtml;
         }
     })
     .catch(error => {
@@ -503,6 +548,72 @@ function executeManualTrade() {
         </div>`;
     });
 }
+
+// Real-time position updates
+(function() {
+    'use strict';
+    
+    function getPositionIds() {
+        const rows = document.querySelectorAll('#positions-tbody-inline tr[data-position-id]');
+        return Array.from(rows).map(row => parseInt(row.getAttribute('data-position-id')));
+    }
+    
+    function updatePositions(updates) {
+        updates.forEach(function(update) {
+            const currentPriceCell = document.querySelector(`.position-current-price[data-position-id="${update.id}"]`);
+            if (currentPriceCell) {
+                const oldPrice = parseFloat(currentPriceCell.textContent.trim());
+                const newPrice = parseFloat(update.current_price);
+                currentPriceCell.textContent = newPrice.toFixed(8);
+                if (oldPrice !== newPrice) {
+                    currentPriceCell.classList.add('price-updated');
+                    setTimeout(() => currentPriceCell.classList.remove('price-updated'), 1000);
+                }
+            }
+            
+            const pnlCell = document.querySelector(`.position-pnl[data-position-id="${update.id}"]`);
+            if (pnlCell) {
+                const pnlAmount = pnlCell.querySelector('.pnl-amount');
+                const pnlPercentage = pnlCell.querySelector('.position-pnl-percentage');
+                if (pnlAmount) pnlAmount.textContent = parseFloat(update.pnl).toFixed(2);
+                if (pnlPercentage) pnlPercentage.textContent = '(' + parseFloat(update.pnl_percentage).toFixed(2) + '%)';
+                pnlCell.classList.remove('text-success', 'text-danger');
+                pnlCell.classList.add(parseFloat(update.pnl) >= 0 ? 'text-success' : 'text-danger');
+            }
+        });
+    }
+    
+    function fetchPositionUpdates() {
+        const positionIds = getPositionIds();
+        if (positionIds.length === 0) return;
+        
+        fetch('{{ route("admin.trading-management.operations.positions.updates") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ position_ids: positionIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) updatePositions(data.data);
+        })
+        .catch(error => console.error('Failed to fetch position updates:', error));
+    }
+    
+    if (getPositionIds().length > 0) {
+        fetchPositionUpdates();
+        setInterval(fetchPositionUpdates, 5000);
+    }
+})();
 </script>
+<style>
+.price-updated {
+    background-color: #fff3cd !important;
+    transition: background-color 0.3s ease;
+}
+</style>
 @endpush
 @endsection

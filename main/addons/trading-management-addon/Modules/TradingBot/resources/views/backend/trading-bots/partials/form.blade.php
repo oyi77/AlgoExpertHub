@@ -270,16 +270,45 @@
         <div id="streaming_config_group" style="display: {{ old('trading_mode', isset($bot) && $bot ? $bot->trading_mode : 'SIGNAL_BASED') == 'MARKET_STREAM_BASED' ? 'block' : 'none' }};">
             <div class="form-group">
                 <label for="streaming_symbols">{{ __('Trading Symbols') }} <span class="text-danger">*</span></label>
-                <input type="text" 
-                       class="form-control @error('streaming_symbols') is-invalid @enderror" 
-                       id="streaming_symbols" 
-                       name="streaming_symbols" 
-                       value="{{ old('streaming_symbols', isset($bot) && $bot && $bot->streaming_symbols ? implode(', ', $bot->streaming_symbols) : '') }}"
-                       placeholder="BTC/USDT, ETH/USDT, EURUSD">
+                
+                {{-- Multi-select dropdown (shown when symbols are available) --}}
+                <select class="form-control @error('streaming_symbols') is-invalid @enderror" 
+                        id="streaming_symbols" 
+                        name="streaming_symbols[]" 
+                        multiple
+                        size="8"
+                        style="min-height: 200px;">
+                    @php
+                        $selectedSymbols = old('streaming_symbols', isset($bot) && $bot && $bot->streaming_symbols ? $bot->streaming_symbols : []);
+                    @endphp
+                    @if(isset($bot) && $bot && $bot->exchange_connection_id)
+                        {{-- Symbols will be loaded via AJAX when exchange connection is selected --}}
+                        @foreach($selectedSymbols as $symbol)
+                            <option value="{{ $symbol }}" selected>{{ $symbol }}</option>
+                        @endforeach
+                    @endif
+                </select>
+                
+                {{-- Manual entry textarea (shown when no symbols are available) --}}
+                <textarea class="form-control @error('streaming_symbols_manual') is-invalid @enderror" 
+                          id="streaming_symbols_manual" 
+                          name="streaming_symbols_manual" 
+                          rows="4"
+                          placeholder="Enter symbols manually (one per line or comma-separated):&#10;EURUSD&#10;GBPUSD&#10;XAUUSD"
+                          style="display: none; margin-top: 10px;"></textarea>
+                
                 <small class="form-text text-muted">
-                    Comma-separated list of trading pairs to monitor (e.g., BTC/USDT, ETH/USDT for crypto or EURUSD, GBPUSD for FX).
+                    <span id="symbols-loading" style="display: none;"><i class="fa fa-spinner fa-spin"></i> Loading symbols...</span>
+                    <span id="symbols-count" style="display: none;"></span>
+                    <span id="symbols-manual-hint" style="display: none;" class="text-warning">
+                        <i class="fa fa-exclamation-triangle"></i> No symbols loaded. Please enter symbols manually above.
+                    </span>
+                    <span id="symbols-auto-hint">Select trading pairs to monitor. Symbols are loaded from the selected exchange connection.</span>
                 </small>
                 @error('streaming_symbols')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                @error('streaming_symbols_manual')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -410,3 +439,193 @@ function toggleMarketStreamFields() {
         <i class="fa fa-save"></i> {{ isset($bot) ? 'Update' : 'Create' }} Trading Bot
     </button>
 </div>
+
+<script>
+(function() {
+    const exchangeConnectionSelect = document.getElementById('exchange_connection_id');
+    const streamingSymbolsSelect = document.getElementById('streaming_symbols');
+    const streamingSymbolsManual = document.getElementById('streaming_symbols_manual');
+    const symbolsLoading = document.getElementById('symbols-loading');
+    const symbolsCount = document.getElementById('symbols-count');
+    const symbolsManualHint = document.getElementById('symbols-manual-hint');
+    const symbolsAutoHint = document.getElementById('symbols-auto-hint');
+    const streamingConfigGroup = document.getElementById('streaming_config_group');
+    
+    if (!exchangeConnectionSelect || !streamingSymbolsSelect) {
+        return; // Elements not found, skip initialization
+    }
+
+    // Store initially selected symbols (for edit mode)
+    const initiallySelectedSymbols = Array.from(streamingSymbolsSelect.selectedOptions).map(opt => opt.value);
+    
+    // If edit mode and symbols exist, populate manual field as fallback
+    if (initiallySelectedSymbols.length > 0 && streamingSymbolsManual) {
+        streamingSymbolsManual.value = initiallySelectedSymbols.join('\n');
+    }
+
+    /**
+     * Show/hide manual entry based on symbols availability
+     */
+    function toggleManualEntry(showManual) {
+        if (!streamingSymbolsManual || !symbolsManualHint || !symbolsAutoHint) return;
+        
+        if (showManual) {
+            // Show manual entry, hide select
+            streamingSymbolsSelect.style.display = 'none';
+            streamingSymbolsManual.style.display = 'block';
+            symbolsManualHint.style.display = 'inline';
+            symbolsAutoHint.style.display = 'none';
+            streamingSymbolsManual.required = true;
+            streamingSymbolsSelect.required = false;
+        } else {
+            // Show select, hide manual entry
+            streamingSymbolsSelect.style.display = 'block';
+            streamingSymbolsManual.style.display = 'none';
+            symbolsManualHint.style.display = 'none';
+            symbolsAutoHint.style.display = 'inline';
+            streamingSymbolsManual.required = false;
+            streamingSymbolsSelect.required = true;
+        }
+    }
+
+    /**
+     * Parse manual entry and populate select (for form submission)
+     */
+    function parseManualEntry() {
+        if (!streamingSymbolsManual) return;
+        
+        const manualText = streamingSymbolsManual.value.trim();
+        if (!manualText) return;
+        
+        // Parse: split by newline or comma, trim each
+        const symbols = manualText
+            .split(/[\n,]+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+        
+        // Clear select and add parsed symbols
+        streamingSymbolsSelect.innerHTML = '';
+        symbols.forEach(symbol => {
+            const option = document.createElement('option');
+            option.value = symbol;
+            option.textContent = symbol;
+            option.selected = true;
+            streamingSymbolsSelect.appendChild(option);
+        });
+    }
+
+    /**
+     * Load symbols from exchange connection
+     */
+    function loadSymbols(connectionId) {
+        if (!connectionId) {
+            streamingSymbolsSelect.innerHTML = '';
+            symbolsCount.style.display = 'none';
+            toggleManualEntry(true);
+            return;
+        }
+
+        // Show loading
+        symbolsLoading.style.display = 'inline';
+        symbolsCount.style.display = 'none';
+        streamingSymbolsSelect.disabled = true;
+        streamingSymbolsSelect.innerHTML = '<option>Loading symbols...</option>';
+        toggleManualEntry(false);
+
+        // Fetch symbols via AJAX
+        fetch(`{{ route('admin.trading-management.trading-bots.exchange-symbols') }}?connection_id=${connectionId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            symbolsLoading.style.display = 'none';
+            streamingSymbolsSelect.disabled = false;
+            streamingSymbolsSelect.innerHTML = '';
+
+            if (data.success && data.symbols && data.symbols.length > 0) {
+                // Populate select with symbols
+                data.symbols.forEach(symbol => {
+                    const option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol;
+                    
+                    // Preserve initially selected symbols (for edit mode)
+                    if (initiallySelectedSymbols.includes(symbol)) {
+                        option.selected = true;
+                    }
+                    
+                    streamingSymbolsSelect.appendChild(option);
+                });
+
+                // Show count
+                symbolsCount.textContent = `(${data.count} symbols available)`;
+                symbolsCount.style.display = 'inline';
+                toggleManualEntry(false);
+            } else {
+                // No symbols available - show manual entry
+                streamingSymbolsSelect.innerHTML = '<option value="">No symbols available</option>';
+                symbolsCount.style.display = 'none';
+                toggleManualEntry(true);
+                
+                if (data.message) {
+                    console.warn('Failed to load symbols:', data.message);
+                }
+            }
+        })
+        .catch(error => {
+            symbolsLoading.style.display = 'none';
+            streamingSymbolsSelect.disabled = false;
+            streamingSymbolsSelect.innerHTML = '<option value="">Error loading symbols</option>';
+            symbolsCount.style.display = 'none';
+            toggleManualEntry(true);
+            console.error('Error loading symbols:', error);
+        });
+    }
+    
+    // Parse manual entry before form submission
+    const form = streamingSymbolsSelect.closest('form');
+    if (form && streamingSymbolsManual) {
+        form.addEventListener('submit', function(e) {
+            if (streamingSymbolsManual.style.display !== 'none' && streamingSymbolsManual.value.trim()) {
+                parseManualEntry();
+            }
+        });
+    }
+
+    // Load symbols when exchange connection changes
+    exchangeConnectionSelect.addEventListener('change', function() {
+        const connectionId = this.value;
+        
+        // Only load symbols if MARKET_STREAM_BASED mode is selected
+        const tradingMode = document.getElementById('trading_mode')?.value;
+        if (tradingMode === 'MARKET_STREAM_BASED' && connectionId) {
+            loadSymbols(connectionId);
+        }
+    });
+
+    // Load symbols on page load if exchange connection is already selected (edit mode)
+    if (exchangeConnectionSelect.value) {
+        const tradingMode = document.getElementById('trading_mode')?.value;
+        if (tradingMode === 'MARKET_STREAM_BASED') {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => {
+                loadSymbols(exchangeConnectionSelect.value);
+            }, 100);
+        }
+    }
+
+    // Also reload symbols when trading mode changes to MARKET_STREAM_BASED
+    const tradingModeSelect = document.getElementById('trading_mode');
+    if (tradingModeSelect) {
+        tradingModeSelect.addEventListener('change', function() {
+            if (this.value === 'MARKET_STREAM_BASED' && exchangeConnectionSelect.value) {
+                loadSymbols(exchangeConnectionSelect.value);
+            }
+        });
+    }
+})();
+</script>

@@ -672,4 +672,394 @@ class Helper
 
         return $jsonArray[$key];
     }
+
+    /**
+     * Command Execution Helper
+     * Detects Docker vs binary environment and provides unified command execution
+     */
+    
+    /**
+     * Check if we're running in Docker container
+     * 
+     * @return bool
+     */
+    public static function isDockerEnvironment(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        
+        $cached = file_exists('/.dockerenv') || getenv('DOCKER_CONTAINER') || getenv('DOCKER_HOST');
+        return $cached;
+    }
+
+    /**
+     * Get command execution mode (docker or binary)
+     * 
+     * @return string 'docker' or 'binary'
+     */
+    public static function getCommandMode(): string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        if (self::isDockerEnvironment()) {
+            $cached = 'binary'; // Inside Docker, use binaries directly
+        } else {
+            // Outside Docker, check if we can use docker exec
+            $dockerAvailable = self::checkDockerAvailable();
+            $cached = $dockerAvailable ? 'docker' : 'binary';
+        }
+        
+        return $cached;
+    }
+
+    /**
+     * Check if Docker is available and accessible
+     * 
+     * @return bool
+     */
+    protected static function checkDockerAvailable(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        if (!function_exists('exec')) {
+            $cached = false;
+            return false;
+        }
+
+        exec('which docker 2>&1', $output, $return);
+        if ($return !== 0) {
+            $cached = false;
+            return false;
+        }
+
+        // Test docker command
+        exec('docker ps > /dev/null 2>&1', $testOutput, $testReturn);
+        $cached = $testReturn === 0;
+        return $cached;
+    }
+
+    /**
+     * Get PHP container name from environment or detect
+     * 
+     * @return string|null
+     */
+    public static function getPhpContainer(): ?string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Check environment variable first
+        $container = getenv('PHP_DOCKER_CONTAINER');
+        if ($container) {
+            $cached = $container;
+            return $container;
+        }
+
+        // Try common 1Panel PHP container patterns
+        $possibleContainers = [
+            '1Panel-php8-mrTy',
+            '1panel-php8-mrTy',
+            'php',
+            'php-fpm',
+        ];
+
+        if (!self::checkDockerAvailable()) {
+            $cached = null;
+            return null;
+        }
+
+        foreach ($possibleContainers as $containerName) {
+            $check = shell_exec("docker ps --filter name={$containerName} --format '{{.Names}}' 2>/dev/null");
+            if ($check && trim($check) === $containerName) {
+                // Verify container has PHP
+                exec("docker exec {$containerName} php --version 2>&1", $verifyOutput, $verifyReturn);
+                if ($verifyReturn === 0) {
+                    $cached = $containerName;
+                    return $containerName;
+                }
+            }
+        }
+
+        $cached = null;
+        return null;
+    }
+
+    /**
+     * Get MySQL container name from environment or detect
+     * 
+     * @return string|null
+     */
+    public static function getMysqlContainer(): ?string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Check environment variable first
+        $container = getenv('MYSQL_DOCKER_CONTAINER');
+        if ($container) {
+            $cached = $container;
+            return $container;
+        }
+
+        if (!self::checkDockerAvailable()) {
+            $cached = null;
+            return null;
+        }
+
+        // Try to find MySQL container
+        exec('docker ps --format "{{.Names}}" | grep -i mysql 2>&1', $containers, $return);
+        if ($return === 0 && !empty($containers)) {
+            $container = trim($containers[0]);
+            if (!empty($container)) {
+                // Verify container has mysqldump
+                exec("docker exec {$container} mysqldump --version 2>&1", $verifyOutput, $verifyReturn);
+                if ($verifyReturn === 0) {
+                    $cached = $container;
+                    return $container;
+                }
+            }
+        }
+
+        // Try common container names
+        $possibleContainers = [
+            '1Panel-mysql-L7KM',
+            '1panel-mysql-L7KM',
+            'mysql',
+            '1panel-mysql',
+            '1Panel-mysql',
+        ];
+
+        foreach ($possibleContainers as $containerName) {
+            exec("docker exec {$containerName} mysqldump --version 2>&1", $testOutput, $testReturn);
+            if ($testReturn === 0) {
+                $cached = $containerName;
+                return $containerName;
+            }
+        }
+
+        $cached = null;
+        return null;
+    }
+
+    /**
+     * Get Redis container name from environment or detect
+     * 
+     * @return string|null
+     */
+    public static function getRedisContainer(): ?string
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Check environment variable first
+        $container = getenv('REDIS_DOCKER_CONTAINER');
+        if ($container) {
+            $cached = $container;
+            return $container;
+        }
+
+        if (!self::checkDockerAvailable()) {
+            $cached = null;
+            return null;
+        }
+
+        // Try to find Redis container
+        exec('docker ps --format "{{.Names}}" | grep -i redis 2>&1', $containers, $return);
+        if ($return === 0 && !empty($containers)) {
+            $container = trim($containers[0]);
+            if (!empty($container)) {
+                // Verify container has redis-cli
+                exec("docker exec {$container} redis-cli --version 2>&1", $verifyOutput, $verifyReturn);
+                if ($verifyReturn === 0) {
+                    $cached = $container;
+                    return $container;
+                }
+            }
+        }
+
+        // Try common container names
+        $possibleContainers = ['redis', '1panel-redis', '1Panel-redis'];
+
+        foreach ($possibleContainers as $containerName) {
+            exec("docker exec {$containerName} redis-cli --version 2>&1", $testOutput, $testReturn);
+            if ($testReturn === 0) {
+                $cached = $containerName;
+                return $containerName;
+            }
+        }
+
+        $cached = null;
+        return null;
+    }
+
+    /**
+     * Map host path to container path
+     * 
+     * @param string $hostPath
+     * @return string
+     */
+    public static function mapPathToContainer(string $hostPath): string
+    {
+        $pathMappings = [
+            '/opt/1panel/apps/openresty/openresty' => '/www',
+            '/opt/1panel/apps/openresty' => '/www',
+        ];
+
+        foreach ($pathMappings as $hostPrefix => $containerPrefix) {
+            if (strpos($hostPath, $hostPrefix) === 0) {
+                return str_replace($hostPrefix, $containerPrefix, $hostPath);
+            }
+        }
+
+        // Fallback: try to extract path after /www
+        if (preg_match('#(/www/sites/[^/]+/index/main)#', $hostPath, $matches)) {
+            return $matches[1];
+        }
+
+        // Final fallback
+        return '/www/sites/aitradepulse.com/index/main';
+    }
+
+    /**
+     * Build PHP command (handles Docker)
+     * 
+     * @param string $command PHP command to execute (e.g., 'artisan queue:work')
+     * @param string|null $workingDir Working directory (defaults to base_path())
+     * @return array ['command' => string, 'path' => string]
+     */
+    public static function buildPhpCommand(string $command = '', ?string $workingDir = null): array
+    {
+        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        $mode = self::getCommandMode();
+        $workingDir = $workingDir ?? base_path();
+
+        if ($mode === 'docker') {
+            $container = self::getPhpContainer();
+            if ($container) {
+                $containerPath = self::mapPathToContainer($workingDir);
+                // Verify path exists in container
+                $pathCheck = shell_exec("docker exec {$container} test -d {$containerPath} && echo 'exists' 2>/dev/null");
+                if ($pathCheck && trim($pathCheck) === 'exists') {
+                    $fullCommand = $command ? "php {$command}" : 'php';
+                    return [
+                        'command' => "docker exec {$container} {$fullCommand}",
+                        'path' => $containerPath
+                    ];
+                }
+            }
+        }
+
+        // Fallback to binary
+        $fullCommand = $command ? "{$phpBinary} {$command}" : $phpBinary;
+        return [
+            'command' => $fullCommand,
+            'path' => $workingDir
+        ];
+    }
+
+    /**
+     * Build MySQL command (handles Docker)
+     * 
+     * @param string $command MySQL command (e.g., 'mysql', 'mysqldump')
+     * @param array $args Command arguments
+     * @return string Full command string
+     */
+    public static function buildMysqlCommand(string $command, array $args = []): string
+    {
+        $mode = self::getCommandMode();
+        $argsStr = !empty($args) ? ' ' . implode(' ', array_map('escapeshellarg', $args)) : '';
+
+        if ($mode === 'docker') {
+            $container = self::getMysqlContainer();
+            if ($container) {
+                return "docker exec -i {$container} {$command}{$argsStr}";
+            }
+        }
+
+        // Fallback to binary
+        return "{$command}{$argsStr}";
+    }
+
+    /**
+     * Build Redis command (handles Docker)
+     * 
+     * @param string $command Redis command (e.g., 'redis-cli')
+     * @param array $args Command arguments
+     * @return string Full command string
+     */
+    public static function buildRedisCommand(string $command, array $args = []): string
+    {
+        $mode = self::getCommandMode();
+        $argsStr = !empty($args) ? ' ' . implode(' ', array_map('escapeshellarg', $args)) : '';
+
+        if ($mode === 'docker') {
+            $container = self::getRedisContainer();
+            if ($container) {
+                return "docker exec -i {$container} {$command}{$argsStr}";
+            }
+        }
+
+        // Fallback to binary
+        return "{$command}{$argsStr}";
+    }
+
+    /**
+     * Execute command with proper environment detection
+     * 
+     * @param string $command Full command string
+     * @param string|null $workingDir Working directory
+     * @param array &$output Output array (by reference)
+     * @param int &$returnVar Return code (by reference)
+     * @return bool Success status
+     */
+    public static function execCommand(string $command, ?string $workingDir = null, array &$output = [], int &$returnVar = 0): bool
+    {
+        if (!function_exists('exec')) {
+            return false;
+        }
+
+        $originalDir = null;
+        if ($workingDir) {
+            $originalDir = getcwd();
+            chdir($workingDir);
+        }
+
+        exec($command, $output, $returnVar);
+
+        if ($originalDir) {
+            chdir($originalDir);
+        }
+
+        return $returnVar === 0;
+    }
+
+    /**
+     * Execute shell command and return output
+     * 
+     * @param string $command Full command string
+     * @return string|null Output or null on failure
+     */
+    public static function shellExec(string $command): ?string
+    {
+        if (!function_exists('shell_exec')) {
+            return null;
+        }
+
+        $output = @shell_exec($command);
+        return $output !== null ? trim($output) : null;
+    }
 }

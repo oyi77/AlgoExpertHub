@@ -13,7 +13,7 @@ class Page extends Model
 
     public function widgets()
     {
-        return $this->hasMany(PageSection::class,'page_id');
+        return $this->hasMany(PageSection::class,'page_id')->orderBy('order');
     }
 
     /**

@@ -45,14 +45,50 @@ class MetaApiStreamWorkerCommand extends Command
         }
 
         $this->info("Starting MetaAPI stream worker for account: {$accountId}");
+        
+        // Get log file path for direct writing
+        $logFile = storage_path("logs/metaapi-stream-{$accountId}.log");
+        
+        // Helper function to write to both log file and Laravel log
+        $writeLog = function($message, $level = 'INFO') use ($logFile, $accountId) {
+            $timestamp = date('Y-m-d H:i:s');
+            $logMessage = "[{$timestamp}] {$level}: {$message}\n";
+            file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+            error_log($message);
+        };
+        
+        // Force log output immediately
+        $writeLog("MetaAPI stream worker command started for account: {$accountId}");
+        Log::info('MetaAPI stream worker command started', ['account_id' => $accountId]);
+        
+        // Flush output
+        if (ob_get_level() > 0) {
+            ob_flush();
+        }
+        flush();
 
         try {
+            $writeLog("Creating MetaApiStreamWorker instance...");
             $worker = new MetaApiStreamWorker($accountId, $apiToken);
+            $writeLog("MetaAPI stream worker instance created, calling run()");
+            Log::info('MetaAPI stream worker instance created', ['account_id' => $accountId]);
+            
+            $writeLog("Entering worker run() method...");
             $worker->run();
-        } catch (\Exception $e) {
+            
+            $writeLog("MetaAPI stream worker run() completed");
+            Log::info('MetaAPI stream worker run() completed', ['account_id' => $accountId]);
+        } catch (\Throwable $e) {
+            $errorMsg = "MetaAPI stream worker failed: " . $e->getMessage();
+            $writeLog($errorMsg, 'ERROR');
+            $writeLog("File: " . $e->getFile() . " Line: " . $e->getLine(), 'ERROR');
+            $writeLog("Stack trace: " . $e->getTraceAsString(), 'ERROR');
+            
             Log::error('MetaAPI stream worker failed', [
                 'account_id' => $accountId,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
             
