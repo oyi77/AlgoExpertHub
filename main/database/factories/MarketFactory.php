@@ -16,4 +16,40 @@ class MarketFactory extends Factory
             'status' => 1,
         ];
     }
+
+    public function forex()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'name' => 'Forex',
+            ];
+        });
+    }
+
+    public function crypto()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'name' => 'Crypto',
+            ];
+        });
+    }
+
+    public function stocks()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'name' => 'Stocks',
+            ];
+        });
+    }
+
+    public function commodities()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'name' => 'Commodities',
+            ];
+        });
+    }
 }
