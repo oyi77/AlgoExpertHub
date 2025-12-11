@@ -1,43 +1,31 @@
-name: 'Frontend Content'
+name: 'Two-Factor Authentication'
 description: |-
 
-  Endpoints for retrieving dynamic frontend content (sections).
+  Endpoints for managing 2FA settings.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/content/{name}'
+    uri: api/user/2fa/status
     metadata:
       custom: []
-      groupName: 'Frontend Content'
+      groupName: 'Two-Factor Authentication'
       groupDescription: |-
 
-        Endpoints for retrieving dynamic frontend content (sections).
+        Endpoints for managing 2FA settings.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Section Content'
-      description: "Retrieve the content for a specific frontend section (e.g., 'banner', 'about', 'testimonial')."
+      title: 'Get 2FA Status'
+      description: 'Check if 2FA is enabled for the user.'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      name:
-        custom: []
-        name: name
-        description: 'The name of the section.'
-        required: true
-        example: banner
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      name: banner
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -51,18 +39,236 @@ endpoints:
           {
             "success": true,
             "data": {
-              "fixed": {
-                "heading": "Welcome to AI Trade Pulse",
-                "sub_heading": "Automated Trading with AI"
-              },
-              "elements": [
-                {
-                  "icon": "fa-chart",
-                  "title": "Analytics"
-                }
-              ],
-              "media_base_url": "https://aitradepulse.com/asset/frontend/default/images/banner/"
+              "enabled": false,
+              "secret": null
             }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/user/2fa/generate-secret
+    metadata:
+      custom: []
+      groupName: 'Two-Factor Authentication'
+      groupDescription: |-
+
+        Endpoints for managing 2FA settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Generate 2FA Secret'
+      description: 'Generate a new 2FA secret and QR code.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "secret": "...",
+              "qr_code_url": "..."
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/user/2fa/enable
+    metadata:
+      custom: []
+      groupName: 'Two-Factor Authentication'
+      groupDescription: |-
+
+        Endpoints for managing 2FA settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enable 2FA'
+      description: 'Enable 2FA after verifying the code.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: '6-digit verification code.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: '123456'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "2FA enabled successfully"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/user/2fa/disable
+    metadata:
+      custom: []
+      groupName: 'Two-Factor Authentication'
+      groupDescription: |-
+
+        Endpoints for managing 2FA settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Disable 2FA'
+      description: 'Disable 2FA after verifying the code.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: '6-digit verification code.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: '123456'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "2FA disabled successfully"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/user/2fa/verify
+    metadata:
+      custom: []
+      groupName: 'Two-Factor Authentication'
+      groupDescription: |-
+
+        Endpoints for managing 2FA settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Verify 2FA Code'
+      description: 'Verify a 2FA code (used during login).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: '6-digit verification code.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: '123456'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Code verified successfully"
           }
         headers: []
         description: ''

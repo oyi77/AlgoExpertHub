@@ -93,6 +93,140 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/executions', [\App\Http\Controllers\Api\User\TradingController::class, 'getExecutions']);
             Route::post('/execute', [\App\Http\Controllers\Api\User\TradingController::class, 'executeTrade']);
         });
+
+        // Trading Bots
+        Route::prefix('trading-bots')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'store']);
+            Route::get('/options', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'getAvailableOptions']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'show']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'destroy']);
+            Route::post('/{id}/start', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'start']);
+            Route::post('/{id}/stop', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'stop']);
+            Route::post('/{id}/pause', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'pause']);
+            Route::post('/{id}/resume', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'resume']);
+            Route::post('/{id}/restart', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'restart']);
+            Route::get('/{id}/worker-status', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'workerStatus']);
+            Route::get('/{id}/positions', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'positions']);
+            Route::get('/{id}/logs', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'logs']);
+            Route::get('/{id}/metrics', [\App\Http\Controllers\Api\User\TradingBotApiController::class, 'metrics']);
+        });
+
+        // Trading Configuration
+        Route::prefix('trading-config')->group(function () {
+            // Exchange Connections
+            Route::get('/connections', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'getConnections']);
+            Route::post('/connections', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'createConnection']);
+            Route::put('/connections/{id}', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'updateConnection']);
+            Route::delete('/connections/{id}', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'deleteConnection']);
+            Route::post('/connections/{id}/test', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'testConnection']);
+            
+            // Risk Presets
+            Route::get('/presets', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'getPresets']);
+            Route::post('/presets', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'createPreset']);
+            
+            // Filter Strategies
+            Route::get('/filter-strategies', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'getFilterStrategies']);
+            
+            // AI Profiles
+            Route::get('/ai-profiles', [\App\Http\Controllers\Api\User\TradingConfigApiController::class, 'getAiProfiles']);
+        });
+
+        // Trading Operations
+        Route::prefix('trading-operations')->group(function () {
+            Route::get('/execution-logs', [\App\Http\Controllers\Api\User\TradingOperationsController::class, 'executionLogs']);
+            Route::post('/manual-trade', [\App\Http\Controllers\Api\User\TradingOperationsController::class, 'manualTrade']);
+            Route::get('/statistics', [\App\Http\Controllers\Api\User\TradingOperationsController::class, 'statistics']);
+        });
+
+        // Crypto Trading
+        Route::prefix('crypto-trading')->group(function () {
+            Route::get('/current-price', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'currentPrice']);
+            Route::get('/ticker', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'latestTicker']);
+            Route::post('/open-trade', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'openTrade']);
+            Route::get('/trades', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'trades']);
+            Route::post('/trades/{id}/close', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'closeTrade']);
+            Route::get('/stream-prices', [\App\Http\Controllers\Api\User\CryptoTradeController::class, 'streamPrices']);
+        });
+
+        // Copy Trading
+        Route::prefix('copy-trading')->group(function () {
+            Route::get('/settings', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'getSettings']);
+            Route::put('/settings', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'updateSettings']);
+            Route::get('/traders', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'getTraders']);
+            Route::get('/traders/{id}', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'getTrader']);
+            Route::get('/subscriptions', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'getSubscriptions']);
+            Route::get('/history', [\App\Http\Controllers\Api\User\CopyTradingController::class, 'getHistory']);
+        });
+
+        // Withdrawals
+        Route::prefix('withdrawals')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\WithdrawApiController::class, 'index']);
+            Route::get('/gateways', [\App\Http\Controllers\Api\User\WithdrawApiController::class, 'getGateways']);
+            Route::post('/', [\App\Http\Controllers\Api\User\WithdrawApiController::class, 'store']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\User\WithdrawApiController::class, 'show']);
+        });
+
+        // Two-Factor Authentication
+        Route::prefix('2fa')->group(function () {
+            Route::get('/status', [\App\Http\Controllers\Api\User\TwoFactorApiController::class, 'status']);
+            Route::post('/generate-secret', [\App\Http\Controllers\Api\User\TwoFactorApiController::class, 'generateSecret']);
+            Route::post('/enable', [\App\Http\Controllers\Api\User\TwoFactorApiController::class, 'enable']);
+            Route::post('/disable', [\App\Http\Controllers\Api\User\TwoFactorApiController::class, 'disable']);
+            Route::post('/verify', [\App\Http\Controllers\Api\User\TwoFactorApiController::class, 'verify']);
+        });
+
+        // Transactions
+        Route::prefix('transactions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\TransactionApiController::class, 'index']);
+            Route::get('/summary', [\App\Http\Controllers\Api\User\TransactionApiController::class, 'summary']);
+            Route::get('/{trx}', [\App\Http\Controllers\Api\User\TransactionApiController::class, 'show']);
+        });
+
+        // Onboarding
+        Route::prefix('onboarding')->group(function () {
+            Route::get('/status', [\App\Http\Controllers\Api\User\OnboardingApiController::class, 'status']);
+            Route::post('/step', [\App\Http\Controllers\Api\User\OnboardingApiController::class, 'completeStep']);
+            Route::post('/skip', [\App\Http\Controllers\Api\User\OnboardingApiController::class, 'skip']);
+            Route::post('/complete', [\App\Http\Controllers\Api\User\OnboardingApiController::class, 'complete']);
+        });
+
+        // Notifications
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\NotificationApiController::class, 'index']);
+            Route::get('/unread-count', [\App\Http\Controllers\Api\User\NotificationApiController::class, 'unreadCount']);
+            Route::post('/mark-as-read', [\App\Http\Controllers\Api\User\NotificationApiController::class, 'markAsRead']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\User\NotificationApiController::class, 'destroy']);
+        });
+
+        // Referrals
+        Route::prefix('referrals')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\ReferralApiController::class, 'index']);
+            Route::get('/stats', [\App\Http\Controllers\Api\User\ReferralApiController::class, 'stats']);
+        });
+
+        // Money Transfer
+        Route::prefix('transfer')->group(function () {
+            Route::post('/', [\App\Http\Controllers\Api\User\TransferApiController::class, 'transfer']);
+            Route::get('/history', [\App\Http\Controllers\Api\User\TransferApiController::class, 'history']);
+        });
+
+        // Multi-Channel Signals
+        Route::prefix('channel-sources')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\ChannelSourceApiController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\User\ChannelSourceApiController::class, 'store']);
+            Route::put('/{id}', [\App\Http\Controllers\Api\User\ChannelSourceApiController::class, 'update']);
+            Route::delete('/{id}', [\App\Http\Controllers\Api\User\ChannelSourceApiController::class, 'destroy']);
+        });
+
+        // Marketplace
+        Route::prefix('marketplace')->group(function () {
+            Route::get('/bot-templates', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'botTemplates']);
+            Route::post('/bot-templates/{id}/clone', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'cloneTemplate']);
+            Route::get('/trading-presets', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'tradingPresets']);
+            Route::post('/trading-presets/{id}/clone', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'clonePreset']);
+        });
     });
 });
 
@@ -129,6 +263,17 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/signals/{id}/publish', [\App\Http\Controllers\Api\Admin\SignalController::class, 'publish']);
     Route::post('/signals/{id}/assign-plans', [\App\Http\Controllers\Api\Admin\SignalController::class, 'assignPlans']);
 
+    // Channel Signals (Auto-created signals)
+    Route::prefix('channel-signals')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'index']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'update']);
+        Route::post('/{id}/approve', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'approve']);
+        Route::post('/{id}/reject', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'reject']);
+        Route::post('/bulk/approve', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'bulkApprove']);
+        Route::post('/bulk/reject', [\App\Http\Controllers\Api\Admin\ChannelSignalController::class, 'bulkReject']);
+    });
+
     // Payment Management
     Route::get('/payments', [\App\Http\Controllers\Api\Admin\PaymentController::class, 'index']);
     Route::get('/payments/{id}', [\App\Http\Controllers\Api\Admin\PaymentController::class, 'show']);
@@ -147,10 +292,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Gateway Management
     Route::get('/gateways', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'index']);
     Route::post('/gateways', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'store']);
+    Route::get('/gateways/online', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'getOnlineGateways']);
+    Route::get('/gateways/offline', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'getOfflineGateways']);
     Route::get('/gateways/{gateway}', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'show']);
     Route::put('/gateways/{gateway}', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'update']);
     Route::delete('/gateways/{gateway}', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'destroy']);
     Route::post('/gateways/{id}/status', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'toggleStatus']);
+    Route::put('/gateways/{id}/online', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'updateOnlineGateway']);
+    Route::post('/gateways/gourl', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'updateGourlGateway']);
+    Route::post('/gateways/offline', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'createOfflineGateway']);
+    Route::put('/gateways/offline/{id}', [\App\Http\Controllers\Api\Admin\GatewayController::class, 'updateOfflineGateway']);
 
     // Ticket Management
     Route::get('/tickets', [\App\Http\Controllers\Api\Admin\TicketController::class, 'index']);
@@ -179,6 +330,104 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         // Settings
         Route::get('/settings', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'getSettings']);
         Route::put('/settings', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'updateSettings']);
+    });
+
+    // Backup Management
+    Route::prefix('backups')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\BackupApiController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\Admin\BackupApiController::class, 'create']);
+        Route::get('/download', [\App\Http\Controllers\Api\Admin\BackupApiController::class, 'download']);
+        Route::delete('/', [\App\Http\Controllers\Api\Admin\BackupApiController::class, 'delete']);
+        Route::post('/restore', [\App\Http\Controllers\Api\Admin\BackupApiController::class, 'restore']);
+    });
+
+    // Email Management
+    Route::prefix('email')->group(function () {
+        Route::get('/config', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'getConfig']);
+        Route::put('/config', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'updateConfig']);
+        Route::get('/templates', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'listTemplates']);
+        Route::get('/templates/{slug}', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'getTemplate']);
+        Route::put('/templates/{slug}', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'updateTemplate']);
+        Route::get('/subscribers', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'listSubscribers']);
+        Route::post('/send-single', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'sendSingle']);
+        Route::post('/send-bulk', [\App\Http\Controllers\Api\Admin\EmailApiController::class, 'sendBulk']);
+    });
+
+    // Roles & Permissions
+    Route::prefix('roles')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\RoleApiController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\Admin\RoleApiController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\Admin\RoleApiController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\RoleApiController::class, 'destroy']);
+    });
+
+    // Admin Users
+    Route::prefix('admins')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\AdminUserApiController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\Admin\AdminUserApiController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\Admin\AdminUserApiController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\AdminUserApiController::class, 'destroy']);
+    });
+
+    // Logs & Reports
+    Route::prefix('logs')->group(function () {
+        Route::get('/transactions', [\App\Http\Controllers\Api\Admin\LogsApiController::class, 'transactions']);
+        Route::get('/payments', [\App\Http\Controllers\Api\Admin\LogsApiController::class, 'payments']);
+        Route::get('/withdrawals', [\App\Http\Controllers\Api\Admin\LogsApiController::class, 'withdrawals']);
+        Route::get('/commissions', [\App\Http\Controllers\Api\Admin\LogsApiController::class, 'commissions']);
+        Route::get('/trades', [\App\Http\Controllers\Api\Admin\LogsApiController::class, 'trades']);
+    });
+
+    // Language Management
+    Route::prefix('languages')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'destroy']);
+        Route::get('/{code}/translations', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'getTranslations']);
+        Route::put('/{code}/translations', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'updateTranslation']);
+    });
+
+    // Language Translation Operations
+    Route::prefix('translation')->group(function () {
+        Route::get('/{lang}/translations', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'getTranslations']);
+        Route::put('/{lang}/translations', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'updateTranslation']);
+        Route::put('/{lang}/translations/bulk', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'bulkUpdateTranslations']);
+        Route::delete('/{lang}/key', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'deleteKey']);
+        Route::post('/{lang}/auto-translate', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'autoTranslate']);
+        Route::get('/settings', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'getSettings']);
+        Route::put('/settings', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'updateSettings']);
+        Route::post('/test', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'testApi']);
+    });
+
+    // System Management
+    Route::prefix('system')->group(function () {
+        Route::get('/status', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'getSystemStatus']);
+        Route::post('/optimize', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimize']);
+        Route::post('/cache/clear', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'clearCache']);
+        Route::post('/optimize/assets', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimizeAssets']);
+        Route::post('/optimize/http', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimizeHttp']);
+        Route::post('/optimize/media', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimizeMedia']);
+        Route::post('/optimize/cache', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimizeCache']);
+        Route::post('/optimize/database', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'optimizeDatabase']);
+        Route::post('/cache/prewarm', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'prewarmCache']);
+        Route::post('/backup/create', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'createBackup']);
+        Route::post('/backup/load', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'loadBackup']);
+        Route::post('/backup/delete', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'deleteBackup']);
+        Route::post('/database/reseed', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'reseedDatabase']);
+        Route::post('/database/reset', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'resetDatabase']);
+    });
+
+    // Theme Management
+    Route::prefix('themes')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'index']);
+        Route::put('/{name}', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'update']);
+        Route::put('/backend/{name}', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'updateBackend']);
+        Route::post('/{theme}/color', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'changeColor']);
+        Route::post('/upload', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'upload']);
+        Route::get('/template/download', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'downloadTemplate']);
+        Route::delete('/{theme}', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'destroy']);
+        Route::post('/deactivate-all', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'deactivateAll']);
     });
 });
 

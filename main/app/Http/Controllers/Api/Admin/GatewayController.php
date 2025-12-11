@@ -190,4 +190,121 @@ class GatewayController extends Controller
             'message' => 'Gateway status updated successfully'
         ]);
     }
+
+    /**
+     * Get online gateways
+     */
+    public function getOnlineGateways(): JsonResponse
+    {
+        $gateways = Gateway::where('type', 1)->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $gateways
+        ]);
+    }
+
+    /**
+     * Get offline gateways
+     */
+    public function getOfflineGateways(): JsonResponse
+    {
+        $gateways = Gateway::where('type', 0)->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $gateways
+        ]);
+    }
+
+    /**
+     * Update online gateway
+     */
+    public function updateOnlineGateway(Request $request, $id): JsonResponse
+    {
+        $gateway = Gateway::where('type', 1)->findOrFail($id);
+
+        $request->validate([
+            'parameter' => 'sometimes|json',
+            'rate' => 'sometimes|numeric',
+            'charge' => 'sometimes|numeric',
+            'currency' => 'sometimes|string',
+            'status' => 'sometimes|boolean',
+        ]);
+
+        $gateway->update($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Online gateway updated successfully',
+            'data' => $gateway->fresh()
+        ]);
+    }
+
+    /**
+     * Update Gourl gateway
+     */
+    public function updateGourlGateway(Request $request): JsonResponse
+    {
+        $gateway = Gateway::where('name', 'gourl')->firstOrFail();
+
+        $request->validate([
+            'parameter' => 'required|json',
+        ]);
+
+        $gateway->update(['parameter' => $request->parameter]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Gourl gateway updated successfully',
+            'data' => $gateway->fresh()
+        ]);
+    }
+
+    /**
+     * Create offline gateway
+     */
+    public function createOfflineGateway(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => 'required|string|unique:gateways,name',
+            'parameter' => 'required|json',
+            'rate' => 'required|numeric',
+            'charge' => 'required|numeric',
+            'currency' => 'required|string',
+        ]);
+
+        $gateway = Gateway::create(array_merge($request->all(), ['type' => 0]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Offline gateway created successfully',
+            'data' => $gateway
+        ], 201);
+    }
+
+    /**
+     * Update offline gateway
+     */
+    public function updateOfflineGateway(Request $request, $id): JsonResponse
+    {
+        $gateway = Gateway::where('type', 0)->findOrFail($id);
+
+        $request->validate([
+            'name' => 'sometimes|string|unique:gateways,name,' . $gateway->id,
+            'parameter' => 'sometimes|json',
+            'rate' => 'sometimes|numeric',
+            'charge' => 'sometimes|numeric',
+            'currency' => 'sometimes|string',
+            'status' => 'sometimes|boolean',
+        ]);
+
+        $gateway->update($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Offline gateway updated successfully',
+            'data' => $gateway->fresh()
+        ]);
+    }
 }

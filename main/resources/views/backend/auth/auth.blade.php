@@ -27,9 +27,8 @@
 <body class="h-100">
 
     <div class="authincation">
-        <div class="authincation-content rounded-xl">
-            <div class="auth-form rounded-xl">
-                <h3 class="text-center mb-4">{{ $title }}</h3>
+        <div class="authincation-content">
+            <div class="auth-form">
                 @yield('element')
             </div>
         </div>
