@@ -27,6 +27,34 @@ Route::prefix('auth')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::post('/login', [\App\Http\Controllers\Api\Admin\Auth\LoginController::class, 'login']);
     });
+});
+
+// Public cached endpoints
+Route::middleware(['cache.response:600'])->group(function () {
+    Route::get('/plans', function () {
+        return response()->json(\App\Models\Plan::where('status', 1)->get());
+    });
+    
+    Route::get('/markets', function () {
+        return response()->json(\App\Models\Market::where('status', 1)->get());
+    });
+    
+    Route::get('/currency-pairs', function () {
+        return response()->json(\App\Models\CurrencyPair::where('status', 1)->get());
+    });
+    
+    Route::get('/time-frames', function () {
+        return response()->json(\App\Models\TimeFrame::where('status', 1)->get());
+    });
+    
+    Route::get('/signals/public', function () {
+        return response()->json(
+            \App\Models\Signal::published()
+                ->withDisplayData()
+                ->recent(20)
+                ->get()
+        );
+    });
 
     // Social Authentication
     Route::get('/social/{provider}/redirect', [\App\Http\Controllers\Api\Auth\SocialAuthController::class, 'redirect']);
@@ -227,6 +255,21 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/trading-presets', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'tradingPresets']);
             Route::post('/trading-presets/{id}/clone', [\App\Http\Controllers\Api\User\MarketplaceApiController::class, 'clonePreset']);
         });
+
+        // Backtesting
+        Route::prefix('backtesting')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'index']);
+            Route::post('/run', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'run']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'show']);
+        });
+
+        // Copy Trading
+        Route::prefix('copy-trading')->group(function () {
+            Route::get('/traders', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'traders']);
+            Route::post('/traders/{id}/follow', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'followTrader']);
+            Route::delete('/traders/{id}/unfollow', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'unfollowTrader']);
+            Route::get('/subscriptions', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'mySubscriptions']);
+        });
     });
 });
 
@@ -386,18 +429,18 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         Route::delete('/{id}', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'destroy']);
         Route::get('/{code}/translations', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'getTranslations']);
         Route::put('/{code}/translations', [\App\Http\Controllers\Api\Admin\LanguageApiController::class, 'updateTranslation']);
-    });
-
-    // Language Translation Operations
-    Route::prefix('translation')->group(function () {
-        Route::get('/{lang}/translations', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'getTranslations']);
-        Route::put('/{lang}/translations', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'updateTranslation']);
-        Route::put('/{lang}/translations/bulk', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'bulkUpdateTranslations']);
-        Route::delete('/{lang}/key', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'deleteKey']);
         Route::post('/{lang}/auto-translate', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'autoTranslate']);
         Route::get('/settings', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'getSettings']);
         Route::put('/settings', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'updateSettings']);
         Route::post('/test', [\App\Http\Controllers\Api\Admin\LanguageTranslationController::class, 'testApi']);
+    });
+
+    // Theme Management
+    Route::prefix('themes')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\ThemeApiController::class, 'index']);
+        Route::post('/activate', [\App\Http\Controllers\Api\Admin\ThemeApiController::class, 'activate']);
+        Route::post('/upload', [\App\Http\Controllers\Api\Admin\ThemeApiController::class, 'upload']);
+        Route::delete('/{theme}', [\App\Http\Controllers\Api\Admin\ThemeApiController::class, 'destroy']);
     });
 
     // System Management
@@ -416,6 +459,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         Route::post('/backup/delete', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'deleteBackup']);
         Route::post('/database/reseed', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'reseedDatabase']);
         Route::post('/database/reset', [\App\Http\Controllers\Api\Admin\SystemManagementController::class, 'resetDatabase']);
+        
+        // AlgoExpert++ System Tools
+        Route::get('/health', [\App\Http\Controllers\Api\Admin\SystemToolsApiController::class, 'health']);
+        Route::get('/performance-stats', [\App\Http\Controllers\Api\Admin\SystemToolsApiController::class, 'performance']);
+        Route::get('/cron-jobs', [\App\Http\Controllers\Api\Admin\SystemToolsApiController::class, 'cronJobs']);
+        Route::get('/horizon/stats', [\App\Http\Controllers\Api\Admin\SystemToolsApiController::class, 'horizonStats']);
+        Route::post('/horizon/clear-failed', [\App\Http\Controllers\Api\Admin\SystemToolsApiController::class, 'clearFailedJobs']);
     });
 
     // Theme Management
@@ -428,6 +478,15 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         Route::get('/template/download', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'downloadTemplate']);
         Route::delete('/{theme}', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'destroy']);
         Route::post('/deactivate-all', [\App\Http\Controllers\Api\Admin\ThemeManagementController::class, 'deactivateAll']);
+    });
+
+    // Addon Management
+    Route::prefix('addons')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\Admin\AddonApiController::class, 'index']);
+        Route::post('/upload', [\App\Http\Controllers\Api\Admin\AddonApiController::class, 'upload']);
+        Route::post('/{addon}/status', [\App\Http\Controllers\Api\Admin\AddonApiController::class, 'updateStatus']);
+        Route::get('/{addon}/modules', [\App\Http\Controllers\Api\Admin\AddonApiController::class, 'modules']);
+        Route::post('/{addon}/modules/{module}', [\App\Http\Controllers\Api\Admin\AddonApiController::class, 'updateModule']);
     });
 });
 

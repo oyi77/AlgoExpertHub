@@ -50,6 +50,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\LogRequests::class,
             \App\Http\Middleware\OptimizeFrontendMiddleware::class,
+            \App\Http\Middleware\QueueMonitoringMiddleware::class,
         ],
 
         'api' => [
@@ -87,5 +88,8 @@ class Kernel extends HttpKernel
         '2fa' => LoginSecurityMiddleware::class,
         'kyc' => KycMiddleware::class,
         'check_onboarding' => CheckOnboarding::class,
+        'cache.response' => \App\Http\Middleware\CacheResponseMiddleware::class,
+        'query.monitor' => \App\Http\Middleware\QueryMonitoringMiddleware::class,
+        'queue.monitor' => \App\Http\Middleware\QueueMonitoringMiddleware::class,
     ];
 }

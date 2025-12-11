@@ -62,6 +62,128 @@ class Signal extends Model
     }
 
     /**
+     * Scope for published signals with optimized ordering
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('is_published', 1)->orderBy('published_date', 'desc');
+    }
+
+    /**
+     * Scope for signals by market with index optimization
+     */
+    public function scopeByMarket($query, $marketId)
+    {
+        return $query->where('market_id', $marketId);
+    }
+
+    /**
+     * Scope for signals by currency pair with index optimization
+     */
+    public function scopeByCurrencyPair($query, $currencyPairId)
+    {
+        return $query->where('currency_pair_id', $currencyPairId);
+    }
+
+    /**
+     * Scope for signals by direction with index optimization
+     */
+    public function scopeByDirection($query, $direction)
+    {
+        return $query->where('direction', $direction);
+    }
+
+    /**
+     * Scope for recent signals with limit
+     */
+    public function scopeRecent($query, $limit = 20)
+    {
+        return $query->orderBy('created_at', 'desc')->limit($limit);
+    }
+
+    /**
+     * Scope with optimized eager loading for display
+     */
+    public function scopeWithDisplayData($query)
+    {
+        return $query->with([
+            'pair:id,name',
+            'time:id,name',
+            'market:id,name',
+            'plans:id,name,status'
+        ]);
+    }
+
+    /**
+     * Scope for published signals only
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('is_published', 1);
+    }
+
+    /**
+     * Scope for draft signals only
+     */
+    public function scopeDraft($query)
+    {
+        return $query->where('is_published', 0);
+    }
+
+    /**
+     * Scope for auto-created signals
+     */
+    public function scopeAutoCreated($query)
+    {
+        return $query->where('auto_created', 1);
+    }
+
+    /**
+     * Scope for manual signals
+     */
+    public function scopeManual($query)
+    {
+        return $query->where('auto_created', 0);
+    }
+
+    /**
+     * Scope for signals by market
+     */
+    public function scopeByMarket($query, $marketId)
+    {
+        return $query->where('market_id', $marketId);
+    }
+
+    /**
+     * Scope for signals by timeframe
+     */
+    public function scopeByTimeframe($query, $timeframeId)
+    {
+        return $query->where('time_frame_id', $timeframeId);
+    }
+
+    /**
+     * Scope for signals published today
+     */
+    public function scopePublishedToday($query)
+    {
+        return $query->where('is_published', 1)
+                    ->whereDate('published_date', today());
+    }
+
+    /**
+     * Scope for signals published this week
+     */
+    public function scopePublishedThisWeek($query)
+    {
+        return $query->where('is_published', 1)
+                    ->whereBetween('published_date', [
+                        now()->startOfWeek(),
+                        now()->endOfWeek()
+                    ]);
+    }
+
+    /**
      * Check if signal was auto-created.
      */
     public function isAutoCreated()

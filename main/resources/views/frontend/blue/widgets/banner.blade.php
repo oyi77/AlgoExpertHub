@@ -7,7 +7,7 @@
     <div class="sp_container">
         <div class="row justify-content-xl-start justify-content-center align-items-center">
             <div class="col-xl-7 col-lg-10 text-xl-start text-center">
-                <h2 class="sp_banner_title wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
+                <h2 class="sp_banner_title" data-animate="fadeInUp">
                 <?= Config::colorText(optional($banner)->content->title, optional($banner)->content->color_text_for_title) ?>
                 </h2>
 

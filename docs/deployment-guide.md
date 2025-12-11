@@ -1,5 +1,20 @@
 # Deployment Guide
 
+> [!TIP]
+> **📚 Detailed Configuration Documentation Available**
+> 
+> For comprehensive auto-generated configuration documentation, see:
+> 
+> **[Configuration Guide](../.qoder/repowiki/en/content/Configuration/Configuration.md)** - Complete configuration documentation
+>
+> Related sections:
+> - [Environment Configuration](../.qoder/repowiki/en/content/Configuration/Environment%20Configuration.md) - .env setup and variables
+> - [Database, Cache & Queue Configuration](../.qoder/repowiki/en/content/Configuration/Database,%20Cache%20&%20Queue%20Configuration.md) - Infrastructure setup
+> - [Service Integration Configuration](../.qoder/repowiki/en/content/Configuration/Service%20Integration%20Configuration.md) - External services
+> - [Performance & Security Configuration](../.qoder/repowiki/en/content/Configuration/Performance%20&%20Security%20Configuration.md) - Optimization and hardening
+
+---
+
 Complete guide for deploying AlgoExpertHub Trading Signal Platform to production environments.
 
 ## Table of Contents

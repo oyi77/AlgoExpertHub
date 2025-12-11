@@ -1,5 +1,7 @@
 # AlgoExpertHub Trading Signal Platform
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/oyi77/AlgoExpertHub)
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -528,6 +530,18 @@ dispatch(new YourJob($data));
 
 ## Documentation Wiki
 
+### 📚 Comprehensive Auto-Generated Wiki
+
+**[Complete Technical Documentation](/.qoder/repowiki/en/content/)** - Comprehensive auto-generated documentation with 70+ detailed guides covering the entire codebase.
+
+#### Key Wiki Sections:
+
+- 🏗️ **[Architecture Overview](/.qoder/repowiki/en/content/Architecture%20Overview/Architecture%20Overview.md)** - System architecture, core components, data flow, and integration patterns
+- ⚙️ **[Core Modules](/.qoder/repowiki/en/content/Core%20Modules/Core%20Modules.md)** - Trading Management, Multi-Channel Signal Processing, AI Integration
+- 🔌 **[API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md)** - Complete REST API, WebSocket, and Webhook documentation
+- 🛠️ **[Configuration](/.qoder/repowiki/en/content/Configuration/Configuration.md)** - Environment, database, service integration, and system settings
+- 🧩 **[Addon Development](/.qoder/repowiki/en/content/Addon%20Development.md)** - Guidelines for creating and managing addons
+
 ### AI-Powered Documentation
 
 📚 **[DeepWiki Documentation](https://deepwiki.com/oyi77/AlgoExpertHub)** - Interactive AI-powered documentation with visual diagrams, code analysis, and context-aware Q&A for this repository.
@@ -608,11 +622,27 @@ For feature specifications, see `specs/` directory.
 
 ## API Documentation
 
-### Authentication
+### 📖 Complete API Reference
+
+For comprehensive API documentation including all endpoints, authentication, webhooks, and real-time communication, see:
+
+**[Complete API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md)** - Full REST API, WebSocket, and Webhook documentation
+
+#### Quick Links:
+- [Authentication](/.qoder/repowiki/en/content/API%20Reference/Authentication.md) - OAuth, Sanctum, and API tokens
+- [User Management](/.qoder/repowiki/en/content/API%20Reference/User%20Management.md) - User profile and account operations
+- [Trading Operations](/.qoder/repowiki/en/content/API%20Reference/Trading%20Operations.md) - Trading bots, positions, and execution
+- [Signal Processing](/.qoder/repowiki/en/content/API%20Reference/Signal%20Processing.md) - Signal management and distribution
+- [Webhooks](/.qoder/repowiki/en/content/API%20Reference/Webhooks.md) - Telegram and API webhook endpoints
+- [Real-time Communication](/.qoder/repowiki/en/content/API%20Reference/Real-time%20Communication.md) - WebSocket and SSE
+
+### Quick Start Example
+
+#### Authentication
 
 All API requests require authentication via Laravel Sanctum.
 
-#### Login
+**Login:**
 
 ```http
 POST /api/login
@@ -636,7 +666,7 @@ Response:
 }
 ```
 
-#### Authenticated Requests
+**Authenticated Requests:**
 
 Include token in header:
 
@@ -644,34 +674,16 @@ Include token in header:
 Authorization: Bearer 1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### Endpoints
-
-#### Get Signals
+### Example Endpoints
 
 ```http
 GET /api/signals
-Authorization: Bearer {token}
-```
-
-#### Get User Subscriptions
-
-```http
 GET /api/subscriptions
-Authorization: Bearer {token}
-```
-
-#### Create Deposit
-
-```http
 POST /api/deposits
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-    "amount": 100.00,
-    "gateway_id": 1
-}
+GET /api/user/trading-bots
 ```
+
+See the [Complete API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md) for all available endpoints.
 
 ---
 

@@ -36,9 +36,11 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
-    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
-    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
-    <link href="{{ asset('asset/frontend/premium/css/premium.css') }}?v=20251202" rel="stylesheet">
+    <link href="{{ asset('css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'components.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v={{ time() }}" rel="stylesheet">
 
     @php
         $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
@@ -136,7 +138,7 @@
         <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
     @endif
 
-    <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 

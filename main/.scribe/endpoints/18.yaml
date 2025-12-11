@@ -1,22 +1,22 @@
-name: 'Multi-Channel Signals'
+name: Referrals
 description: |-
 
-  Endpoints for managing channel sources and message patterns.
+  Endpoints for referral system.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/user/channel-sources
+    uri: api/user/referrals
     metadata:
       custom: []
-      groupName: 'Multi-Channel Signals'
+      groupName: Referrals
       groupDescription: |-
 
-        Endpoints for managing channel sources and message patterns.
+        Endpoints for referral system.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Channel Sources'
+      title: 'Get Referral Info'
       description: ''
       authenticated: true
       deprecated: false
@@ -37,7 +37,7 @@ endpoints:
         status: 404
         content: |-
           {
-              "message": "The route api/user/channel-sources could not be found."
+              "message": "The route api/user/referrals could not be found."
           }
         headers:
           cache-control: 'no-cache, private'
@@ -55,17 +55,17 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/user/channel-sources
+      - GET
+    uri: api/user/referrals/stats
     metadata:
       custom: []
-      groupName: 'Multi-Channel Signals'
+      groupName: Referrals
       groupDescription: |-
 
-        Endpoints for managing channel sources and message patterns.
+        Endpoints for referral system.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create Channel Source'
+      title: 'Get Referral Stats'
       description: ''
       authenticated: true
       deprecated: false
@@ -77,148 +77,22 @@ endpoints:
     cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      name:
-        custom: []
-        name: name
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      type:
-        custom: []
-        name: type
-        description: ''
-        required: true
-        example: WEBHOOK
-        type: string
-        enumValues:
-          - TELEGRAM
-          - DISCORD
-          - SLACK
-          - WEBHOOK
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      credentials:
-        custom: []
-        name: credentials
-        description: ''
-        required: true
-        example: []
-        type: object
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      name: architecto
-      type: WEBHOOK
-      credentials: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: 'api/user/channel-sources/{id}'
-    metadata:
-      custom: []
-      groupName: 'Multi-Channel Signals'
-      groupDescription: |-
-
-        Endpoints for managing channel sources and message patterns.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Update Channel Source'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the channel source.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/user/channel-sources/{id}'
-    metadata:
-      custom: []
-      groupName: 'Multi-Channel Signals'
-      groupDescription: |-
-
-        Endpoints for managing channel sources and message patterns.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Delete Channel Source'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
+    responses:
+      -
         custom: []
-        name: id
-        description: 'The ID of the channel source.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api/user/referrals/stats could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth:
       - headers

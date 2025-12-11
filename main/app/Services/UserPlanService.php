@@ -146,21 +146,21 @@ class UserPlanService
 
     private function subscription($data)
     {
+        // Use a single query to check and update existing subscriptions
+        $existingSubscriptions = auth()->user()->subscriptions()->where('is_current', 1)->get();
 
-        $subscription = auth()->user()->subscriptions;
-
-        if ($subscription) {
-            DB::table('plan_subscriptions')->where('user_id', auth()->id())->update(['is_current' => 0]);
+        if ($existingSubscriptions->isNotEmpty()) {
+            // Use bulk update for better performance
+            auth()->user()->subscriptions()->where('is_current', 1)->update(['is_current' => 0]);
         }
 
-
-        $id = PlanSubscription::create([
+        $subscription = PlanSubscription::create([
             'plan_id' => $data['plan_id'],
             'user_id' => $data['user_id'],
             'is_current' => 1,
             'plan_expired_at' => $data['plan_expired_at']
         ]);
 
-        return $id;
+        return $subscription;
     }
 }

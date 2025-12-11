@@ -38,14 +38,11 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
-    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <noscript>
-        <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
-        <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
-        <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="stylesheet">
-    </noscript>
+    <link href="{{ asset('css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'components.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v={{ time() }}" rel="stylesheet">
 
     @php
         $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
@@ -125,29 +122,12 @@
     @include(Config::theme() . 'widgets.footer')
 
     <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
-    <script defer src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
-    @if(!View::hasSection('skip_slick'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_wow'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_paroller'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_tweenmax'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_odometer'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_viewport'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
-    @endif
-
-    @if(optional(Config::config())->enable_new_styles)
-        <script defer src="{{ mix('js/app.js') }}"></script>
-    @endif
+    {{-- Critical scripts (load immediately) --}}
+    <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
+    
+    {{-- Non-critical scripts (defer loading) --}}
+    {{-- jQuery plugins removed - using vanilla JS alternatives --}}
 
 
 
@@ -159,7 +139,7 @@
         <script defer src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
     @endif
 
-    <script defer src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 

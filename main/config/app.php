@@ -181,6 +181,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\CacheServiceProvider::class,
         
         // Addons are now conditionally registered in AppServiceProvider::register()
         // based on their active status to prevent errors when addons are disabled

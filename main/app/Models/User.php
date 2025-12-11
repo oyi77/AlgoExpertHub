@@ -98,9 +98,123 @@ class User extends Authenticatable
         return $this->hasMany(Trade::class,'user_id');
     }
 
+    // Scopes for better query reusability
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 0);
+    }
+
+    public function scopeEmailVerified($query)
+    {
+        return $query->where('is_email_verified', 1);
+    }
+
+    public function scopeKycApproved($query)
+    {
+        return $query->where('kyc_status', 'approved');
+    }
+
+    public function scopeKycPending($query)
+    {
+        return $query->where('kyc_status', 'pending');
+    }
+
+    public function scopeWithActiveSubscription($query)
+    {
+        return $query->whereHas('subscriptions', function ($q) {
+            $q->where('is_current', 1)
+              ->where('end_date', '>', now());
+        });
+    }
+
+    public function scopeRegisteredToday($query)
+    {
+        return $query->whereDate('created_at', today());
+    }
+
+    public function scopeRegisteredThisWeek($query)
+    {
+        return $query->whereBetween('created_at', [
+            now()->startOfWeek(),
+            now()->endOfWeek()
+        ]);
+    }
+
+    public function scopeRegisteredThisMonth($query)
+    {
+        return $query->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year);
+    }
+
+    public function scopeByReferrer($query, $referrerId)
+    {
+        return $query->where('ref_id', $referrerId);
+    }
+
+    public function scopeSearchByName($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('username', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%")
+              ->orWhere('first_name', 'like', "%{$search}%")
+              ->orWhere('last_name', 'like', "%{$search}%");
+        });
+    }
+
     public function onboardingProgress()
     {
         return $this->hasOne(UserOnboardingProgress::class);
+    }
+
+    /**
+     * Scope for active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    /**
+     * Scope for verified users
+     */
+    public function scopeVerified($query)
+    {
+        return $query->where('is_email_verified', 1);
+    }
+
+    /**
+     * Scope for users with current subscriptions
+     */
+    public function scopeWithActiveSubscription($query)
+    {
+        return $query->whereHas('subscriptions', function ($q) {
+            $q->where('is_current', 1)->where('end_date', '>', now());
+        });
+    }
+
+    /**
+     * Scope for users by KYC status
+     */
+    public function scopeByKycStatus($query, $status)
+    {
+        return $query->where('kyc_status', $status);
+    }
+
+    /**
+     * Get current subscription with optimized query
+     */
+    public function getCurrentSubscriptionAttribute()
+    {
+        return $this->subscriptions()
+            ->where('is_current', 1)
+            ->where('end_date', '>', now())
+            ->with('plan:id,name,price,plan_type')
+            ->first();
     }
 
 }

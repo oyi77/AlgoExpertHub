@@ -35,48 +35,32 @@
                 </div>
                 <div class="row g-sm-4 g-3">
                     <div class="custom-xxl-6 col-xxl-3 col-xl-6 col-lg-3 col-6">
-                        <div class="d-card d-icon-card">
-                            <div class="d-card-icon gr-bg-1">
-                                <i class="las la-credit-card"></i>
-                            </div>
-                            <div class="d-card-content">
-                                <h4 class="d-card-amount">{{ Config::formatter($totalDeposit) }}</h4>
-                                <p class="d-card-caption">{{ __('Total Deposit') }}</p>
-                            </div>
-                        </div>
+                        <x-ui.stats-card 
+                            title="{{ __('Total Deposit') }}"
+                            :value="Config::formatter($totalDeposit)"
+                            icon='<i class="las la-credit-card"></i>'
+                        />
                     </div>
                     <div class="custom-xxl-6 col-xxl-3 col-xl-6 col-lg-3 col-6">
-                        <div class="d-card d-icon-card">
-                            <div class="d-card-icon gr-bg-2">
-                                <i class="las la-hand-holding-usd"></i>
-                            </div>
-                            <div class="d-card-content">
-                                <h4 class="d-card-amount">{{ Config::formatter($totalWithdraw) }}</h4>
-                                <p class="d-card-caption">{{ __('Total Withdraw') }}</p>
-                            </div>
-                        </div>
+                        <x-ui.stats-card 
+                            title="{{ __('Total Withdraw') }}"
+                            :value="Config::formatter($totalWithdraw)"
+                            icon='<i class="las la-hand-holding-usd"></i>'
+                        />
                     </div>
                     <div class="custom-xxl-6 col-xxl-3 col-xl-6 col-lg-3 col-6">
-                        <div class="d-card d-icon-card">
-                            <div class="d-card-icon gr-bg-3">
-                                <i class="las la-chart-bar"></i>
-                            </div>
-                            <div class="d-card-content">
-                                <h4 class="d-card-amount">{{ Config::formatter($totalPayments) }}</h4>
-                                <p class="d-card-caption">{{ __('Total Payment') }}</p>
-                            </div>
-                        </div>
+                        <x-ui.stats-card 
+                            title="{{ __('Total Payment') }}"
+                            :value="Config::formatter($totalPayments)"
+                            icon='<i class="las la-chart-bar"></i>'
+                        />
                     </div>
                     <div class="custom-xxl-6 col-xxl-3 col-xl-6 col-lg-3 col-6">
-                        <div class="d-card d-icon-card">
-                            <div class="d-card-icon gr-bg-4">
-                                <i class="las la-ticket-alt"></i>
-                            </div>
-                            <div class="d-card-content">
-                                <h4 class="d-card-amount">{{ $totalSupportTickets }}</h4>
-                                <p class="d-card-caption">{{ __('Support Ticket') }}</p>
-                            </div>
-                        </div>
+                        <x-ui.stats-card 
+                            title="{{ __('Support Tickets') }}"
+                            :value="$totalSupportTickets"
+                            icon='<i class="las la-ticket-alt"></i>'
+                        />
                     </div>
                 </div>
 
@@ -113,7 +97,7 @@
                                     @endforeach
                                     
                                 </ul>
-                                <a href="{{ route('user.transaction.log') }}" class="btn sp_theme_btn mt-4 w-100"><i class="fas fa-rocket me-2"></i> {{ __('View All Transaction') }}</a>
+                                <a href="{{ route('user.transaction.log') }}" class="btn btn-primary mt-4 w-100 focus-ring"><i class="fas fa-rocket me-2"></i> {{ __('View All Transactions') }}</a>
                             </div>
                         </div>
                         <div class="col-xl-12 col-lg-6">
@@ -124,24 +108,23 @@
                             <h6 class="mb-2 mt-4">{{ __('Your Referral Link') }}</h6>
                             <form>
                                 <div class="input-group">
-                                    <input type="text" class="form-control copy-text" placeholder="Referral link"
-                                        value="{{ route('user.register', $user->username) }}" readonly>
-                                        <button type="button" class="input-group-text sp_bg_base px-4 copy
-                                        ">{{ __('Copy') }}</button>
+                                    <input type="text" id="referral-link-mobile" class="form-control form-control-modern copy-text" placeholder="{{ __('Referral link') }}"
+                                        value="{{ route('user.register', $user->username) }}" readonly aria-label="{{ __('Referral link') }}">
+                                    <button type="button" class="btn btn-primary copy focus-ring" aria-label="{{ __('Copy referral link') }}">{{ __('Copy') }}</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-card mt-4">
-                    <h5 class="">{{ __('All Signal') }}</h5>
+                <div class="d-card card-modern mt-4">
+                    <h5 class="mb-4">{{ __('All Signals') }}</h5>
                     <div id="chart"></div>
                 </div>
 
-                <div class="sp_site_card mt-4">
-                    <div class="card-header">
-                        <h5>{{ __('Latest Signal') }}</h5>
+                <div class="sp_site_card card-modern mt-4">
+                    <div class="card-header border-bottom pb-3 mb-3">
+                        <h5 class="mb-0">{{ __('Latest Signals') }}</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -165,7 +148,9 @@
                                             <td data-caption="{{ __('Title') }}">{{ $signal->signal->title }}</td>
                                             <td data-caption="{{ __('Action') }}">
                                                 <a href="{{ route('user.signal.details', ['id' => $signal->signal->id, 'slug' => Str::slug($signal->signal->title)]) }}"
-                                                    class="view-btn"><i class="far fa-eye"></i></a>
+                                                    class="btn btn-sm btn-outline-primary focus-ring" aria-label="{{ __('View signal') }} {{ $signal->signal->title }}">
+                                                    <i class="far fa-eye me-1"></i> {{ __('View') }}
+                                                </a>
                                             </td>
                                         </tr>
                                     @empty
@@ -194,13 +179,13 @@
                 <div class="d-xl-block d-none">
                     <div class="row g-sm-4 g-3">
                         <div class="col-xl-12 col-lg-6">
-                            <div class="d-card user-card not-hover"> 
+                            <div class="d-card user-card card-modern"> 
                                 <div class="text-center">
-                                    <h5 class="user-card-title">{{ __('Total Balance') }}</h5>
-                                    <h4 class="d-card-balance mt-xxl-3 mt-2">{{ Config::formatter($totalbalance) }}</h4>
-                                    <div class="mt-4">
-                                        <a href="{{ route('user.withdraw') }}" class="btn btn-md sp_btn_danger me-xxl-3 me-2"><i class="las la-minus-circle fs-lg"></i> {{ __('Withdraw') }}</a>
-                                        <a href="{{ route('user.deposit') }}" class="btn btn-md sp_btn_success ms-xxl-3 ms-2"><i class="las la-plus-circle fs-lg"></i> {{ __('Deposit') }}</a>
+                                    <h5 class="user-card-title mb-3">{{ __('Total Balance') }}</h5>
+                                    <h4 class="d-card-balance mt-xxl-3 mt-2 mb-4">{{ Config::formatter($totalbalance) }}</h4>
+                                    <div class="mt-4 d-flex gap-2 justify-content-center">
+                                        <a href="{{ route('user.withdraw') }}" class="btn btn-danger btn-md focus-ring"><i class="las la-minus-circle me-1"></i> {{ __('Withdraw') }}</a>
+                                        <a href="{{ route('user.deposit') }}" class="btn btn-success btn-md focus-ring"><i class="las la-plus-circle me-1"></i> {{ __('Deposit') }}</a>
                                     </div>
                                 </div>
 
@@ -208,9 +193,7 @@
 
                                 <ul class="recent-transaction-list mt-4">
                                     @foreach ($transactions as $trans)
-                                        
                                     <li class="single-recent-transaction">
-                                      
                                         <div class="content">
                                             <h6 class="title">{{$trans->details}}</h6>
                                             <span>{{$trans->created_at->format('d F, Y')}}</span>
@@ -218,22 +201,21 @@
                                         <p class="recent-transaction-amount {{$trans->type == '+' ?  "sp_text_success" : 'sp_text_danger' }}">{{number_format($trans->amount)}}</p>
                                     </li>
                                     @endforeach
-                                    
                                 </ul>
-                                <a href="{{ route('user.transaction.log') }}" class="btn sp_theme_btn mt-4 w-100"><i class="fas fa-rocket me-2"></i> {{ __('View All Transaction') }}</a>
+                                <a href="{{ route('user.transaction.log') }}" class="btn btn-primary mt-4 w-100 focus-ring"><i class="fas fa-rocket me-2"></i> {{ __('View All Transactions') }}</a>
                             </div>
                         </div>
                         <div class="col-xl-12 col-lg-6">
-                            <div class="d-card not-hover">
+                            <div class="d-card card-modern">
                                 <div id="chart2" class="d-flex justify-content-center"></div>
                             </div>
 
                             <h6 class="mb-2 mt-4">{{ __('Your Referral Link') }}</h6>
                             <form>
                                 <div class="input-group">
-                                    <input type="text" class="form-control copy-text2" placeholder="Referral link"
-                                        value="{{ route('user.register', $user->username) }}" readonly>
-                                    <button type="button" class="input-group-text sp_bg_base px-4 copy2">{{ __('Copy') }}</button>
+                                    <input type="text" id="referral-link-desktop" class="form-control form-control-modern copy-text2" placeholder="{{ __('Referral link') }}"
+                                        value="{{ route('user.register', $user->username) }}" readonly aria-label="{{ __('Referral link') }}">
+                                    <button type="button" class="btn btn-primary copy2 focus-ring" aria-label="{{ __('Copy referral link') }}">{{ __('Copy') }}</button>
                                 </div>
                             </form>
                         </div>

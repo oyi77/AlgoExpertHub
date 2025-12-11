@@ -108,6 +108,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Query Optimization Settings
+    |--------------------------------------------------------------------------
+    |
+    | These settings control query optimization and monitoring features.
+    |
+    */
+
+    'slow_query_threshold' => env('DB_SLOW_QUERY_THRESHOLD', 1000), // milliseconds
+    'enable_query_monitoring' => env('DB_ENABLE_QUERY_MONITORING', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Redis Databases
     |--------------------------------------------------------------------------
     |
@@ -150,6 +162,27 @@ return [
         'cache' => (function() {
             $host = env('REDIS_HOST', '127.0.0.1');
             $config = ['database' => (int) env('REDIS_CACHE_DB', '1')];
+            
+            if (str_starts_with($host, '/')) {
+                // Unix socket for Predis
+                $config['scheme'] = 'unix';
+                $config['path'] = $host;
+            } else {
+                // TCP connection
+                $config['host'] = $host;
+                $config['port'] = (int) env('REDIS_PORT', '6379');
+            }
+            
+            if ($password = env('REDIS_PASSWORD')) {
+                $config['password'] = $password;
+            }
+            
+            return $config;
+        })(),
+
+        'queue' => (function() {
+            $host = env('REDIS_HOST', '127.0.0.1');
+            $config = ['database' => (int) env('REDIS_QUEUE_DB', '2')];
             
             if (str_starts_with($host, '/')) {
                 // Unix socket for Predis

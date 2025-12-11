@@ -1,5 +1,25 @@
 # API Reference
 
+> [!NOTE]
+> **📖 Comprehensive API Documentation Available**
+> 
+> For complete, auto-generated API documentation with detailed endpoint descriptions, request/response examples, and real-time communication guides, see:
+> 
+> **[Complete API Reference](../.qoder/repowiki/en/content/API%20Reference/API%20Reference.md)** - Full REST API, WebSocket, and Webhook documentation
+>
+> #### Quick Navigation:
+> - [Authentication](../.qoder/repowiki/en/content/API%20Reference/Authentication.md) - Sanctum, OAuth, API tokens
+> - [User Management](../.qoder/repowiki/en/content/API%20Reference/User%20Management.md) - User profile and account operations
+> - [Trading Operations](../.qoder/repowiki/en/content/API%20Reference/Trading%20Operations.md) - Trading bots, positions, execution
+> - [Signal Processing](../.qoder/repowiki/en/content/API%20Reference/Signal%20Processing.md) - Signal management and distribution
+> - [System Monitoring](../.qoder/repowiki/en/content/API%20Reference/System%20Monitoring.md) - Admin monitoring and system operations
+> - [Webhooks](../.qoder/repowiki/en/content/API%20Reference/Webhooks.md) - Telegram and API webhook endpoints
+> - [Real-time Communication](../.qoder/repowiki/en/content/API%20Reference/Real-time%20Communication.md) - WebSocket and Server-Sent Events
+
+---
+
+## Quick Reference Guide
+
 Complete REST API documentation for AlgoExpertHub Trading Signal Platform.
 
 ## Table of Contents
@@ -11,6 +31,7 @@ Complete REST API documentation for AlgoExpertHub Trading Signal Platform.
 - [Error Handling](#error-handling)
 - [Rate Limiting](#rate-limiting)
 - [Examples](#examples)
+
 
 ---
 

@@ -1,5 +1,19 @@
 # Trading Execution Flow - Complete Documentation
 
+> [!TIP]
+> **📚 Detailed Documentation Available**
+> 
+> For comprehensive auto-generated documentation on the Trading Management System including execution modules, position monitoring, and analytics, see:
+> 
+> **[Trading Management System](../.qoder/repowiki/en/content/Core%20Modules/Trading%20Management%20System/Trading%20Management%20System.md)** - Complete trading operations documentation
+>
+> Related sections:
+> - [Execution Module](../.qoder/repowiki/en/content/Core%20Modules/Trading%20Management%20System/Execution%20Module/Execution%20Module.md) - Trade execution details
+> - [Position Monitoring](../.qoder/repowiki/en/content/Core%20Modules/Trading%20Management%20System/Position%20Monitoring/Position%20Monitoring.md) - Position tracking and management
+> - [Risk Management](../.qoder/repowiki/en/content/Core%20Modules/Trading%20Management%20System/Risk%20Management/Risk%20Management.md) - Risk calculation and presets
+
+---
+
 ## Overview
 The Trading Execution Engine automatically executes trading signals on connected exchanges/brokers when signals are published. This document explains the complete flow from signal publication to position monitoring.
 

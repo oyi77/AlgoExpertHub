@@ -106,12 +106,8 @@
     @include(Config::theme() . 'widgets.footer')
     <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
     <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
+    {{-- Non-critical scripts (defer loading) --}}
+    {{-- jQuery plugins removed - using vanilla JS alternatives --}}
 
     @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
         <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
@@ -121,7 +117,7 @@
         <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
     @endif
 
-    <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 
