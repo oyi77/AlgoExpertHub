@@ -27,6 +27,10 @@ Route::prefix('auth')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::post('/login', [\App\Http\Controllers\Api\Admin\Auth\LoginController::class, 'login']);
     });
+
+    // Social Authentication
+    Route::get('/social/{provider}/redirect', [\App\Http\Controllers\Api\Auth\SocialAuthController::class, 'redirect']);
+    Route::post('/social/{provider}/callback', [\App\Http\Controllers\Api\Auth\SocialAuthController::class, 'callback']);
 });
 
 // Authenticated User Routes
@@ -48,6 +52,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [\App\Http\Controllers\Api\User\ProfileController::class, 'show']);
         Route::put('/profile', [\App\Http\Controllers\Api\User\ProfileController::class, 'update']);
         Route::post('/change-password', [\App\Http\Controllers\Api\User\ProfileController::class, 'changePassword']);
+
+        // KYC
+        Route::get('/kyc', [\App\Http\Controllers\Api\User\KycController::class, 'index']);
+        Route::post('/kyc', [\App\Http\Controllers\Api\User\KycController::class, 'store']);
 
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\User\DashboardController::class, 'index']);
@@ -78,6 +86,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/tickets/{id}', [\App\Http\Controllers\Api\User\TicketController::class, 'show']);
         Route::post('/tickets/{id}/reply', [\App\Http\Controllers\Api\User\TicketController::class, 'reply']);
         Route::post('/tickets/{id}/close', [\App\Http\Controllers\Api\User\TicketController::class, 'close']);
+
+        // Trading
+        Route::prefix('trading')->group(function () {
+            Route::get('/signals', [\App\Http\Controllers\Api\User\TradingController::class, 'getSignals']);
+            Route::get('/executions', [\App\Http\Controllers\Api\User\TradingController::class, 'getExecutions']);
+            Route::post('/execute', [\App\Http\Controllers\Api\User\TradingController::class, 'executeTrade']);
+        });
     });
 });
 
@@ -147,12 +162,40 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Configuration
     Route::get('/configuration', [\App\Http\Controllers\Api\Admin\ConfigurationController::class, 'index']);
     Route::put('/configuration', [\App\Http\Controllers\Api\Admin\ConfigurationController::class, 'update']);
+
+    // Management (Pages, Sections, Settings)
+    Route::prefix('management')->group(function () {
+        // Pages
+        Route::get('/pages', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'getPages']);
+        Route::post('/pages', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'createPage']);
+        Route::put('/pages/{id}', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'updatePage']);
+        Route::delete('/pages/{id}', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'deletePage']);
+
+        // Sections
+        Route::get('/sections', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'getSections']);
+        Route::get('/sections/{name}', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'getSectionContent']);
+        Route::put('/sections/{name}', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'updateSectionContent']);
+
+        // Settings
+        Route::get('/settings', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'getSettings']);
+        Route::put('/settings', [\App\Http\Controllers\Api\Admin\ManagementController::class, 'updateSettings']);
+    });
 });
 
 // Reference Data (public endpoints)
 Route::get('/currency-pairs', [\App\Http\Controllers\Api\ReferenceDataController::class, 'currencyPairs']);
 Route::get('/timeframes', [\App\Http\Controllers\Api\ReferenceDataController::class, 'timeframes']);
 Route::get('/markets', [\App\Http\Controllers\Api\ReferenceDataController::class, 'markets']);
+
+// System Configuration
+Route::controller(\App\Http\Controllers\Api\SystemController::class)->group(function () {
+    Route::get('/config', 'config');
+    Route::get('/languages', 'languages');
+    Route::get('/translations/{lang}', 'translations');
+});
+
+// Frontend Content
+Route::get('/content/{name}', [\App\Http\Controllers\Api\ContentController::class, 'index']);
 
 // Webhook Routes (no authentication required, uses channel source ID)
 Route::post('/webhook/telegram/{channelSourceId}', [\App\Http\Controllers\Api\TelegramWebhookController::class, 'handle']);
