@@ -1,0 +1,54 @@
+---
+inclusion: always
+---
+
+# SDD Toolkit Rules
+
+## Core Principles
+
+1. **Spec Before Code**: Always create specifications before implementation
+2. **Plan Before Build**: Design architecture before coding  
+3. **Tasks Before Work**: Break down work into manageable tasks
+4. **Evolve as You Build**: Update specs as implementation reveals new insights
+
+## Command Usage
+
+### Quick Mode (80% of features)
+Use `/brief [feature-name] [description]` for rapid feature development:
+- 30-minute planning
+- Start coding immediately
+- Perfect for straightforward features
+
+### Full SDD 2.0 Mode (20% of features)
+Use full workflow for complex features:
+1. `/research [feature-name] [topics]` - Research technologies and patterns
+2. `/specify [feature-name]` - Create detailed specifications
+3. `/plan [feature-name]` - Design architecture
+4. `/tasks [feature-name]` - Break down work
+5. `/implement [feature-name]` - Execute implementation
+
+### Escalation
+Use `/upgrade [feature-name]` to convert briefs to full workflow when complexity increases.
+
+### Evolution
+Use `/evolve [feature-name] [changes]` to keep specs aligned with implementation.
+
+## Documentation Structure
+
+All specifications should be in `specs/active/[feature-name]/`:
+- `feature-brief.md` - Quick 30-minute brief
+- `research.md` - Research findings
+- `spec.md` - Full specification
+- `plan.md` - Technical architecture
+- `tasks.md` - Task breakdown
+
+## Best Practices
+
+- Keep tasks small (1-2 days max)
+- Document all architecture decisions with justification
+- Update specs when requirements change
+- Maintain version history for significant changes
+- Use absolute imports in Python code
+- Follow SOLID and DRY principles
+- Ensure consistency and adaptability for future changes
+

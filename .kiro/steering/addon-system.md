@@ -1,0 +1,428 @@
+---
+inclusion: always
+---
+
+# Addon System Rules
+
+## Overview
+The platform uses a **modular addon architecture** to extend core functionality without modifying the main application. Addons are self-contained packages with their own controllers, models, services, migrations, views, and routes.
+
+## Addon Directory Structure
+```
+main/addons/
+├── multi-channel-signal-addon/
+├── trading-execution-engine-addon/
+├── trading-preset-addon/
+├── trading-bot-signal-addon/
+└── copy-trading-addon/
+```
+
+Each addon follows this structure:
+```
+addon-name/
+├── addon.json              # Addon manifest
+├── AddonServiceProvider.php # Service provider
+├── app/
+│   ├── Console/            # Artisan commands
+│   ├── Contracts/          # Interfaces
+│   ├── DTOs/               # Data Transfer Objects
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Backend/    # Admin controllers
+│   │   │   └── User/       # User controllers
+│   │   ├── Middleware/
+│   │   └── Requests/       # Form requests
+│   ├── Jobs/               # Queue jobs
+│   ├── Models/             # Eloquent models
+│   ├── Parsers/            # Custom parsers
+│   ├── Services/           # Business logic
+│   └── ...
+├── config/                 # Addon-specific config
+├── database/
+│   ├── migrations/         # Addon migrations
+│   └── seeders/            # Addon seeders
+├── resources/
+│   └── views/
+│       ├── backend/        # Admin views
+│       └── user/           # User views
+├── routes/
+│   ├── admin.php           # Admin routes
+│   ├── user.php            # User routes
+│   └── api.php             # API routes
+└── README.md               # Addon documentation
+```
+
+## Addon Manifest (addon.json)
+Each addon MUST have an `addon.json` file with metadata and module declarations.
+
+### Format
+```json
+{
+    "name": "addon-slug",
+    "title": "Addon Title",
+    "description": "Brief description",
+    "version": "1.0.0",
+    "author": "Author Name",
+    "namespace": "Addons\\AddonName",
+    "status": "active",
+    "requires": {
+        "php": "^7.3|^8.0",
+        "laravel": "^8.0|^9.0"
+    },
+    "dependencies": {
+        "package/name": "^1.0"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Provides admin routes and views",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "Provides user routes and views",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "processing",
+            "name": "Background Processing",
+            "description": "Jobs and scheduled tasks",
+            "targets": ["jobs", "scheduling"],
+            "enabled": true
+        }
+    ]
+}
+```
+
+### Module Targets
+- `admin_routes` - Admin routes loaded
+- `admin_menu` - Admin menu items displayed
+- `user_routes` - User routes loaded
+- `user_menu` - User menu items displayed
+- `jobs` - Background jobs enabled
+- `scheduling` - Scheduled tasks enabled
+- `webhooks` - Webhook endpoints enabled
+
+## Addon Service Provider
+Each addon MUST have a service provider extending `Illuminate\Support\ServiceProvider`.
+
+### Template
+```php
+<?php
+
+namespace Addons\AddonName;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+
+class AddonServiceProvider extends ServiceProvider
+{
+    public function register()
+    {
+        // Register services, bindings, singletons
+        $this->app->singleton(SomeService::class);
+        
+        // Merge addon config with app config
+        $this->mergeConfigFrom(__DIR__ . '/config/addon.php', 'addon-name');
+    }
+
+    public function boot()
+    {
+        // Load migrations
+        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        
+        // Load views
+        $this->loadViewsFrom(__DIR__ . '/resources/views', 'addon-name');
+        
+        // Load routes (conditionally based on module status)
+        $this->loadRoutes();
+        
+        // Register commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Commands\SomeCommand::class,
+            ]);
+        }
+        
+        // Publish assets
+        $this->publishes([
+            __DIR__ . '/resources/views' => resource_path('views/vendor/addon-name'),
+        ], 'addon-views');
+    }
+    
+    protected function loadRoutes()
+    {
+        // Load admin routes if module enabled
+        if ($this->isModuleEnabled('admin_ui')) {
+            Route::middleware(['web', 'admin', 'demo'])
+                ->prefix('admin')
+                ->name('admin.')
+                ->group(__DIR__ . '/routes/admin.php');
+        }
+        
+        // Load user routes if module enabled
+        if ($this->isModuleEnabled('user_ui')) {
+            Route::middleware(['web', 'auth', 'inactive', 'is_email_verified', '2fa', 'kyc'])
+                ->name('user.')
+                ->group(__DIR__ . '/routes/user.php');
+        }
+    }
+    
+    protected function isModuleEnabled(string $target): bool
+    {
+        // Check if module with target is enabled in addon.json
+        // Implementation in AddonRegistry
+        return true;
+    }
+}
+```
+
+## Addon Registration
+Addons are registered conditionally in `App\Providers\AppServiceProvider::registerAddonServiceProviders()`.
+
+### Registration Logic
+```php
+protected function registerAddonServiceProviders(): void
+{
+    $addonProviders = [
+        'addon-slug' => \Addons\AddonName\AddonServiceProvider::class,
+    ];
+
+    foreach ($addonProviders as $addonSlug => $providerClass) {
+        if (class_exists($providerClass)) {
+            if (AddonRegistry::active($addonSlug)) {
+                $this->app->register($providerClass);
+            }
+        }
+    }
+}
+```
+
+## AddonRegistry Service
+**Location**: `App\Support\AddonRegistry`
+
+### Methods
+- `AddonRegistry::active($slug)` - Check if addon is active
+- `AddonRegistry::all()` - Get all addons
+- `AddonRegistry::enabled()` - Get enabled addons
+- `AddonRegistry::disabled()` - Get disabled addons
+- `AddonRegistry::get($slug)` - Get addon manifest
+- `AddonRegistry::toggle($slug, $status)` - Enable/disable addon
+- `AddonRegistry::moduleEnabled($slug, $moduleKey)` - Check module status
+- `AddonRegistry::toggleModule($slug, $moduleKey, $enabled)` - Toggle module
+
+## Addon Development Rules
+
+### Rule 1: Namespace Convention
+- Root namespace: `Addons\{AddonName}`
+- App namespace: `Addons\{AddonName}\App`
+- Controllers: `Addons\{AddonName}\App\Http\Controllers`
+- Models: `Addons\{AddonName}\App\Models`
+- Services: `Addons\{AddonName}\App\Services`
+
+### Rule 2: Database Conventions
+- Migration files MUST be timestamped
+- Table names: `{addon_prefix}_{table_name}` (e.g., `channel_sources`, `execution_connections`)
+- Foreign keys to core tables: Use direct references (e.g., `user_id`, `signal_id`)
+- Create indexes for foreign keys and frequently queried columns
+
+### Rule 3: Core Integration
+- **DO NOT modify core files** unless absolutely necessary
+- Use service providers to extend core functionality
+- Use events/listeners for loose coupling
+- Use observers to react to core model events
+- Example: `SignalObserver` to detect signal publishing
+
+### Rule 4: Route Naming
+- Admin routes: `admin.{addon-slug}.{resource}.{action}`
+- User routes: `user.{addon-slug}.{resource}.{action}`
+- API routes: `api.{addon-slug}.{resource}.{action}`
+
+### Rule 5: View Naming
+- Views loaded with namespace: `@addon-name::backend.page`
+- Follow same structure as main app: `backend/`, `user/`
+- Extend main layouts: `@extends('backend.layout.master')`
+
+### Rule 6: Configuration
+- Addon-specific config files in `addon/config/`
+- Merge with app config in service provider
+- Access: `config('addon-name.key')`
+- Store credentials in `.env` with prefix: `ADDON_NAME_KEY`
+
+### Rule 7: Permissions
+- Register addon-specific permissions in migration
+- Use middleware: `permission:addon-permission,admin`
+- Grant to roles in seeder
+
+### Rule 8: Queue Jobs
+- Addon jobs in `addon/app/Jobs/`
+- Namespace: `Addons\{AddonName}\App\Jobs`
+- Dispatch: `dispatch(new \Addons\AddonName\App\Jobs\JobClass())`
+- Tag jobs for monitoring: `$this->tags(['addon-name', 'job-type'])`
+
+### Rule 9: Scheduled Tasks
+- Register in addon service provider's `boot()` method
+- Use Laravel's scheduler: `$schedule->job(JobClass::class)->everyMinute()`
+- OR create console command and schedule it
+
+### Rule 10: Dependency Management
+- Declare composer dependencies in addon's `composer.json` (if separate)
+- OR list in addon.json `dependencies` field
+- Install via main `composer.json` if shared
+
+## Installed Addons
+
+### 1. Multi-Channel Signal Addon
+- **Slug**: `multi-channel-signal-addon`
+- **Namespace**: `Addons\MultiChannelSignalAddon`
+- **Purpose**: Automatically forward messages from external channels into signals
+- **Features**:
+  - Signal Sources (Telegram Bot, MTProto, API, Web Scrape, RSS)
+  - Channel Forwarding & Assignment (user, plan, global scope)
+  - Message parsing (regex, AI, pattern templates)
+  - Auto-signal creation (drafts for review)
+  - Analytics & reporting
+- **Key Models**: `ChannelSource`, `ChannelMessage`, `MessageParsingPattern`, `SignalAnalytic`
+- **Routes**: `/admin/signal-sources`, `/admin/channel-forwarding`, `/user/signal-sources`
+- **Docs**: `specs/active/multi-channel-signal-addon/`
+
+### 2. Trading Execution Engine Addon
+- **Slug**: `trading-execution-engine-addon`
+- **Namespace**: `Addons\TradingExecutionEngine`
+- **Purpose**: Execute trades on connected exchanges/brokers based on signals
+- **Features**:
+  - Connection management (crypto exchanges via CCXT, FX brokers via MT4/MT5)
+  - Automated signal execution
+  - Position monitoring (SL/TP tracking)
+  - Analytics (win rate, profit factor, drawdown)
+  - Notifications
+- **Key Models**: `ExecutionConnection`, `ExecutionLog`, `ExecutionPosition`, `ExecutionAnalytic`, `ExecutionNotification`
+- **Routes**: `/admin/execution-connections`, `/user/connections`, `/user/analytics`
+- **Jobs**: `ExecuteSignalJob`, `MonitorPositionsJob`, `UpdateAnalyticsJob`
+
+### 3. Trading Preset Addon
+- **Slug**: `trading-preset-addon`
+- **Namespace**: `Addons\TradingPresetAddon`
+- **Purpose**: Trading configuration presets for risk management and position sizing
+- **Features**:
+  - Preset management (create, edit, clone)
+  - 6 default presets (scalper, swing, aggressive, safe, grid, breakout)
+  - User onboarding (auto-assign default preset)
+  - Auto-assignment to new connections
+  - Multi-TP, break-even, trailing stop, layering, hedging
+- **Key Models**: `TradingPreset`
+- **Routes**: `/user/presets`, `/user/presets/marketplace`
+- **Integration**: Used by Execution Engine for position sizing
+
+### 4. Trading Bot Signal Addon
+- **Slug**: `trading-bot-signal-addon`
+- **Namespace**: `Addons\TradingBotSignalAddon`
+- **Purpose**: Integration with external trading bots (Firebase-based)
+- **Features**:
+  - Firebase notification listening
+  - Signal processing from bot notifications
+  - Position tracking
+  - Backtest analytics
+- **Key Components**: `FirebaseService`, `SignalProcessorService`, `NotificationListener`
+
+### 5. Copy Trading Addon
+- **Slug**: `copy-trading-addon`
+- **Namespace**: `Addons\CopyTrading`
+- **Purpose**: Social trading - users copy other traders' signals
+- **Status**: Basic structure, implementation TBD
+
+## Addon Management (Admin Interface)
+**Route**: `/admin/addons`
+**Controller**: `App\Http\Controllers\Backend\AddonController`
+**Permission**: `manage-addon,admin`
+
+### Features
+1. **List Addons**: View all installed addons with status
+2. **Upload Addon**: Upload ZIP archive with addon package
+3. **Enable/Disable**: Toggle addon status (active/inactive)
+4. **Module Management**: Enable/disable individual modules per addon
+5. **View Modules**: See module details and targets
+
+### Upload Flow
+1. Admin uploads ZIP file
+2. System extracts to `main/addons/{addon-name}/`
+3. Validates `addon.json` exists
+4. Registers in addon registry
+5. Runs migrations (if any)
+6. Refreshes autoloader
+
+## Testing Addons
+- Test addon features in isolation
+- Use factories for addon models
+- Seed test data with addon seeders
+- Test routes with middleware
+- Mock external dependencies (APIs, CCXT, etc.)
+
+## Best Practices
+
+### Practice 1: Loose Coupling
+- Depend on core interfaces, not implementations
+- Use events/listeners instead of direct calls
+- Use service container for dependency injection
+
+### Practice 2: Database Isolation
+- Addon migrations are separate
+- Addon models in addon namespace
+- Foreign keys to core tables allowed
+- Use Eloquent relationships to link to core models
+
+### Practice 3: Configuration
+- All configurable values in config files
+- Credentials in `.env`
+- Provide sensible defaults
+- Document all config options
+
+### Practice 4: Documentation
+- README.md in addon root
+- Installation instructions
+- Configuration guide
+- API documentation (if exposing APIs)
+- Integration guide
+
+### Practice 5: Error Handling
+- Catch exceptions in addon code
+- Log errors with addon context
+- Return graceful errors to users
+- Don't break core app functionality
+
+### Practice 6: Security
+- Validate all input
+- Sanitize output
+- Encrypt sensitive data (API keys, tokens)
+- Use Laravel's encryption: `encrypt()`, `decrypt()`
+- Authorize actions with policies/permissions
+
+### Practice 7: Performance
+- Queue long-running operations
+- Cache frequently accessed data
+- Eager load relationships
+- Index database columns
+- Monitor job queue health
+
+### Practice 8: Versioning
+- Use semantic versioning (major.minor.patch)
+- Document breaking changes
+- Provide migration guides for major versions
+- Maintain backward compatibility when possible
+
+### Practice 9: Maintenance
+- Keep addon docs updated with code changes
+- Update specs in `specs/active/{addon-name}/` when features change
+- Log addon activities for debugging
+- Monitor addon-specific errors
+
+### Practice 10: Core Compatibility
+- Test addon with core updates
+- Don't rely on undocumented core behavior
+- Use stable APIs and contracts
+- Handle deprecated features gracefully
+
