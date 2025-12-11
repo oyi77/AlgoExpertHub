@@ -47,6 +47,8 @@ class ConfigurationSeeder extends Seeder
                 'seo_description' => "AlgoExpertHub - Your premier destination for algorithmic trading signals across Forex, Crypto, and Stock markets. Access AI-powered signals, automated trading, and institutional-grade strategies.",
                 
                 'seo_tags' => ['trading', 'signals', 'forex', 'crypto', 'stocks']
+                ,
+                'enable_new_styles' => false
             ]
         );
     }

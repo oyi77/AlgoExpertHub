@@ -83,6 +83,17 @@ class ExecutionPosition extends Model
 
     public function updatePnL(float $currentPrice): void
     {
+        // Validate inputs before calculation
+        if ($currentPrice <= 0 || $this->entry_price <= 0 || $this->quantity <= 0) {
+            \Log::warning('ExecutionPosition::updatePnL - Invalid values for PnL calculation', [
+                'position_id' => $this->id,
+                'current_price' => $currentPrice,
+                'entry_price' => $this->entry_price,
+                'quantity' => $this->quantity,
+            ]);
+            return;
+        }
+
         $this->current_price = $currentPrice;
         
         $priceDiff = $this->direction === 'buy'
@@ -90,7 +101,14 @@ class ExecutionPosition extends Model
             : $this->entry_price - $currentPrice;
 
         $this->pnl = $priceDiff * $this->quantity;
-        $this->pnl_percentage = ($priceDiff / $this->entry_price) * 100;
+        
+        // Avoid division by zero - only calculate percentage if entry_price is valid
+        if ($this->entry_price > 0) {
+            $this->pnl_percentage = ($priceDiff / $this->entry_price) * 100;
+        } else {
+            $this->pnl_percentage = 0;
+        }
+        
         $this->last_price_update_at = now();
         
         $this->save();

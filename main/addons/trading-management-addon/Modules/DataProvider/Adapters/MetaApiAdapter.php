@@ -87,6 +87,21 @@ class MetaApiAdapter implements DataProviderInterface
     }
 
     /**
+     * Get account ID from credentials with validation
+     * 
+     * @return string
+     * @throws \Exception if account_id is missing
+     */
+    protected function getAccountId(): string
+    {
+        $accountId = $this->credentials['account_id'] ?? null;
+        if (empty($accountId)) {
+            throw new \Exception('MetaApi account ID is required');
+        }
+        return $accountId;
+    }
+
+    /**
      * Connect to MetaApi.cloud
      */
     public function connect(array $credentials): bool
@@ -108,9 +123,8 @@ class MetaApiAdapter implements DataProviderInterface
             throw new \Exception('MetaApi API token is required. Please configure it in Global Settings or .env file (METAAPI_TOKEN)');
         }
 
-        if (empty($this->credentials['account_id'])) {
-            throw new \Exception('MetaApi account ID is required');
-        }
+        // Validate account_id exists (will throw exception if missing)
+        $this->getAccountId();
 
         // Test connection by fetching account info
         try {
@@ -156,7 +170,7 @@ class MetaApiAdapter implements DataProviderInterface
         // Ensure API token is available
         $this->ensureApiToken();
         
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         if (empty($accountId)) {
             throw new \Exception('MetaApi account ID is required');
         }
@@ -244,7 +258,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function fetchTicks(string $symbol, int $limit = 100, ?int $since = null, int $offset = 0): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         
         $endpoint = sprintf(
             '/users/current/accounts/%s/historical-market-data/symbols/%s/ticks',
@@ -329,10 +343,7 @@ class MetaApiAdapter implements DataProviderInterface
         // Ensure API token is available
         $this->ensureApiToken();
         
-        $accountId = $this->credentials['account_id'];
-        if (empty($accountId)) {
-            throw new \Exception('MetaApi account ID is required');
-        }
+        $accountId = $this->getAccountId();
         
         $endpoint = sprintf('/users/current/accounts/%s/account-information', $accountId);
 
@@ -405,7 +416,7 @@ class MetaApiAdapter implements DataProviderInterface
         // Ensure API token is available
         $this->ensureApiToken();
         
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         if (empty($accountId)) {
             throw new \Exception('MetaApi account ID is required');
         }
@@ -485,10 +496,7 @@ class MetaApiAdapter implements DataProviderInterface
         // Ensure API token is available
         $this->ensureApiToken();
         
-        $accountId = $this->credentials['account_id'];
-        if (empty($accountId)) {
-            throw new \Exception('MetaApi account ID is required');
-        }
+        $accountId = $this->getAccountId();
         
         $endpoint = sprintf('/users/current/accounts/%s/positions', $accountId);
 
@@ -567,7 +575,7 @@ class MetaApiAdapter implements DataProviderInterface
         // Ensure API token is available
         $this->ensureApiToken();
         
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         if (empty($accountId)) {
             throw new \Exception('MetaApi account ID is required');
         }
@@ -649,7 +657,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function placeMarketOrder(string $symbol, string $direction, float $volume, ?float $sl = null, ?float $tp = null, ?string $comment = null): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/trade', $accountId);
 
         // Map direction to MetaAPI order type
@@ -743,7 +751,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function placeLimitOrder(string $symbol, string $direction, float $volume, float $price, ?float $sl = null, ?float $tp = null, ?string $comment = null): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/trade', $accountId);
 
         // Map direction to MetaAPI limit order type
@@ -814,7 +822,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function closePosition(string $positionId, ?float $volume = null): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/positions/%s', $accountId, $positionId);
 
         $params = [];
@@ -870,7 +878,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function modifyPosition(string $positionId, ?float $sl = null, ?float $tp = null): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/positions/%s', $accountId, $positionId);
 
         $body = [];
@@ -938,7 +946,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function modifyOrder(string $orderId, ?float $sl = null, ?float $tp = null, ?float $price = null): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/orders/%s', $accountId, $orderId);
 
         $body = [];
@@ -1006,7 +1014,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function cancelOrder(string $orderId): array
     {
-        $accountId = $this->credentials['account_id'];
+        $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/orders/%s', $accountId, $orderId);
 
         try {

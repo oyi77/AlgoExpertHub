@@ -12,6 +12,8 @@
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ Config::fetchImage('icon', optional(Config::config())->favicon ?? '') }}">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
 
     <link href="{{ Config::cssLib('backend', 'all.min.css') }}" rel="stylesheet">
@@ -46,9 +48,16 @@
 
     @stack('external-style')
 
-    <link href="{{ Config::cssLib('backend', 'style.css') }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('backend', 'style.css') }}" rel="preload" as="style" onload="this.rel='stylesheet'">
+    <noscript>
+        <link href="{{ Config::cssLib('backend', 'style.css') }}" rel="stylesheet">
+    </noscript>
 
     <link href="{{ Config::cssLib('backend', 'main.css') }}" rel="stylesheet">
+
+    @if(optional(Config::config())->enable_new_styles)
+        <link href="{{ Config::cssLib('backend', 'new-styles.css') }}" rel="stylesheet">
+    @endif
 
     @stack('style')
 
@@ -79,42 +88,52 @@
 
     </div>
 
-    <script src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'feather.min.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'feather.min.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'quixnav-init.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'quixnav-init.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'metismenu.min.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'metismenu.min.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'perfectscroll.min.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'perfectscroll.min.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'jquery.dataTables.min.js') }}"></script>
+    @hasSection('uses_datatable')
+        <script defer src="{{ Config::jsLib('backend', 'jquery.dataTables.min.js') }}"></script>
+    @endif
 
-    <script src="{{ Config::jsLib('backend', 'jquery.uploadPreview.min.js') }}"></script>
+    @hasSection('uses_uploadpreview')
+        <script defer src="{{ Config::jsLib('backend', 'jquery.uploadPreview.min.js') }}"></script>
+    @endif
 
-    <script src="{{ Config::jsLib('backend', 'summernote-bs4.min.js') }}"></script>
+    @hasSection('uses_summernote')
+        <script defer src="{{ Config::jsLib('backend', 'summernote-bs4.min.js') }}"></script>
+    @endif
 
-    <script src="{{ Config::jsLib('backend', 'ui.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'ui.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'apex-chart.min.js') }}"></script>
+    @hasSection('uses_apexchart')
+        <script defer src="{{ Config::jsLib('backend', 'apex-chart.min.js') }}"></script>
+    @endif
 
-    <script src="{{ Config::jsLib('backend', 'iconpicker.js') }}"></script>
+    @hasSection('uses_iconpicker')
+        <script defer src="{{ Config::jsLib('backend', 'iconpicker.js') }}"></script>
+    @endif
 
     @if ($alertType === 'izi')
-        <script src="{{ Config::jsLib('backend', 'izitoast.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('backend', 'izitoast.min.js') }}"></script>
     @elseif($alertType === 'toast')
-        <script src="{{ Config::jsLib('backend', 'toastr.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('backend', 'toastr.min.js') }}"></script>
     @else
-        <script src="{{ Config::jsLib('backend', 'sweetalert.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('backend', 'sweetalert.min.js') }}"></script>
     @endif
 
     @stack('external-script')
 
     <!-- Dialog Wrapper - Replaces native alert/confirm/prompt with custom modals -->
-    <script src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
+    <script defer src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
 
-    <script src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
+    <script defer src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
 
     @stack('script')
     @include('backend.layout.alert')

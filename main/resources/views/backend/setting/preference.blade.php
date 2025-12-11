@@ -44,6 +44,14 @@
                         data-width="100%" data-height="43px">
                 </div>
 
+                <div class="mb-4 col-md-3">
+                    <label for="" class="w-100">{{ __('Enable New UI Styles') }}</label>
+                    <input type="checkbox" name="enable_new_styles" {{ $general->enable_new_styles ? 'checked' : '' }}
+                        data-toggle="toggle" data-on="Active" data-off="Disabled" data-onstyle="success" data-offstyle="danger" data-width="100%"
+                        data-height="45px">
+                    <small class="form-hint d-block mt-2">{{ __('Loads token-based styles and optimized assets') }}</small>
+                </div>
+
 
             </div>
         </div>

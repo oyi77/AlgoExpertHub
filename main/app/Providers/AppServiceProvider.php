@@ -6,6 +6,8 @@ use App\Support\AddonRegistry;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,27 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
 
         Paginator::useBootstrap();
+
+        // Enable database query logging
+        if (env('LOG_QUERIES', true)) {
+            DB::listen(function ($query) {
+                $sql = $query->sql;
+                $bindings = $query->bindings;
+                $time = $query->time;
+                
+                // Replace ? placeholders with actual values
+                foreach ($bindings as $binding) {
+                    $value = is_numeric($binding) ? $binding : "'{$binding}'";
+                    $sql = preg_replace('/\?/', $value, $sql, 1);
+                }
+                
+                Log::debug('Database Query', [
+                    'sql' => $sql,
+                    'time' => $time . 'ms',
+                    'connection' => $query->connectionName,
+                ]);
+            });
+        }
 
         // Global view composer to ensure $page is always available
         view()->composer('*', function ($view) {

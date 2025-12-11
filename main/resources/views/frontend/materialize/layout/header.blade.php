@@ -27,15 +27,18 @@
                                 @endphp
                                 @foreach ($uniqueSocials as $social)
                                     @if(isset($social->content->link) && isset($social->content->icon))
-                                        <li><a href="{{ $social->content->link }}"><i
-                                                    class="{{ $social->content->icon }}"></i></a></li>
+                                        <li>
+                                            <a href="{{ $social->content->link }}" aria-label="{{ ucfirst(class_basename($social->content->icon)) }}">
+                                                <i class="{{ $social->content->icon }}" aria-hidden="true"></i>
+                                            </a>
+                                        </li>
                                     @endif
                                 @endforeach
                             </ul>
                         </li>
                         <li>
                             <select class="custom-select-form selectric ms-3 rounded changeLang nav-link scrollto"
-                                aria-label="Default select example">
+                                aria-label="Select language">
                                 @foreach (Config::languages() as $language)
                                     <option value="{{ $language->code }}"
                                         {{ Config::languageSelection($language->code) }}>
@@ -54,8 +57,9 @@
         <div class="container">
             <nav class="navbar navbar-expand-xl p-0 align-items-center">
                 <a class="site-logo site-title" href="{{ route('home') }}">
-                    <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '') }}" alt="logo">
+                    <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '') }}" alt="logo" loading="lazy" decoding="async">
                 </a>
+                <a href="#mainNavbar" class="visually-hidden-focusable">Skip to navigation</a>
                 <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -66,7 +70,7 @@
                         <?= Config::navbarMenus() ?>
                     </ul>
 
-                    <select class="custom-select-form  rounded changeLang nav-link mb-3 d-xl-none">
+                    <select class="custom-select-form  rounded changeLang nav-link mb-3 d-xl-none" aria-label="Select language">
                         @foreach (Config::languages() as $language)
                             <option value="{{ $language->code }}" {{ Config::languageSelection($language->code) }}>
                                 {{ __(ucwords($language->name)) }}

@@ -43,6 +43,21 @@ class MtapiAdapter implements DataProviderInterface
     }
 
     /**
+     * Get account ID from credentials with validation
+     * 
+     * @return string
+     * @throws \Exception if account_id is missing
+     */
+    protected function getAccountId(): string
+    {
+        $accountId = $this->credentials['account_id'] ?? null;
+        if (empty($accountId)) {
+            throw new \Exception('MT account ID is required');
+        }
+        return $accountId;
+    }
+
+    /**
      * Connect to mtapi.io
      */
     public function connect(array $credentials): bool
@@ -53,9 +68,8 @@ class MtapiAdapter implements DataProviderInterface
             throw new \Exception('mtapi.io API key is required');
         }
 
-        if (empty($this->credentials['account_id'])) {
-            throw new \Exception('MT account ID is required');
-        }
+        // Validate account_id exists (will throw exception if missing)
+        $this->getAccountId();
 
         // Test connection by fetching account info
         try {
@@ -95,7 +109,7 @@ class MtapiAdapter implements DataProviderInterface
      */
     public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
     {
-        $endpoint = sprintf('/v1/accounts/%s/history', $this->credentials['account_id']);
+        $endpoint = sprintf('/v1/accounts/%s/history', $this->getAccountId());
         
         $params = [
             'symbol' => $symbol,
@@ -149,7 +163,7 @@ class MtapiAdapter implements DataProviderInterface
      */
     public function getAccountInfo(): array
     {
-        $endpoint = sprintf('/v1/accounts/%s', $this->credentials['account_id']);
+        $endpoint = sprintf('/v1/accounts/%s', $this->getAccountId());
 
         try {
             $response = $this->client->get($endpoint, [
@@ -184,7 +198,7 @@ class MtapiAdapter implements DataProviderInterface
      */
     public function getAvailableSymbols(): array
     {
-        $endpoint = sprintf('/v1/accounts/%s/symbols', $this->credentials['account_id']);
+        $endpoint = sprintf('/v1/accounts/%s/symbols', $this->getAccountId());
 
         try {
             $response = $this->client->get($endpoint, [

@@ -25,17 +25,32 @@ class ConfigurationRequest extends FormRequest
      */
     public function rules()
     {
+        try {
+            // #region agent log
+            \Log::error('DEBUG: ConfigurationRequest rules() called', ['type' => request()->type ?? 'null']);
+            // #endregion
 
+            $type = request()->type;
 
-        $type = request()->type;
-
-        $general = Configuration::first();
+            $general = Configuration::first();
+            
+            // #region agent log
+            \Log::error('DEBUG: ConfigurationRequest got general config', ['config_exists' => $general !== null]);
+            // #endregion
+        } catch (\Exception $e) {
+            // #region agent log
+            \Log::error('DEBUG: ConfigurationRequest rules() exception', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
+            // #endregion
+            // If there's an error getting config, still return rules based on type
+            $type = request()->type ?? 'unknown';
+            $general = null;
+        }
 
         if ($type === 'general') {
             return [
                 'sitename' => 'required',
-                'signup_bonus' => 'gte:0',
-                'withdraw_limit' => 'integer',
+                'signup_bonus' => 'nullable|numeric|gte:0',
+                'withdraw_limit' => 'nullable|integer|min:0',
                 'trans_type' => 'required|in:fixed,percent',
                 'trans_limit' => 'required|numeric',
                 'trans_charge' => 'required|numeric',
@@ -44,7 +59,7 @@ class ConfigurationRequest extends FormRequest
 
                 'alert' => 'required|in:izi,toast,sweet',
                 'site_currency' => 'required|max:10',
-                'pagination_limit' => 'numeric|gt:0',
+                'pagination_limit' => 'nullable|numeric|gt:0',
                 'logo' => [Rule::requiredIf(function () use ($general) {
                     return $general == null;
                 }), 'image', 'mimes:jpg,png,jpeg'],
@@ -77,7 +92,10 @@ class ConfigurationRequest extends FormRequest
                 'seo_description' => 'max:2000',
                 'copyright' => 'required|max:255'
             ];
-        }else{
+        } elseif ($type === 'pref') {
+            // Preference settings - no validation required, all fields optional
+            return [];
+        } else {
             return [];
         }
     }

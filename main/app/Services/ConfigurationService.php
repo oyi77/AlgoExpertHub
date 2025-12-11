@@ -11,6 +11,9 @@ class ConfigurationService
 
     public function general($request)
     {
+        // #region agent log
+        \Log::error('DEBUG: general() method entry', ['type' => $request->type ?? 'null', 'all_input_keys' => array_keys($request->all())]);
+        // #endregion
 
         if ($request->type == 'general') {
 
@@ -37,15 +40,17 @@ class ConfigurationService
             }
 
 
+            $existingConfig = Configuration::first();
+            
             Configuration::updateOrCreate([
                 'id' => 1
             ], [
                 'appname' => $request->sitename,
                 'signup_bonus' => $request->signup_bonus,
                 'currency' => $request->site_currency,
-                'logo' => isset($logo) ? ($logo ?? '') : Configuration::first()->logo,
-                'favicon' => isset($icon) ? ($icon ?? '') : Configuration::first()->favicon,
-                'dark_logo' => isset($dark_logo) ? ($dark_logo ?? '') : Configuration::first()->dark_logo,
+                'logo' => isset($logo) ? ($logo ?? '') : ($existingConfig->logo ?? ''),
+                'favicon' => isset($icon) ? ($icon ?? '') : ($existingConfig->favicon ?? ''),
+                'dark_logo' => isset($dark_logo) ? ($dark_logo ?? '') : ($existingConfig->dark_logo ?? ''),
                 'color' =>  $request->primary_color ?? '',
                 'withdraw_limit' => $request->withdraw_limit,
                 'pagination' => $request->pagination_limit,
@@ -117,25 +122,62 @@ class ConfigurationService
                 'copyright' => $request->copyright
             ]);
         } elseif ($request->type == 'pref') {
-            Configuration::updateOrCreate([
-                'id' => 1
-            ], [
-
-                'preloader_status' => $request->preloader_status === 'on' ? 1 : 0,
-                'reg_enabled' => $request->user_reg == 'on' ? 1 : 0,
-                'is_email_verification_on' => $request->is_email_verification_on == 'on' ? 1 : 0,
-                'is_sms_verification_on' => $request->is_sms_verification_on == 'on' ? 1 : 0,
-                'is_allow_kyc' => $request->user_kyc == 'on' ? 1 : 0,
-
-            ]);
+            // #region agent log
+            \Log::error('DEBUG: Processing pref type', ['preloader_status_val' => $request->input('preloader_status', 'NOT_SET'), 'user_reg_val' => $request->input('user_reg', 'NOT_SET'), 'is_email_verification_on_val' => $request->input('is_email_verification_on', 'NOT_SET'), 'is_sms_verification_on_val' => $request->input('is_sms_verification_on', 'NOT_SET'), 'user_kyc_val' => $request->input('user_kyc', 'NOT_SET'), 'enable_new_styles_val' => $request->input('enable_new_styles', 'NOT_SET'), 'all_input' => $request->all()]);
+            // #endregion
+            
+            // Ensure Configuration record exists first
+            $config = Configuration::first();
+            if (!$config) {
+                $config = Configuration::create(['id' => 1]);
+            }
+            
+            // Bootstrap toggle checkboxes: when checked, the field is present in request; when unchecked, it's absent
+            // Standard HTML checkbox behavior: checked = name sent with value "on", unchecked = name not sent
+            $dataArray = [
+                'preloader_status' => $request->has('preloader_status') ? 1 : 0,
+                'reg_enabled' => $request->has('user_reg') ? 1 : 0,
+                'is_email_verification_on' => $request->has('is_email_verification_on') ? 1 : 0,
+                'is_sms_verification_on' => $request->has('is_sms_verification_on') ? 1 : 0,
+                'is_allow_kyc' => $request->has('user_kyc') ? 1 : 0,
+                'enable_new_styles' => $request->has('enable_new_styles') ? 1 : 0,
+            ];
+            
+            // #region agent log
+            \Log::error('DEBUG: Before updateOrCreate', ['data_array' => $dataArray]);
+            // #endregion
+            
+            try {
+                $config->update($dataArray);
+                
+                // #region agent log
+                \Log::error('DEBUG: updateOrCreate succeeded', ['config_id' => $config->id ?? 'null']);
+                // #endregion
+            } catch (\Exception $e) {
+                // #region agent log
+                \Log::error('DEBUG: updateOrCreate failed', ['error' => $e->getMessage(), 'code' => $e->getCode(), 'file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => substr($e->getTraceAsString(), 0, 500)]);
+                // #endregion
+                throw $e;
+            }
         } else {
-
             $general = Configuration::first();
+            
+            if (!$general) {
+                return ['type' => 'error', 'message' => 'Configuration not found. Please create a configuration first.'];
+            }
 
             $general->kyc = array_values($request->kyc);
 
             $general->save();
         }
+        
+        // Clear configuration cache after update
+        \Illuminate\Support\Facades\Cache::forget('app_configuration');
+        
+        // #region agent log
+        \Log::error('DEBUG: Returning success from general()', ['type' => $request->type]);
+        // #endregion
+        
         return ['type' => 'success', 'message' => 'General setting has been updated.'];
     }
 }

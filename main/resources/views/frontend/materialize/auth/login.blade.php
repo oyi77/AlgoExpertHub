@@ -1,20 +1,31 @@
 @extends(Config::theme() . 'auth.master')
 
 @section('content')
-    <form class="sp_account_form mt-4" action="" method="POST">
+    @push('skip_slick')@endpush
+    @push('skip_wow')@endpush
+    @push('skip_paroller')@endpush
+    @push('skip_tweenmax')@endpush
+    @push('skip_odometer')@endpush
+    @push('skip_viewport')@endpush
+    <form class="sp_account_form mt-4" action="" method="POST" novalidate>
         @csrf
-        <label>{{ __('User email') }}</label>
-        <div class="sp_input_icon_field mb-3">
-            <input type="email" class="form-control" name="email" value="{{ old('email') }}" id="email"
-                placeholder="{{ __('Enter Your Email') }}">
-            <i class="las la-envelope"></i>
-        </div>
-        <label>{{ __('Password') }}</label>
-        <div class="sp_input_icon_field mb-3">
-            <input type="password" class="form-control" name="password" id="password"
-                placeholder="{{ __('Enter Password') }}">
-            <i class="las la-lock"></i>
-        </div>
+        @include('partials.ui.input', [
+            'type' => 'email',
+            'name' => 'email',
+            'id' => 'email',
+            'label' => __('User email'),
+            'value' => old('email'),
+            'hint' => __('We’ll never share your email.'),
+            'icon' => 'las la-envelope'
+        ])
+
+        @include('partials.ui.input', [
+            'type' => 'password',
+            'name' => 'password',
+            'id' => 'password',
+            'label' => __('Password'),
+            'icon' => 'las la-lock'
+        ])
 
         @if (Config::config()->allow_recaptcha == 1)
             <div class="col-md-12 my-3">
@@ -35,7 +46,13 @@
             <a href="{{ route('user.forgot.password') }}" class="mb-2 sp_site_color">{{ __('Forget Password') }}</a>
         </div>
         <div class="mt-4">
-            <button type="submit" class="btn sp_theme_btn w-100">{{ __('Login') }}</button>
+            @include('partials.ui.button', [
+                'variant' => 'primary',
+                'size' => 'md',
+                'type' => 'submit',
+                'text' => __('Login'),
+                'attributes' => ['class' => 'w-100']
+            ])
         </div>
 
         <div class="or-text">

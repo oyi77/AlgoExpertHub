@@ -130,20 +130,40 @@ class ExchangeConnectionService
      */
     protected function getAdapter(ExchangeConnection $connection)
     {
+        $connectionType = $connection->connection_type ?? null;
+        $provider = $connection->provider ?? $connection->exchange_name ?? null;
+        $type = $connection->type ?? null; // legacy: 'crypto' or 'fx'
+        
+        // Determine if this is a crypto exchange
+        $isCrypto = false;
+        
+        // Check connection_type first (new field)
+        if ($connectionType === 'CRYPTO_EXCHANGE') {
+            $isCrypto = true;
+        }
+        // Check legacy type field
+        elseif ($type === 'crypto') {
+            $isCrypto = true;
+        }
+        // Check provider/exchange_name for known crypto exchanges
+        elseif ($provider && in_array(strtolower($provider), ['binance', 'coinbase', 'coinbasepro', 'kraken', 'bitfinex', 'okx', 'bybit', 'huobi', 'kucoin', 'gate', 'mexc'])) {
+            $isCrypto = true;
+        }
+        
         // Crypto exchanges always use CCXT adapter
-        if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+        if ($isCrypto) {
             return new CcxtAdapter(
-                $connection->credentials,
-                $connection->provider
+                $connection->credentials ?? [],
+                $provider ?? 'binance'
             );
         }
         
         // For FX brokers (MT4/MT5), select adapter based on provider
-        if ($connection->provider === 'metaapi') {
-            return new MetaApiAdapter($connection->credentials);
-        } elseif ($connection->provider === 'mtapi_grpc' || 
+        if ($provider === 'metaapi') {
+            return new MetaApiAdapter($connection->credentials ?? []);
+        } elseif ($provider === 'mtapi_grpc' || 
                   (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
-            $credentials = $connection->credentials;
+            $credentials = $connection->credentials ?? [];
             $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
             
             if (!empty($globalSettings['base_url'])) {
@@ -155,8 +175,8 @@ class ExchangeConnectionService
             
             return new MtapiGrpcAdapter($credentials);
         } else {
-            // Default: MTAPI REST adapter
-            return new MtapiAdapter($connection->credentials);
+            // Default: MTAPI REST adapter (for FX brokers)
+            return new MtapiAdapter($connection->credentials ?? []);
         }
     }
 

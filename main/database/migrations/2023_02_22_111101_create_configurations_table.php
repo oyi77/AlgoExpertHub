@@ -57,6 +57,9 @@ class CreateConfigurationsTable extends Migration
             $table->dateTime('cron')->nullable();
             $table->string('copyright')->nullable();
 
+            // UI/UX feature flag for new token-based styles
+            $table->boolean('enable_new_styles')->default(false);
+
             $table->text('email_method')->nullable();
             $table->text('email_sent_from')->nullable();
             $table->text('email_config')->nullable();

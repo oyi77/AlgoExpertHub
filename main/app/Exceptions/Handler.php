@@ -50,6 +50,40 @@ class Handler extends ExceptionHandler
      */
     public function report(Throwable $e)
     {
+        // Skip logging 404s for common files (robots.txt, favicon.ico, etc.)
+        if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+            $path = request()->path();
+            if (in_array($path, ['robots.txt', 'favicon.ico', 'sitemap.xml', '.well-known'])) {
+                return; // Don't log these common 404s
+            }
+        }
+        
+        // Log all exceptions with full context
+        // Also write to PHP error_log as backup
+        $errorDetails = [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'code' => $e->getCode(),
+            'class' => get_class($e),
+            'request_url' => request()->fullUrl() ?? 'N/A',
+            'request_method' => request()->method() ?? 'N/A',
+            'user_id' => auth()->id() ?? 'guest',
+            'admin_id' => auth()->guard('admin')->id() ?? null,
+        ];
+        
+        // Write to PHP error_log as backup (works even if Laravel logging fails)
+        error_log('LARAVEL EXCEPTION: ' . json_encode($errorDetails, JSON_PRETTY_PRINT));
+        
+        // Log via Laravel
+        try {
+            \Log::error('Exception occurred', $errorDetails);
+        } catch (\Throwable $logException) {
+            // If Laravel logging fails, at least we have PHP error_log
+            error_log('LARAVEL LOGGING FAILED: ' . $logException->getMessage());
+        }
+
         // Skip reporting Page Builder database connection errors (not critical)
         if ($e instanceof \Error && 
             str_contains($e->getMessage() ?? '', 'Call to a member function select() on null') &&

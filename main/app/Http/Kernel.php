@@ -9,6 +9,7 @@ use App\Http\Middleware\isEmailVerified;
 use App\Http\Middleware\IsInstalled;
 use App\Http\Middleware\KycMiddleware;
 use App\Http\Middleware\LoginSecurityMiddleware;
+use App\Http\Middleware\LogRequests;
 use App\Http\Middleware\RedirectIfAdmin;
 use App\Http\Middleware\RedirectIfNotAdmin;
 use App\Http\Middleware\RegistrationOff;
@@ -47,6 +48,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\LogRequests::class,
             \App\Http\Middleware\OptimizeFrontendMiddleware::class,
         ],
 

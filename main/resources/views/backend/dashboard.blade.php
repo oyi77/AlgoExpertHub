@@ -1,12 +1,14 @@
 @extends('backend.layout.master')
 
 @section('element')
+    @push('uses_apexchart')@endpush
+    @push('uses_datatable')@endpush
     <div class="row">
         <div class="col-xxl-9">
             <div class="row">
                 <div class="col-lg-4 col-sm-6">
                     <div class="card mb-4 gr-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.payments.index', 'offline') }}" class="link"></a>
+                        <a href="{{ route('admin.payments.index', 'offline') }}" class="link" aria-label="{{ __('Total Payments') }}"></a>
                         <div class="sp-widget-2 card-body">
                             <a href="{{ route('admin.payments.index', 'offline') }}" class="widget-link-arrow"><i
                                     class="las la-arrow-right"></i></a>
@@ -28,7 +30,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6">
                     <div class="card mb-4 gr-white gr-white2 rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.deposit', 'offline') }}" class="link"></a>
+                        <a href="{{ route('admin.deposit', 'offline') }}" class="link" aria-label="{{ __('Total Deposit') }}"></a>
                         <div class="sp-widget-2 card-body">
                             <a href="{{ route('admin.deposit', 'offline') }}" class="widget-link-arrow"><i
                                     class="las la-arrow-right"></i></a>
@@ -50,7 +52,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6">
                     <div class="card mb-4 gr-white gr-white3 rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.withdraw.filter', 'pending') }}" class="link"></a>
+                        <a href="{{ route('admin.withdraw.filter', 'pending') }}" class="link" aria-label="{{ __('Total Withdraw') }}"></a>
                         <div class="sp-widget-2 card-body">
                             <a href="{{ route('admin.withdraw.filter', 'pending') }}" class="widget-link-arrow"><i
                                     class="las la-arrow-right"></i></a>
@@ -73,7 +75,7 @@
 
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.user.index') }}" class="link"></a>
+                        <a href="{{ route('admin.user.index') }}" class="link" aria-label="{{ __('Total user') }}"></a>
                         <div class="widget-icon light-icon-1">
                             <i class="las la-dollar-sign"></i>
                         </div>
@@ -85,7 +87,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.user.filter', 'deactive') }}" class="link"></a>
+                        <a href="{{ route('admin.user.filter', 'deactive') }}" class="link" aria-label="{{ __('Deactive user') }}"></a>
                         <div class="widget-icon light-icon-2">
                             <i class="las la-user-friends"></i>
                         </div>
@@ -97,7 +99,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.ticket.index') }}" class="link"></a>
+                        <a href="{{ route('admin.ticket.index') }}" class="link" aria-label="{{ __('Total Ticket') }}"></a>
                         <div class="widget-icon light-icon-3">
                             <i class="las la-folder"></i>
                         </div>
@@ -109,7 +111,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.ticket.status', 'pending') }}" class="link"></a>
+                        <a href="{{ route('admin.ticket.status', 'pending') }}" class="link" aria-label="{{ __('Pending Ticket') }}"></a>
                         <div class="widget-icon  light-icon-4">
                             <i class="las la-link"></i>
                         </div>
@@ -121,7 +123,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.payment.index') }}" class="link"></a>
+                        <a href="{{ route('admin.payment.index') }}" class="link" aria-label="{{ __('Online Gateway') }}"></a>
                         <div class="widget-icon light-icon-5">
                             <i class="las la-dollar-sign"></i>
                         </div>
@@ -133,7 +135,7 @@
                 </div>
                 <div class="col-lg-4 col-sm-6 col-4 mb-4">
                     <div class="sp-widget-1 bg-white rounded-xl link-item widget-hr-effect">
-                        <a href="{{ route('admin.payment.offline') }}" class="link"></a>
+                        <a href="{{ route('admin.payment.offline') }}" class="link" aria-label="{{ __('Offline Gateway') }}"></a>
                         <div class="widget-icon light-icon-6">
                             <i class="las la-user-friends"></i>
                         </div>
@@ -152,7 +154,7 @@
                     <div class="row quick-links-wrapper">
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.user.index') }}" class="link"></a>
+                                <a href="{{ route('admin.user.index') }}" class="link" aria-label="{{ __('Users') }}"></a>
                                 <div class="short-card-icon light-icon-1">
                                     <i class="fas fa-exchange-alt"></i>
                                 </div>
@@ -161,7 +163,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.plan.index') }}" class="link"></a>
+                                <a href="{{ route('admin.plan.index') }}" class="link" aria-label="{{ __('Plans') }}"></a>
                                 <div class="short-card-icon light-icon-2">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
@@ -170,7 +172,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.signals.index') }}" class="link"></a>
+                                <a href="{{ route('admin.signals.index') }}" class="link" aria-label="{{ __('Signals') }}"></a>
                                 <div class="short-card-icon light-icon-3">
                                     <i class="fas fa-link"></i>
                                 </div>
@@ -179,7 +181,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.deposit', 'offline') }}" class="link"></a>
+                                <a href="{{ route('admin.deposit', 'offline') }}" class="link" aria-label="{{ __('Deposit') }}"></a>
                                 <div class="short-card-icon light-icon-4">
                                     <i class="fas fa-wallet"></i>
                                 </div>
@@ -188,7 +190,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.withdraw.filter', 'pending') }}" class="link"></a>
+                                <a href="{{ route('admin.withdraw.filter', 'pending') }}" class="link" aria-label="{{ __('Withdraw') }}"></a>
                                 <div class="short-card-icon light-icon-5">
                                     <i class="fas fa-hand-holding-usd"></i>
                                 </div>
@@ -197,7 +199,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.payments.index', 'offline') }}" class="link"></a>
+                                <a href="{{ route('admin.payments.index', 'offline') }}" class="link" aria-label="{{ __('Payments') }}"></a>
                                 <div class="short-card-icon light-icon-6">
                                     <i class="fas fa-ticket-alt"></i>
                                 </div>
@@ -206,7 +208,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.transaction') }}" class="link"></a>
+                                <a href="{{ route('admin.transaction') }}" class="link" aria-label="{{ __('Reports') }}"></a>
                                 <div class="short-card-icon light-icon-7">
                                     <i class="fas fa-exchange-alt"></i>
                                 </div>
@@ -215,7 +217,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.ticket.index') }}" class="link"></a>
+                                <a href="{{ route('admin.ticket.index') }}" class="link" aria-label="{{ __('Tickets') }}"></a>
                                 <div class="short-card-icon light-icon-8">
                                     <i class="fas fa-file-alt"></i>
                                 </div>
@@ -224,7 +226,7 @@
                         </div>
                         <div class="col-4 mb-3">
                             <div class="short-card link-item">
-                                <a href="{{ route('admin.general.index') }}" class="link"></a>
+                                <a href="{{ route('admin.general.index') }}" class="link" aria-label="{{ __('Settings') }}"></a>
                                 <div class="short-card-icon light-icon-9">
                                     <i class="fas fa-link"></i>
                                 </div>
@@ -276,13 +278,13 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table" aria-label="{{ __('Latest Subscription List') }}">
                             <thead>
                                 <tr>
-                                    <th>{{ __('User') }}</th>
-                                    <th>{{ __('Plan') }}</th>
-                                    <th>{{ __('TRX') }}</th>
-                                    <th>{{ __('Amount') }}</th>
+                                    <th scope="col">{{ __('User') }}</th>
+                                    <th scope="col">{{ __('Plan') }}</th>
+                                    <th scope="col">{{ __('TRX') }}</th>
+                                    <th scope="col">{{ __('Amount') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -293,7 +295,7 @@
                                         <td>
                                             <a href="{{ route('admin.user.details', optional($invest->user)->id) }}">
                                                 <img src="{{ Config::getFile('user', optional($invest->user)->image, true) }}"
-                                                    alt="" class="image-table">
+                                                    alt="{{ optional($invest->user)->username }}" class="image-table" loading="lazy" decoding="async">
                                                 <span>
                                                     {{ optional($invest->user)->username }}
                                                 </span>
@@ -325,75 +327,74 @@
                     <ul class="browser-status-list mt-4">
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','chrome.svg', true) }}"
-                                    alt="image"> {{ __('Chrome') }}</span>
+                                    alt="Chrome"> {{ __('Chrome') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Chrome')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Chrome')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Chrome')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-success" style="width: {{ $count }}%;">
                                 </div>
                             </div>
                         </li>
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','firefox.svg', true) }}"
-                                    alt="image"> {{ __('Friefox') }}</span>
+                                    alt="Firefox"> {{ __('Friefox') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Mozilla')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Mozilla')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Mozilla')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-danger" style="width: {{ $count }}%;"></div>
                             </div>
                         </li>
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','safari.svg', true) }}"
-                                    alt="image"> {{ __('Safari') }}</span>
+                                    alt="Safari"> {{ __('Safari') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Safari')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Safari')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Safari')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-info" style="width: {{ $count }}%;"></div>
                             </div>
                         </li>
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','edge.svg', true) }}"
-                                    alt="image"> {{ __('Edge') }}</span>
+                                    alt="Edge"> {{ __('Edge') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Edge')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Edge')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
-
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Edge')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-info" style="width: {{ $count }}%;"></div>
                             </div>
                         </li>
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','opera.svg', true) }}"
-                                    alt="image"> {{ __('Opera') }}</span>
+                                    alt="Opera"> {{ __('Opera') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Opera')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Opera')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Opera')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-danger" style="width: {{ $count }}%;"></div>
                             </div>
                         </li>
                         <li>
                             <span class="caption"><img src="{{ Config::getFile('browsers','uc.svg', true) }}"
-                                    alt="image"> {{ __('UC') }}</span>
+                                    alt="UC"> {{ __('UC') }}</span>
                             <span
                                 class="user-amount">{{ optional($browser->where('browser', 'Uc')->first())->total ?? 0 }}</span>
-                            <div class="user-progressbar">
-                                @php
-                                    $count = (100 * (optional($browser->where('browser', 'Uc')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
-                                @endphp
+                            @php
+                                $count = (100 * (optional($browser->where('browser', 'Uc')->first())->total ?? 0)) / ($logTotal == 0 ? 1 : $logTotal);
+                            @endphp
+                            <div class="user-progressbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$count }}">
                                 <div class="user-progressbar-inner bg-warning" style="width: {{ $count }}%;">
                                 </div>
                             </div>
@@ -458,13 +459,13 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table" aria-label="{{ __('Latest Withdraw') }}">
                             <thead>
                                 <tr>
-                                    <th>{{ __('User') }}</th>
-                                    <th>{{ __('Method') }}</th>
-                                    <th>{{ __('TRX') }}</th>
-                                    <th>{{ __('Amount') }}</th>
+                                    <th scope="col">{{ __('User') }}</th>
+                                    <th scope="col">{{ __('Method') }}</th>
+                                    <th scope="col">{{ __('TRX') }}</th>
+                                    <th scope="col">{{ __('Amount') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -473,7 +474,7 @@
                                         <td>
                                             <a href="{{ route('admin.user.details', $withdraw->user->id) }}">
                                                 <img src="{{ Config::getFile('user', $withdraw->user->image, true) }}"
-                                                    alt="" class="image-table">
+                                                    alt="{{ $withdraw->user->username }}" class="image-table" loading="lazy" decoding="async">
                                                 <span>
                                                     {{ $withdraw->user->username }}
                                                 </span>

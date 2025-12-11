@@ -8,6 +8,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 /**
  * PositionUpdated Event
@@ -19,10 +20,33 @@ class PositionUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public ExecutionPosition $position;
+    public ?int $userId;
 
     public function __construct(ExecutionPosition $position)
     {
-        $this->position = $position;
+        // Store position without any eager loaded relationships to prevent serialization issues
+        $this->position = $position->withoutRelations();
+        
+        // Extract user_id immediately to avoid loading relationships during deserialization
+        try {
+            // Get user_id directly from connection_id to avoid loading relationships
+            // Use fresh query to avoid any cached relationships
+            $connectionId = $position->connection_id;
+            if ($connectionId) {
+                $connection = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::without(['dataConnection', 'preset', 'user', 'admin'])
+                    ->find($connectionId);
+                $this->userId = $connection->user_id ?? null;
+            } else {
+                $this->userId = null;
+            }
+        } catch (\Exception $e) {
+            // If connection or dataConnection table doesn't exist, gracefully handle it
+            Log::debug('PositionUpdated: Could not load connection', [
+                'position_id' => $position->id,
+                'error' => $e->getMessage()
+            ]);
+            $this->userId = null;
+        }
     }
 
     /**
@@ -30,9 +54,8 @@ class PositionUpdated implements ShouldBroadcast
      */
     public function broadcastOn(): Channel
     {
-        $userId = $this->position->connection->user_id ?? null;
-        if ($userId) {
-            return new Channel('user.' . $userId);
+        if ($this->userId) {
+            return new Channel('user.' . $this->userId);
         }
         return new Channel('positions');
     }

@@ -1072,6 +1072,10 @@ Route::get('/docs.postman', function () {
     ]);
 })->name('scribe.postman');
 
+Route::get('/styleguide', function () {
+    return view('styleguide');
+})->name('styleguide');
+
 Route::get('trading-return', [CryptoTradeController::class, 'tradingInterest'])->name('trading-interest');
 
 Route::get('change-language', [FrontendController::class, 'changeLanguage'])->name('change-language');

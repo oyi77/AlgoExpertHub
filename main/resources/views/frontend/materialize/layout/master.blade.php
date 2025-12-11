@@ -13,6 +13,8 @@
 
     <title>{{ optional(Config::config())->appname ?? 'AlgoExpert Hub' }}</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
@@ -36,9 +38,14 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
-    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
-    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
-    <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
+    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
+    <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
+    <noscript>
+        <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
+        <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
+        <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="stylesheet">
+    </noscript>
 
     @php
         $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
@@ -117,26 +124,42 @@
 
     @include(Config::theme() . 'widgets.footer')
 
-    <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
+    <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
+    <script defer src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
+    @if(!View::hasSection('skip_slick'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
+    @endif
+    @if(!View::hasSection('skip_wow'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
+    @endif
+    @if(!View::hasSection('skip_paroller'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
+    @endif
+    @if(!View::hasSection('skip_tweenmax'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
+    @endif
+    @if(!View::hasSection('skip_odometer'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
+    @endif
+    @if(!View::hasSection('skip_viewport'))
+        <script defer src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
+    @endif
+
+    @if(optional(Config::config())->enable_new_styles)
+        <script defer src="{{ mix('js/app.js') }}"></script>
+    @endif
 
 
 
     @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
     @elseif(optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
     @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
+        <script defer src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
     @endif
 
-    <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script defer src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
 
     @stack('script')
 

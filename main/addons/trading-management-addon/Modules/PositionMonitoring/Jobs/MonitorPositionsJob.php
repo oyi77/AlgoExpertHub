@@ -96,8 +96,10 @@ class MonitorPositionsJob implements ShouldQueue
                         continue;
                     }
 
-                    // Update PnL
-                    $position->updatePnL($position->current_price);
+                    // Update PnL only if current_price is valid
+                    if ($position->current_price && $position->current_price > 0) {
+                        $position->updatePnL($position->current_price);
+                    }
 
                     // Broadcast update via WebSocket
                     $this->broadcastPositionUpdate($position);
@@ -123,10 +125,15 @@ class MonitorPositionsJob implements ShouldQueue
         try {
             $connection = $position->connection;
             if (!$connection) {
+                Log::warning('No connection found for position', ['position_id' => $position->id]);
                 return;
             }
 
-            $adapter = $this->getAdapter($connection);
+            $adapter = $this->getAdapter($connection, $position->id);
+            if (!$adapter) {
+                // Warning already logged in getAdapter if needed (only once per connection)
+                return;
+            }
             
             if (method_exists($adapter, 'fetchCurrentPrice')) {
                 $result = $adapter->fetchCurrentPrice($position->symbol);
@@ -155,10 +162,21 @@ class MonitorPositionsJob implements ShouldQueue
         try {
             $connection = $position->connection;
             if (!$connection) {
+                Log::warning('No connection found for position', ['position_id' => $position->id]);
                 return;
             }
 
-            $adapter = $this->getAdapter($connection);
+            $adapter = $this->getAdapter($connection, $position->id);
+            if (!$adapter) {
+                // Warning already logged in getAdapter if needed (only once per connection)
+                // Still update position status even if we can't close on exchange
+                $position->update([
+                    'status' => 'closed',
+                    'closed_at' => now(),
+                    'closed_reason' => $reason . '_local_only',
+                ]);
+                return;
+            }
 
             // Close on exchange
             if (method_exists($adapter, 'closePosition')) {
@@ -235,11 +253,42 @@ class MonitorPositionsJob implements ShouldQueue
     }
 
     /**
+     * Track which connections we've already warned about (to avoid spam)
+     */
+    protected static $warnedConnections = [];
+
+    /**
      * Get adapter for connection
      */
-    protected function getAdapter($connection)
+    protected function getAdapter($executionConnection, $positionId = null)
     {
-        $adapterFactory = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class);
-        return $adapterFactory->create($connection->provider, $connection->credentials ?? []);
+        try {
+            // ExecutionConnection should have a related DataConnection
+            $dataConnection = $executionConnection->dataConnection;
+            
+            if (!$dataConnection) {
+                // Only log warning once per connection to avoid log spam
+                $connectionId = $executionConnection->id;
+                if (!isset(static::$warnedConnections[$connectionId])) {
+                    Log::warning('No DataConnection linked to ExecutionConnection - skipping price updates', [
+                        'execution_connection_id' => $connectionId,
+                        'connection_name' => $executionConnection->name ?? 'Unknown',
+                        'note' => 'Positions with this connection will not have price updates until DataConnection is linked',
+                    ]);
+                    static::$warnedConnections[$connectionId] = true;
+                }
+                return null;
+            }
+
+            $adapterFactory = app(\Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory::class);
+            return $adapterFactory->create($dataConnection);
+        } catch (\Exception $e) {
+            Log::error('Failed to create adapter', [
+                'execution_connection_id' => $executionConnection->id ?? null,
+                'position_id' => $positionId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }

@@ -74,26 +74,6 @@
 
                 </div>
             </div>
-            
-            {{-- Note about moved features --}}
-            @php
-                $systemToolsAvailable = \App\Support\AddonRegistry::active('algoexpert-plus-addon') 
-                    && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.dashboard');
-            @endphp
-            @if($systemToolsAvailable)
-            <div class="row mt-3">
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        <i class="las la-info-circle"></i>
-                        <strong>{{ __('Note') }}:</strong> 
-                        {{ __('Performance Settings and Cron Jobs have been moved to') }} 
-                        <a href="{{ route('admin.algoexpert-plus.system-tools.dashboard') }}" class="alert-link">
-                            {{ __('System Tools') }}
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
     </div>
 

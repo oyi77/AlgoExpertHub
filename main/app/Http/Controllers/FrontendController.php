@@ -34,6 +34,11 @@ class FrontendController extends Controller
         $data['page'] = Page::where('slug', $request->pages)->first();
 
         if (!$data['page']) {
+            // Skip logging 404s for common files like robots.txt, favicon.ico, etc.
+            $skipLogging = in_array($request->pages, ['robots.txt', 'favicon.ico', 'sitemap.xml', '.well-known']);
+            if ($skipLogging) {
+                abort(404, '', ['skip_logging' => true]);
+            }
             abort(404);
         }
 
