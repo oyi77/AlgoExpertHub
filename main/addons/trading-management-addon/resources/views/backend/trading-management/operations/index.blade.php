@@ -2,55 +2,86 @@
 
 @section('element')
 <div class="row">
+    <!-- Statistics Overview -->
+    <div class="col-12 mb-4">
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-left-success shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Connections</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['active_connections'] }}</div>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-plug fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-left-primary shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Open Positions</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['open_positions'] }}</div>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-chart-area fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-left-info shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Today's Executions</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['today_executions'] }}</div>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-bolt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card border-left-{{ $stats['today_pnl'] >= 0 ? 'success' : 'danger' }} shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Today's P&L</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($stats['today_pnl'], 2) }}</div>
+                            </div>
+                            <div class="text-{{ $stats['today_pnl'] >= 0 ? 'success' : 'danger' }}">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
     <div class="col-12">
-        <!-- Page Header -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <h3><i class="fas fa-bolt"></i> Trading Operations</h3>
-                <p class="text-muted mb-0">Manage execution connections, monitor positions, and view analytics</p>
-            </div>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Active Connections</h6>
-                        <h3>{{ $stats['active_connections'] }}</h3>
-                    </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold">
+                        <i class="fas fa-bolt text-primary"></i> Trading Operations
+                    </h5>
+                    <p class="text-muted mb-0">Manage execution connections, monitor positions, and view analytics</p>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Open Positions</h6>
-                        <h3>{{ $stats['open_positions'] }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Today's Executions</h6>
-                        <h3>{{ $stats['today_executions'] }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Today's P&L</h6>
-                        <h3>${{ number_format($stats['today_pnl'], 2) }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="card">
-            <div class="card-header p-0">
-                <ul class="nav nav-tabs" role="tablist">
+            <div class="card-body p-0">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs border-bottom" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" href="#tab-manual-trade" data-toggle="tab">
                             <i class="fas fa-bolt"></i> Manual Trade
@@ -77,24 +108,19 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-            <div class="card-body">
-                <div class="tab-content">
+
+                <div class="tab-content p-4">
                     <!-- Manual Trade Tab -->
                     <div class="tab-pane fade show active" id="tab-manual-trade">
-                        <h5 class="mb-3"><i class="fas fa-bolt"></i> Manual Trade Execution</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-bolt text-primary"></i> Manual Trade Execution</h5>
 
                         @php
-                            // Check if column exists before querying
                             $hasTradeExecutionColumn = \Illuminate\Support\Facades\Schema::hasColumn('execution_connections', 'trade_execution_enabled');
-                            
                             $query = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('is_active', true)
                                 ->where('status', 'active');
-                            
                             if ($hasTradeExecutionColumn) {
                                 $query->where('trade_execution_enabled', true);
                             }
-                            
                             $activeConnections = $query->get();
                         @endphp
 
@@ -103,9 +129,9 @@
                             @csrf
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="card border-primary">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0">Trade Setup</h6>
+                                    <div class="card border-primary shadow-sm">
+                                        <div class="card-header bg-light border-bottom">
+                                            <h6 class="mb-0 font-weight-bold"><i class="fas fa-cog text-primary"></i> Trade Setup</h6>
                                         </div>
                                         <div class="card-body">
                                             <div class="form-group">
@@ -148,9 +174,9 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <div class="card border-warning">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0">Risk Management</h6>
+                                    <div class="card border-warning shadow-sm">
+                                        <div class="card-header bg-light border-bottom">
+                                            <h6 class="mb-0 font-weight-bold"><i class="fas fa-shield-alt text-warning"></i> Risk Management</h6>
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
@@ -196,7 +222,7 @@
                                 </div>
                             </div>
 
-                            <div class="card bg-light">
+                            <div class="card bg-light border shadow-sm mt-3">
                                 <div class="card-body">
                                     <div class="row align-items-center">
                                         <div class="col-md-8">
@@ -220,7 +246,7 @@
 
                         <div id="tradeResult" class="mt-3"></div>
                         @else
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning border">
                             <i class="fas fa-exclamation-triangle"></i> No active exchange connections with trade execution enabled. 
                             <a href="{{ route('admin.trading-management.config.exchange-connections.create') }}">Create a connection</a> in Trading Configuration first.
                         </div>
@@ -229,7 +255,7 @@
 
                     <!-- Execution Log Tab -->
                     <div class="tab-pane fade" id="tab-executions">
-                        <h5 class="mb-3"><i class="fas fa-list"></i> Recent Executions</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-list text-primary"></i> Recent Executions</h5>
 
                         @php
                             $executions = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::with('connection')
@@ -240,8 +266,8 @@
 
                         @if($executions->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Time</th>
                                         <th>Connection</th>
@@ -256,7 +282,7 @@
                                     <tr>
                                         <td>{{ $exec->created_at->format('Y-m-d H:i') }}</td>
                                         <td>{{ $exec->connection->name ?? 'N/A' }}</td>
-                                        <td>{{ $exec->symbol }}</td>
+                                        <td><strong>{{ $exec->symbol }}</strong></td>
                                         <td>
                                             <span class="badge {{ in_array($exec->direction, ['BUY', 'LONG']) ? 'badge-success' : 'badge-danger' }}">
                                                 {{ $exec->direction }}
@@ -283,13 +309,13 @@
                             </a>
                         </div>
                         @else
-                        <div class="alert alert-info">No executions yet.</div>
+                        <div class="alert alert-info border">No executions yet.</div>
                         @endif
                     </div>
 
                     <!-- Open Positions Tab -->
                     <div class="tab-pane fade" id="tab-positions-open">
-                        <h5 class="mb-3"><i class="fas fa-chart-area"></i> Open Positions</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-chart-area text-primary"></i> Open Positions</h5>
 
                         @php
                             $openPositions = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::with('connection')
@@ -301,8 +327,8 @@
 
                         @if($openPositions->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Symbol</th>
                                         <th>Direction</th>
@@ -312,27 +338,27 @@
                                         <th>P&L</th>
                                     </tr>
                                 </thead>
-                        <tbody id="positions-tbody-inline">
-                            @foreach($openPositions as $pos)
-                            <tr data-position-id="{{ $pos->id }}">
-                                <td>{{ $pos->symbol }}</td>
-                                <td>
-                                    <span class="badge {{ in_array(strtolower($pos->direction), ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
-                                        {{ strtoupper($pos->direction) }}
-                                    </span>
-                                </td>
-                                <td>{{ $pos->entry_price }}</td>
-                                <td class="position-current-price" data-position-id="{{ $pos->id }}">{{ $pos->current_price ?? $pos->entry_price }}</td>
-                                <td>{{ $pos->quantity }}</td>
-                                <td class="position-pnl {{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}" data-position-id="{{ $pos->id }}">
-                                    $<span class="pnl-amount">{{ number_format($pos->pnl, 2) }}</span>
-                                    <small class="d-block text-muted position-pnl-percentage" data-position-id="{{ $pos->id }}">
-                                        ({{ number_format($pos->pnl_percentage ?? 0, 2) }}%)
-                                    </small>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
+                                <tbody id="positions-tbody-inline">
+                                    @foreach($openPositions as $pos)
+                                    <tr data-position-id="{{ $pos->id }}">
+                                        <td><strong>{{ $pos->symbol }}</strong></td>
+                                        <td>
+                                            <span class="badge {{ in_array(strtolower($pos->direction), ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
+                                                {{ strtoupper($pos->direction) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $pos->entry_price }}</td>
+                                        <td class="position-current-price" data-position-id="{{ $pos->id }}">{{ $pos->current_price ?? $pos->entry_price }}</td>
+                                        <td>{{ $pos->quantity }}</td>
+                                        <td class="position-pnl {{ $pos->pnl >= 0 ? 'text-success' : 'text-danger' }}" data-position-id="{{ $pos->id }}">
+                                            $<span class="pnl-amount font-weight-bold">{{ number_format($pos->pnl, 2) }}</span>
+                                            <small class="d-block text-muted position-pnl-percentage" data-position-id="{{ $pos->id }}">
+                                                ({{ number_format($pos->pnl_percentage ?? 0, 2) }}%)
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
                             </table>
                         </div>
                         <div class="mt-3">
@@ -341,13 +367,13 @@
                             </a>
                         </div>
                         @else
-                        <div class="alert alert-info">No open positions.</div>
+                        <div class="alert alert-info border">No open positions.</div>
                         @endif
                     </div>
 
                     <!-- Closed Positions Tab -->
                     <div class="tab-pane fade" id="tab-positions-closed">
-                        <h5 class="mb-3"><i class="fas fa-history"></i> Recent Closed Positions</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-history text-primary"></i> Recent Closed Positions</h5>
 
                         @php
                             $closedPositions = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::with('connection')
@@ -359,8 +385,8 @@
 
                         @if($closedPositions->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Closed</th>
                                         <th>Symbol</th>
@@ -375,7 +401,7 @@
                                     @foreach($closedPositions as $pos)
                                     <tr>
                                         <td>{{ $pos->closed_at->format('Y-m-d H:i') }}</td>
-                                        <td>{{ $pos->symbol }}</td>
+                                        <td><strong>{{ $pos->symbol }}</strong></td>
                                         <td>
                                             <span class="badge {{ in_array($pos->direction, ['buy', 'long']) ? 'badge-success' : 'badge-danger' }}">
                                                 {{ strtoupper($pos->direction) }}
@@ -406,16 +432,16 @@
                             </a>
                         </div>
                         @else
-                        <div class="alert alert-info">No closed positions yet.</div>
+                        <div class="alert alert-info border">No closed positions yet.</div>
                         @endif
                     </div>
 
                     <!-- Analytics Tab -->
                     <div class="tab-pane fade" id="tab-analytics">
-                        <h5 class="mb-3"><i class="fas fa-chart-pie"></i> Performance Analytics</h5>
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">View detailed performance analytics with charts and metrics</p>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-chart-pie text-primary"></i> Performance Analytics</h5>
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                            <p class="text-muted mb-4">View detailed performance analytics with charts and metrics</p>
                             <a href="{{ route('admin.trading-management.operations.analytics') }}" class="btn btn-primary btn-lg">
                                 <i class="fas fa-external-link-alt"></i> Open Analytics Dashboard
                             </a>
@@ -475,12 +501,10 @@ function executeManualTrade() {
         })
     })
     .then(async response => {
-        // Handle redirects (302, etc.)
         if (response.redirected || response.status === 302) {
             throw new Error('Request was redirected. Please check your session and try again.');
         }
         
-        // Check if response is JSON
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
@@ -502,27 +526,19 @@ function executeManualTrade() {
                 <p class="mb-0"><strong>Status:</strong> <span class="badge badge-success">${data.data.status}</span></p>
             </div>`;
             
-            // Reset form
             document.getElementById('manualTradeForm').reset();
             document.getElementById('confirmTrade').checked = false;
         } else {
-            // Build error message with validation errors if present
             let errorHtml = `<div class="alert alert-danger">
                 <i class="fas fa-times-circle"></i> <strong>Trade Execution Failed</strong>
                 <hr>`;
             
-            // Check if there are validation errors
             if (data.errors && typeof data.errors === 'object') {
                 errorHtml += `<p class="mb-2"><strong>${data.message || 'Validation failed'}:</strong></p><ul class="mb-0">`;
-                
-                // Display each field's errors
                 for (const [field, messages] of Object.entries(data.errors)) {
-                    // Format field name (lot_size -> Lot Size, entry_price -> Entry Price)
                     const fieldName = field.split('_').map(word => 
                         word.charAt(0).toUpperCase() + word.slice(1)
                     ).join(' ');
-                    
-                    // Display each error message for this field
                     if (Array.isArray(messages)) {
                         messages.forEach(msg => {
                             errorHtml += `<li><strong>${fieldName}:</strong> ${msg}</li>`;
@@ -531,10 +547,8 @@ function executeManualTrade() {
                         errorHtml += `<li><strong>${fieldName}:</strong> ${messages}</li>`;
                     }
                 }
-                
                 errorHtml += `</ul>`;
             } else {
-                // No validation errors, just show the message
                 errorHtml += `<p class="mb-0">${data.message || 'An error occurred'}</p>`;
             }
             
@@ -610,6 +624,10 @@ function executeManualTrade() {
 })();
 </script>
 <style>
+.border-left-primary { border-left: 4px solid #4e73df !important; }
+.border-left-success { border-left: 4px solid #1cc88a !important; }
+.border-left-info { border-left: 4px solid #36b9cc !important; }
+.border-left-danger { border-left: 4px solid #e74a3b !important; }
 .price-updated {
     background-color: #fff3cd !important;
     transition: background-color 0.3s ease;

@@ -2,47 +2,73 @@
 
 @section('element')
 <div class="row">
+    <!-- Statistics Overview -->
+    <div class="col-12 mb-4">
+        <div class="row">
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card border-left-primary shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Subscriptions</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_subscriptions'] }}</div>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-link fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card border-left-success shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Subscriptions</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['active_subscriptions'] }}</div>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card border-left-info shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Traders</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_traders'] }}</div>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-user-tie fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
     <div class="col-12">
-        <!-- Page Header -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <h3><i class="fas fa-users"></i> Copy Trading</h3>
-                <p class="text-muted mb-0">Social trading - manage traders, followers, and copy trading subscriptions</p>
-            </div>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Total Subscriptions</h6>
-                        <h3>{{ $stats['total_subscriptions'] }}</h3>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 font-weight-bold">
+                            <i class="fas fa-users text-primary"></i> Copy Trading
+                        </h5>
+                        <small class="text-muted">Social trading - manage traders, followers, and copy trading subscriptions</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-success">
-                    <div class="card-body">
-                        <h6 class="text-muted">Active Subscriptions</h6>
-                        <h3 class="text-success">{{ $stats['active_subscriptions'] }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="text-muted">Total Traders</h6>
-                        <h3>{{ $stats['total_traders'] }}</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="card">
-            <div class="card-header p-0">
-                <ul class="nav nav-tabs" role="tablist">
+            <div class="card-body p-0">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs border-bottom" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" href="#tab-traders" data-toggle="tab">
                             <i class="fas fa-user-tie"></i> Traders List
@@ -64,17 +90,16 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-            <div class="card-body">
-                <div class="tab-content">
+
+                <div class="tab-content p-4">
                     <!-- Traders Tab -->
                     <div class="tab-pane fade show active" id="tab-traders">
-                        <h5 class="mb-3"><i class="fas fa-user-tie"></i> Traders (Ranked by Followers)</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-user-tie text-primary"></i> Traders (Ranked by Followers)</h5>
 
                         @if($traders->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead>
+                                <thead class="bg-light">
                                     <tr>
                                         <th>#</th>
                                         <th>Trader</th>
@@ -89,9 +114,11 @@
                                         <td>{{ $traders->firstItem() + $index }}</td>
                                         <td><strong>{{ $item->trader->username ?? 'N/A' }}</strong></td>
                                         <td>{{ $item->trader->email ?? 'N/A' }}</td>
-                                        <td><span class="badge badge-primary badge-lg">{{ $item->follower_count }}</span></td>
                                         <td>
-                                            <a href="{{ route('admin.trading-management.copy-trading.traders') }}?trader_id={{ $item->trader_id }}" class="btn btn-sm btn-info">
+                                            <span class="badge badge-primary badge-lg">{{ $item->follower_count }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('admin.trading-management.copy-trading.traders') }}?trader_id={{ $item->trader_id }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> Details
                                             </a>
                                         </td>
@@ -100,20 +127,22 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{ $traders->links() }}
+                        <div class="mt-3">
+                            {{ $traders->links() }}
+                        </div>
                         @else
-                        <div class="alert alert-info">No traders found.</div>
+                        <div class="alert alert-info border">No traders found.</div>
                         @endif
                     </div>
 
                     <!-- Subscriptions Tab -->
                     <div class="tab-pane fade" id="tab-subscriptions">
-                        <h5 class="mb-3"><i class="fas fa-link"></i> Copy Trading Subscriptions</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-link text-primary"></i> Copy Trading Subscriptions</h5>
 
                         @if($subscriptions->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-hover">
-                                <thead>
+                                <thead class="bg-light">
                                     <tr>
                                         <th>Trader</th>
                                         <th>Follower</th>
@@ -128,7 +157,9 @@
                                     <tr>
                                         <td><strong>{{ $sub->trader->username ?? 'N/A' }}</strong></td>
                                         <td>{{ $sub->follower->username ?? 'N/A' }}</td>
-                                        <td><span class="badge badge-info">{{ strtoupper($sub->copy_mode) }}</span></td>
+                                        <td>
+                                            <span class="badge badge-info">{{ strtoupper($sub->copy_mode) }}</span>
+                                        </td>
                                         <td>{{ $sub->risk_multiplier }}x</td>
                                         <td>
                                             @if($sub->is_active)
@@ -143,24 +174,24 @@
                                 </tbody>
                             </table>
                         </div>
-                        {{ $subscriptions->links() }}
                         <div class="mt-3">
-                            <a href="{{ route('admin.trading-management.copy-trading.subscriptions') }}" class="btn btn-primary">
+                            {{ $subscriptions->links() }}
+                            <a href="{{ route('admin.trading-management.copy-trading.subscriptions') }}" class="btn btn-primary ml-2">
                                 <i class="fas fa-external-link-alt"></i> View All Subscriptions
                             </a>
                         </div>
                         @else
-                        <div class="alert alert-info">No subscriptions found.</div>
+                        <div class="alert alert-info border">No subscriptions found.</div>
                         @endif
                     </div>
 
                     <!-- Analytics Tab -->
                     <div class="tab-pane fade" id="tab-analytics">
-                        <h5 class="mb-3"><i class="fas fa-chart-line"></i> Copy Trading Analytics</h5>
+                        <h5 class="mb-4 font-weight-bold"><i class="fas fa-chart-line text-primary"></i> Copy Trading Analytics</h5>
                         <div class="text-center py-5">
-                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Full analytics dashboard</p>
-                            <a href="{{ route('admin.trading-management.copy-trading.analytics') }}" class="btn btn-primary">
+                            <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                            <p class="text-muted mb-4">Full analytics dashboard with detailed metrics and charts</p>
+                            <a href="{{ route('admin.trading-management.copy-trading.analytics') }}" class="btn btn-primary btn-lg">
                                 <i class="fas fa-external-link-alt"></i> Open Analytics Dashboard
                             </a>
                         </div>
@@ -170,4 +201,12 @@
         </div>
     </div>
 </div>
+
+@push('style')
+<style>
+    .border-left-primary { border-left: 4px solid #4e73df !important; }
+    .border-left-success { border-left: 4px solid #1cc88a !important; }
+    .border-left-info { border-left: 4px solid #36b9cc !important; }
+</style>
+@endpush
 @endsection
