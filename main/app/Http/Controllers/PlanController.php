@@ -23,7 +23,7 @@ class PlanController extends Controller
 
         $data['plans'] = Plan::whereStatus(true)->paginate(Helper::pagination());
 
-        return view(Helper::theme() . 'user.plans')->with($data);
+        return view(Helper::themeView('user.plans')->with($data);
     }
 
     public function subscribe(Request $request)

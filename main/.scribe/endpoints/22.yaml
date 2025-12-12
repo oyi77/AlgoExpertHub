@@ -1,23 +1,23 @@
-name: 'Admin - Email Management'
+name: 'Admin Management'
 description: |-
 
-  Endpoints for managing email configuration, templates, and subscribers.
+  Endpoints for managing system settings, themes, and frontend content.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/admin/email/config
+    uri: api/admin/management/pages
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Email Configuration'
-      description: 'Retrieve current email settings.'
+      title: 'Get Pages'
+      description: 'Retrieve all frontend pages.'
       authenticated: true
       deprecated: false
     headers:
@@ -38,6 +38,125 @@ endpoints:
         content: |-
           {
             "success": true,
+            "data": [...]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/management/pages
+    metadata:
+      custom: []
+      groupName: 'Admin Management'
+      groupDescription: |-
+
+        Endpoints for managing system settings, themes, and frontend content.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create Page'
+      description: 'Create a new frontend page.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Page name.'
+        required: true
+        example: 'About Us'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      slug:
+        custom: []
+        name: slug
+        description: 'Page slug.'
+        required: true
+        example: about-us
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      content:
+        custom: []
+        name: content
+        description: 'Page content.'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Page status.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      is_dropdown:
+        custom: []
+        name: is_dropdown
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      order:
+        custom: []
+        name: order
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: 'About Us'
+      slug: about-us
+      content: architecto
+      status: true
+      is_dropdown: true
+      order: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "success": true,
             "data": {...}
           }
         headers: []
@@ -54,100 +173,44 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: api/admin/email/config
+    uri: 'api/admin/management/pages/{id}'
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update Email Configuration'
-      description: 'Update email settings.'
+      title: 'Update Page'
+      description: 'Update an existing page.'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      email_method:
+    urlParameters:
+      id:
         custom: []
-        name: email_method
-        description: 'Email method: smtp, sendmail, mailgun.'
-        required: false
-        example: smtp
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      email_from:
-        custom: []
-        name: email_from
-        description: 'From email address.'
-        required: false
-        example: noreply@example.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      email_from_name:
-        custom: []
-        name: email_from_name
-        description: ''
-        required: false
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      smtp_host:
-        custom: []
-        name: smtp_host
-        description: 'SMTP host.'
-        required: false
-        example: smtp.gmail.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      smtp_port:
-        custom: []
-        name: smtp_port
-        description: 'SMTP port.'
-        required: false
-        example: 587
+        name: id
+        description: 'Page ID.'
+        required: true
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      smtp_encryption:
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
         custom: []
-        name: smtp_encryption
-        description: ''
-        required: false
-        example: ssl
-        type: string
-        enumValues:
-          - tls
-          - ssl
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      smtp_username:
-        custom: []
-        name: smtp_username
-        description: ''
+        name: name
+        description: 'Page name.'
         required: false
         example: architecto
         type: string
@@ -155,26 +218,67 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      smtp_password:
+      slug:
         custom: []
-        name: smtp_password
+        name: slug
         description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      content:
+        custom: []
+        name: content
+        description: 'Page content.'
         required: false
         example: architecto
         type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Page status.'
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      is_dropdown:
+        custom: []
+        name: is_dropdown
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      order:
+        custom: []
+        name: order
+        description: ''
+        required: false
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      email_method: smtp
-      email_from: noreply@example.com
-      email_from_name: architecto
-      smtp_host: smtp.gmail.com
-      smtp_port: 587
-      smtp_encryption: ssl
-      smtp_username: architecto
-      smtp_password: architecto
+      name: architecto
+      content: architecto
+      status: false
+      is_dropdown: true
+      order: 16
     fileParameters: []
     responses:
       -
@@ -183,7 +287,66 @@ endpoints:
         content: |-
           {
             "success": true,
-            "message": "Email configuration updated"
+            "data": {...}
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/admin/management/pages/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin Management'
+      groupDescription: |-
+
+        Endpoints for managing system settings, themes, and frontend content.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete Page'
+      description: 'Delete a page.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'Page ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Page deleted successfully"
           }
         headers: []
         description: ''
@@ -199,17 +362,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/admin/email/templates
+    uri: api/admin/management/sections
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Email Templates'
-      description: 'Get all email templates.'
+      title: 'Get Frontend Sections'
+      description: 'Retrieve all frontend content sections.'
       authenticated: true
       deprecated: false
     headers:
@@ -218,8 +381,20 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      theme:
+        custom: []
+        name: theme
+        description: 'Theme name.'
+        required: false
+        example: default
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      theme: default
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -246,17 +421,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/admin/email/templates/{slug}'
+    uri: 'api/admin/management/sections/{name}'
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Email Template'
-      description: 'Retrieve a specific email template.'
+      title: 'Get Section Content'
+      description: 'Retrieve content for a specific section.'
       authenticated: true
       deprecated: false
     headers:
@@ -264,19 +439,19 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      slug:
+      name:
         custom: []
-        name: slug
-        description: 'Template slug.'
+        name: name
+        description: 'Section name.'
         required: true
-        example: welcome-email
+        example: banner
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      slug: welcome-email
+      name: banner
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -305,17 +480,17 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/admin/email/templates/{slug}'
+    uri: 'api/admin/management/sections/{name}'
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update Email Template'
-      description: 'Update an email template.'
+      title: 'Update Section Content'
+      description: 'Update content for a section.'
       authenticated: true
       deprecated: false
     headers:
@@ -323,47 +498,35 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      slug:
+      name:
         custom: []
-        name: slug
-        description: 'Template slug.'
+        name: name
+        description: 'Section name.'
         required: true
-        example: welcome-email
+        example: banner
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      slug: welcome-email
+      name: banner
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      subject:
+      content:
         custom: []
-        name: subject
-        description: 'Email subject.'
+        name: content
+        description: 'Section content data.'
         required: false
-        example: 'Welcome to our platform'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      body:
-        custom: []
-        name: body
-        description: 'Email body content.'
-        required: false
-        example: architecto
-        type: string
+        example: []
+        type: object
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      subject: 'Welcome to our platform'
-      body: architecto
+      content: []
     fileParameters: []
     responses:
       -
@@ -372,7 +535,7 @@ endpoints:
         content: |-
           {
             "success": true,
-            "message": "Template updated successfully"
+            "message": "Section updated successfully"
           }
         headers: []
         description: ''
@@ -388,17 +551,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/admin/email/subscribers
+    uri: api/admin/management/settings
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Subscribers'
-      description: 'Get all email subscribers.'
+      title: 'Get System Settings'
+      description: 'Retrieve current system configuration.'
       authenticated: true
       deprecated: false
     headers:
@@ -419,7 +582,7 @@ endpoints:
         content: |-
           {
             "success": true,
-            "data": [...]
+            "data": {...}
           }
         headers: []
         description: ''
@@ -434,18 +597,18 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/admin/email/send-single
+      - PUT
+    uri: api/admin/management/settings
     metadata:
       custom: []
-      groupName: 'Admin - Email Management'
+      groupName: 'Admin Management'
       groupDescription: |-
 
-        Endpoints for managing email configuration, templates, and subscribers.
+        Endpoints for managing system settings, themes, and frontend content.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Send Single Email'
-      description: 'Send email to a specific subscriber.'
+      title: 'Update System Settings'
+      description: 'Update system configuration.'
       authenticated: true
       deprecated: false
     headers:
@@ -457,33 +620,33 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      email:
+      site_name:
         custom: []
-        name: email
-        description: 'Subscriber email.'
-        required: true
-        example: user@example.com
+        name: site_name
+        description: 'Site name.'
+        required: false
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      subject:
+      currency:
         custom: []
-        name: subject
-        description: 'Email subject.'
-        required: true
-        example: 'Special Offer'
+        name: currency
+        description: 'Currency code.'
+        required: false
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      message:
+      theme:
         custom: []
-        name: message
-        description: 'Email message.'
-        required: true
+        name: theme
+        description: 'Active theme.'
+        required: false
         example: architecto
         type: string
         enumValues: []
@@ -491,9 +654,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      email: user@example.com
-      subject: 'Special Offer'
-      message: architecto
+      site_name: architecto
+      currency: architecto
+      theme: architecto
     fileParameters: []
     responses:
       -
@@ -502,78 +665,7 @@ endpoints:
         content: |-
           {
             "success": true,
-            "message": "Email sent successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/admin/email/send-bulk
-    metadata:
-      custom: []
-      groupName: 'Admin - Email Management'
-      groupDescription: |-
-
-        Endpoints for managing email configuration, templates, and subscribers.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Send Bulk Email'
-      description: 'Send email to all subscribers.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      subject:
-        custom: []
-        name: subject
-        description: 'Email subject.'
-        required: true
-        example: Newsletter
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      message:
-        custom: []
-        name: message
-        description: 'Email message.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      subject: Newsletter
-      message: architecto
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Bulk email sent successfully"
+            "message": "Settings updated successfully"
           }
         headers: []
         description: ''

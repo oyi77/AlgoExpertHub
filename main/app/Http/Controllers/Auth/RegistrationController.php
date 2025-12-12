@@ -19,9 +19,9 @@ class RegistrationController extends Controller
     {
         $data['title'] = 'Register User';
 
-        $data['content'] = Helper::builder('auth');
+        $data['content'] = Helper::builder('auth') ?? (object)['content' => (object)['title' => 'Create Account', 'image_one' => null]];
 
-        return view(Helper::theme() . 'auth.register')->with($data);
+        return view(Helper::themeView('auth.register'))->with($data);
     }
 
     public function register(RegisterRequest $request)

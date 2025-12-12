@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.master')
+@extends(Config::themeView('layout.master'))
 
 @section('content')
     @if (isset($pageBuilderContent) && $pageBuilderContent)
@@ -7,7 +7,7 @@
         <div class="pagebuilder-content">
             {!! $pageBuilderContent['html'] ?? '' !!}
         </div>
-    @elseif ($page->widgets)
+    @elseif (isset($page) && $page && $page->widgets)
         {{-- Render legacy sections --}}
         @foreach ($page->widgets as $section)
             <?= Section::render($section->sections) ?>

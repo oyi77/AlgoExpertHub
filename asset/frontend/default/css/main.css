@@ -1595,16 +1595,9 @@ Banner css
     }
 }
 
-.sp_banner .sp_banner_bottom_shape {
-    bottom: 0;
-    left: 0;
-    align-items: flex-end;
-    height: auto;
-    opacity: 0.2;
-}
-
-.sp_banner .sp_banner_bottom_shape img {
-    width: 100%;
+/* Banner bottom shape styles moved to components.css - CSS wave pattern */
+.sp_banner {
+    position: relative;
 }
 
 .sp_banner .sp_banner_title {

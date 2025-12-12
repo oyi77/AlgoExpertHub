@@ -1,23 +1,23 @@
-name: 'Two-Factor Authentication'
+name: 'Backtesting & Copy Trading'
 description: |-
 
-  Endpoints for managing 2FA settings.
+  Endpoints for backtesting strategies and copy trading.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/user/2fa/status
+    uri: api/user/copy-trading/traders
     metadata:
       custom: []
-      groupName: 'Two-Factor Authentication'
+      groupName: 'Backtesting & Copy Trading'
       groupDescription: |-
 
-        Endpoints for managing 2FA settings.
+        Endpoints for backtesting strategies and copy trading.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get 2FA Status'
-      description: 'Check if 2FA is enabled for the user.'
+      title: 'List Available Traders (Copy Trading)'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -34,17 +34,16 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
+        status: 404
         content: |-
           {
-            "success": true,
-            "data": {
-              "enabled": false,
-              "secret": null
-            }
+              "message": "The route api/user/copy-trading/traders could not be found."
           }
-        headers: []
-        description: ''
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth:
       - headers
@@ -56,18 +55,18 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/user/2fa/generate-secret
+      - GET
+    uri: api/user/copy-trading/subscriptions
     metadata:
       custom: []
-      groupName: 'Two-Factor Authentication'
+      groupName: 'Backtesting & Copy Trading'
       groupDescription: |-
 
-        Endpoints for managing 2FA settings.
+        Endpoints for backtesting strategies and copy trading.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Generate 2FA Secret'
-      description: 'Generate a new 2FA secret and QR code.'
+      title: 'My Copy Trading Subscriptions'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -84,17 +83,65 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
+        status: 404
         content: |-
           {
-            "success": true,
-            "data": {
-              "secret": "...",
-              "qr_code_url": "..."
-            }
+              "message": "The route api/user/copy-trading/subscriptions could not be found."
           }
-        headers: []
-        description: ''
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/user/backtesting
+    metadata:
+      custom: []
+      groupName: 'Backtesting & Copy Trading'
+      groupDescription: |-
+
+        Endpoints for backtesting strategies and copy trading.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Backtests'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api/user/backtesting could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth:
       - headers
@@ -107,17 +154,17 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/user/2fa/enable
+    uri: api/user/backtesting/run
     metadata:
       custom: []
-      groupName: 'Two-Factor Authentication'
+      groupName: 'Backtesting & Copy Trading'
       groupDescription: |-
 
-        Endpoints for managing 2FA settings.
+        Endpoints for backtesting strategies and copy trading.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Enable 2FA'
-      description: 'Enable 2FA after verifying the code.'
+      title: 'Run Backtest'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -129,31 +176,142 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      code:
+      strategy_id:
         custom: []
-        name: code
-        description: '6-digit verification code.'
+        name: strategy_id
+        description: ''
         required: true
-        example: '123456'
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      symbol:
+        custom: []
+        name: symbol
+        description: ''
+        required: true
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      timeframe:
+        custom: []
+        name: timeframe
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      start_date:
+        custom: []
+        name: start_date
+        description: 'Must be a valid date.'
+        required: true
+        example: '2025-12-11T12:20:22'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      end_date:
+        custom: []
+        name: end_date
+        description: 'Must be a valid date. Must be a date after <code>start_date</code>.'
+        required: true
+        example: '2052-01-04'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      initial_balance:
+        custom: []
+        name: initial_balance
+        description: 'Must be at least 0.'
+        required: true
+        example: 39
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      code: '123456'
+      strategy_id: 16
+      symbol: architecto
+      timeframe: architecto
+      start_date: '2025-12-11T12:20:22'
+      end_date: '2052-01-04'
+      initial_balance: 39
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/user/backtesting/{id}'
+    metadata:
+      custom: []
+      groupName: 'Backtesting & Copy Trading'
+      groupDescription: |-
+
+        Endpoints for backtesting strategies and copy trading.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Backtest Results'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the backtesting.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
+        status: 404
         content: |-
           {
-            "success": true,
-            "message": "2FA enabled successfully"
+              "message": "The route api/user/backtesting/architecto could not be found."
           }
-        headers: []
-        description: ''
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth:
       - headers
@@ -166,53 +324,67 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/user/2fa/disable
+    uri: 'api/user/copy-trading/traders/{id}/follow'
     metadata:
       custom: []
-      groupName: 'Two-Factor Authentication'
+      groupName: 'Backtesting & Copy Trading'
       groupDescription: |-
 
-        Endpoints for managing 2FA settings.
+        Endpoints for backtesting strategies and copy trading.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Disable 2FA'
-      description: 'Disable 2FA after verifying the code.'
+      title: 'Follow Trader'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the trader.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      code:
+      connection_id:
         custom: []
-        name: code
-        description: '6-digit verification code.'
+        name: connection_id
+        description: ''
         required: true
-        example: '123456'
-        type: string
+        example: 16
+        type: integer
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      copy_percentage:
+        custom: []
+        name: copy_percentage
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: true
+        example: 22
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      code: '123456'
+      connection_id: 16
+      copy_percentage: 22
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "2FA disabled successfully"
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -224,54 +396,44 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/user/2fa/verify
+      - DELETE
+    uri: 'api/user/copy-trading/traders/{id}/unfollow'
     metadata:
       custom: []
-      groupName: 'Two-Factor Authentication'
+      groupName: 'Backtesting & Copy Trading'
       groupDescription: |-
 
-        Endpoints for managing 2FA settings.
+        Endpoints for backtesting strategies and copy trading.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Verify 2FA Code'
-      description: 'Verify a 2FA code (used during login).'
+      title: 'Unfollow Trader'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer Bearer {TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      code:
+    urlParameters:
+      id:
         custom: []
-        name: code
-        description: '6-digit verification code.'
+        name: id
+        description: 'The ID of the trader.'
         required: true
-        example: '123456'
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanBodyParameters:
-      code: '123456'
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Code verified successfully"
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth:
       - headers

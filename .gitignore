@@ -39,3 +39,5 @@ MadelineProto.log
 .ea-php-cli.cache
 CLAUDE.md
 AGENTS.md
+/sdks/
+/asset/

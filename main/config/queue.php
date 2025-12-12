@@ -71,6 +71,24 @@ return [
             'after_commit' => false,
         ],
 
+        'redis-high' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => 'high',
+            'retry_after' => 60,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'redis-low' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => 'low',
+            'retry_after' => 120,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
     ],
 
     /*

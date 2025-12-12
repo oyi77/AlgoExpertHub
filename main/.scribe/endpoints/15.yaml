@@ -1,23 +1,23 @@
-name: Notifications
+name: Transactions
 description: |-
 
-  Endpoints for user notifications.
+  Endpoints for viewing transaction history.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/user/notifications
+    uri: api/user/transactions
     metadata:
       custom: []
-      groupName: Notifications
+      groupName: Transactions
       groupDescription: |-
 
-        Endpoints for user notifications.
+        Endpoints for viewing transaction history.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Notifications'
-      description: ''
+      title: 'Get Transactions'
+      description: "Retrieve user's transaction history."
       authenticated: true
       deprecated: false
     headers:
@@ -26,24 +26,46 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      type:
+        custom: []
+        name: type
+        description: 'Filter by type: + (credit) or - (debit).'
+        required: false
+        example: +
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      search:
+        custom: []
+        name: search
+        description: 'Search by transaction ID or details.'
+        required: false
+        example: deposit
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      type: +
+      search: deposit
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api/user/notifications could not be found."
+            "success": true,
+            "data": [...]
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -56,17 +78,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/user/notifications/unread-count
+    uri: api/user/transactions/summary
     metadata:
       custom: []
-      groupName: Notifications
+      groupName: Transactions
       groupDescription: |-
 
-        Endpoints for user notifications.
+        Endpoints for viewing transaction history.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Unread Count'
-      description: ''
+      title: 'Get Transaction Summary'
+      description: 'Get summary statistics of transactions.'
       authenticated: true
       deprecated: false
     headers:
@@ -75,24 +97,39 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      period:
+        custom: []
+        name: period
+        description: 'Period: today, week, month, year.'
+        required: false
+        example: month
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      period: month
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api/user/notifications/unread-count could not be found."
+            "success": true,
+            "data": {
+              "total_credit": 1000,
+              "total_debit": 500,
+              "net": 500,
+              "count": 25
+            }
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -104,55 +141,18 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/user/notifications/mark-as-read
+      - GET
+    uri: 'api/user/transactions/{trx}'
     metadata:
       custom: []
-      groupName: Notifications
+      groupName: Transactions
       groupDescription: |-
 
-        Endpoints for user notifications.
+        Endpoints for viewing transaction history.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Mark as Read'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/user/notifications/{id}'
-    metadata:
-      custom: []
-      groupName: Notifications
-      groupDescription: |-
-
-        Endpoints for user notifications.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Delete Notification'
-      description: ''
+      title: 'Get Transaction Details'
+      description: 'Retrieve details of a specific transaction.'
       authenticated: true
       deprecated: false
     headers:
@@ -160,25 +160,35 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      trx:
         custom: []
-        name: id
-        description: 'The ID of the notification.'
+        name: trx
+        description: 'Transaction ID.'
         required: true
-        example: architecto
+        example: ABC123XYZ
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: architecto
+      trx: ABC123XYZ
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {...}
+          }
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers

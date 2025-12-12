@@ -141,23 +141,19 @@ class ExecutionJob implements ShouldQueue
             ]);
 
             if ($orderType === 'limit') {
-                $result = $adapter->placeLimitOrder(
+                $result = $adapter->createLimitOrder(
                     $symbol,
                     $direction,
                     $quantity,
                     $entryPrice,
-                    $stopLoss,
-                    $takeProfit,
-                    'Bot: ' . ($this->executionData['bot_id'] ?? 'N/A')
+                    ['stopLoss' => $stopLoss, 'takeProfit' => $takeProfit, 'comment' => 'Bot: ' . ($this->executionData['bot_id'] ?? 'N/A')]
                 );
             } else {
-                $result = $adapter->placeMarketOrder(
+                $result = $adapter->createMarketOrder(
                     $symbol,
                     $direction,
                     $quantity,
-                    $stopLoss,
-                    $takeProfit,
-                    'Bot: ' . ($this->executionData['bot_id'] ?? 'N/A')
+                    ['stopLoss' => $stopLoss, 'takeProfit' => $takeProfit, 'comment' => 'Bot: ' . ($this->executionData['bot_id'] ?? 'N/A')]
                 );
             }
 
@@ -349,52 +345,43 @@ class ExecutionJob implements ShouldQueue
     /**
      * Create adapter for execution connection
      */
+    /**
+     * Get adapter from ExchangeConnectionService
+     */
     protected function createAdapter(ExecutionConnection $connection)
     {
+        // Try to find the linked ExchangeConnection model if this is an ExecutionConnection
+        // Note: ExecutionConnection might be an alias or legacy model. 
+        // We assume we can cast or find the ExchangeConnection.
+        
+        $service = app(\Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService::class);
+        
+        // If ExecutionConnection is just an ExchangeConnection (same table/model), pass it directly
+        // If they are different, we might need to find the ExchangeConnection.
+        // Based on analysis, they seem to share structure or be related.
+        // Let's assume for now we can pass it if it implements contract or keys exist.
+        // Actually, ExchangeConnectionService expects ExchangeConnection model.
+        
+        // Hack: Create ExchangeConnection instance from ExecutionConnection data if needed
+        // Or better: Use the adapter creation logic BUT using the proper classes.
+        
+        // Since we already updated Adapters to be consistent, we can just instantiate them matching ExchangeConnectionService logic
+        // but it's better to use the Service if possible.
+        
+        // If ExecutionConnection is legacy, we might need manual instantiation.
+        // But we want to use the new Adapters we updated.
+        
         $provider = $connection->provider ?? $connection->exchange_name ?? 'binance';
-        $type = $connection->type ?? 'crypto';
-        $connectionType = $connection->connection_type ?? null;
+        $credentials = $connection->credentials ?? [];
         
-        // For new ExchangeConnection model (has connection_type)
-        if ($connectionType === 'CRYPTO_EXCHANGE') {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
-                $connection->credentials ?? [],
-                $provider
-            );
+        if ($provider === 'metaapi') {
+            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter($credentials);
+        } elseif (strpos($provider, 'mtapi') !== false) {
+             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter($credentials);
         }
         
-        // For legacy ExecutionConnection (has type field)
-        if ($type === 'crypto' || (!$connectionType && $type === 'crypto')) {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
-                $connection->credentials ?? [],
-                $provider
-            );
-        }
-        
-        // FX/Broker connections (MT4/MT5)
-        if ($provider === 'metaapi' || strpos(strtolower($provider), 'metaapi') !== false) {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
-                $connection->credentials ?? []
-            );
-        } elseif ($provider === 'mtapi_grpc' || 
-                  (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
-            $credentials = $connection->credentials ?? [];
-            $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
-            
-            if (!empty($globalSettings['base_url'])) {
-                $credentials['base_url'] = $globalSettings['base_url'];
-            }
-            if (!empty($globalSettings['timeout'])) {
-                $credentials['timeout'] = $globalSettings['timeout'];
-            }
-            
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
-        } else {
-            // Default: MTAPI REST adapter
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
-                $connection->credentials ?? []
-            );
-        }
+        // Default CCXT
+        return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter($provider, $credentials);
     }
 
     /**

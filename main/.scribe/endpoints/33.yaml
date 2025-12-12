@@ -1,0 +1,76 @@
+name: 'Frontend Content'
+description: |-
+
+  Endpoints for retrieving dynamic frontend content (sections).
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/content/{name}'
+    metadata:
+      custom: []
+      groupName: 'Frontend Content'
+      groupDescription: |-
+
+        Endpoints for retrieving dynamic frontend content (sections).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Section Content'
+      description: "Retrieve the content for a specific frontend section (e.g., 'banner', 'about', 'testimonial')."
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      name:
+        custom: []
+        name: name
+        description: 'The name of the section.'
+        required: true
+        example: banner
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      name: banner
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "fixed": {
+                "heading": "Welcome to AI Trade Pulse",
+                "sub_heading": "Automated Trading with AI"
+              },
+              "elements": [
+                {
+                  "icon": "fa-chart",
+                  "title": "Analytics"
+                }
+              ],
+              "media_base_url": "https://aitradepulse.com/asset/frontend/default/images/banner/"
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

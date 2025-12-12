@@ -21,7 +21,7 @@ class EmailVerificationController extends Controller
     {
         $data['title'] = "Email Verify";
 
-        return view(Helper::theme() . 'auth.email_sms_verify');
+        return view(Helper::themeView('auth.email_sms_verify');
     }
 
     public function emailVerifyConfirm(EmailVerificationRequest $request)

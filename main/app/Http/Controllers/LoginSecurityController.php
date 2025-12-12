@@ -36,7 +36,7 @@ class LoginSecurityController extends Controller
         $data['secret'] = $secret_key;
         $data['google2fa_url'] = $google2fa_url;
 
-        return view(Helper::theme().'user.2fa_settings')->with($data);
+        return view(Helper::themeView('user.2fa_settings')->with($data);
     }
 
     /**

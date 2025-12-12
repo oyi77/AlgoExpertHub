@@ -17,6 +17,11 @@ trait CreatesApplication
 
         $app->make(Kernel::class)->bootstrap();
 
+        // Specific for Trading Management Addon testing
+        if (class_exists(\Addons\TradingManagement\AddonServiceProvider::class)) {
+            $app->register(\Addons\TradingManagement\AddonServiceProvider::class);
+        }
+
         return $app;
     }
 }

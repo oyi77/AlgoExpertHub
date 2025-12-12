@@ -347,7 +347,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('maintanace-mode', [DashboardController::class, 'maintanance'])->name('maintanace');
 
+        // Queue Management
+        Route::middleware('permission:manage-system,admin')->prefix('queue')->name('queue.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Backend\QueueManagementController::class, 'index'])->name('index');
+            Route::get('health', [\App\Http\Controllers\Backend\QueueManagementController::class, 'health'])->name('health');
+            Route::get('metrics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'metrics'])->name('metrics');
+            Route::get('statistics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'statistics'])->name('statistics');
+            Route::post('scale', [\App\Http\Controllers\Backend\QueueManagementController::class, 'scale'])->name('scale');
+            Route::post('restart', [\App\Http\Controllers\Backend\QueueManagementController::class, 'restart'])->name('restart');
+            Route::post('clear-metrics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'clearMetrics'])->name('clear-metrics');
+        });
+
         Route::get('cacheclear', [ConfigurationController::class, 'cacheClear'])->name('general.cacheclear');
+
+        // Cache Management Routes
+        Route::prefix('cache')->name('cache.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Backend\CacheManagementController::class, 'index'])->name('index');
+            Route::post('warm', [\App\Http\Controllers\Backend\CacheManagementController::class, 'warm'])->name('warm');
+            Route::post('clear-tags', [\App\Http\Controllers\Backend\CacheManagementController::class, 'clearByTags'])->name('clear-tags');
+            Route::post('clear-all', [\App\Http\Controllers\Backend\CacheManagementController::class, 'clearAll'])->name('clear-all');
+            Route::get('stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'stats'])->name('stats');
+            Route::get('query-stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'queryStats'])->name('query-stats');
+        });
     });
 });
 

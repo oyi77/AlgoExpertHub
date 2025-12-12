@@ -12,15 +12,17 @@
     // Use cached menu (getMenuForUser includes caching)
     $menuStructure = $menuConfig->getMenuForUser($user);
     
-    // Final safety check: Ensure trading menu exists if user has active plan
+    // Final safety check: Ensure trading_console menu exists if user has active plan
     $onboardingService = app(\App\Services\UserOnboardingService::class);
     if ($onboardingService->hasActivePlan($user)) {
-        if (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items'])) {
+        // Support both new 'trading_console' and legacy 'trading' keys
+        if ((!isset($menuStructure['trading_console']) || empty($menuStructure['trading_console']['items'])) 
+            && (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items']))) {
             // Re-add trading menu if it was removed or empty
-            $menuStructure['trading'] = [
-                'label' => __('TRADING'),
+            $menuStructure['trading_console'] = [
+                'label' => __('TRADING CONSOLE'),
                 'icon' => 'fas fa-chart-line',
-                'items' => $menuConfig->getTradingMenuItems(),
+                'items' => $menuConfig->getTradingConsoleMenuItems(),
             ];
         }
     }
@@ -218,35 +220,42 @@
         <li>
             <a href="{{ route('user.dashboard') }}" class="{{ Config::activeMenu(route('user.dashboard')) }}">
                 <i class="fas fa-home"></i>
-                <span>{{ __('Home') }}</span>
+                <span>{{ __('Overview') }}</span>
             </a>
         </li>
 
         <li>
-            <a href="{{ route('user.deposit') }}" class="{{ Config::activeMenu(route('user.deposit')) }}">
-                <i class="fas fa-wallet"></i>
-                <span>{{ __('Deposit') }}</span>
+            <a href="{{ route('user.trading.operations.index') }}" class="{{ Config::activeMenu(route('user.trading.operations.index')) }}">
+                <i class="fas fa-robot"></i>
+                <span>{{ __('Bots') }}</span>
             </a>
         </li>
 
         <li>
-            <a href="{{ route('user.transfer_money') }}" class="{{ Config::activeMenu(route('user.transfer_money')) }}">
-                <i class="fas fa-exchange-alt"></i>
-                <span>{{ __('Send Money') }}</span>
-            </a>
+            @if(Route::has('user.manual-trading.index'))
+                <a href="{{ route('user.manual-trading.index') }}" class="{{ Config::activeMenu(route('user.manual-trading.index')) }}">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>{{ __('Trade') }}</span>
+                </a>
+            @else
+                <a href="{{ route('user.dashboard') }}" class="{{ Config::activeMenu(route('user.dashboard')) }}">
+                    <i class="fas fa-hand-pointer"></i>
+                    <span>{{ __('Trade') }}</span>
+                </a>
+            @endif
         </li>
 
         <li>
-            <a href="{{ route('user.withdraw') }}" class="{{ Config::activeMenu(route('user.withdraw')) }}">
-                <i class="fas fa-hand-holding-usd"></i>
-                <span>{{ __('Withdraw') }}</span>
+            <a href="{{ route('user.trading.multi-channel-signal.index') }}" class="{{ Config::activeMenu(route('user.trading.multi-channel-signal.index')) }}">
+                <i class="fas fa-signal"></i>
+                <span>{{ __('Signals') }}</span>
             </a>
         </li>
 
         <li class="sidebar-open-btn">
             <a href="#0">
                 <i class="fas fa-bars"></i>
-                <span>{{ __('Menu') }}</span>
+                <span>{{ __('More') }}</span>
             </a>
         </li>
     </ul>

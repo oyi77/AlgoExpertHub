@@ -13,5 +13,34 @@ const mix = require('laravel-mix');
 
 mix.js('resources/js/app.js', 'public/js')
     .postCss('resources/css/app.css', 'public/css', [
-        //
-    ]);
+        require('postcss-import'),
+        require('autoprefixer'),
+    ])
+    .postCss('resources/css/tokens.css', 'public/css', [
+        require('postcss-import'),
+        require('autoprefixer'),
+        require('cssnano')({
+            preset: ['default', {
+                discardComments: { removeAll: true },
+                normalizeWhitespace: true,
+            }]
+        })
+    ])
+    .postCss('resources/css/utilities.css', 'public/css', [
+        require('postcss-import'),
+        require('autoprefixer'),
+        require('cssnano')({
+            preset: ['default', {
+                discardComments: { removeAll: true },
+                normalizeWhitespace: true,
+            }]
+        })
+    ])
+    .options({
+        processCssUrls: false,
+        postCss: [
+            require('postcss-import'),
+            require('autoprefixer'),
+        ]
+    })
+    .version();

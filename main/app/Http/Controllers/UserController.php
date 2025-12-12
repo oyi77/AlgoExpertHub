@@ -39,7 +39,7 @@ class UserController extends Controller
             $data['onboardingProgress'] = 100;
         }
 
-        return view(Helper::theme() . 'user.dashboard')->with($data);
+        return view(Helper::themeView('user.dashboard'))->with($data);
     }
 
     public function profile()
@@ -48,7 +48,7 @@ class UserController extends Controller
 
         $data['user'] = auth()->user();
 
-        return view(Helper::theme() . 'user.profile')->with($data);
+        return view(Helper::themeView('user.profile'))->with($data);
     }
 
     public function profileUpdate(UserProfile $request)
@@ -63,7 +63,7 @@ class UserController extends Controller
     public function changePassword()
     {
         $title = 'Change Password';
-        return view(Helper::theme() . 'user.changepassword', compact('title'));
+        return view(Helper::themeView('user.changepassword'), compact('title'));
     }
 
     public function updatePassword(Request $request)

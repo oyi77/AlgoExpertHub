@@ -1095,5 +1095,11 @@ Route::post('subscribe', [FrontendController::class, 'subscribe'])->name('subscr
 
 Route::post('contact', [FrontendController::class, 'contactSend'])->name('contact');
 
+// PWA Routes
+Route::get('manifest.json', [\App\Http\Controllers\PWAController::class, 'manifest'])->name('pwa.manifest');
+Route::get('sw.js', [\App\Http\Controllers\PWAController::class, 'serviceWorker'])->name('pwa.serviceworker');
+Route::get('offline', [\App\Http\Controllers\PWAController::class, 'offline'])->name('pwa.offline');
+Route::get('install', [\App\Http\Controllers\PWAController::class, 'install'])->name('pwa.install');
+
 // Catch-all route must be last
 Route::get('{pages}', [FrontendController::class, 'page'])->name('pages');

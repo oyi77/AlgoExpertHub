@@ -21,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
         // Conditionally register addon service providers based on their status
         $this->registerAddonServiceProviders();
         
+        // Register queue optimization services
+        $this->app->singleton(\App\Services\QueueOptimizer::class);
+        
     }
     
     public function boot()

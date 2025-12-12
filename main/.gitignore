@@ -60,4 +60,4 @@ Thumbs.db
 
 # Npm package lock
 package-lock.json
-
+asset/

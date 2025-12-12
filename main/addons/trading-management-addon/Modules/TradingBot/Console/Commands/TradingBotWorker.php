@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
+use App\Logging\RotatingStreamHandler;
+use App\Services\LogRotationService;
 
 /**
  * TradingBotWorker Command
@@ -127,6 +129,10 @@ class TradingBotWorker extends Command
     {
         $logPath = storage_path("logs/trading-bot-{$botId}.log");
         
+        // Rotate log file if needed before setting up logger
+        $logRotation = app(LogRotationService::class);
+        $logRotation->rotateIfNeeded($logPath, 1000);
+        
         // Configure a custom log channel for this bot
         config(['logging.channels.trading-bot-' . $botId => [
             'driver' => 'single',
@@ -141,9 +147,9 @@ class TradingBotWorker extends Command
         // Clear the log manager cache to pick up the new config
         app()->forgetInstance('log');
         
-        // Also create a direct logger instance for command output
+        // Also create a direct logger instance for command output with rotation
         $logger = new Logger("trading-bot-{$botId}");
-        $handler = new StreamHandler($logPath, Logger::DEBUG);
+        $handler = new RotatingStreamHandler($logPath, Logger::DEBUG, true, null, false, 1000);
         $formatter = new LineFormatter(
             "[%datetime%] %level_name%: %message% %context% %extra%\n",
             'Y-m-d H:i:s'

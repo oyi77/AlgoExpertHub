@@ -21,7 +21,7 @@ class MoneyTransferController extends Controller
     {
         $data['title'] = 'Transfer Money';
 
-        return view(Helper::theme() . 'user.transfer_money')->with($data);
+        return view(Helper::themeView('user.transfer_money')->with($data);
     }
 
     public function transferMoney(UserMoneyTransferRequest $request)
@@ -46,7 +46,7 @@ class MoneyTransferController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('sender_id', auth()->id())->latest()->with('receiver')->paginate(Helper::pagination());
 
-        return view(Helper::theme() . 'user.transfermoney_log')->with($data);
+        return view(Helper::themeView('user.transfermoney_log')->with($data);
     }
 
     public function receiveMoneyLog(Request $request)
@@ -59,6 +59,6 @@ class MoneyTransferController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('receiver_id', auth()->id())->latest()->with('sender')->paginate(Helper::pagination());
 
-        return view(Helper::theme() . 'user.transfermoney_log')->with($data);
+        return view(Helper::themeView('user.transfermoney_log')->with($data);
     }
 }

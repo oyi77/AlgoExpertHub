@@ -1,23 +1,23 @@
-name: 'Admin - Language Management'
+name: 'Admin - Admin Users'
 description: |-
 
-  Endpoints for managing languages and translations.
+  Endpoints for managing admin users.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/admin/languages
+    uri: api/admin/admins
     metadata:
       custom: []
-      groupName: 'Admin - Language Management'
+      groupName: 'Admin - Admin Users'
       groupDescription: |-
 
-        Endpoints for managing languages and translations.
+        Endpoints for managing admin users.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Languages'
-      description: ''
+      title: 'List Admin Users'
+      description: 'Get all admin users.'
       authenticated: true
       deprecated: false
     headers:
@@ -34,16 +34,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api/admin/languages could not be found."
+            "success": true,
+            "data": [...]
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -56,17 +54,17 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/admin/languages
+    uri: api/admin/admins
     metadata:
       custom: []
-      groupName: 'Admin - Language Management'
+      groupName: 'Admin - Admin Users'
       groupDescription: |-
 
-        Endpoints for managing languages and translations.
+        Endpoints for managing admin users.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create Language'
-      description: ''
+      title: 'Create Admin User'
+      description: 'Create a new admin user.'
       authenticated: true
       deprecated: false
     headers:
@@ -81,30 +79,64 @@ endpoints:
       name:
         custom: []
         name: name
-        description: ''
+        description: 'Admin name.'
         required: true
-        example: architecto
+        example: 'John Doe'
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      code:
+      email:
         custom: []
-        name: code
-        description: 'Must be 2 characters.'
+        name: email
+        description: 'Admin email.'
         required: true
-        example: ng
+        example: admin@example.com
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: Password.
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      role_id:
+        custom: []
+        name: role_id
+        description: 'Role ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
         deprecated: false
     cleanBodyParameters:
-      name: architecto
-      code: ng
+      name: 'John Doe'
+      email: admin@example.com
+      password: password123
+      role_id: 1
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "success": true,
+            "data": {...}
+          }
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -117,17 +149,17 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/admin/languages/{id}'
+    uri: 'api/admin/admins/{id}'
     metadata:
       custom: []
-      groupName: 'Admin - Language Management'
+      groupName: 'Admin - Admin Users'
       groupDescription: |-
 
-        Endpoints for managing languages and translations.
+        Endpoints for managing admin users.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update Language'
-      description: ''
+      title: 'Update Admin User'
+      description: 'Update an admin user.'
       authenticated: true
       deprecated: false
     headers:
@@ -138,22 +170,80 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the language.'
+        description: 'Admin ID.'
         required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Admin name.'
+        required: false
         example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      email:
+        custom: []
+        name: email
+        description: 'Admin email.'
+        required: false
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'New password.'
+        required: false
+        example: '|]|{+-'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      role_id:
+        custom: []
+        name: role_id
+        description: 'Role ID.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: architecto
+      email: gbailey@example.net
+      password: '|]|{+-'
+      role_id: 16
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {...}
+          }
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers
@@ -166,17 +256,17 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/admin/languages/{id}'
+    uri: 'api/admin/admins/{id}'
     metadata:
       custom: []
-      groupName: 'Admin - Language Management'
+      groupName: 'Admin - Admin Users'
       groupDescription: |-
 
-        Endpoints for managing languages and translations.
+        Endpoints for managing admin users.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete Language'
-      description: ''
+      title: 'Delete Admin User'
+      description: 'Delete an admin user.'
       authenticated: true
       deprecated: false
     headers:
@@ -187,65 +277,16 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the language.'
+        description: 'Admin ID.'
         required: true
-        example: architecto
-        type: string
+        example: 1
+        type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/admin/languages/{code}/translations'
-    metadata:
-      custom: []
-      groupName: 'Admin - Language Management'
-      groupDescription: |-
-
-        Endpoints for managing languages and translations.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Translations'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      code:
-        custom: []
-        name: code
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      code: architecto
+      id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -254,65 +295,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api/admin/languages/architecto/translations could not be found."
+            "success": true,
+            "message": "Admin deleted successfully"
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: 'api/admin/languages/{code}/translations'
-    metadata:
-      custom: []
-      groupName: 'Admin - Language Management'
-      groupDescription: |-
-
-        Endpoints for managing languages and translations.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Update Translation'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      code:
-        custom: []
-        name: code
+        headers: []
         description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      code: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
     responseFields: []
     auth:
       - headers

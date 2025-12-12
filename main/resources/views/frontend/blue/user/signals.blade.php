@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.auth')
+@extends(Config::themeView('layout.auth'))
 
 @section('content')
 

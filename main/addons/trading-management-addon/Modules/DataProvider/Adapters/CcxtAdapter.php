@@ -3,286 +3,323 @@
 namespace Addons\TradingManagement\Modules\DataProvider\Adapters;
 
 use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
+use Addons\TradingManagement\Shared\Contracts\ExchangeAdapterInterface;
+use ccxt\Exchange;
+use Exception;
 
 /**
  * CCXT Adapter
  * 
- * Connects to crypto exchanges via CCXT library
+ * Implements DataProviderInterface and ExchangeAdapterInterface via CCXT
  */
-class CcxtAdapter implements DataProviderInterface
+class CcxtAdapter implements DataProviderInterface, ExchangeAdapterInterface
 {
-    protected $credentials;
-    protected $exchange;
-    protected $ccxtInstance;
+    protected ?Exchange $exchange = null;
+    protected array $credentials = [];
+    protected string $exchangeId;
+    protected bool $connected = false;
 
-    public function __construct(array $credentials, string $exchangeName)
+    public function __construct(string $exchangeId, array $credentials = [])
     {
+        $this->exchangeId = $exchangeId;
         $this->credentials = $credentials;
-        $this->exchange = $exchangeName;
-    }
-
-    /**
-     * Test connection
-     */
-    public function test(): array
-    {
-        try {
-            $this->initializeCcxt();
-            
-            // Test by fetching markets
-            $markets = $this->ccxtInstance->load_markets();
-            
-            return [
-                'success' => true,
-                'message' => 'Connected successfully to ' . $this->exchange,
-                'data' => [
-                    'markets_count' => count($markets),
-                    'exchange' => $this->exchange,
-                ],
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'Connection failed: ' . $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Fetch OHLCV data (interface requirement)
-     */
-    public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
-    {
-        try {
-            $this->initializeCcxt();
-            
-            // Convert timeframe to CCXT format (1h, 4h, 1d, etc.)
-            $ccxtTimeframe = $this->convertTimeframe($timeframe);
-            
-            // Fetch OHLCV data (CCXT expects timestamp in milliseconds for since parameter)
-            $sinceMs = $since ? $since * 1000 : null;
-            $ohlcv = $this->ccxtInstance->fetch_ohlcv($symbol, $ccxtTimeframe, $sinceMs, $limit);
-            
-            // Transform to standard format
-            $candles = [];
-            foreach ($ohlcv as $candle) {
-                $candles[] = [
-                    'timestamp' => $candle[0], // Already in milliseconds from CCXT
-                    'open' => (float) $candle[1],
-                    'high' => (float) $candle[2],
-                    'low' => (float) $candle[3],
-                    'close' => (float) $candle[4],
-                    'volume' => (float) $candle[5],
-                ];
-            }
-            
-            return $candles;
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to fetch OHLCV data: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Fetch candle data (backward compatibility)
-     */
-    public function fetchCandles(string $symbol, string $timeframe, int $limit = 100): array
-    {
-        try {
-            $data = $this->fetchOHLCV($symbol, $timeframe, $limit);
-            return [
-                'success' => true,
-                'data' => $data,
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Fetch current price
-     */
-    public function fetchCurrentPrice(string $symbol): array
-    {
-        try {
-            $this->initializeCcxt();
-            
-            $ticker = $this->ccxtInstance->fetch_ticker($symbol);
-            
-            return [
-                'success' => true,
-                'data' => [
-                    'bid' => $ticker['bid'],
-                    'ask' => $ticker['ask'],
-                    'last' => $ticker['last'],
-                ],
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Initialize CCXT instance
-     */
-    protected function initializeCcxt(): void
-    {
-        if ($this->ccxtInstance) {
-            return;
-        }
-
-        // Dynamically create CCXT exchange instance
-        $exchangeClass = "\\ccxt\\" . $this->exchange;
         
+        $this->initializeExchange();
+    }
+
+    protected function initializeExchange(): void
+    {
+        $exchangeClass = "\\ccxt\\$this->exchangeId";
         if (!class_exists($exchangeClass)) {
-            throw new \Exception("Exchange {$this->exchange} not supported by CCXT");
+            throw new Exception("Exchange $this->exchangeId not supported by CCXT");
         }
 
-        $config = [
-            'apiKey' => $this->credentials['api_key'] ?? '',
-            'secret' => $this->credentials['api_secret'] ?? '',
-        ];
-
-        // Add passphrase if provided (required by some exchanges like OKX, KuCoin)
-        if (!empty($this->credentials['api_passphrase'])) {
-            $config['password'] = $this->credentials['api_passphrase'];
+        $this->exchange = new $exchangeClass([
+            'apiKey' => $this->credentials['api_key'] ?? null,
+            'secret' => $this->credentials['secret'] ?? null,
+            'password' => $this->credentials['password'] ?? null, // For some exchanges like OKX/KuCoin
+            'uid' => $this->credentials['uid'] ?? null,
+            'enableRateLimit' => true,
+        ]);
+        
+        // Use sandbox if configured
+        if (!empty($this->credentials['sandbox'])) {
+            $this->exchange->set_sandbox_mode(true);
         }
-
-        $this->ccxtInstance = new $exchangeClass($config);
     }
 
-    /**
-     * Convert timeframe to CCXT format
-     */
-    protected function convertTimeframe(string $timeframe): string
+    public function connect(array $credentials = []): bool
     {
-        $mapping = [
-            'M1' => '1m',
-            'M5' => '5m',
-            'M15' => '15m',
-            'M30' => '30m',
-            'H1' => '1h',
-            'H4' => '4h',
-            'D1' => '1d',
-            'W1' => '1w',
-            'MN' => '1M',
-        ];
-
-        return $mapping[$timeframe] ?? $timeframe;
-    }
-
-    /**
-     * Connect to exchange
-     */
-    public function connect(array $credentials): bool
-    {
-        try {
+        if (!empty($credentials)) {
             $this->credentials = array_merge($this->credentials, $credentials);
-            $this->initializeCcxt();
-            $this->ccxtInstance->load_markets();
+            $this->initializeExchange();
+        }
+
+        try {
+            // Some exchanges don't require explicit check, but loading markets confirms connectivity
+            $this->exchange->load_markets();
+            $this->connected = true;
             return true;
-        } catch (\Exception $e) {
-            return false;
+        } catch (Exception $e) {
+            $this->connected = false;
+            throw new Exception("Failed to connect to $this->exchangeId: " . $e->getMessage());
         }
     }
 
-    /**
-     * Disconnect
-     */
     public function disconnect(): void
     {
-        $this->ccxtInstance = null;
+        $this->connected = false;
+        $this->exchange = null;
     }
 
-    /**
-     * Check if connected
-     */
     public function isConnected(): bool
     {
-        return $this->ccxtInstance !== null;
+        return $this->connected;
     }
 
-    /**
-     * Fetch tick data
-     */
+    public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
+    {
+        if (!$this->connected) {
+            $this->connect();
+        }
+
+        try {
+            $ohlcv = $this->exchange->fetch_ohlcv($symbol, $timeframe, $since, $limit);
+            return $this->normalizeOHLCVData($ohlcv);
+        } catch (Exception $e) {
+            throw new Exception("Failed to fetch OHLCV from $this->exchangeId: " . $e->getMessage());
+        }
+    }
+
     public function fetchTicks(string $symbol, int $limit = 100): array
     {
+        if (!$this->connected) {
+            $this->connect();
+        }
+
         try {
-            $this->initializeCcxt();
-            $trades = $this->ccxtInstance->fetch_trades($symbol, null, $limit);
+            // CCXT doesn't have a standard fetch_ticks for all exchanges, 
+            // but fetch_trades (public trades) is often what's intended for tick data history
+            $trades = $this->exchange->fetch_trades($symbol, null, $limit);
             
             $ticks = [];
             foreach ($trades as $trade) {
                 $ticks[] = [
                     'timestamp' => $trade['timestamp'],
-                    'symbol' => $symbol,
-                    'bid' => $trade['price'],
-                    'ask' => $trade['price'],
-                    'last' => $trade['price'],
+                    'price' => $trade['price'],
                     'volume' => $trade['amount'],
+                    'side' => $trade['side'],
                 ];
             }
-            
             return $ticks;
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to fetch ticks: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Failed to fetch ticks from $this->exchangeId: " . $e->getMessage());
         }
     }
 
-    /**
-     * Get account info
-     */
     public function getAccountInfo(): array
     {
+        if (!$this->connected) {
+            $this->connect();
+        }
+
         try {
-            $this->initializeCcxt();
-            $balance = $this->ccxtInstance->fetch_balance();
-            
+            $balance = $this->exchange->fetch_balance();
             return [
-                'balance' => $balance['total']['USD'] ?? $balance['total']['USDT'] ?? 0,
-                'equity' => $balance['total']['USD'] ?? $balance['total']['USDT'] ?? 0,
-                'margin' => 0,
-                'free_margin' => $balance['free']['USD'] ?? $balance['free']['USDT'] ?? 0,
-                'currency' => 'USD',
+                'free' => $balance['free'],
+                'used' => $balance['used'],
+                'total' => $balance['total'],
+                'info' => $balance['info'] ?? [],
             ];
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to fetch account info: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Failed to get account info from $this->exchangeId: " . $e->getMessage());
         }
     }
 
-    /**
-     * Get available symbols
-     */
     public function getAvailableSymbols(): array
     {
+        if (!$this->connected) {
+            $this->connect();
+        }
+
+        return $this->exchange->symbols;
+    }
+
+    public function testConnection(): array
+    {
+        $start = microtime(true);
         try {
-            $this->initializeCcxt();
-            $markets = $this->ccxtInstance->load_markets();
-            return array_keys($markets);
-        } catch (\Exception $e) {
+            $this->connect();
+            $latency = (microtime(true) - $start) * 1000;
+            return [
+                'success' => true,
+                'message' => "Successfully connected to $this->exchangeId",
+                'latency' => round($latency, 2),
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'latency' => round((microtime(true) - $start) * 1000, 2),
+            ];
+        }
+    }
+
+    public function getProviderName(): string
+    {
+        return "ccxt_$this->exchangeId";
+    }
+
+    protected function normalizeOHLCVData(array $data): array
+    {
+        // CCXT returns [timestamp, open, high, low, close, volume]
+        $normalized = [];
+        foreach ($data as $candle) {
+            $normalized[] = [
+                'timestamp' => $candle[0],
+                'open' => $candle[1],
+                'high' => $candle[2],
+                'low' => $candle[3],
+                'close' => $candle[4],
+                'volume' => $candle[5],
+            ];
+        }
+        return $normalized;
+    }
+
+    // ExchangeAdapterInterface Implementation
+
+    public function createMarketOrder(string $symbol, string $side, float $amount, array $params = []): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            return $this->exchange->create_market_order($symbol, $side, $amount, null, $params);
+        } catch (Exception $e) {
+            throw new Exception("Create market order failed: " . $e->getMessage());
+        }
+    }
+
+    public function createLimitOrder(string $symbol, string $side, float $amount, float $price, array $params = []): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            return $this->exchange->create_limit_order($symbol, $side, $amount, $price, $params);
+        } catch (Exception $e) {
+            throw new Exception("Create limit order failed: " . $e->getMessage());
+        }
+    }
+
+    public function cancelOrder(string $orderId, string $symbol): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            return $this->exchange->cancel_order($orderId, $symbol);
+        } catch (Exception $e) {
+            throw new Exception("Cancel order failed: " . $e->getMessage());
+        }
+    }
+
+    public function getOrder(string $orderId, string $symbol): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            return $this->exchange->fetch_order($orderId, $symbol);
+        } catch (Exception $e) {
+            throw new Exception("Get order failed: " . $e->getMessage());
+        }
+    }
+
+    public function getOpenPositions(?string $symbol = null): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            // Not all exchanges support fetchPositions
+            if ($this->exchange->has['fetchPositions']) {
+                return $this->exchange->fetch_positions($symbol ? [$symbol] : null);
+            }
+            return [];
+        } catch (Exception $e) {
+            // Fallback: return empty or throw? Usually better to log and return empty if not critical
             return [];
         }
     }
 
-    /**
-     * Test connection
-     */
-    public function testConnection(): array
+    public function closePosition(string $positionId, string $symbol, ?float $amount = null): array
     {
-        return $this->test();
+        if (!$this->connected) $this->connect();
+        
+        try {
+            // 1. Try native close position if supported (e.g. OKX, Binance Futures sometimes support it)
+            // CCXT doesn't have a unified 'closePosition' method yet, usually it's exchange specific.
+            
+            // 2. Fetch position to determine side/amount if not provided
+            $positions = $this->getOpenPositions($symbol);
+            $targetPosition = null;
+            
+            // Try to find by multiple criteria since IDs vary
+            foreach ($positions as $p) {
+                if (($p['id'] ?? '') == $positionId || ($p['symbol'] ?? '') == $symbol) {
+                    $targetPosition = $p;
+                    break;
+                }
+            }
+            
+            if (!$targetPosition) {
+                // If we can't find it but have symbol, maybe just skip or error
+                throw new Exception("Position not found for $symbol");
+            }
+            
+            $side = $targetPosition['side'] ?? null; // 'long' or 'short' usually
+            $size = $amount ?? $targetPosition['contracts'] ?? $targetPosition['amount'] ?? 0;
+            
+            if (!$side || $size <= 0) {
+                 throw new Exception("Could not determine position side or size");
+            }
+            
+            // Determine opposite side
+            $closeSide = ($side === 'long' || $side === 'buy') ? 'sell' : 'buy';
+            
+            // 3. Place opposite market order
+            // Note: Some exchanges require 'reduceOnly' => true
+            $params = ['reduceOnly' => true];
+            
+            return $this->createMarketOrder($symbol, $closeSide, $size, $params);
+            
+        } catch (Exception $e) {
+             throw new Exception("Close position failed: " . $e->getMessage());
+        }
     }
 
-    /**
-     * Get provider name
-     */
-    public function getProviderName(): string
+    public function getBalance(): array
     {
-        return 'ccxt_' . strtolower($this->exchange);
+        return $this->getAccountInfo();
+    }
+
+    public function modifyPosition(string $positionId, string $symbol, ?float $stopLoss = null, ?float $takeProfit = null): array
+    {
+         // CCXT doesn't have generic modifyPosition.
+         // Usually involves cancelling SL/TP orders and creating new ones.
+         throw new Exception("modifyPosition not supported in generic CCXT adapter yet.");
+    }
+
+    public function getCurrentPrice(string $symbol): array
+    {
+        if (!$this->connected) $this->connect();
+        try {
+            $ticker = $this->exchange->fetch_ticker($symbol);
+            return [
+                'bid' => $ticker['bid'],
+                'ask' => $ticker['ask'],
+                'last' => $ticker['last'],
+                'timestamp' => $ticker['timestamp'],
+            ];
+        } catch (Exception $e) {
+            throw new Exception("Get current price failed: " . $e->getMessage());
+        }
+    }
+
+    public function getExchangeName(): string
+    {
+        return $this->exchangeId;
     }
 }
-

@@ -22,7 +22,7 @@ class ExecutionLogController extends Controller
         $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon');
 
         if (!$data['tradingManagementEnabled']) {
-            return view(Helper::theme() . 'user.trading.execution-log', $data);
+            return view(Helper::themeView('user.trading.execution-log', $data);
         }
 
         try {
@@ -163,7 +163,7 @@ class ExecutionLogController extends Controller
             $data['closedPositions'] = collect();
         }
 
-        return view(Helper::theme() . 'user.trading.execution-log', $data);
+        return view(Helper::themeView('user.trading.execution-log', $data);
     }
 
     /**
