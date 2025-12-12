@@ -1,0 +1,99 @@
+/*
+ * Component Styles - Blue Theme
+ * Clean blue color scheme
+ */
+
+/* Button Component - Blue Theme */
+.btn-primary,
+button.btn-primary,
+.btn-primary:not(:disabled):not(.disabled) {
+    background-color: #2563eb; /* Blue-600 */
+    border-color: #2563eb;
+    color: white;
+    transition: var(--transition-standard);
+    box-shadow: var(--shadow-md);
+    font-weight: var(--font-weight-medium);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+}
+
+.btn-primary:hover:not(:disabled):not(.disabled) {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+/* Card Component */
+.card-modern {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-standard);
+    border: 1px solid #e5e7eb;
+    padding: var(--space-6);
+}
+
+.card-modern:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* Banner Bottom Shape - Blue Wave */
+.sp_banner .sp_banner_bottom_shape::before {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+}
+
+/* Stats Card Icon */
+.stats-card-icon {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+/* Benefit icons - Enhanced with gradients */
+.sp_benefit_icon {
+    background: linear-gradient(135deg, #0099FA 0%, #6366F1 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0, 153, 250, 0.25);
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sp_benefit_icon:hover {
+    background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
+}
+
+/* Work number badges */
+.sp_work_number {
+    background: #2563eb;
+    color: white;
+}
+
+/* Pricing icon */
+.pricing-header .icon {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+.package-price {
+    color: #2563eb;
+}
+
+/* Accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Include base component styles */
+@import '../default/css/components.css';
+
