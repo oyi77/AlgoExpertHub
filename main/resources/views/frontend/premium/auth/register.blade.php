@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'auth.master')
+@extends(Config::themeView('auth.master'))
 
 @section('content')
     <form action="{{ route('user.register') }}" method="POST">

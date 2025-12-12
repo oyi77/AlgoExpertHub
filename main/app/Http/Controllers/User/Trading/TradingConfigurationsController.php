@@ -93,7 +93,7 @@ class TradingConfigurationsController extends Controller
             }
         }
 
-        return view(Helper::theme() . 'user.trading.configurations', $data);
+        return view(Helper::themeView('user.trading.configurations', $data);
     }
 }
 

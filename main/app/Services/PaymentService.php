@@ -119,11 +119,11 @@ class PaymentService
         }
 
         if ($data['gateway']->type == 0) {
-            return ['type'=> '','view' => Helper::theme().'user.gateway.offline', 'data' => $data];
+            return ['type'=> '','view' => Helper::themeView('user.gateway.offline'), 'data' => $data];
         }
 
 
-        return ['type'=> '', 'view' => Helper::theme().'user.gateway.online', 'data' => $data];
+        return ['type'=> '', 'view' => Helper::themeView('user.gateway.online'), 'data' => $data];
 
     }
 }

@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'auth.master')
+@extends(Config::themeView('auth.master'))
 
 @section('content')
     <form class="account-form mt-4" action="{{ route('user.auth.verify') }}" method="POST">

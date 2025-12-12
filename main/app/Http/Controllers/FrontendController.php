@@ -26,7 +26,7 @@ class FrontendController extends Controller
 
         $data['title'] = $data['page']->name;
 
-        return view(Helper::theme() . 'home')->with($data);
+        return view(Helper::themeView('home'))->with($data);
     }
 
     public function page(Request $request)
@@ -59,7 +59,7 @@ class FrontendController extends Controller
 
         $data['pageBuilderContent'] = $pageBuilderContent;
 
-        return view(Helper::theme() . 'pages')->with($data);
+        return view(Helper::themeView('pages'))->with($data);
     }
 
     public function changeLanguage(Request $request)
@@ -92,7 +92,7 @@ class FrontendController extends Controller
             ->whatsapp()
             ->reddit();
 
-        return view(Helper::theme() . 'pages.blog_details')->with($data);
+        return view(Helper::themeView('pages.blog_details'))->with($data);
     }
 
     public function contactSend(Request $request)
@@ -136,6 +136,6 @@ class FrontendController extends Controller
         $data['page'] = null;
         $data['details'] = $details;
 
-        return view(Helper::theme(). 'link_details')->with($data);
+        return view(Helper::themeView('link_details'))->with($data);
     }
 }

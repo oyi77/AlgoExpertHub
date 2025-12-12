@@ -274,6 +274,31 @@ class Helper
         }
     }
 
+    public static function themeView($view)
+    {
+        try {
+            $config = Configuration::first();
+            $theme = $config && $config->theme ? $config->theme : 'default';
+            
+            // If default theme, use default directly
+            if ($theme === 'default') {
+                return 'frontend.default.' . $view;
+            }
+            
+            // For other themes, check if theme-specific view exists
+            $themeView = 'frontend.' . $theme . '.' . $view;
+            if (view()->exists($themeView)) {
+                return $themeView;
+            }
+            
+            // Fallback to default theme
+            return 'frontend.default.' . $view;
+        } catch (\Exception $e) {
+            // Fallback to default on error
+            return 'frontend.default.' . $view;
+        }
+    }
+
     public static function backendTheme()
     {
         try {

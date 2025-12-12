@@ -47,6 +47,6 @@ class BacktestingController extends Controller
             }
         }
 
-        return view(Helper::theme() . 'user.trading.backtesting', $data);
+        return view(Helper::themeView('user.trading.backtesting', $data);
     }
 }

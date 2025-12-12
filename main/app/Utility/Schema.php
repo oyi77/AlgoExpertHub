@@ -4,6 +4,7 @@ namespace App\Utility;
 
 use App\Helpers\Helper\Helper;
 use App\Models\Configuration;
+use Illuminate\Support\Facades\Log;
 
 trait Schema
 {
@@ -63,12 +64,31 @@ trait Schema
 
     public function sectionHtml($sectionName)
     {
-        $content = Helper::builder($sectionName);
+        try {
+            $content = Helper::builder($sectionName);
 
-        $data['content'] = $content ? optional($content)->content : null;
-        
-        $data['element'] = Helper::builder($sectionName, true);
-        
-        return view(Helper::theme() . 'widgets.'.$sectionName)->with($data);
+            $data['content'] = $content ? optional($content)->content : null;
+            
+            $data['element'] = Helper::builder($sectionName, true);
+            
+            $viewPath = Helper::themeView('widgets.'.$sectionName);
+            
+            if (!view()->exists($viewPath)) {
+                Log::error('Section widget view not found', [
+                    'section' => $sectionName,
+                    'view_path' => $viewPath
+                ]);
+                return '<!-- Section widget not found: ' . htmlspecialchars($sectionName) . ' -->';
+            }
+            
+            return view($viewPath)->with($data);
+        } catch (\Exception $e) {
+            Log::error('Section HTML error', [
+                'section' => $sectionName,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return '<!-- Section HTML error: ' . htmlspecialchars($sectionName) . ' - ' . htmlspecialchars($e->getMessage()) . ' -->';
+        }
     }
 }

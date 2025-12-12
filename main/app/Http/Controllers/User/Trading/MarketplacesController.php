@@ -197,6 +197,6 @@ class MarketplacesController extends Controller
             }
         }
 
-        return view(Helper::theme() . 'user.trading.marketplaces', $data);
+        return view(Helper::themeView('user.trading.marketplaces', $data);
     }
 }

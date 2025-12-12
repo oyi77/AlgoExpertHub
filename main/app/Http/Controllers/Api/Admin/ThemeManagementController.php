@@ -186,7 +186,7 @@ class ThemeManagementController extends Controller
                 $themes[] = [
                     'name' => $themeName,
                     'path' => $dir,
-                    'active' => \App\Helpers\Helper\Helper::theme() === $themeName
+                    'active' => str_replace(['frontend.', '.'], '', \App\Helpers\Helper\Helper::theme()) === $themeName
                 ];
             }
         }

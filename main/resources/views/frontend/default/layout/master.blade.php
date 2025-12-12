@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
 
-    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', Config::config()->favicon, true) }}">
+    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->favicon, true) }}">
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'all.min.css') }}">
@@ -49,8 +49,8 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
-    <link href="{{ asset('css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
-    <link href="{{ asset('css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('asset/css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('asset/css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'components.css') }}?v=20251211" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
@@ -117,20 +117,20 @@
                 }
             @endphp
             @if (!$hasBannerInWidgets)
-                @include(Config::theme() . 'widgets.banner')
+                @include(Config::themeView('widgets.banner'))
             @endif
         @endif
 
-        @include(Config::theme() . 'layout.header')
+        @include(Config::themeView('layout.header'))
 
         @if (!request()->routeIs('home'))
-            @include(Config::theme() . 'widgets.breadcrumb')
+            @include(Config::themeView('widgets.breadcrumb'))
         @endif
 
         @yield('content')
     </div>
 
-    @include(Config::theme() . 'widgets.footer')
+    @include(Config::themeView('widgets.footer'))
 
     {{-- Critical scripts (load immediately) --}}
     <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
@@ -192,7 +192,7 @@
 
                         $('.subscribe-email').val('');
 
-                        @include(Config::theme() . 'layout.ajax_alert', [
+                        @include(Config::themeView('layout.ajax_alert'), [
                             'message' => 'Successfully Subscribe',
                             'message_error' => '',
                         ])

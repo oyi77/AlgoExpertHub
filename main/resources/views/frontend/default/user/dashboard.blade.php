@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.auth')
+@extends(Config::themeView('layout.auth'))
 
 @section('content')
 
@@ -21,14 +21,14 @@
             <div class="d-left-wrapper">
                 <!-- Onboarding Checklist Widget -->
                 @if(isset($onboardingChecklist) && !empty($onboardingChecklist) && $onboardingProgress < 100)
-                    @include(Config::theme() . 'user.onboarding._checklist_widget', [
+                    @include(Config::themeView('user.onboarding._checklist_widget', [
                         'checklist' => $onboardingChecklist,
                         'progress' => $onboardingProgress
                     ])
                 @endif
                 
                 <!-- Quick Action Banner Section -->
-                @include(Config::theme() . 'user.dashboard._quick_actions_banner')
+                @include(Config::themeView('user.dashboard._quick_actions_banner')
                 
                 <div class="d-left-countdown">
                     <div id="countdownTwo"></div>
@@ -232,38 +232,138 @@
 
 
 @push('external-script')
-    <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}"></script>
+    <!-- ApexCharts Library - Direct blocking load -->
+    <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}" async="false" defer="false" onerror="window.__apexchartsLoadFailed = true;"></script>
+    <script>
+        // Check if blocking load succeeded
+        (function() {
+            console.log('[ApexCharts] Checking after blocking load, defined:', typeof ApexCharts !== 'undefined', 'failed:', window.__apexchartsLoadFailed);
+            
+            // Small delay to allow script to initialize
+            setTimeout(function() {
+                if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                    console.log('[ApexCharts] Blocking load succeeded');
+                    window.__apexchartsLoaded = true;
+                    window.dispatchEvent(new Event('apexcharts-loaded'));
+                } else if (window.__apexchartsLoadFailed || typeof ApexCharts === 'undefined') {
+                    console.log('[ApexCharts] Blocking load failed or not available, using fallback');
+                    loadFallback();
+                } else {
+                    // Script loaded but ApexCharts not ready yet - wait a bit more
+                    var attempts = 0;
+                    var checkInterval = setInterval(function() {
+                        attempts++;
+                        if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                            console.log('[ApexCharts] Available after', attempts, 'checks');
+                            clearInterval(checkInterval);
+                            window.__apexchartsLoaded = true;
+                            window.dispatchEvent(new Event('apexcharts-loaded'));
+                        } else if (attempts >= 20) {
+                            console.warn('[ApexCharts] Timeout waiting, using fallback');
+                            clearInterval(checkInterval);
+                            loadFallback();
+                        }
+                    }, 50);
+                }
+            }, 50);
+            
+            function loadFallback() {
+                if (window.__apexchartsLoading) return;
+                window.__apexchartsLoading = true;
+                
+                var scripts = [
+                    'https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js',
+                    'https://unpkg.com/apexcharts@3.44.0/dist/apexcharts.min.js'
+                ];
+                
+                function loadScript(index) {
+                    if (index >= scripts.length) {
+                        console.error('[ApexCharts] All fallback sources failed');
+                        window.__apexchartsLoading = false;
+                        return;
+                    }
+                    
+                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                        console.log('[ApexCharts] Available from fallback');
+                        window.__apexchartsLoaded = true;
+                        window.__apexchartsLoading = false;
+                        window.dispatchEvent(new Event('apexcharts-loaded'));
+                        return;
+                    }
+                    
+                    console.log('[ApexCharts] Loading fallback', index + 1, ':', scripts[index]);
+                    var script = document.createElement('script');
+                    script.src = scripts[index];
+                    script.async = false;
+                    script.defer = false;
+                    
+                    script.onload = function() {
+                        var attempts = 0;
+                        var checkInterval = setInterval(function() {
+                            attempts++;
+                            if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                                console.log('[ApexCharts] Fallback confirmed available');
+                                clearInterval(checkInterval);
+                                window.__apexchartsLoaded = true;
+                                window.__apexchartsLoading = false;
+                                window.dispatchEvent(new Event('apexcharts-loaded'));
+                            } else if (attempts >= 100) {
+                                clearInterval(checkInterval);
+                                loadScript(index + 1);
+                            }
+                        }, 50);
+                    };
+                    
+                    script.onerror = function() {
+                        loadScript(index + 1);
+                    };
+                    
+                    document.head.appendChild(script);
+                }
+                
+                loadScript(0);
+            }
+        })();
+    </script>
 @endpush
 
 @push('script')
     <script>
-    $(function() {
+    // Initialize dashboard - wait for both DOM and ApexCharts
+    (function() {
         'use strict'
+        
+        console.log('[Dashboard] Init script started, DOM:', document.readyState, 'ApexCharts:', typeof ApexCharts !== 'undefined');
+        
+        function initDashboard() {
+            console.log('[Dashboard] initDashboard called, ApexCharts:', typeof ApexCharts !== 'undefined');
 
         var copyButton = document.querySelector('.copy');
         var copyInput = document.querySelector('.copy-text');
-        copyButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            var text = copyInput.select();
-            document.execCommand('copy');
-        });
-        copyInput.addEventListener('click', function() {
-            this.select();
-        });
-
-
+        if (copyButton && copyInput) {
+            copyButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                var text = copyInput.select();
+                document.execCommand('copy');
+            });
+            copyInput.addEventListener('click', function() {
+                this.select();
+            });
+        }
 
         var copyButton2 = document.querySelector('.copy2');
         var copyInput2 = document.querySelector('.copy-text2');
-        copyButton2.addEventListener('click', function(e) {
-            e.preventDefault();
-            var text = copyInput2.select();
-            document.execCommand('copy');
-        });
-        copyInput2.addEventListener('click', function() {
-            this.select();
-        });
-
+        if (copyButton2 && copyInput2) {
+            copyButton2.addEventListener('click', function(e) {
+                e.preventDefault();
+                var text = copyInput2.select();
+                document.execCommand('copy');
+            });
+            copyInput2.addEventListener('click', function() {
+                this.select();
+            });
+        }
 
         var expirationDate = new Date('{{ $plan_expired_at }}');
 
@@ -309,191 +409,360 @@
         // Call updateCountdown every second
         setInterval(updateCountdown, 1000);
 
-
-        var colors = ['#9C0AC1'];
-
-        var options = {
-            series: [{
-                name: 'Signal',
-                data: @json($signalGrapTotal)
-            }],
-            legend: {
-                labels: {
-                    colors: '#ffffff'
+        // Wait for ApexCharts to be available - with strict verification
+        function waitForApexCharts(callback) {
+            console.log('[Dashboard] waitForApexCharts called, ApexCharts:', typeof ApexCharts !== 'undefined');
+            
+            // Check immediately with strict verification
+            if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                console.log('[Dashboard] ApexCharts available immediately');
+                // Double-check it's actually callable
+                try {
+                    if (ApexCharts.prototype && ApexCharts.prototype.constructor) {
+                        callback();
+                        return;
+                    }
+                } catch(e) {
+                    console.warn('[Dashboard] ApexCharts exists but not callable:', e);
                 }
-            },
-            colors: colors,
-            chart: {
-                height: 280,
-                type: 'bar',
-                toolbar: {
-                    show: false
+            }
+            
+            // Check if already loaded flag is set
+            if (window.__apexchartsLoaded) {
+                setTimeout(function() {
+                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                        console.log('[Dashboard] ApexCharts confirmed via loaded flag');
+                        callback();
+                        return;
+                    }
+                }, 10);
+            }
+            
+            // Listen for loaded event (only once)
+            var eventHandler = function() {
+                console.log('[Dashboard] apexcharts-loaded event fired');
+                // Wait a tiny bit to ensure ApexCharts is fully initialized
+                setTimeout(function() {
+                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                        console.log('[Dashboard] ApexCharts confirmed in event handler');
+                        callback();
+                    } else {
+                        console.error('[Dashboard] Event fired but ApexCharts still not valid!');
+                    }
+                }, 10);
+            };
+            window.addEventListener('apexcharts-loaded', eventHandler, { once: true });
+            
+            // Fallback polling (max 10 seconds = 200 attempts * 50ms)
+            var attempts = 0;
+            var maxAttempts = 200;
+            var pollInterval = setInterval(function() {
+                attempts++;
+                if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                    console.log('[Dashboard] ApexCharts detected via polling after', attempts, 'attempts');
+                    clearInterval(pollInterval);
+                    window.removeEventListener('apexcharts-loaded', eventHandler);
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    console.error('[Dashboard] Polling timeout - ApexCharts failed to load');
+                    clearInterval(pollInterval);
+                    window.removeEventListener('apexcharts-loaded', eventHandler);
                 }
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '40%',
-                    endingShape: 'rounded'
+            }, 50);
+        }
+
+        // Initialize charts when ApexCharts is ready
+        waitForApexCharts(function() {
+            console.log('[Dashboard] Chart init callback executing');
+            
+            // Strict verification - ApexCharts must be a function
+            if (typeof ApexCharts === 'undefined' || typeof ApexCharts !== 'function') {
+                console.error('[Dashboard] CRITICAL: ApexCharts not available or not a function. Type:', typeof ApexCharts);
+                return;
+            }
+            
+            // Additional verification - try to access ApexCharts constructor
+            try {
+                if (!ApexCharts.prototype || !ApexCharts.prototype.constructor) {
+                    console.error('[Dashboard] CRITICAL: ApexCharts exists but prototype invalid');
+                    return;
+                }
+            } catch(e) {
+                console.error('[Dashboard] CRITICAL: Error accessing ApexCharts:', e);
+                return;
+            }
+            
+            console.log('[Dashboard] ApexCharts verified, proceeding with chart creation');
+
+            var colors = ['#9C0AC1'];
+
+            var options = {
+                series: [{
+                    name: 'Signal',
+                    data: @json($signalGrapTotal)
+                }],
+                legend: {
+                    labels: {
+                        colors: '#ffffff'
+                    }
                 },
-            },
-            dataLabels: {
-                enabled: false
-            },
-            stroke: {
-                show: true,
-                width: 2,
-                colors: ['transparent'],
-                curve: 'smooth'
-            },
-            xaxis: {
-                categories: @json($months),
-                labels: {
-                    style: {
-                        colors: '#bebebe',
-                        fontSize: '12px',
+                colors: colors,
+                chart: {
+                    height: 280,
+                    type: 'bar',
+                    toolbar: {
+                        show: false
                     }
-                }
-            },
-            yaxis: {
-                labels: {
-                    style: {
-                        colors: '#bebebe'
-                    }
-                }
-            },
-            grid: {
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '40%',
+                        endingShape: 'rounded'
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent'],
+                    curve: 'smooth'
+                },
                 xaxis: {
-                    lines: {
-                        show: false
+                    categories: @json($months),
+                    labels: {
+                        style: {
+                            colors: '#bebebe',
+                            fontSize: '12px',
+                        }
                     }
-                },   
+                },
                 yaxis: {
-                    lines: {
-                        show: false
-                    }
-                }, 
-            },
-            fill: {
-                opacity: 1,
-                colors: colors
-            },
-            tooltip: {
-                x: {
-                    format: 'dd/MM/yy HH:mm'
-                },
-            },
-        };
-
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
-
-        var options = {
-       
-        series: [{{$totalAmount->sum()}}, {{$withdrawTotalAmount->sum()}}, {{$depositTotalAmount->sum()}}],
-        labels: ['Payment', 'Withdraw', 'Deposit'],
-        chart: {
-            type: 'donut',
-            width: 370,
-            height: 430
-        },
-        colors: ['#622bd7', '#e7515a', '#10a373', '#10a373'],
-        dataLabels: {
-            enabled: false
-        },
-        legend: {
-            position: 'bottom',
-            horizontalAlign: 'center',
-            fontSize: '14px',
-            labels: {
-                colors: '#ffffff'
-            },
-            markers: {
-                width: 10,
-                height: 10,
-                offsetX: -5,
-                offsetY: 0
-            },
-            itemMargin: {
-                horizontal: 10,
-                vertical: 30
-            }
-        },
-        plotOptions: {
-            pie: {
-                donut: {
-                size: '75%',
-                background: 'transparent',
-                labels: {
-                    show: true,
-                    name: {
-                    show: true,
-                    fontSize: '29px',
-                    fontFamily: 'Nunito, sans-serif',
-                    color: '#ffffff',
-                    offsetY: -10
-                    },
-                    value: {
-                        show: true,
-                        fontSize: '26px',
-                        fontFamily: 'Nunito, sans-serif',
-                        color: '#bfc9d4',
-                        offsetY: 16,
-                        number_format: function (val) {
-                            return val
-                        }
-                    },
-                    total: {
-                        show: true,
-                        showAlways: true,
-                        label: 'Total',
-                        color: '#ffffff',
-                        fontSize: '30px',
-                        number_format: function (w) {
-                            return w.globals.seriesTotals.reduce( function(a, b) {
-                            return a + b
-                            }, 0)
+                    labels: {
+                        style: {
+                            colors: '#bebebe'
                         }
                     }
+                },
+                grid: {
+                    xaxis: {
+                        lines: {
+                            show: false
+                        }
+                    },   
+                    yaxis: {
+                        lines: {
+                            show: false
+                        }
+                    }, 
+                },
+                fill: {
+                    opacity: 1,
+                    colors: colors
+                },
+                tooltip: {
+                    x: {
+                        format: 'dd/MM/yy HH:mm'
+                    },
+                },
+            };
+
+            // Final safety check - ensure ApexCharts is actually available
+            if (typeof ApexCharts === 'undefined') {
+                console.error('[Dashboard] CRITICAL: ApexCharts undefined before chart creation - aborting');
+                return;
+            }
+            
+            console.log('[Dashboard] Creating chart 1, ApexCharts type:', typeof ApexCharts);
+            var chartElement = document.querySelector("#chart");
+            if (chartElement) {
+                try {
+                    var chart = new ApexCharts(chartElement, options);
+                    chart.render();
+                    console.log('[Dashboard] Chart 1 created successfully');
+                } catch(e) {
+                    console.error('[Dashboard] Chart 1 creation failed:', e.message, e.stack);
                 }
+            } else {
+                console.warn('[Dashboard] Chart element #chart not found');
+            }
+
+            var options2 = {
+                series: [{{$totalAmount->sum()}}, {{$withdrawTotalAmount->sum()}}, {{$depositTotalAmount->sum()}}],
+                labels: ['Payment', 'Withdraw', 'Deposit'],
+                chart: {
+                    type: 'donut',
+                    width: 370,
+                    height: 430
+                },
+                colors: ['#622bd7', '#e7515a', '#10a373', '#10a373'],
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    labels: {
+                        colors: '#ffffff'
+                    },
+                    markers: {
+                        width: 10,
+                        height: 10,
+                        offsetX: -5,
+                        offsetY: 0
+                    },
+                    itemMargin: {
+                        horizontal: 10,
+                        vertical: 30
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                        size: '75%',
+                        background: 'transparent',
+                        labels: {
+                            show: true,
+                            name: {
+                            show: true,
+                            fontSize: '29px',
+                            fontFamily: 'Nunito, sans-serif',
+                            color: '#ffffff',
+                            offsetY: -10
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '26px',
+                                fontFamily: 'Nunito, sans-serif',
+                                color: '#bfc9d4',
+                                offsetY: 16,
+                                number_format: function (val) {
+                                    return val
+                                }
+                            },
+                            total: {
+                                show: true,
+                                showAlways: true,
+                                label: 'Total',
+                                color: '#ffffff',
+                                fontSize: '30px',
+                                number_format: function (w) {
+                                    return w.globals.seriesTotals.reduce( function(a, b) {
+                                    return a + b
+                                    }, 0)
+                                }
+                            }
+                        }
+                        }
+                    }
+                },
+                stroke: {
+                    show: true,
+                    width: 15,
+                    colors: '#1E1F25'
+                  },
+                  responsive: [
+                    { 
+                      breakpoint: 1440, options: {
+                        chart: {
+                          width: 325
+                        },
+                      }
+                    },
+                    { 
+                      breakpoint: 1199, options: {
+                        chart: {
+                          width: 380
+                        },
+                      }
+                    },
+                    { 
+                      breakpoint: 575, options: {
+                        chart: {
+                          width: 320
+                        },
+                      }
+                    },
+                  ],
+            };
+
+            // Double-check ApexCharts before each chart creation
+            if (typeof ApexCharts === 'undefined') {
+                console.error('[Dashboard] ApexCharts undefined before chart 2 - stopping');
+                return;
+            }
+            
+            console.log('[Dashboard] Creating chart 2');
+            var chart2Element = document.querySelector("#chart2");
+            if (chart2Element) {
+                try {
+                    var chart2 = new ApexCharts(chart2Element, options2);
+                    chart2.render();
+                    console.log('[Dashboard] Chart 2 created successfully');
+                } catch(e) {
+                    console.error('[Dashboard] Chart 2 creation failed:', e.message, e.stack);
+                }
+            } else {
+                console.warn('[Dashboard] Chart element #chart2 not found');
+            }
+
+            if (typeof ApexCharts === 'undefined') {
+                console.error('[Dashboard] ApexCharts undefined before chart 3 - stopping');
+                return;
+            }
+            
+            console.log('[Dashboard] Creating chart 3');
+            var chart3Element = document.querySelector("#chart3");
+            if (chart3Element) {
+                try {
+                    var chart3 = new ApexCharts(chart3Element, options2);
+                    chart3.render();
+                    console.log('[Dashboard] Chart 3 created successfully');
+                } catch(e) {
+                    console.error('[Dashboard] Chart 3 creation failed:', e.message, e.stack);
+                }
+            } else {
+                console.warn('[Dashboard] Chart element #chart3 not found');
+            }
+        });
+        }
+        
+        // Wait for both DOM and ApexCharts before initializing
+        function waitForBoth() {
+            var domReady = document.readyState === 'complete' || document.readyState === 'interactive';
+            
+            console.log('[Dashboard] waitForBoth check - DOM:', domReady, 'readyState:', document.readyState);
+            
+            if (domReady) {
+                // DOM is ready, now wait for ApexCharts
+                waitForApexCharts(function() {
+                    console.log('[Dashboard] Both DOM and ApexCharts ready, initializing dashboard');
+                    initDashboard();
+                });
+            } else {
+                // Wait for DOM first
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', waitForBoth, { once: true });
+                } else if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+                    $(document).ready(waitForBoth);
+                } else {
+                    // Fallback: check again after a short delay
+                    setTimeout(waitForBoth, 100);
                 }
             }
-        },
-        stroke: {
-            show: true,
-            width: 15,
-            colors: '#1E1F25'
-          },
-          responsive: [
-            { 
-              breakpoint: 1440, options: {
-                chart: {
-                  width: 325
-                },
-              }
-            },
-            { 
-              breakpoint: 1199, options: {
-                chart: {
-                  width: 380
-                },
-              }
-            },
-            { 
-              breakpoint: 575, options: {
-                chart: {
-                  width: 320
-                },
-              }
-            },
-          ],
-        };
-
-        var chart = new ApexCharts(document.querySelector("#chart2"), options);
-        chart.render();
-
-        var chart2 = new ApexCharts(document.querySelector("#chart3"), options);
-        chart2.render();
-    })
+        }
+        
+        // Start waiting - use jQuery ready if available, otherwise DOMContentLoaded
+        if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+            $(document).ready(waitForBoth);
+        } else if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForBoth, { once: true });
+        } else {
+            waitForBoth();
+        }
+    })();
     </script>
 @endpush

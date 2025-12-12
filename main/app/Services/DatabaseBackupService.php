@@ -24,6 +24,118 @@ class DatabaseBackupService
     }
 
     /**
+     * Fix root user authentication plugin using Laravel DB connection (works even if root has caching_sha2_password)
+     * This uses Laravel's working connection to execute ALTER USER commands
+     */
+    protected function fixRootUserAuthPluginViaLaravel(string $username, ?string $password, string $host): void
+    {
+        try {
+            \Log::info('fixRootUserAuthPluginViaLaravel called', ['username' => $username, 'host' => $host]);
+            
+            // Check if we're using MariaDB
+            $dbVersion = DB::select("SELECT VERSION() as version")[0]->version ?? '';
+            $isMariaDB = stripos($dbVersion, 'mariadb') !== false;
+            
+            \Log::info('Database version check', ['version' => $dbVersion, 'is_mariadb' => $isMariaDB]);
+            
+            if (!$isMariaDB) {
+                // Not MariaDB, no need to fix
+                \Log::info('Not MariaDB, skipping auth plugin fix');
+                return;
+            }
+            
+            // Check current plugin for root user
+            $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ? AND host = ?", [$username, $host]);
+            if (empty($currentPluginResult)) {
+                // Try with % wildcard
+                $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ?", [$username]);
+            }
+            
+            $currentPlugin = $currentPluginResult[0]->plugin ?? null;
+            \Log::info('Current root user auth plugin', ['plugin' => $currentPlugin, 'username' => $username, 'host' => $host]);
+            
+            // Only fix if using caching_sha2_password
+            if ($currentPlugin !== 'caching_sha2_password') {
+                \Log::info('Root user already has compatible auth plugin', ['plugin' => $currentPlugin]);
+                return;
+            }
+            
+            // Check available auth plugins
+            $plugins = DB::select("SHOW PLUGINS WHERE Type = 'AUTHENTICATION'");
+            $availablePlugins = array_map(function($p) {
+                return $p->Name ?? null;
+            }, $plugins);
+            
+            \Log::info('Available auth plugins', ['plugins' => $availablePlugins]);
+            
+            // Determine which auth plugin to use (MariaDB compatible)
+            $authPlugin = null;
+            if (in_array('ed25519', $availablePlugins)) {
+                $authPlugin = 'ed25519';
+            } elseif (in_array('mysql_native_password', $availablePlugins)) {
+                $authPlugin = 'mysql_native_password';
+            } else {
+                $authPlugin = 'mysql_native_password'; // Fallback
+            }
+            
+            \Log::info('Will use auth plugin', ['plugin' => $authPlugin]);
+            
+            // Fix auth plugin for all possible host patterns
+            $hostsToTry = [$host, 'localhost', '127.0.0.1', '%'];
+            $passwordEscaped = !empty($password) ? addslashes($password) : '';
+            
+            $fixedCount = 0;
+            foreach ($hostsToTry as $tryHost) {
+                $hostEscaped = addslashes($tryHost);
+                try {
+                    if ($authPlugin === 'ed25519' || $authPlugin === 'mysql_native_password') {
+                        if (!empty($passwordEscaped)) {
+                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED VIA " . $authPlugin . " USING PASSWORD('" . $passwordEscaped . "')");
+                        } else {
+                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED VIA " . $authPlugin);
+                        }
+                    } else {
+                        if (!empty($passwordEscaped)) {
+                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED BY '" . $passwordEscaped . "'");
+                        }
+                    }
+                    $fixedCount++;
+                    \Log::info('Fixed root user auth plugin via Laravel DB', [
+                        'username' => $username,
+                        'host' => $tryHost,
+                        'plugin' => $authPlugin
+                    ]);
+                } catch (\Exception $e) {
+                    // Some hosts might not exist, that's OK
+                    if (stripos($e->getMessage(), "doesn't exist") === false && stripos($e->getMessage(), "Unknown user") === false && stripos($e->getMessage(), "Access denied") === false) {
+                        \Log::warning('Could not fix auth plugin for specific host', [
+                            'host' => $tryHost,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+            
+            // Flush privileges
+            if ($fixedCount > 0) {
+                DB::statement("FLUSH PRIVILEGES");
+                \Log::info('Completed root user auth plugin fix via Laravel DB', [
+                    'username' => $username,
+                    'plugin' => $authPlugin,
+                    'hosts_fixed' => $fixedCount
+                ]);
+            } else {
+                \Log::warning('No hosts were fixed for root user auth plugin', ['username' => $username]);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Error fixing root user auth plugin via Laravel DB', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
      * Fix user authentication plugin if needed (for MariaDB compatibility)
      * Note: caching_sha2_password is MySQL 8.0+ only and doesn't exist in MariaDB
      * We need to change the user's auth plugin to mysql_native_password
@@ -430,9 +542,19 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'Database username is not configured'];
             }
 
-            // Only try to fix auth plugin if NOT using local mysqldump, PHP container, or root credentials
-            // (Root credentials typically have proper auth, and local mysqldump/PHP container are already authenticated)
-            if (!$useLocalMysqldump && !$usePhpContainer && !$useRootCredentials) {
+            // Fix auth plugin for root user if using root credentials (root might have caching_sha2_password which MariaDB doesn't support)
+            // Use Laravel's DB connection (which works) to fix the auth plugin
+            if ($useRootCredentials) {
+                // Root user might have caching_sha2_password - fix it for MariaDB compatibility using Laravel DB
+                \Log::info('Attempting to fix root user auth plugin via Laravel DB', [
+                    'username' => $username,
+                    'host' => $host,
+                    'use_local_mysqldump' => $useLocalMysqldump
+                ]);
+                $this->fixRootUserAuthPluginViaLaravel($username, $password, $host);
+                // Wait a moment for changes to take effect
+                sleep(1);
+            } else if (!$useLocalMysqldump && !$usePhpContainer) {
                 $this->fixUserAuthPlugin();
                 $this->fixUserAuthPluginViaCli($useDocker, $host, $port, $username, $password);
                 // Wait a moment for changes to take effect
@@ -451,7 +573,7 @@ class DatabaseBackupService
                 return ['type' => 'error', 'message' => 'Backup directory is not writable: ' . $this->backupPath];
             }
 
-            // Detect if we're using MariaDB (check container name or version)
+            // Detect if we're using MariaDB (check container name, version, or database version)
             $isMariaDB = false;
             if ($useDocker && !empty($mysqlContainer)) {
                 try {
@@ -470,12 +592,18 @@ class DatabaseBackupService
                         }
                     }
                 } catch (\Exception $e) {
-                    // If version check fails, assume MySQL (safer default)
-                    \Log::warning('Could not detect MariaDB version, assuming MySQL', [
-                        'error' => $e->getMessage(),
-                        'container' => $mysqlContainer ?? 'unknown'
-                    ]);
-                    $isMariaDB = false;
+                    // If version check fails, try database query
+                    try {
+                        $dbVersion = DB::select("SELECT VERSION() as version")[0]->version ?? '';
+                        $isMariaDB = stripos($dbVersion, 'mariadb') !== false;
+                    } catch (\Exception $e2) {
+                        // If database query fails, assume MySQL (safer default)
+                        \Log::warning('Could not detect MariaDB version, assuming MySQL', [
+                            'error' => $e->getMessage(),
+                            'container' => $mysqlContainer ?? 'unknown'
+                        ]);
+                        $isMariaDB = false;
+                    }
                 } catch (\Throwable $e) {
                     // Catch any other errors
                     \Log::warning('Error during MariaDB detection, assuming MySQL', [
@@ -484,10 +612,26 @@ class DatabaseBackupService
                     ]);
                     $isMariaDB = false;
                 }
+            } else if ($isInsideContainer || $useLocalMysqldump) {
+                // When running inside container, try to detect via database query
+                try {
+                    $dbVersion = DB::select("SELECT VERSION() as version")[0]->version ?? '';
+                    $isMariaDB = stripos($dbVersion, 'mariadb') !== false;
+                } catch (\Exception $e) {
+                    // If query fails, check host name for MariaDB hint
+                    $isMariaDB = stripos($host, 'mariadb') !== false;
+                }
             }
             
             // #region agent log
-            file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'DatabaseBackupService.php:487','message'=>'MariaDB detection result','data'=>['isMariaDB'=>$isMariaDB,'mysqlContainer'=>$mysqlContainer??null,'useDocker'=>$useDocker],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
+            $debugLogDir = dirname($debugLogPath);
+            if (!is_dir($debugLogDir)) {
+                @mkdir($debugLogDir, 0755, true);
+            }
+            if (is_dir($debugLogDir)) {
+                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'DatabaseBackupService.php:487','message'=>'MariaDB detection result','data'=>['isMariaDB'=>$isMariaDB,'mysqlContainer'=>$mysqlContainer??null,'useDocker'=>$useDocker],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            }
             // #endregion
             
             // Build mysqldump/mariadb-dump command with proper password handling
@@ -518,7 +662,14 @@ class DatabaseBackupService
             chmod($configFile, 0600); // Secure permissions
             
             // #region agent log
-            file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'B','location'=>'DatabaseBackupService.php:518','message'=>'Config file created in createBackup','data'=>['configFile'=>$configFile,'configContent'=>str_replace($password??'','***',$configContent),'isMariaDB'=>$isMariaDB,'hasDefaultAuth'=>!$isMariaDB,'username'=>$username,'host'=>$host,'port'=>$port,'useRootCredentials'=>$useRootCredentials],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
+            $debugLogDir = dirname($debugLogPath);
+            if (!is_dir($debugLogDir)) {
+                @mkdir($debugLogDir, 0755, true);
+            }
+            if (is_dir($debugLogDir)) {
+                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'B','location'=>'DatabaseBackupService.php:518','message'=>'Config file created in createBackup','data'=>['configFile'=>$configFile,'configContent'=>str_replace($password??'','***',$configContent),'isMariaDB'=>$isMariaDB,'hasDefaultAuth'=>!$isMariaDB,'username'=>$username,'host'=>$host,'port'=>$port,'useRootCredentials'=>$useRootCredentials],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            }
             // #endregion
             
             // Always use mariadb-dump when in Docker mode (it's compatible with both MySQL and MariaDB)
@@ -542,6 +693,12 @@ class DatabaseBackupService
             // Build base command parts
             $commandParts = [];
             
+            // Store original MYSQL_PWD if we'll be using local mysqldump (for restoration later)
+            $originalMysqlPwd = false;
+            if ($useLocalMysqldump) {
+                $originalMysqlPwd = getenv('MYSQL_PWD');
+            }
+            
             if ($useLocalMysqldump) {
                 // We're inside the container, use mariadb-dump directly (no docker exec needed)
                 // Always prefer mariadb-dump (works with both MySQL and MariaDB)
@@ -550,19 +707,21 @@ class DatabaseBackupService
                 Helper::execCommand('which mariadb-dump 2>&1', null, $whichOutput, $whichReturn);
                 $dumpCmd = ($whichReturn === 0 && !empty($whichOutput)) ? 'mariadb-dump' : 'mysqldump';
                 
-                // Use environment variable for password to avoid shell escaping issues
-                // This is more secure and avoids auth plugin issues
-                $envVars = [];
+                // When running inside container, use the original host (container name)
+                // Docker networks allow container names to resolve to their IPs
+                // The putenv() approach handles auth plugin issues, so we can use the container name
+                $connectHost = $host;
+                
+                // ALWAYS use environment variable for password when inside container
+                // This bypasses auth plugin issues completely (especially for MariaDB)
+                // Use PHP's putenv() to set environment variable before execution
                 if (!empty($password)) {
-                    $envVars[] = 'MYSQL_PWD=' . escapeshellarg($password);
+                    putenv('MYSQL_PWD=' . $password);
                 }
                 
                 $dumpParts = [];
-                if (!empty($envVars)) {
-                    $dumpParts[] = implode(' ', $envVars);
-                }
                 $dumpParts[] = $dumpCmd;
-                $dumpParts[] = "-h" . escapeshellarg($host);
+                $dumpParts[] = "-h" . escapeshellarg($connectHost);
                 $dumpParts[] = "-P" . escapeshellarg((string)$port);
                 $dumpParts[] = "-u" . escapeshellarg($username);
                 $dumpParts[] = escapeshellarg($database);
@@ -577,12 +736,14 @@ class DatabaseBackupService
                 
                 \Log::info('Using local mariadb-dump/mysqldump (running inside container)', [
                     'dump_command' => $dumpCmd,
-                    'host' => $host,
+                    'original_host' => $host,
+                    'connect_host' => $connectHost,
                     'database' => $database,
                     'username' => $username,
                     'using_root_credentials' => $useRootCredentials,
                     'using_env_password' => true,
-                    'is_mariadb' => $isMariaDB
+                    'is_mariadb' => $isMariaDB,
+                    'is_inside_container' => $isInsideContainer
                 ]);
             } else if ($usePhpContainer) {
                 // Use PHP container's mysql client (already authenticated via Laravel DB connection)
@@ -716,41 +877,74 @@ class DatabaseBackupService
             if (!$usePhpContainer && $useDocker && !empty($mysqlContainer)) {
                 // Docker: use MySQL/MariaDB container - always use mariadb-dump (compatible with both)
                 $container = $mysqlContainer;
-                // Copy config file into container temporarily
-                $containerConfigFile = '/tmp/mysqldump_' . uniqid() . '.cnf';
-                $copyCommand = "docker cp " . escapeshellarg($configFile) . " {$container}:{$containerConfigFile}";
-                $copyOutput = [];
-                $copyReturn = 0;
-                Helper::execCommand($copyCommand, null, $copyOutput, $copyReturn);
                 
-                // #region agent log
-                file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'C','location'=>'DatabaseBackupService.php:714','message'=>'Config file copied to container','data'=>['copyCommand'=>$copyCommand,'copyReturn'=>$copyReturn,'copyOutput'=>$copyOutput,'containerConfigFile'=>$containerConfigFile],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-                // #endregion
-                
-                $commandParts[] = "docker exec -i " . escapeshellarg($container) . " mariadb-dump";
-                $commandParts[] = "--defaults-file=" . escapeshellarg($containerConfigFile);
-                $commandParts[] = escapeshellarg($database);
-                $commandParts[] = '--single-transaction';
-                $commandParts[] = '--quick';
-                $commandParts[] = '--lock-tables=false';
-                // Don't specify auth plugin - let it use default (works better with MariaDB)
-                
-                $baseCommand = implode(' ', $commandParts);
-                $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2> ' . escapeshellarg($errorFile);
-                // Cleanup container config file after command
-                $command .= ' ; docker exec ' . escapeshellarg($container) . ' rm -f ' . escapeshellarg($containerConfigFile);
-                
-                // #region agent log
-                file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'DatabaseBackupService.php:728','message'=>'Docker command built','data'=>['command'=>str_replace($password??'','***',$command),'executionPath'=>'mysql_container','useRootCredentials'=>$useRootCredentials],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-                // #endregion
-                
-                \Log::info('Using Docker mariadb-dump', [
-                    'container' => $container,
-                    'is_mariadb' => $isMariaDB,
-                    'database' => $database
-                ]);
-            } else if (!$usePhpContainer) {
+                // For MariaDB, use environment variables for password to avoid auth plugin issues
+                // This bypasses caching_sha2_password problems completely
+                if ($isMariaDB) {
+                    // Use environment variable approach for MariaDB (more reliable)
+                    // When connecting from inside the container, use localhost
+                    $containerHost = 'localhost';
+                    
+                    // Build docker exec command with -e flag for environment variables
+                    $dockerExecParts = ["docker exec -i"];
+                    if (!empty($password)) {
+                        $dockerExecParts[] = "-e MYSQL_PWD=" . escapeshellarg($password);
+                    }
+                    $dockerExecParts[] = escapeshellarg($container);
+                    
+                    $dumpParts = [];
+                    $dumpParts[] = implode(' ', $dockerExecParts);
+                    $dumpParts[] = "mariadb-dump";
+                    $dumpParts[] = "-h" . escapeshellarg($containerHost);
+                    $dumpParts[] = "-P" . escapeshellarg((string)$port);
+                    $dumpParts[] = "-u" . escapeshellarg($username);
+                    $dumpParts[] = escapeshellarg($database);
+                    $dumpParts[] = "--single-transaction";
+                    $dumpParts[] = "--quick";
+                    $dumpParts[] = "--lock-tables=false";
+                    $dumpParts[] = "--skip-ssl";
+                    // Don't specify auth plugin - let MariaDB use default
+                    
+                    $baseCommand = implode(' ', $dumpParts);
+                    $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2> ' . escapeshellarg($errorFile);
+                    
+                    \Log::info('Using Docker mariadb-dump with env vars (MariaDB)', [
+                        'container' => $container,
+                        'is_mariadb' => $isMariaDB,
+                        'database' => $database,
+                        'use_root_credentials' => $useRootCredentials,
+                        'container_host' => $containerHost
+                    ]);
+                } else {
+                    // For MySQL, use config file approach
+                    // Copy config file into container temporarily
+                    $containerConfigFile = '/tmp/mysqldump_' . uniqid() . '.cnf';
+                    $copyCommand = "docker cp " . escapeshellarg($configFile) . " {$container}:{$containerConfigFile}";
+                    $copyOutput = [];
+                    $copyReturn = 0;
+                    Helper::execCommand($copyCommand, null, $copyOutput, $copyReturn);
+                    
+                    $commandParts[] = "docker exec -i " . escapeshellarg($container) . " mariadb-dump";
+                    $commandParts[] = "--defaults-file=" . escapeshellarg($containerConfigFile);
+                    $commandParts[] = escapeshellarg($database);
+                    $commandParts[] = '--single-transaction';
+                    $commandParts[] = '--quick';
+                    $commandParts[] = '--lock-tables=false';
+                    
+                    $baseCommand = implode(' ', $commandParts);
+                    $command = "{$baseCommand} > " . escapeshellarg($filepath) . ' 2> ' . escapeshellarg($errorFile);
+                    // Cleanup container config file after command
+                    $command .= ' ; docker exec ' . escapeshellarg($container) . ' rm -f ' . escapeshellarg($containerConfigFile);
+                    
+                    \Log::info('Using Docker mariadb-dump with config file (MySQL)', [
+                        'container' => $container,
+                        'is_mariadb' => $isMariaDB,
+                        'database' => $database
+                    ]);
+                }
+            } else if (!$usePhpContainer && !$useLocalMysqldump) {
                 // Host: use connection credentials with config file
+                // Only execute if we're not using local mysqldump (which already set the command)
                 $commandParts[] = $dumpCommand;
                 $commandParts[] = "--defaults-file=" . escapeshellarg($configFile);
                 $commandParts[] = escapeshellarg($database);
@@ -779,8 +973,21 @@ class DatabaseBackupService
             Helper::execCommand($command, null, $output, $returnVar);
             
             // #region agent log
-            file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'DatabaseBackupService.php:761','message'=>'Command executed','data'=>['returnVar'=>$returnVar,'outputLines'=>count($output),'outputSample'=>array_slice($output,0,5)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
+            $debugLogDir = dirname($debugLogPath);
+            if (is_dir($debugLogDir)) {
+                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'DatabaseBackupService.php:853','message'=>'Command executed','data'=>['returnVar'=>$returnVar,'outputLines'=>count($output),'outputSample'=>array_slice($output,0,5)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            }
             // #endregion
+            
+            // Restore original MYSQL_PWD if we set it via putenv
+            if ($useLocalMysqldump && !empty($password)) {
+                if ($originalMysqlPwd !== false) {
+                    putenv('MYSQL_PWD=' . $originalMysqlPwd);
+                } else {
+                    putenv('MYSQL_PWD'); // Remove if it wasn't set before
+                }
+            }
             
             // Cleanup config file
             if (File::exists($configFile)) {
@@ -791,7 +998,9 @@ class DatabaseBackupService
                 \Log::error('Backup command failed', [
                     'return_var' => $returnVar,
                     'output' => $output,
-                    'use_php_container' => $usePhpContainer ?? false
+                    'use_php_container' => $usePhpContainer ?? false,
+                    'error_file_path' => $errorFile,
+                    'error_file_exists' => File::exists($errorFile)
                 ]);
                 // Read error file if it exists
                 $errorMsg = 'Unknown error';
@@ -802,10 +1011,21 @@ class DatabaseBackupService
                     }
                     
                     // #region agent log
-                    file_put_contents('/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'DatabaseBackupService.php:777','message'=>'Error file content','data'=>['errorFile'=>$errorFile,'errorContent'=>$errorContent,'hasCachingSha2'=>stripos($errorContent,'caching_sha2_password')!==false,'hasPluginError'=>stripos($errorContent,'Plugin')!==false],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                    $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
+                    $debugLogDir = dirname($debugLogPath);
+                    if (is_dir($debugLogDir)) {
+                        @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'DatabaseBackupService.php:877','message'=>'Error file content','data'=>['errorFile'=>$errorFile,'errorContent'=>$errorContent,'hasCachingSha2'=>stripos($errorContent,'caching_sha2_password')!==false,'hasPluginError'=>stripos($errorContent,'Plugin')!==false],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                    }
                     // #endregion
                     
                     File::delete($errorFile);
+                } else {
+                    // Error file doesn't exist - command might have failed before execution
+                    // Try to capture stderr by running a test command
+                    \Log::warning('Error file not found, command may have failed before execution', [
+                        'command_preview' => substr($command, 0, 200),
+                        'return_var' => $returnVar
+                    ]);
                 }
                 
                 // Also check if output has any messages

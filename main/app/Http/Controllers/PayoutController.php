@@ -25,7 +25,7 @@ class PayoutController extends Controller
 
         $data['withdraws'] = WithdrawGateway::where('status', 1)->latest()->get();
 
-        return view(Helper::theme() . 'user.withdraw.index')->with($data);
+        return view(Helper::themeView('user.withdraw.index')->with($data);
     }
 
     public function withdrawCompleted(UserWithdrawRequest $request)

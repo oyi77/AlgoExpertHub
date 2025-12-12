@@ -88,6 +88,6 @@ class MultiChannelSignalController extends Controller
             }
         }
 
-        return view(Helper::theme() . 'user.trading.multi-channel-signal', $data);
+        return view(Helper::themeView('user.trading.multi-channel-signal', $data);
     }
 }

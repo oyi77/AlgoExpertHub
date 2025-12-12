@@ -154,9 +154,12 @@
                 $(function() {
                     'use strict'
                     
-                    $('.summernote').summernote({
-                        height: 250,
-                    });
+                    // Only initialize Summernote if it's loaded and elements exist
+                    if (typeof $.fn.summernote !== 'undefined' && $('.summernote').length > 0) {
+                        $('.summernote').summernote({
+                            height: 250,
+                        });
+                    }
 
                     var url = "{{ route('admin.changeLang') }}";
 
