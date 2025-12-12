@@ -244,29 +244,18 @@ class TradeCopyService
      */
     protected function getAdapter($connection)
     {
-        // Handle ExchangeConnection (unified model)
-        if ($connection instanceof ExchangeConnection) {
-            if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
-                return new CcxtAdapter($connection->credentials, $connection->provider);
-            } elseif ($connection->provider === 'metaapi') {
-                return new MetaApiAdapter($connection->credentials);
-            }
-            return new CcxtAdapter($connection->credentials, $connection->provider ?? 'binance');
+        $provider = $connection->provider ?? $connection->exchange_name ?? 'binance';
+        $credentials = $connection->credentials ?? [];
+        
+        // Handle specialized adapters
+        if ($provider === 'metaapi' || strpos(strtolower($provider), 'metaapi') !== false) {
+            return new MetaApiAdapter($credentials);
+        } elseif (strpos($provider, 'mtapi') !== false) {
+             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter($credentials);
         }
-
-        // Handle ExecutionConnection (legacy model)
-        if ($connection instanceof ExecutionConnection) {
-            $provider = $connection->exchange_name ?? 'binance';
-            $type = $connection->type ?? 'crypto';
-            
-            if ($type === 'fx' || strpos(strtolower($provider), 'mt') !== false) {
-                return new MetaApiAdapter($connection->credentials);
-            }
-            return new CcxtAdapter($connection->credentials, $provider);
-        }
-
-        // Fallback
-        return new CcxtAdapter($connection->credentials ?? [], 'binance');
+        
+        // Default CCXT
+        return new CcxtAdapter($provider, $credentials);
     }
 
     /**

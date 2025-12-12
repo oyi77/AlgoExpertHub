@@ -64,11 +64,22 @@ class QueueOptimizer
             ];
         }
         
+        // Calculate overall metrics first
+        $totalJobs = array_sum(array_column($metrics, 'size'));
+        $averageHealth = count($metrics) > 0 ? array_sum(array_column($metrics, 'health_score')) / count($metrics) : 0;
+        $activeWorkers = $this->getActiveWorkerCount();
+        
+        // Create temporary overall for calculation
+        $tempOverall = [
+            'total_jobs' => $totalJobs,
+            'average_health' => $averageHealth,
+        ];
+        
         $metrics['overall'] = [
-            'total_jobs' => array_sum(array_column($metrics, 'size')),
-            'average_health' => array_sum(array_column($metrics, 'health_score')) / count($metrics),
-            'active_workers' => $this->getActiveWorkerCount(),
-            'recommended_workers' => $this->calculateOptimalWorkerCount($metrics)
+            'total_jobs' => $totalJobs,
+            'average_health' => $averageHealth,
+            'active_workers' => $activeWorkers,
+            'recommended_workers' => $this->calculateOptimalWorkerCount(array_merge($metrics, ['overall' => $tempOverall]))
         ];
         
         // Cache metrics for dashboard
@@ -84,7 +95,7 @@ class QueueOptimizer
     {
         if ($targetCount === null) {
             $metrics = $this->monitorHealth();
-            $targetCount = $metrics['overall']['recommended_workers'];
+            $targetCount = $metrics['overall']['recommended_workers'] ?? $this->minWorkers;
         }
         
         $currentWorkers = $this->getActiveWorkerCount();
@@ -253,8 +264,10 @@ class QueueOptimizer
      */
     protected function calculateOptimalWorkerCount(array $metrics): int
     {
-        $totalJobs = $metrics['overall']['total_jobs'];
-        $averageHealth = $metrics['overall']['average_health'];
+        // Safely access overall metrics with defaults
+        $overall = $metrics['overall'] ?? [];
+        $totalJobs = $overall['total_jobs'] ?? 0;
+        $averageHealth = $overall['average_health'] ?? 50;
         
         // Base calculation on job count and health
         $baseWorkers = min($this->maxWorkers, max($this->minWorkers, ceil($totalJobs / 50)));

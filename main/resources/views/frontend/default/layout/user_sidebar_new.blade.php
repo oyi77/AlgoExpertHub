@@ -13,15 +13,17 @@
     // Force refresh to ensure Trading Configuration is removed
     $menuStructure = $menuConfig->getMenuForUser($user, true);
     
-    // Final safety check: Ensure trading menu exists if user has active plan
+    // Final safety check: Ensure trading_console menu exists if user has active plan
     $onboardingService = app(\App\Services\UserOnboardingService::class);
     if ($onboardingService->hasActivePlan($user)) {
-        if (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items'])) {
+        // Support both new 'trading_console' and legacy 'trading' keys
+        if ((!isset($menuStructure['trading_console']) || empty($menuStructure['trading_console']['items'])) 
+            && (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items']))) {
             // Re-add trading menu if it was removed or empty
-            $menuStructure['trading'] = [
-                'label' => __('TRADING'),
+            $menuStructure['trading_console'] = [
+                'label' => __('TRADING CONSOLE'),
                 'icon' => 'fas fa-chart-line',
-                'items' => $menuConfig->getTradingMenuItems(),
+                'items' => $menuConfig->getTradingConsoleMenuItems(),
             ];
         }
     }
@@ -45,19 +47,18 @@
 
     <ul class="sidebar-menu">
         @php
-            // Final safety check: Ensure trading menu exists before rendering
-            if (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items'])) {
-                $onboardingService = app(\App\Services\UserOnboardingService::class);
-                if ($onboardingService->hasActivePlan(auth()->user())) {
-                    $menuStructure['trading'] = [
-                        'label' => __('TRADING'),
+            // Final safety check: Ensure trading_console menu exists before rendering
+            $onboardingService = app(\App\Services\UserOnboardingService::class);
+            if ($onboardingService->hasActivePlan(auth()->user())) {
+                if ((!isset($menuStructure['trading_console']) || empty($menuStructure['trading_console']['items']))
+                    && (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items']))) {
+                    $menuStructure['trading_console'] = [
+                        'label' => __('TRADING CONSOLE'),
                         'icon' => 'fas fa-chart-line',
-                        'items' => app(\App\Services\MenuConfigService::class)->getTradingMenuItems(),
+                        'items' => app(\App\Services\MenuConfigService::class)->getTradingConsoleMenuItems(),
                     ];
                 }
             }
-            // Debug: Log menu structure (temporary)
-            // \Log::info('Menu Structure in View', ['keys' => array_keys($menuStructure), 'trading_exists' => isset($menuStructure['trading']), 'trading_items' => isset($menuStructure['trading']) ? count($menuStructure['trading']['items']) : 0]);
         @endphp
         {{-- Debug output (temporary) --}}
         <!-- DEBUG START: Menu Structure Analysis -->
@@ -95,8 +96,8 @@
                         </a>
                     </li>
                 @endforeach
-            @elseif($groupKey === 'trading')
-                {{-- TRADING Group --}}
+            @elseif(in_array($groupKey, ['trading', 'trading_console', 'market_analysis', 'marketplace', 'support']))
+                {{-- TRADING, MARKET ANALYSIS, MARKETPLACE, SUPPORT Groups (use same rendering logic) --}}
                 @if(isset($group['items']) && is_array($group['items']) && count($group['items']) > 0)
                     @foreach($group['items'] as $item)
                         @php

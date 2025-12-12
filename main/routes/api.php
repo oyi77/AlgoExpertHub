@@ -263,6 +263,17 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'show']);
         });
 
+        // Data Loading Optimization
+        Route::prefix('data-loading')->group(function () {
+            Route::get('/signals/infinite-scroll', [\App\Http\Controllers\Api\DataLoadingController::class, 'getSignalsInfiniteScroll']);
+            Route::get('/signals/cursor-pagination', [\App\Http\Controllers\Api\DataLoadingController::class, 'getSignalsCursorPagination']);
+            Route::get('/signals/virtualized', [\App\Http\Controllers\Api\DataLoadingController::class, 'getVirtualizedSignals']);
+            Route::get('/lazy-loading-config', [\App\Http\Controllers\Api\DataLoadingController::class, 'getLazyLoadingConfig']);
+            Route::get('/skeleton-placeholders', [\App\Http\Controllers\Api\DataLoadingController::class, 'getSkeletonPlaceholders']);
+            Route::get('/performance-metrics', [\App\Http\Controllers\Api\DataLoadingController::class, 'getPerformanceMetrics']);
+            Route::get('/preload-critical', [\App\Http\Controllers\Api\DataLoadingController::class, 'preloadCriticalData']);
+        });
+
         // Copy Trading
         Route::prefix('copy-trading')->group(function () {
             Route::get('/traders', [\App\Http\Controllers\Api\User\BacktestingApiController::class, 'traders']);
@@ -494,6 +505,13 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 Route::get('/currency-pairs', [\App\Http\Controllers\Api\ReferenceDataController::class, 'currencyPairs']);
 Route::get('/timeframes', [\App\Http\Controllers\Api\ReferenceDataController::class, 'timeframes']);
 Route::get('/markets', [\App\Http\Controllers\Api\ReferenceDataController::class, 'markets']);
+
+// API Documentation
+Route::prefix('docs')->controller(\App\Http\Controllers\Api\DocumentationController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('/endpoints', 'endpoints');
+    Route::get('/health', 'health');
+});
 
 // System Configuration
 Route::controller(\App\Http\Controllers\Api\SystemController::class)->group(function () {

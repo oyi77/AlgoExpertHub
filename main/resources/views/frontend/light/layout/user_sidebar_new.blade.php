@@ -12,15 +12,17 @@
     // Use cached menu (getMenuForUser includes caching)
     $menuStructure = $menuConfig->getMenuForUser($user);
     
-    // Final safety check: Ensure trading menu exists if user has active plan
+    // Final safety check: Ensure trading_console menu exists if user has active plan
     $onboardingService = app(\App\Services\UserOnboardingService::class);
     if ($onboardingService->hasActivePlan($user)) {
-        if (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items'])) {
+        // Support both new 'trading_console' and legacy 'trading' keys
+        if ((!isset($menuStructure['trading_console']) || empty($menuStructure['trading_console']['items'])) 
+            && (!isset($menuStructure['trading']) || empty($menuStructure['trading']['items']))) {
             // Re-add trading menu if it was removed or empty
-            $menuStructure['trading'] = [
-                'label' => __('TRADING'),
+            $menuStructure['trading_console'] = [
+                'label' => __('TRADING CONSOLE'),
                 'icon' => 'fas fa-chart-line',
-                'items' => $menuConfig->getTradingMenuItems(),
+                'items' => $menuConfig->getTradingConsoleMenuItems(),
             ];
         }
     }

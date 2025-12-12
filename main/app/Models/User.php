@@ -172,32 +172,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Scope for active users
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('status', 1);
-    }
-
-    /**
-     * Scope for verified users
-     */
-    public function scopeVerified($query)
-    {
-        return $query->where('is_email_verified', 1);
-    }
-
-    /**
-     * Scope for users with current subscriptions
-     */
-    public function scopeWithActiveSubscription($query)
-    {
-        return $query->whereHas('subscriptions', function ($q) {
-            $q->where('is_current', 1)->where('end_date', '>', now());
-        });
-    }
-
-    /**
      * Scope for users by KYC status
      */
     public function scopeByKycStatus($query, $status)

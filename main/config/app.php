@@ -116,6 +116,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API Version
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the current API version. This is used for API
+    | versioning and backward compatibility support.
+    |
+    */
+
+    'api_version' => env('API_VERSION', 'v1'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Versioning
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for API versioning support including supported versions
+    | and deprecation notices.
+    |
+    */
+
+    'api_versioning' => [
+        'current' => env('API_VERSION', 'v1'),
+        'supported' => ['v1'],
+        'deprecated' => [],
+        'header_name' => 'Accept-Version',
+        'default_version' => 'v1',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

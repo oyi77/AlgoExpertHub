@@ -50,10 +50,19 @@ button.btn-primary,
     color: #2563eb;
 }
 
-/* Benefit icons */
+/* Benefit icons - Enhanced with gradients */
 .sp_benefit_icon {
-    background: rgba(37, 99, 235, 0.1);
-    color: #2563eb;
+    background: linear-gradient(135deg, #0099FA 0%, #6366F1 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0, 153, 250, 0.25);
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sp_benefit_icon:hover {
+    background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
 }
 
 /* Work number badges */

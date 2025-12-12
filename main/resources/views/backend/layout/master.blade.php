@@ -88,7 +88,8 @@
 
     </div>
 
-    <script defer src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
+    {{-- Load jQuery synchronously first to ensure it's available for inline scripts and repeater.js --}}
+    <script src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
 
     <script defer src="{{ Config::jsLib('backend', 'feather.min.js') }}"></script>
 
@@ -139,22 +140,35 @@
     @include('backend.layout.alert')
 
     <script>
-        $(function() {
-            'use strict'
-            
-            $('.summernote').summernote({
-                height: 250,
-            });
-
-            var url = "{{ route('admin.changeLang') }}";
-
-            $(".changeLang").change(function() {
-                if ($(this).val() == '') {
-                    return false;
+        // Ensure jQuery is available before executing any scripts
+        (function() {
+            function waitForJQuery(callback) {
+                if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+                    callback();
+                } else {
+                    setTimeout(function() { waitForJQuery(callback); }, 50);
                 }
-                window.location.href = url + "?lang=" + $(this).val();
+            }
+            
+            waitForJQuery(function() {
+                $(function() {
+                    'use strict'
+                    
+                    $('.summernote').summernote({
+                        height: 250,
+                    });
+
+                    var url = "{{ route('admin.changeLang') }}";
+
+                    $(".changeLang").change(function() {
+                        if ($(this).val() == '') {
+                            return false;
+                        }
+                        window.location.href = url + "?lang=" + $(this).val();
+                    });
+                });
             });
-        })
+        })();
     </script>
 
 </body>

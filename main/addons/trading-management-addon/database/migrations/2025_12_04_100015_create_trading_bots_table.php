@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * Trading Bot Builder - Coinrule-like bot creation
  * Combines: Exchange Connection + Trading Preset + Filter Strategy + AI Profile
  */
-class CreateTradingBotsTable extends Migration
+return new class extends Migration
 {
     public function up()
     {
@@ -77,4 +77,4 @@ class CreateTradingBotsTable extends Migration
     {
         Schema::dropIfExists('trading_bots');
     }
-}
+};

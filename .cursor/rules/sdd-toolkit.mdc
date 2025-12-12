@@ -1,56 +1,310 @@
 ---
-description: SDD (Spec-Driven Development) Toolkit rules for Cursor IDE - Use /brief, /specify, /plan, /tasks, /implement, /evolve, /upgrade, /research commands
+description: SDD (Specs-Driven Development) Toolkit - Kiro-style workflow. Use /sdd, /build, /requirements, /design, /tasks, /evolve commands. Auto-detects beads (bd) or falls back to Cursor tasks.
 globs: ["**/*"]
 alwaysApply: true
 ---
 
-# SDD Toolkit Rules
+# Specs-Driven Development (SDD) Toolkit
 
-## Core Principles
+Inspired by Kiro's streamlined approach to building features with clarity and confidence.
+
+## 🎯 Core Philosophy
+
+**"Simple prompt → Complete specs → User verification → Build"**
 
 1. **Spec Before Code**: Always create specifications before implementation
-2. **Plan Before Build**: Design architecture before coding  
-3. **Tasks Before Work**: Break down work into manageable tasks
-4. **Evolve as You Build**: Update specs as implementation reveals new insights
+2. **Verify Before Build**: Get user approval on specs before writing code
+3. **Tasks Before Work**: Break down work into manageable, tracked tasks
+4. **Evolve as You Build**: Update specs when implementation reveals new insights
 
-## Command Usage
+## 📋 Primary Workflow
 
-### Quick Mode (80% of features)
-Use `/brief [feature-name] [description]` for rapid feature development:
-- 30-minute planning
-- Start coding immediately
-- Perfect for straightforward features
+### Step 1: Generate Specs
 
-### Full SDD 2.0 Mode (20% of features)
-Use full workflow for complex features:
-1. `/research [feature-name] [topics]` - Research technologies and patterns
-2. `/specify [feature-name]` - Create detailed specifications
-3. `/plan [feature-name]` - Design architecture
-4. `/tasks [feature-name]` - Break down work
-5. `/implement [feature-name]` - Execute implementation
+```
+/sdd [feature-name] [description]
+```
 
-### Escalation
-Use `/upgrade [feature-name]` to convert briefs to full workflow when complexity increases.
+Generates three documents in `.kiro/specs/[feature-name]/`:
+- `requirements.md` - WHAT to build (user stories, acceptance criteria)
+- `design.md` - HOW to build it (architecture, components, APIs)
+- `tasks.md` - STEPS to build it (task breakdown, estimates)
 
-### Evolution
-Use `/evolve [feature-name] [changes]` to keep specs aligned with implementation.
+### Step 2: Verify with User
 
-## Documentation Structure
+**CRITICAL**: Always verify specs before building:
 
-All specifications should be in `specs/active/[feature-name]/`:
-- `feature-brief.md` - Quick 30-minute brief
-- `research.md` - Research findings
-- `spec.md` - Full specification
-- `plan.md` - Technical architecture
-- `tasks.md` - Task breakdown
+> "📋 I've generated the specs for [feature-name]:
+>
+> ✅ Requirements: [summary]
+> ✅ Design: [summary]
+> ✅ Tasks: [count] tasks identified
+>
+> Please review `.kiro/specs/[feature-name]/`
+>
+> Ready to build? (yes/no)"
 
-## Best Practices
+### Step 3: Build
 
-- Keep tasks small (1-2 days max)
-- Document all architecture decisions with justification
+Only after user approval:
+
+```
+/build [feature-name]
+```
+
+This:
+1. Detects task system (bd or Cursor)
+2. Creates tasks from `tasks.md`
+3. Implements features following `design.md`
+4. Verifies against `requirements.md`
+5. Updates task status throughout
+
+## 🔧 Task Management Integration
+
+### Auto-Detection
+
+The system automatically detects which task management system to use:
+
+**Beads (bd) - Primary**:
+```bash
+# Check availability
+which bd
+
+# Create task
+bd create "Task title" -t task -p 1 --json
+
+# Update status
+bd update bd-123 --status in_progress --json
+
+# Complete
+bd close bd-123 --reason "Completed" --json
+```
+
+**Cursor Tasks - Fallback**:
+```javascript
+// Create tasks
+add_tasks([{ id, content, status: "PENDING" }])
+
+// Update
+update_tasks([{ id, status: "IN_PROGRESS" }])
+
+// Complete
+update_tasks([{ id, status: "COMPLETE" }])
+```
+
+### Detection Logic
+
+```javascript
+const hasBeads = await checkCommand('which bd');
+
+if (hasBeads) {
+  // Use bd for task management
+  await executeCommand('bd create ...');
+} else {
+  // Fallback to Cursor tasks
+  await add_tasks([...]);
+}
+```
+
+## 📦 Available Commands
+
+### Primary Commands
+- **`/sdd`** - Generate all specs (requirements + design + tasks)
+- **`/build`** - Implement feature after verification
+
+### Individual Steps (optional)
+- **`/requirements`** - Generate only requirements
+- **`/design`** - Generate only design
+- **`/tasks`** - Generate only tasks
+
+### Management
+- **`/evolve`** - Update specs as requirements change
+- **`/analyze`** - Analyze existing code or feature
+
+### Deprecated
+- **`/implement`** - Use `/build` instead
+
+## 📐 Documentation Structure
+
+### Specs Location
+
+All specs stored in:
+```
+.kiro/specs/[feature-name]/
+  ├── requirements.md
+  ├── design.md
+  └── tasks.md
+```
+
+### Requirements Format
+
+```markdown
+# [Feature] Requirements
+
+## Introduction
+[Context and problem statement]
+
+## Glossary
+- **Term**: Definition
+
+## Requirements
+
+### Requirement 1: [Name]
+**User Story:** As a [role], I want [feature], so that [benefit]
+
+#### Acceptance Criteria
+1. WHEN [condition], THE System SHALL [behavior]
+```
+
+### Design Format
+
+```markdown
+# [Feature] Design
+
+## Architecture Overview
+[High-level design]
+
+## Component Design
+### Component: [Name]
+**Purpose**: [What it does]
+**Responsibilities**: ...
+
+## Database Schema
+```sql
+CREATE TABLE ...
+```
+
+## API Contracts
+### POST /api/endpoint
+...
+```
+
+### Tasks Format
+
+```markdown
+# [Feature] Tasks
+
+## Task Tracking
+**System**: Beads (bd) | Cursor Tasks
+
+## Task Breakdown
+
+### Phase 1: [Phase Name]
+
+#### Task 1.1: [Task Name]
+**Description**: ...
+**Acceptance Criteria**: ...
+**Estimate**: X hours/days
+**Dependencies**: None | Task X.X
+**Status**: pending | in_progress | complete
+```
+
+## 📚 Integration Points
+
+### Project Patterns
+
+Read project patterns from `.kiro/steering/`:
+- `README.md` - Platform overview
+- `laravel-architecture.md` - Laravel conventions
+- `business-domain.md` - Business logic
+- `addon-system.md` - Addon patterns
+- `database-models.md` - Database conventions
+- Other domain-specific patterns
+
+### Laravel Conventions
+
+Follow existing patterns:
+- Service layer for business logic
+- Controllers for HTTP only
+- Form requests for validation
+- Jobs for async operations
+- Eloquent for database
+- Middleware for cross-cutting concerns
+
+### Addon Architecture
+
+If building addons:
+- Self-contained in `main/addons/[addon-name]/`
+- Use `addon.json` manifest
+- Service provider pattern
+- No core modifications
+- Use events/observers for integration
+
+## 🔄 Evolution Workflow
+
+### When Requirements Change
+
+```
+/evolve [feature-name] [changes description]
+```
+
+This:
+1. Updates affected documents (requirements/design/tasks)
+2. Maintains change history
+3. Updates task tracking (bd or Cursor)
+4. Asks for user verification
+
+### Change History
+
+Each document tracks changes:
+```markdown
+## Change History
+- 2025-12-12: Initial requirements
+- 2025-12-13: Added payment flow
+- 2025-12-14: Updated API design
+```
+
+## ✅ Best Practices
+
+### Spec Quality
+- Use clear, unambiguous language
+- Include all stakeholder perspectives
+- Define measurable acceptance criteria
+- Consider edge cases and errors
+- Document technology choices with justification
+
+### Task Granularity
+- Keep tasks 1-2 days max
+- Define clear acceptance criteria
+- Map dependencies explicitly
+- Provide realistic estimates
+
+### Verification
+- ALWAYS verify specs before building
+- Get explicit user approval
+- Allow for iteration
 - Update specs when requirements change
-- Maintain version history for significant changes
-- Use absolute imports in Python code
-- Follow SOLID and DRY principles
-- Ensure consistency and adaptability for future changes
+
+### Code Quality
+- Follow project patterns from `.kiro/steering/`
+- Use service layer for business logic
+- Maintain consistency with existing code
+- Write tests for critical functionality
+- Document complex logic
+
+## ⚠️ Critical Rules
+
+1. **NEVER build without specs** - Use `/sdd` first
+2. **ALWAYS verify before building** - Get user approval
+3. **NEVER skip user verification** - Even for small changes
+4. **ALWAYS update task status** - Keep tracking current
+5. **USE project patterns** - Read from `.kiro/steering/`
+6. **DETECT task system** - Check for bd, fallback to Cursor
+7. **MAINTAIN change history** - Document all evolutions
+
+## 🚀 Quick Reference
+
+| Command | Purpose | Output |
+|---------|---------|--------|
+| `/sdd` | Generate all specs | requirements.md, design.md, tasks.md |
+| `/build` | Implement feature | Code + task tracking |
+| `/evolve` | Update specs | Updated documents |
+| `/requirements` | Just requirements | requirements.md |
+| `/design` | Just design | design.md |
+| `/tasks` | Just tasks | tasks.md |
+| `/analyze` | Research/analyze | Analysis document |
+
+---
+
+**Remember**: Specs first, verification second, code last. Always detect and use the appropriate task management system (beads preferred, Cursor fallback). 🚀
 

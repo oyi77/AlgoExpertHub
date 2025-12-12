@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('trading_bots', function (Blueprint $table) {
             // Only add columns if they don't exist
             if (!Schema::hasColumn('trading_bots', 'is_template')) {
-                $table->boolean('is_template')->default(false)->after('status');
+                $table->boolean('is_template')->default(false)->after('is_active');
             }
             // visibility enum should match existing migration (PRIVATE, PUBLIC_MARKETPLACE)
             // Check if visibility column exists, if not add it with correct enum values

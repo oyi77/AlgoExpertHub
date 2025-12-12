@@ -114,13 +114,7 @@ class Signal extends Model
         ]);
     }
 
-    /**
-     * Scope for published signals only
-     */
-    public function scopePublished($query)
-    {
-        return $query->where('is_published', 1);
-    }
+
 
     /**
      * Scope for draft signals only
@@ -130,13 +124,7 @@ class Signal extends Model
         return $query->where('is_published', 0);
     }
 
-    /**
-     * Scope for auto-created signals
-     */
-    public function scopeAutoCreated($query)
-    {
-        return $query->where('auto_created', 1);
-    }
+
 
     /**
      * Scope for manual signals
@@ -146,13 +134,7 @@ class Signal extends Model
         return $query->where('auto_created', 0);
     }
 
-    /**
-     * Scope for signals by market
-     */
-    public function scopeByMarket($query, $marketId)
-    {
-        return $query->where('market_id', $marketId);
-    }
+
 
     /**
      * Scope for signals by timeframe
@@ -232,6 +214,14 @@ class Signal extends Model
     public function hasMultipleTps(): bool
     {
         return $this->takeProfits()->count() > 0;
+    }
+
+    /**
+     * Get associated AI decision
+     */
+    public function aiDecision()
+    {
+        return $this->hasOne(\Addons\TradingManagement\Modules\AiAnalysis\Models\AiDecision::class);
     }
 
     protected static function booted()

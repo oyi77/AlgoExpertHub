@@ -756,7 +756,9 @@ class Helper
     public static function getPhpContainer(): ?string
     {
         static $cached = null;
-        if ($cached !== null) {
+        // Clear cache if we're in a new request (for testing)
+        // In production, this will cache properly
+        if ($cached !== null && !defined('TESTING_CONTAINER_DETECTION')) {
             return $cached;
         }
 
@@ -767,22 +769,89 @@ class Helper
             return $container;
         }
 
-        // Try common 1Panel PHP container patterns
-        $possibleContainers = [
-            '1Panel-php8-mrTy',
-            '1panel-php8-mrTy',
-            'php',
-            'php-fpm',
-        ];
+        // If we're running inside a container, try to detect our container name
+        // Since we can't access docker from inside, we'll try common patterns or env vars
+        if (file_exists('/.dockerenv') || file_exists('/proc/self/cgroup')) {
+            // We're inside a Docker container
+            // Try common 1Panel PHP container name patterns (since we know the pattern)
+            $possibleNames = [
+                '1Panel-php8-mrTy',
+                '1panel-php8-mrTy',
+                '1Panel-php8',
+                '1panel-php8',
+            ];
+            
+            // Try to verify by checking if we can exec into ourselves (won't work, but try anyway)
+            // Actually, since we're IN the container, we can't verify via docker exec
+            // So we'll just return the first pattern that matches common 1Panel naming
+            // Or check HOSTNAME env var which might be set
+            $hostnameEnv = getenv('HOSTNAME');
+            if ($hostnameEnv && preg_match('/^(1Panel|1panel|php)/i', $hostnameEnv)) {
+                $cached = $hostnameEnv;
+                \Log::info('Detected PHP container from HOSTNAME env', ['container' => $hostnameEnv]);
+                return $hostnameEnv;
+            }
+            
+            // For 1Panel, try the most common pattern first
+            // We'll try to use it, and the backup code will verify mysqldump exists
+            $assumedName = '1Panel-php8-mrTy'; // Most common 1Panel PHP container name
+            $cached = $assumedName;
+            \Log::info('Assuming PHP container name (running inside container, cannot access docker)', [
+                'container' => $assumedName,
+                'note' => 'Will be verified when mysqldump is checked'
+            ]);
+            return $assumedName;
+        }
 
         if (!self::checkDockerAvailable()) {
             $cached = null;
             return null;
         }
 
+        // First, try to find any container with "php" in the name (more reliable)
+        exec('docker ps --format "{{.Names}}" | grep -i php 2>&1', $phpContainers, $return);
+        \Log::info('PHP container detection - grep result', [
+            'return_code' => $return,
+            'containers' => $phpContainers,
+            'docker_available' => self::checkDockerAvailable()
+        ]);
+        
+        if ($return === 0 && !empty($phpContainers)) {
+            foreach ($phpContainers as $containerName) {
+                $containerName = trim($containerName);
+                if (!empty($containerName) && stripos($containerName, 'phpmyadmin') === false) {
+                    // Skip phpmyadmin, verify container has PHP
+                    exec("docker exec {$containerName} php --version 2>&1", $verifyOutput, $verifyReturn);
+                    \Log::info('PHP container verification', [
+                        'container' => $containerName,
+                        'verify_return' => $verifyReturn,
+                        'output' => $verifyOutput
+                    ]);
+                    if ($verifyReturn === 0) {
+                        $cached = $containerName;
+                        \Log::info('PHP container detected', ['container' => $containerName]);
+                        return $containerName;
+                    }
+                }
+            }
+        }
+
+        // Fallback: Try common 1Panel PHP container patterns
+        $possibleContainers = [
+            '1Panel-php8-mrTy',
+            '1panel-php8-mrTy',
+            '1Panel-php',
+            '1panel-php',
+            'php',
+            'php-fpm',
+        ];
+
         foreach ($possibleContainers as $containerName) {
-            $check = shell_exec("docker ps --filter name={$containerName} --format '{{.Names}}' 2>/dev/null");
-            if ($check && trim($check) === $containerName) {
+            // Try with exec (more reliable than shell_exec)
+            $execOutput = [];
+            $execReturn = 0;
+            exec("docker ps --filter name={$containerName} --format '{{.Names}}' 2>&1", $execOutput, $execReturn);
+            if ($execReturn === 0 && !empty($execOutput) && trim($execOutput[0]) === $containerName) {
                 // Verify container has PHP
                 exec("docker exec {$containerName} php --version 2>&1", $verifyOutput, $verifyReturn);
                 if ($verifyReturn === 0) {

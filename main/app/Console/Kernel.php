@@ -31,6 +31,9 @@ class Kernel extends ConsoleKernel
         // Auto-scale queue workers based on load - run every 10 minutes
         $schedule->command('queue:manage scale')->everyTenMinutes();
         
+        // Rotate log files to keep them small - run every hour
+        $schedule->command('logs:rotate --max-lines=1000')->hourly();
+        
         if (AddonRegistry::active('multi-channel-signal-addon') && AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'processing')) {
             // Process RSS feeds every 10 minutes
             if (class_exists(\App\Console\Commands\ProcessRssChannels::class) || 
