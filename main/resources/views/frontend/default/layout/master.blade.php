@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
 
-    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', Config::config()->favicon, true) }}">
+    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->favicon, true) }}">
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'all.min.css') }}">
@@ -49,6 +49,9 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
+    <link href="{{ asset('asset/css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('asset/css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'components.css') }}?v=20251211" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
 
@@ -114,32 +117,30 @@
                 }
             @endphp
             @if (!$hasBannerInWidgets)
-                @include(Config::theme() . 'widgets.banner')
+                @include(Config::themeView('widgets.banner'))
             @endif
         @endif
 
-        @include(Config::theme() . 'layout.header')
+        @include(Config::themeView('layout.header'))
 
         @if (!request()->routeIs('home'))
-            @include(Config::theme() . 'widgets.breadcrumb')
+            @include(Config::themeView('widgets.breadcrumb'))
         @endif
 
         @yield('content')
     </div>
 
-    @include(Config::theme() . 'widgets.footer')
+    @include(Config::themeView('widgets.footer'))
 
     {{-- Critical scripts (load immediately) --}}
     <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
     <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
     
     {{-- Non-critical scripts (defer loading) --}}
-    <script src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}" defer></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}" defer></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}" defer></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}" defer></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}" defer></script>
-    <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}" defer></script>
+    {{-- jQuery plugins removed - using vanilla JS alternatives in main-optimized.js --}}
+    {{-- Slick, WOW, Paroller, TweenMax replaced with lightweight vanilla JS --}}
+    {{-- Keep odometer only if needed, otherwise remove --}}
+    {{-- <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}" defer></script> --}}
 
 
 
@@ -151,7 +152,7 @@
         <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}" defer></script>
     @endif
 
-    <script src="{{ Config::jsLib('frontend', 'main.js') }}" defer></script>
+    <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 
@@ -191,7 +192,7 @@
 
                         $('.subscribe-email').val('');
 
-                        @include(Config::theme() . 'layout.ajax_alert', [
+                        @include(Config::themeView('layout.ajax_alert'), [
                             'message' => 'Successfully Subscribe',
                             'message_error' => '',
                         ])

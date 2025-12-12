@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'auth.master')
+@extends(Config::themeView('auth.master'))
 
 @section('content')
     @push('skip_slick')@endpush

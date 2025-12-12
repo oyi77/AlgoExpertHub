@@ -60,17 +60,17 @@ class DashboardController extends Controller
         $depositsTotalAmount = array();
 
         $payments = Payment::where('status', 1)
-            ->select(DB::raw('SUM(total) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')
+            ->selectRaw('SUM(total) as total, MONTHNAME(created_at) as month')
+            ->groupBy('month')
             ->get();
         $withdraws = Withdraw::where('status', 1)
-            ->select(DB::raw('SUM(withdraw_amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-            ->groupby('month')
+            ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
+            ->groupBy('month')
             ->get();
 
         $deposits = Deposit::where('status', 1)
-            ->select(DB::raw('SUM(total) as total'), DB::raw('MONTHNAME(created_at) as month'))
-            ->groupby('month')
+            ->selectRaw('SUM(total) as total, MONTHNAME(created_at) as month')
+            ->groupBy('month')
             ->get();
 
 
@@ -116,7 +116,7 @@ class DashboardController extends Controller
         $data['withdrawTotalAmount'] = $withdrawTotalAmount;
         $data['depositsTotalAmount'] = $depositsTotalAmount;
 
-        $data['browser'] = UserLog::select(DB::raw('COUNT(browser) as total'),'browser')->groupBy('browser')->get();
+        $data['browser'] = UserLog::selectRaw('COUNT(browser) as total, browser')->groupBy('browser')->get();
 
         $data['logTotal'] = UserLog::count();
        

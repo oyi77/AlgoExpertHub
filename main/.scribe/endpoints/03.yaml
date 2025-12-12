@@ -503,7 +503,7 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/auth/social/{provider}/redirect'
+    uri: 'api/social/{provider}/redirect'
     metadata:
       custom: []
       groupName: Authentication
@@ -562,7 +562,7 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/auth/social/{provider}/callback'
+    uri: 'api/social/{provider}/callback'
     metadata:
       custom: []
       groupName: Authentication

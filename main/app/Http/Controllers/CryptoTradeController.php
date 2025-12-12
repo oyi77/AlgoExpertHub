@@ -23,7 +23,7 @@ class CryptoTradeController extends Controller
             $item->whereDate('trade_opens_at', $request->date);
         })->where('user_id', auth()->id())->orderBy('id', 'desc')->paginate(Helper::pagination());
 
-        return view(Helper::theme() . 'user.trading')->with($data);
+        return view(Helper::themeView('user.trading'))->with($data);
     }
 
     public function latestTicker(Request $request)
@@ -217,7 +217,7 @@ class CryptoTradeController extends Controller
 
         $data['title'] = 'Trades List';
 
-        return view(Helper::theme() . 'user.trade_list')->with($data);
+        return view(Helper::themeView('user.trade_list'))->with($data);
     }
 
 

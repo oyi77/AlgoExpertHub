@@ -120,7 +120,7 @@ class TradingOverviewController extends Controller
             }
         }
 
-        return view(Helper::theme() . 'user.trading_overview')->with($data);
+        return view(Helper::themeView('user.trading_overview')->with($data);
     }
 }
 

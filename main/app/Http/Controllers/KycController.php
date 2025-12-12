@@ -18,7 +18,7 @@ class KycController extends Controller
             return redirect()->route('user.dashboard')->with('success', 'Your Kyc Verification Successfull');
         }
         $data['title'] = 'Kyc Verification';
-        return view(Helper::theme(). 'user.kyc')->with($data);
+        return view(Helper::themeView( 'user.kyc')->with($data);
     }
 
 

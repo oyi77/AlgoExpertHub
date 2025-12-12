@@ -1,5 +1,8 @@
 @extends('backend.layout.master')
 
+@section('uses_summernote')
+@stop
+
 @section('element')
 <div class="row">
     <div class="col-12">

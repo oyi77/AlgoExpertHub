@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * MonitorPositionsJob
@@ -30,10 +31,21 @@ class MonitorPositionsJob implements ShouldQueue
     public function handle(PositionMonitoringService $positionService): void
     {
         try {
+            // Check if table and columns exist before querying
+            if (!Schema::hasTable('trading_bots')) {
+                Log::warning('Table trading_bots does not exist. Skipping position monitoring.');
+                return;
+            }
+            
             // Get all active trading bots
-            $bots = TradingBot::where('status', 'running')
-                ->where('is_active', true)
-                ->get();
+            // Check if status column exists, otherwise use is_active only
+            $query = TradingBot::where('is_active', true);
+            
+            if (Schema::hasColumn('trading_bots', 'status')) {
+                $query->where('status', 'running');
+            }
+            
+            $bots = $query->get();
 
             $totalChecked = 0;
             $slClosed = 0;
@@ -77,6 +89,11 @@ class MonitorPositionsJob implements ShouldQueue
     protected function monitorExecutionPositions(): void
     {
         try {
+            // Check if table exists
+            if (!Schema::hasTable('execution_positions')) {
+                return; // Silently skip if table doesn't exist
+            }
+            
             $openPositions = ExecutionPosition::where('status', 'open')->get();
 
             foreach ($openPositions as $position) {
@@ -135,7 +152,12 @@ class MonitorPositionsJob implements ShouldQueue
                 return;
             }
             
-            if (method_exists($adapter, 'fetchCurrentPrice')) {
+            if (method_exists($adapter, 'getCurrentPrice')) {
+                $result = $adapter->getCurrentPrice($position->symbol);
+                if (isset($result['last'])) {
+                    $position->current_price = $result['last'];
+                }
+            } elseif (method_exists($adapter, 'fetchCurrentPrice')) {
                 $result = $adapter->fetchCurrentPrice($position->symbol);
                 if ($result['success'] && isset($result['data']['last'])) {
                     $position->current_price = $result['data']['last'];

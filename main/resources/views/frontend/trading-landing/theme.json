@@ -1,0 +1,11 @@
+{
+  "name": "trading-landing",
+  "display_name": "Trading Landing",
+  "description": "Modern finance trading landing page theme adapted from Figma design",
+  "version": "1.0.0",
+  "author": "AlgoExpertHub",
+  "type": "frontend",
+  "preview": "preview.jpg",
+  "requires_plan": null
+}
+

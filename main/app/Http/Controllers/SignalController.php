@@ -22,7 +22,7 @@ class SignalController extends Controller
             });
         })->whereIn('id', $dashboardSignal)->latest()->with('plans', 'pair', 'time', 'market')->paginate(Helper::pagination());
 
-        return view(Helper::theme() . 'user.signals')->with($data);
+        return view(Helper::themeView('user.signals')->with($data);
     }
 
     public function details($id)
@@ -31,6 +31,6 @@ class SignalController extends Controller
 
         $data['title'] = 'Signal Description';
 
-        return view(Helper::theme(). 'user.signal_details')->with($data);
+        return view(Helper::themeView( 'user.signal_details')->with($data);
     }
 }

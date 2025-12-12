@@ -64,7 +64,7 @@
 
 <body class="user-pages-body">
 
-    @include(Config::theme() . 'layout.user_sidebar_new')
+    @include(Config::themeView('layout.user_sidebar_new')
 
     <header class="user-header">
         <a href="{{ route('user.dashboard') }}" class="site-logo">

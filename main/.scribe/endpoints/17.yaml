@@ -1,83 +1,22 @@
-name: 'Money Transfer'
+name: Notifications
 description: |-
 
-  Endpoints for transferring money between users.
+  Endpoints for user notifications.
 endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/user/transfer
-    metadata:
-      custom: []
-      groupName: 'Money Transfer'
-      groupDescription: |-
-
-        Endpoints for transferring money between users.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Transfer Money'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      recipient_email:
-        custom: []
-        name: recipient_email
-        description: 'Must be a valid email address. The <code>email</code> of an existing record in the users table.'
-        required: true
-        example: gbailey@example.net
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      amount:
-        custom: []
-        name: amount
-        description: 'Must be at least 1.'
-        required: true
-        example: 27
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      recipient_email: gbailey@example.net
-      amount: 27
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
       - GET
-    uri: api/user/transfer/history
+    uri: api/user/notifications
     metadata:
       custom: []
-      groupName: 'Money Transfer'
+      groupName: Notifications
       groupDescription: |-
 
-        Endpoints for transferring money between users.
+        Endpoints for user notifications.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Transfer History'
+      title: 'List Notifications'
       description: ''
       authenticated: true
       deprecated: false
@@ -98,13 +37,148 @@ endpoints:
         status: 404
         content: |-
           {
-              "message": "The route api/user/transfer/history could not be found."
+              "message": "The route api/user/notifications could not be found."
           }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
         description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/user/notifications/unread-count
+    metadata:
+      custom: []
+      groupName: Notifications
+      groupDescription: |-
+
+        Endpoints for user notifications.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Unread Count'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api/user/notifications/unread-count could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/user/notifications/mark-as-read
+    metadata:
+      custom: []
+      groupName: Notifications
+      groupDescription: |-
+
+        Endpoints for user notifications.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Mark as Read'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/user/notifications/{id}'
+    metadata:
+      custom: []
+      groupName: Notifications
+      groupDescription: |-
+
+        Endpoints for user notifications.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete Notification'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the notification.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
     responseFields: []
     auth:
       - headers

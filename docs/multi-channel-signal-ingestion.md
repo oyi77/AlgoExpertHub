@@ -1,5 +1,19 @@
 # Multi-Channel Signal Ingestion Flow
 
+> [!TIP]
+> **📚 Detailed Documentation Available**
+> 
+> For comprehensive auto-generated documentation on the Multi-Channel Signal Processing system, see:
+> 
+> **[Multi-Channel Signal Processing](../.qoder/repowiki/en/content/Core%20Modules/Multi-Channel%20Signal%20Processing/Multi-Channel%20Signal%20Processing.md)** - Complete signal ingestion documentation
+>
+> Related sections:
+> - [Channel Adapters](../.qoder/repowiki/en/content/Core%20Modules/Multi-Channel%20Signal%20Processing/Channel%20Adapters.md) - Telegram, API, RSS, Web scraping adapters
+> - [Message Parsing](../.qoder/repowiki/en/content/Core%20Modules/Multi-Channel%20Signal%20Processing/Message%20Parsing.md) - Pattern-based and AI parsing
+> - [Signal Distribution](../.qoder/repowiki/en/content/Core%20Modules/Multi-Channel%20Signal%20Processing/Signal%20Distribution.md) - Distribution logic
+
+---
+
 ## Overview
 The Multi-Channel Signal Addon automatically ingests trading signals from external sources (Telegram channels, APIs, RSS feeds, web scraping) and converts them into signals in the system. This enables automatic signal collection without manual entry.
 

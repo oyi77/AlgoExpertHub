@@ -1,22 +1,83 @@
-name: Marketplace
+name: 'Money Transfer'
 description: |-
 
-  Endpoints for bot templates, trader profiles, and marketplace features.
+  Endpoints for transferring money between users.
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/user/marketplace/bot-templates
+      - POST
+    uri: api/user/transfer
     metadata:
       custom: []
-      groupName: Marketplace
+      groupName: 'Money Transfer'
       groupDescription: |-
 
-        Endpoints for bot templates, trader profiles, and marketplace features.
+        Endpoints for transferring money between users.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Bot Templates'
+      title: 'Transfer Money'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      recipient_email:
+        custom: []
+        name: recipient_email
+        description: 'Must be a valid email address. The <code>email</code> of an existing record in the users table.'
+        required: true
+        example: gbailey@example.net
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Must be at least 1.'
+        required: true
+        example: 27
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      recipient_email: gbailey@example.net
+      amount: 27
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/user/transfer/history
+    metadata:
+      custom: []
+      groupName: 'Money Transfer'
+      groupDescription: |-
+
+        Endpoints for transferring money between users.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Transfer History'
       description: ''
       authenticated: true
       deprecated: false
@@ -37,160 +98,13 @@ endpoints:
         status: 404
         content: |-
           {
-              "message": "The route api/user/marketplace/bot-templates could not be found."
+              "message": "The route api/user/transfer/history could not be found."
           }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
         description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/marketplace/bot-templates/{id}/clone'
-    metadata:
-      custom: []
-      groupName: Marketplace
-      groupDescription: |-
-
-        Endpoints for bot templates, trader profiles, and marketplace features.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Clone Bot Template'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the bot template.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/user/marketplace/trading-presets
-    metadata:
-      custom: []
-      groupName: Marketplace
-      groupDescription: |-
-
-        Endpoints for bot templates, trader profiles, and marketplace features.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'List Trading Presets'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "The route api/user/marketplace/trading-presets could not be found."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/marketplace/trading-presets/{id}/clone'
-    metadata:
-      custom: []
-      groupName: Marketplace
-      groupDescription: |-
-
-        Endpoints for bot templates, trader profiles, and marketplace features.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Clone Trading Preset'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the trading preset.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
     responseFields: []
     auth:
       - headers

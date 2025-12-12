@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * MonitorStreamHealthJob
@@ -42,6 +43,12 @@ class MonitorStreamHealthJob implements ShouldQueue
             }
 
             // 2. Check for streams with errors that have subscribers (should be restarted)
+            // Check if table exists before querying
+            if (!Schema::hasTable('sp_metaapi_streams')) {
+                Log::warning('Table sp_metaapi_streams does not exist. Skipping stream health check.');
+                return;
+            }
+            
             $errorStreams = MetaapiStream::where('status', 'error')
                 ->where('subscriber_count', '>', 0)
                 ->get();

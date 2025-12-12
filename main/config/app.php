@@ -116,6 +116,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API Version
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the current API version. This is used for API
+    | versioning and backward compatibility support.
+    |
+    */
+
+    'api_version' => env('API_VERSION', 'v1'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Versioning
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for API versioning support including supported versions
+    | and deprecation notices.
+    |
+    */
+
+    'api_versioning' => [
+        'current' => env('API_VERSION', 'v1'),
+        'supported' => ['v1'],
+        'deprecated' => [],
+        'header_name' => 'Accept-Version',
+        'default_version' => 'v1',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |
@@ -181,6 +211,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\CacheServiceProvider::class,
         
         // Addons are now conditionally registered in AppServiceProvider::register()
         // based on their active status to prevent errors when addons are disabled

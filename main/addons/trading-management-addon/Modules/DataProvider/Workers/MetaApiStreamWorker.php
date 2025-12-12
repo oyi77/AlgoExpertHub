@@ -7,6 +7,7 @@ use Addons\TradingManagement\Modules\DataProvider\Services\SharedStreamManager;
 use Addons\TradingManagement\Modules\DataProvider\Models\MetaapiStream;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\LogRotationService;
 
 /**
  * MetaApiStreamWorker
@@ -31,12 +32,13 @@ class MetaApiStreamWorker
         $this->streamManager = app(SharedStreamManager::class);
         $this->streamingService = new MetaApiStreamingService($apiToken, $accountId);
         
-        // Setup log writer
+        // Setup log writer with rotation
         $logFile = storage_path("logs/metaapi-stream-{$accountId}.log");
-        $this->writeLog = function($message, $level = 'INFO') use ($logFile) {
+        $logRotation = app(LogRotationService::class);
+        $this->writeLog = function($message, $level = 'INFO') use ($logFile, $logRotation) {
             $timestamp = date('Y-m-d H:i:s');
             $logMessage = "[{$timestamp}] {$level}: {$message}\n";
-            file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+            $logRotation->appendWithRotation($logFile, $logMessage, FILE_APPEND | LOCK_EX, 1000);
         };
     }
 

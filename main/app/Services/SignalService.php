@@ -8,13 +8,21 @@ use App\Models\DashboardSignal;
 use App\Models\Signal;
 use App\Models\Template;
 use App\Models\UserSignal;
+use App\Services\CacheManager;
+use App\Services\BaseService;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
 use NotificationChannels\Telegram\TelegramUpdates;
 
-class SignalService
+class SignalService extends BaseService
 {
+    protected $cacheManager;
+
+    public function __construct(CacheManager $cacheManager)
+    {
+        $this->cacheManager = $cacheManager;
+    }
     public function create($request)
     {
         $description =  clean($request->description, 'youtube');
@@ -108,6 +116,8 @@ class SignalService
 
         $signal->plans()->attach($request->plans);
 
+        // Invalidate relevant caches
+        $this->cacheManager->invalidateByTags(['signals', 'plans']);
 
         if ($request->type === 'Send') {
 
@@ -232,6 +242,9 @@ class SignalService
 
         $signal->plans()->sync($request->plans);
 
+        // Invalidate relevant caches
+        $this->cacheManager->invalidateByTags(['signals', 'plans']);
+
         // Handle signal modification if signal is published
         if ($signal->is_published) {
             try {
@@ -246,13 +259,7 @@ class SignalService
         }
 
         if ($request->type == 'Send') {
-
-
-
-
             $this->sent($signal->id);
-
-
 
             $signal->published_date = now();
 
@@ -285,6 +292,9 @@ class SignalService
 
         $signal->delete();
 
+        // Invalidate relevant caches
+        $this->cacheManager->invalidateByTags(['signals', 'plans']);
+
         return ['type' => 'success', 'message' => 'Successfully Deleted Signal'];
     }
 
@@ -292,17 +302,27 @@ class SignalService
 
     public function sent($id)
     {
-
-        $signal = Signal::find($id);
+        // Use optimized query with eager loading for signal relationships
+        $signal = Signal::with(['pair:id,name', 'time:id,name', 'market:id,name'])
+            ->find($id);
 
         if (!$signal) {
             return ['type' => 'error', 'message' => 'No Signals Found'];
         }
 
-        $signal->is_published = 1;
-        $signal->published_date = now();
-        $signal->save();
-        \App\Jobs\DistributeSignalJob::dispatch($signal->id)->onQueue('notifications');
+        // Use single update query instead of loading and saving
+        Signal::where('id', $id)->update([
+            'is_published' => 1,
+            'published_date' => now()
+        ]);
+
+        // Dispatch optimized signal distribution job with high priority
+        \App\Jobs\DistributeSignalJob::dispatch($signal->id)
+            ->setPriority('high')
+            ->addTags(['signal-publishing', 'urgent']);
+
+        // Invalidate signals cache
+        $this->cacheManager->invalidateByTags(['signals']);
 
         return ['type' => 'success', 'message' => 'Successfully sent Signal'];
     }
@@ -310,38 +330,37 @@ class SignalService
 
     public function sendSignalToUser($signal)
     {
-
         $general = Helper::config();
 
-        $plans = $signal->plans()->where('status', 1)->with('subscriptions')->get();
-
+        // Optimized query with eager loading to prevent N+1 queries
+        $plans = $signal->plans()
+            ->where('status', 1)
+            ->with([
+                'subscriptions' => function ($query) {
+                    $query->where('is_current', 1)
+                          ->where('plan_expired_at', '>', now())
+                          ->with('user:id,username,email,telegram_chat_id,phone');
+                }
+            ])
+            ->get();
 
         foreach ($plans as $plan) {
-            $subscriptions = $plan->subscriptions()->where('is_current', 1)->with('user')->get();
-
-
-            if ($subscriptions->isNotEmpty()) {
-                foreach ($subscriptions as $subscription) {
-
-                    $isNotExpired = $subscription->plan_expired_at->gt(now());
-
-
-                    if ($isNotExpired) {
-
-                        // Distribution moved to queue; keep minimal persistence here if needed
-                        \App\Jobs\SendChannelMessageJob::dispatch('dashboard', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
-                        if ($plan->whatsapp) {
-                            \App\Jobs\SendChannelMessageJob::dispatch('whatsapp', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
-                        }
-                        if ($plan->telegram) {
-                            \App\Jobs\SendChannelMessageJob::dispatch('telegram', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
-                        }
-                        if ($plan->email) {
-                            \App\Jobs\SendChannelMessageJob::dispatch('email', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
-                        }
-                        if ($plan->sms) {
-                            \App\Jobs\SendChannelMessageJob::dispatch('sms', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
-                        }
+            if ($plan->subscriptions->isNotEmpty()) {
+                foreach ($plan->subscriptions as $subscription) {
+                    // Distribution moved to queue; keep minimal persistence here if needed
+                    \App\Jobs\SendChannelMessageJob::dispatch('dashboard', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
+                    
+                    if ($plan->whatsapp) {
+                        \App\Jobs\SendChannelMessageJob::dispatch('whatsapp', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
+                    }
+                    if ($plan->telegram) {
+                        \App\Jobs\SendChannelMessageJob::dispatch('telegram', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
+                    }
+                    if ($plan->email) {
+                        \App\Jobs\SendChannelMessageJob::dispatch('email', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
+                    }
+                    if ($plan->sms) {
+                        \App\Jobs\SendChannelMessageJob::dispatch('sms', $subscription->user->id, $signal->id, $plan->id)->onQueue('notifications');
                     }
                 }
             }

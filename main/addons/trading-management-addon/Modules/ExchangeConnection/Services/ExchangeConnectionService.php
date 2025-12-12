@@ -128,7 +128,7 @@ class ExchangeConnectionService
      * @param ExchangeConnection $connection
      * @return mixed|null
      */
-    protected function getAdapter(ExchangeConnection $connection)
+    public function getAdapter(ExchangeConnection $connection)
     {
         $connectionType = $connection->connection_type ?? null;
         $provider = $connection->provider ?? $connection->exchange_name ?? null;

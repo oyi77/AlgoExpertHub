@@ -8,8 +8,12 @@
 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <meta name="description" content="{{ $page->seo_description ?? optional(Config::config())->seo_description }}" />
-    <meta name="keywords" content="{{ implode(",", is_array($page->seo_keywords ?? Config::config()->seo_tags ?? []) ? ($page->seo_keywords ?? Config::config()->seo_tags ?? []) : []) }} ">
+    <meta name="description" content="{{ optional($page)->seo_description ?? optional(Config::config())->seo_description }}" />
+    @php
+        $keywords = optional($page)->seo_keywords ?? optional(Config::config())->seo_tags ?? [];
+        $keywordsString = is_array($keywords) ? implode(',', $keywords) : $keywords;
+    @endphp
+    <meta name="keywords" content="{{ $keywordsString }}" />
 
     <title>{{ optional(Config::config())->appname ?? 'AlgoExpert Hub' }}</title>
 
@@ -19,7 +23,7 @@
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
     <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
 
-    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', Config::config()->favicon, true) }}">
+    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->favicon, true) }}">
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'all.min.css') }}">
@@ -38,14 +42,11 @@
         <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
-    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="preload" as="style" onload="this.rel='stylesheet'">
-    <noscript>
-        <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
-        <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
-        <link href="{{ asset('asset/frontend/materialize/css/material.css') }}?v=20251202" rel="stylesheet">
-    </noscript>
+    <link href="{{ asset('asset/css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ asset('asset/css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'components.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'main.css') }}?v={{ time() }}" rel="stylesheet">
+    <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v={{ time() }}" rel="stylesheet">
 
     @php
         $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
@@ -109,57 +110,39 @@
                 }
             @endphp
             @if (!$hasBannerInWidgets)
-                @include(Config::theme() . 'widgets.banner')
+                @include(Config::themeView('widgets.banner'))
             @endif
         @endif
 
-        @include(Config::theme() . 'layout.header')
+        @include(Config::themeView('layout.header'))
 
         @if (!request()->routeIs('home'))
-            @include(Config::theme() . 'widgets.breadcrumb')
+            @include(Config::themeView('widgets.breadcrumb'))
         @endif
 
         @yield('content')
     </div>
 
-    @include(Config::theme() . 'widgets.footer')
+    @include(Config::themeView('widgets.footer'))
 
-    <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
-    <script defer src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
-    @if(!View::hasSection('skip_slick'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/slick.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_wow'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/wow.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_paroller'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/jquery.paroller.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_tweenmax'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/TweenMax.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_odometer'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
-    @endif
-    @if(!View::hasSection('skip_viewport'))
-        <script defer src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
-    @endif
-
-    @if(optional(Config::config())->enable_new_styles)
-        <script defer src="{{ mix('js/app.js') }}"></script>
-    @endif
+    {{-- Critical scripts (load immediately) --}}
+    <script src="{{ Config::jsLib('frontend', 'lib/jquery.min.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
+    
+    {{-- Non-critical scripts (defer loading) --}}
+    {{-- jQuery plugins removed - using vanilla JS alternatives --}}
 
 
 
     @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-        <script defer src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}" defer></script>
     @elseif(optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-        <script defer src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}" defer></script>
     @else
-        <script defer src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
+        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}" defer></script>
     @endif
 
-    <script defer src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
+    <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 
@@ -199,7 +182,7 @@
 
                         $('.subscribe-email').val('');
 
-                        @include(Config::theme() . 'layout.ajax_alert', [
+                        @include(Config::themeView('layout.ajax_alert')), [
                             'message' => 'Successfully Subscribe',
                             'message_error' => '',
                         ])
