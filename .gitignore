@@ -40,4 +40,6 @@ MadelineProto.log
 CLAUDE.md
 AGENTS.md
 /sdks/
-/asset/
+# Ignore asset contents but allow symlink
+/asset/*
+!/asset/.gitkeep
