@@ -20,7 +20,7 @@ class ForgotPasswordController extends Controller
     {
         $data['title'] = 'Forgot Password';
 
-        return view(Helper::themeView('auth.email')->with($data);
+        return view(Helper::themeView('auth.email'))->with($data);
     }
 
     public function sendVerification(Request $request)
@@ -79,7 +79,7 @@ class ForgotPasswordController extends Controller
             return redirect()->route('user.forgot.password');
         }
 
-        return view(Helper::themeView('auth.verify', compact('title', 'email'));
+        return view(Helper::themeView('auth.verify'), compact('title', 'email'));
     }
 
     public function verifyCode(Request $request)
@@ -130,7 +130,7 @@ class ForgotPasswordController extends Controller
 
         $title = 'Reset Password';
 
-        return view(Helper::themeView('auth.reset', compact('title', 'session'));
+        return view(Helper::themeView('auth.reset'), compact('title', 'session'));
     }
 
     public function resetPassword(Request $request)
@@ -165,7 +165,7 @@ class ForgotPasswordController extends Controller
         }
 
         $title = 'Verify Account';
-        return view(Helper::themeView('auth.email_sms_verify',compact('title'));
+        return view(Helper::themeView('auth.email_sms_verify'), compact('title'));
     }
 
     public function verifyEmailAuth(Request $request)

@@ -103,7 +103,17 @@
                 $hasBannerInWidgets = false;
                 if (isset($page) && $page && $page->widgets) {
                     $hasBannerInWidgets = $page->widgets->contains(function($widget) {
-                        return $widget->sections === 'banner';
+                        $sectionValue = $widget->sections;
+                        // Handle JSON string
+                        if (is_string($sectionValue)) {
+                            $decoded = json_decode($sectionValue, true);
+                            if ($decoded !== null) {
+                                $sectionValue = is_array($decoded) ? ($decoded[0] ?? $decoded['name'] ?? $sectionValue) : $decoded;
+                            } else {
+                                $sectionValue = trim($sectionValue, '"\'');
+                            }
+                        }
+                        return $sectionValue === 'banner';
                     });
                 }
             @endphp

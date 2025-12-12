@@ -728,7 +728,7 @@ class DatabaseBackupService
                 $dumpParts[] = "--single-transaction";
                 $dumpParts[] = "--quick";
                 $dumpParts[] = "--lock-tables=false";
-                $dumpParts[] = "--skip-ssl";
+                $dumpParts[] = "--ssl-mode=DISABLED";
                 // Don't specify auth plugin - let it use default (works better with MariaDB)
                 
                 $baseCommand = implode(' ', $dumpParts);
@@ -782,7 +782,7 @@ class DatabaseBackupService
                     $dumpParts[] = "--single-transaction";
                     $dumpParts[] = "--quick";
                     $dumpParts[] = "--lock-tables=false";
-                    $dumpParts[] = "--skip-ssl";
+                    $dumpParts[] = "--ssl-mode=DISABLED";
                     // Don't specify auth plugin - let it use default (works better with MariaDB)
                     
                     $baseCommand = implode(' ', $dumpParts);
@@ -851,7 +851,7 @@ class DatabaseBackupService
                             $dumpParts[] = "--single-transaction";
                             $dumpParts[] = "--quick";
                             $dumpParts[] = "--lock-tables=false";
-                            $dumpParts[] = "--skip-ssl";
+                            $dumpParts[] = "--ssl-mode=DISABLED";
                             // Don't specify auth plugin - let it use default (works better with MariaDB)
                             
                             $baseCommand = implode(' ', $dumpParts);
@@ -902,7 +902,7 @@ class DatabaseBackupService
                     $dumpParts[] = "--single-transaction";
                     $dumpParts[] = "--quick";
                     $dumpParts[] = "--lock-tables=false";
-                    $dumpParts[] = "--skip-ssl";
+                    $dumpParts[] = "--ssl-mode=DISABLED";
                     // Don't specify auth plugin - let MariaDB use default
                     
                     $baseCommand = implode(' ', $dumpParts);
@@ -1178,18 +1178,18 @@ class DatabaseBackupService
             if ($useDocker) {
                 // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('cat %s | %s 2>&1', escapeshellarg($filepath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($filepath));
@@ -1402,18 +1402,18 @@ class DatabaseBackupService
             if ($useDocker) {
                 // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
+                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($this->factoryStatePath));
@@ -1476,9 +1476,9 @@ class DatabaseBackupService
                             // Re-import factory state data after fresh migration
                             if ($useDocker) {
                                 if (!empty($password)) {
-                                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                                 } else {
-                                    $args = ['--skip-ssl', '--default-auth=mysql_native_password', '-u', $username, $database];
+                                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
                                 }
                                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                                 $reimportCommand = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);

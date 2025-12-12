@@ -4,7 +4,7 @@
  
 <!-- banner section start -->
 @if($banner && $banner->content)
-<section class="sp_banner">
+<section class="sp_banner" data-banner-source="{{ isset($bannerSource) ? $bannerSource : 'section-render' }}" data-banner-render-id="{{ uniqid('banner-') }}">
     <div class="sp_banner_bottom_shape" aria-hidden="true"></div>
     <div class="container">
         <div class="row justify-content-between align-items-center">
@@ -23,7 +23,11 @@
             </div>
             <div class="col-lg-5">
                 <div class="sp_banner_thumb" data-animate="fadeInUp">
-                    <img src="{{ Config::getFile('banner', $banner->content->image_one ?? '') }}" class="sp_banner_img" alt="{{ Config::trans($banner->content->title ?? 'Banner') }}" loading="eager">
+                    @php
+                        $imageOne = $banner->content->image_one ?? '';
+                        $imagePath = Config::getFile('banner', $imageOne);
+                    @endphp
+                    <img src="{{ $imagePath }}" class="sp_banner_img" alt="{{ Config::trans($banner->content->title ?? 'Banner') }}" loading="eager">
                 </div>
             </div>
         </div>

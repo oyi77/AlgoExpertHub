@@ -26,7 +26,7 @@ class ExternalSignalController extends Controller
         $data['multiChannelEnabled'] = \App\Support\AddonRegistry::active('multi-channel-signal-addon') 
             && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
 
-        return view(Helper::themeView('user.external_signals')->with($data);
+        return view(Helper::themeView('user.external_signals'))->with($data);
     }
 }
 

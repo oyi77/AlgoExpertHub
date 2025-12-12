@@ -110,14 +110,26 @@
         @if (request()->routeIs('home'))
             @php
                 $hasBannerInWidgets = false;
-                if (isset($page) && $page && $page->widgets) {
+                // Check if $page is a real Page model with widgets, not the middleware's default object
+                // The middleware shares a default page object without widgets, so we need to verify this is the real Page model
+                if (isset($page) && $page && ($page instanceof \App\Models\Page) && isset($page->widgets) && $page->widgets) {
                     $hasBannerInWidgets = $page->widgets->contains(function($widget) {
-                        return $widget->sections === 'banner';
+                        $sectionValue = $widget->sections;
+                        // Handle JSON string
+                        if (is_string($sectionValue)) {
+                            $decoded = json_decode($sectionValue, true);
+                            if ($decoded !== null) {
+                                $sectionValue = is_array($decoded) ? ($decoded[0] ?? $decoded['name'] ?? $sectionValue) : $decoded;
+                            } else {
+                                $sectionValue = trim($sectionValue, '"\'');
+                            }
+                        }
+                        return $sectionValue === 'banner';
                     });
                 }
             @endphp
             @if (!$hasBannerInWidgets)
-                @include(Config::themeView('widgets.banner'))
+                @include(Config::themeView('widgets.banner'), ['bannerSource' => 'master-layout'])
             @endif
         @endif
 

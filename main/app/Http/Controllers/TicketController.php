@@ -27,7 +27,7 @@ class TicketController extends Controller
         $data['tickets_closed'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('1')->count();
         $data['tickets_all'] = Ticket::whereUserId(Auth::user()->id)->count();
 
-        return view(Helper::themeView('user.ticket.list')->with($data);
+        return view(Helper::themeView('user.ticket.list'))->with($data);
     }
 
 
@@ -52,7 +52,7 @@ class TicketController extends Controller
         $data['tickets'] =  $data['tickets'] = Ticket::whereUserId(Auth::user()->id)->with('ticketReplies')->get();
         $data['ticket_reply'] = TicketReply::whereTicketId($data['ticket']->id)->latest()->get();
 
-        return view(Helper::themeView('user.ticket.show')->with($data);
+        return view(Helper::themeView('user.ticket.show'))->with($data);
     }
 
 
@@ -108,7 +108,7 @@ class TicketController extends Controller
         $data['tickets_answered'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('3')->count();
         $data['tickets_closed'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('1')->count();
         $data['tickets_all'] = Ticket::whereUserId(Auth::user()->id)->count();
-        return view(Helper::themeView('user.ticket.list')->with($data);
+        return view(Helper::themeView('user.ticket.list'))->with($data);
     }
 
     public function ticketDownload($id)

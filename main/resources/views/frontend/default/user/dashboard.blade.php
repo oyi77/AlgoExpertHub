@@ -21,14 +21,14 @@
             <div class="d-left-wrapper">
                 <!-- Onboarding Checklist Widget -->
                 @if(isset($onboardingChecklist) && !empty($onboardingChecklist) && $onboardingProgress < 100)
-                    @include(Config::themeView('user.onboarding._checklist_widget', [
+                    @include(Config::themeView('user.onboarding._checklist_widget'), [
                         'checklist' => $onboardingChecklist,
                         'progress' => $onboardingProgress
                     ])
                 @endif
                 
                 <!-- Quick Action Banner Section -->
-                @include(Config::themeView('user.dashboard._quick_actions_banner')
+                @include(Config::themeView('user.dashboard._quick_actions_banner'))
                 
                 <div class="d-left-countdown">
                     <div id="countdownTwo"></div>
@@ -336,6 +336,69 @@
         
         console.log('[Dashboard] Init script started, DOM:', document.readyState, 'ApexCharts:', typeof ApexCharts !== 'undefined');
         
+        // Wait for ApexCharts to be available - with strict verification
+        // Defined at IIFE scope so it's accessible to both initDashboard and waitForBoth
+        function waitForApexCharts(callback) {
+            console.log('[Dashboard] waitForApexCharts called, ApexCharts:', typeof ApexCharts !== 'undefined');
+            
+            // Check immediately with strict verification
+            if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                console.log('[Dashboard] ApexCharts available immediately');
+                // Double-check it's actually callable
+                try {
+                    if (ApexCharts.prototype && ApexCharts.prototype.constructor) {
+                        callback();
+                        return;
+                    }
+                } catch(e) {
+                    console.warn('[Dashboard] ApexCharts exists but not callable:', e);
+                }
+            }
+            
+            // Check if already loaded flag is set
+            if (window.__apexchartsLoaded) {
+                setTimeout(function() {
+                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                        console.log('[Dashboard] ApexCharts confirmed via loaded flag');
+                        callback();
+                        return;
+                    }
+                }, 10);
+            }
+            
+            // Listen for loaded event (only once)
+            var eventHandler = function() {
+                console.log('[Dashboard] apexcharts-loaded event fired');
+                // Wait a tiny bit to ensure ApexCharts is fully initialized
+                setTimeout(function() {
+                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                        console.log('[Dashboard] ApexCharts confirmed in event handler');
+                        callback();
+                    } else {
+                        console.error('[Dashboard] Event fired but ApexCharts still not valid!');
+                    }
+                }, 10);
+            };
+            window.addEventListener('apexcharts-loaded', eventHandler, { once: true });
+            
+            // Fallback polling (max 10 seconds = 200 attempts * 50ms)
+            var attempts = 0;
+            var maxAttempts = 200;
+            var pollInterval = setInterval(function() {
+                attempts++;
+                if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
+                    console.log('[Dashboard] ApexCharts detected via polling after', attempts, 'attempts');
+                    clearInterval(pollInterval);
+                    window.removeEventListener('apexcharts-loaded', eventHandler);
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    console.error('[Dashboard] Polling timeout - ApexCharts failed to load');
+                    clearInterval(pollInterval);
+                    window.removeEventListener('apexcharts-loaded', eventHandler);
+                }
+            }, 50);
+        }
+        
         function initDashboard() {
             console.log('[Dashboard] initDashboard called, ApexCharts:', typeof ApexCharts !== 'undefined');
 
@@ -408,68 +471,6 @@
         }
         // Call updateCountdown every second
         setInterval(updateCountdown, 1000);
-
-        // Wait for ApexCharts to be available - with strict verification
-        function waitForApexCharts(callback) {
-            console.log('[Dashboard] waitForApexCharts called, ApexCharts:', typeof ApexCharts !== 'undefined');
-            
-            // Check immediately with strict verification
-            if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
-                console.log('[Dashboard] ApexCharts available immediately');
-                // Double-check it's actually callable
-                try {
-                    if (ApexCharts.prototype && ApexCharts.prototype.constructor) {
-                        callback();
-                        return;
-                    }
-                } catch(e) {
-                    console.warn('[Dashboard] ApexCharts exists but not callable:', e);
-                }
-            }
-            
-            // Check if already loaded flag is set
-            if (window.__apexchartsLoaded) {
-                setTimeout(function() {
-                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
-                        console.log('[Dashboard] ApexCharts confirmed via loaded flag');
-                        callback();
-                        return;
-                    }
-                }, 10);
-            }
-            
-            // Listen for loaded event (only once)
-            var eventHandler = function() {
-                console.log('[Dashboard] apexcharts-loaded event fired');
-                // Wait a tiny bit to ensure ApexCharts is fully initialized
-                setTimeout(function() {
-                    if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
-                        console.log('[Dashboard] ApexCharts confirmed in event handler');
-                        callback();
-                    } else {
-                        console.error('[Dashboard] Event fired but ApexCharts still not valid!');
-                    }
-                }, 10);
-            };
-            window.addEventListener('apexcharts-loaded', eventHandler, { once: true });
-            
-            // Fallback polling (max 10 seconds = 200 attempts * 50ms)
-            var attempts = 0;
-            var maxAttempts = 200;
-            var pollInterval = setInterval(function() {
-                attempts++;
-                if (typeof ApexCharts !== 'undefined' && typeof ApexCharts === 'function') {
-                    console.log('[Dashboard] ApexCharts detected via polling after', attempts, 'attempts');
-                    clearInterval(pollInterval);
-                    window.removeEventListener('apexcharts-loaded', eventHandler);
-                    callback();
-                } else if (attempts >= maxAttempts) {
-                    console.error('[Dashboard] Polling timeout - ApexCharts failed to load');
-                    clearInterval(pollInterval);
-                    window.removeEventListener('apexcharts-loaded', eventHandler);
-                }
-            }, 50);
-        }
 
         // Initialize charts when ApexCharts is ready
         waitForApexCharts(function() {

@@ -29,7 +29,7 @@ class LogController extends Controller
             ->with('gateway')
             ->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.deposit_log')->with($data);
+        return view(Helper::themeView('user.deposit_log'))->with($data);
     }
 
 
@@ -43,7 +43,7 @@ class LogController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('user_id', auth()->id())->latest()->with('withdrawMethod')->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.withdraw.withdraw_log')->with($data);
+        return view(Helper::themeView('user.withdraw.withdraw_log'))->with($data);
     }
 
     public function pendingWithdraw()
@@ -52,7 +52,7 @@ class LogController extends Controller
 
         $data['withdrawlogs'] = Withdraw::where('user_id', auth()->id())->where('status', 0)->latest()->with('withdrawMethod')->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.withdraw.withdraw_log')->with($data);
+        return view(Helper::themeView('user.withdraw.withdraw_log'))->with($data);
     }
 
     public function completeWithdraw()
@@ -61,7 +61,7 @@ class LogController extends Controller
 
         $data['withdrawlogs'] = Withdraw::where('user_id', auth()->id())->where('status', 1)->latest()->with('withdrawMethod')->paginate(10);
 
-        return view(Helper::themeView('user.withdraw.withdraw_log')->with($data);
+        return view(Helper::themeView('user.withdraw.withdraw_log'))->with($data);
     }
 
 
@@ -75,7 +75,7 @@ class LogController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('user_id', auth()->id())->whereIn('status', [1, 2, 3])->latest()->with('user', 'gateway')->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.invest_log')->with($data);
+        return view(Helper::themeView('user.invest_log'))->with($data);
     }
 
 
@@ -89,7 +89,7 @@ class LogController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('user_id', auth()->id())->latest()->with('user')->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.transaction')->with($data);
+        return view(Helper::themeView('user.transaction'))->with($data);
     }
 
     public function commision(Request $request)
@@ -101,7 +101,7 @@ class LogController extends Controller
             $item->whereDate('created_at', $request->date);
         })->where('commission_to', auth()->id())->latest()->with('whoGetTheMoney', 'whoSendTheMoney')->paginate(Helper::pagination());
 
-        return view(Helper::themeView('user.commision_log')->with($data);
+        return view(Helper::themeView('user.commision_log'))->with($data);
     }
 
     public function subscriptionLog(Request $request)
@@ -113,7 +113,7 @@ class LogController extends Controller
         })->where('user_id', auth()->id())->latest()->with('user', 'plan')->paginate(Helper::pagination());
 
 
-        return view(Helper::themeView('user.subscription_log')->with($data);
+        return view(Helper::themeView('user.subscription_log'))->with($data);
     }
 
 
@@ -123,6 +123,6 @@ class LogController extends Controller
 
         $data['title'] = 'Refferal Log';
 
-        return view(Helper::themeView( 'user.refferal')->with($data);
+        return view(Helper::themeView('user.refferal'))->with($data);
     }
 }

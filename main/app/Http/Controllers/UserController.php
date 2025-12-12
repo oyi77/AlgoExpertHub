@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
 use App\Http\Requests\UserProfile;
+use App\Models\Payment;
+use App\Models\ReferralCommission;
 use App\Models\User;
 use App\Services\UserDashboardService;
 use App\Services\UserProfileService;
@@ -84,5 +86,56 @@ class UserController extends Controller
 
             return redirect()->back()->with('success', 'Password Updated');
         }
+    }
+
+    public function allInvest(Request $request)
+    {
+        $data['title'] = 'All Investments';
+
+        $data['investments'] = Payment::when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })
+            ->where('user_id', auth()->id())
+            ->whereIn('status', [0, 1, 2])
+            ->latest()
+            ->with('plan', 'gateway')
+            ->paginate(Helper::pagination());
+
+        return view(Helper::themeView('user.invest_log'))->with($data);
+    }
+
+    public function pendingInvest(Request $request)
+    {
+        $data['title'] = 'Pending Investments';
+
+        $data['investments'] = Payment::when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })
+            ->where('user_id', auth()->id())
+            ->where('status', 0)
+            ->latest()
+            ->with('plan', 'gateway')
+            ->paginate(Helper::pagination());
+
+        return view(Helper::themeView('user.invest_log'))->with($data);
+    }
+
+    public function interestLog(Request $request)
+    {
+        $data['title'] = 'Interest Log';
+
+        $data['interestLogs'] = ReferralCommission::when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })
+            ->where('commission_to', auth()->id())
+            ->latest()
+            ->with('whoGetTheMoney', 'whoSendTheMoney')
+            ->paginate(Helper::pagination());
+
+        return view(Helper::themeView('user.interest_log'))->with($data);
     }
 }

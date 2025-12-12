@@ -31,7 +31,7 @@ class PaymentController extends Controller
 
         $data['title'] = "Payment Methods";
 
-        return view(Helper::themeView("user.gateway.gateways")->with($data);
+        return view(Helper::themeView("user.gateway.gateways"))->with($data);
     }
 
     public function paynow(PaymentRequest $request)
@@ -124,7 +124,7 @@ class PaymentController extends Controller
         }
         if ($gateway->name == 'paytm') {
 
-            return view(Helper::themeView('user.gateway.auto', compact('data'));
+            return view(Helper::themeView('user.gateway.auto'), compact('data'));
         }
 
         $is_manual = session('manual') != null && session('manual') == 'yes' ? 1 : 0;

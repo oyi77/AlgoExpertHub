@@ -15,6 +15,6 @@ class DepositController extends Controller
 
         $data['type'] = 'deposit';
 
-        return view(Helper::themeView( "user.gateway.gateways")->with($data);
+        return view(Helper::themeView("user.gateway.gateways"))->with($data);
     }
 }

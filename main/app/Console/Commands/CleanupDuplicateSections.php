@@ -33,8 +33,9 @@ class CleanupDuplicateSections extends Command
         $this->info('Cleaning up duplicate sections...');
 
         // Clean up duplicate contents
+        // Keep the newest record (MAX id) and delete older duplicates
         $duplicates = DB::table('contents')
-            ->select('type', 'name', 'theme', 'language_id', DB::raw('MIN(id) as min_id'))
+            ->select('type', 'name', 'theme', 'language_id', DB::raw('MAX(id) as max_id'))
             ->groupBy('type', 'name', 'theme', 'language_id')
             ->havingRaw('COUNT(*) > 1')
             ->get();
@@ -46,7 +47,7 @@ class CleanupDuplicateSections extends Command
                 ->where('name', $duplicate->name)
                 ->where('theme', $duplicate->theme)
                 ->where('language_id', $duplicate->language_id)
-                ->where('id', '!=', $duplicate->min_id)
+                ->where('id', '!=', $duplicate->max_id)
                 ->delete();
             $contentsDeleted += $deleted;
         }
@@ -54,8 +55,9 @@ class CleanupDuplicateSections extends Command
         $this->info("Cleaned up {$contentsDeleted} duplicate contents.");
 
         // Clean up duplicate page sections
+        // Keep the newest record (MAX id) and delete older duplicates
         $pageSectionDuplicates = DB::table('page_sections')
-            ->select('page_id', 'sections', DB::raw('MIN(id) as min_id'))
+            ->select('page_id', 'sections', DB::raw('MAX(id) as max_id'))
             ->groupBy('page_id', 'sections')
             ->havingRaw('COUNT(*) > 1')
             ->get();
@@ -65,7 +67,7 @@ class CleanupDuplicateSections extends Command
             $deleted = DB::table('page_sections')
                 ->where('page_id', $duplicate->page_id)
                 ->where('sections', $duplicate->sections)
-                ->where('id', '!=', $duplicate->min_id)
+                ->where('id', '!=', $duplicate->max_id)
                 ->delete();
             $pageSectionsDeleted += $deleted;
         }

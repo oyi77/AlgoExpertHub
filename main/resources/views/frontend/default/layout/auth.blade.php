@@ -36,15 +36,24 @@
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202">
-    @if(file_exists(public_path('asset/frontend/' . (\App\Models\Configuration::first()->theme ?? 'default') . '/css/menu-groups.css')))
+    @php
+        $theme = \App\Models\Configuration::first()->theme ?? 'default';
+        $menuGroupsPath = public_path('asset/frontend/' . $theme . '/css/menu-groups.css');
+        $userPanelThemePath = public_path('asset/frontend/' . $theme . '/css/user-panel-admin-theme.css');
+    @endphp
+    @if(file_exists($menuGroupsPath))
         <style>
-            {!! file_get_contents(public_path('asset/frontend/' . (\App\Models\Configuration::first()->theme ?? 'default') . '/css/menu-groups.css')) !!}
+            {!! file_get_contents($menuGroupsPath) !!}
         </style>
     @else
         <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'menu-groups.css') }}?v=20251202">
     @endif
     <!-- User Panel Admin Theme Override - Light background like admin (MUST be loaded LAST to override dark theme) -->
-    <link rel="stylesheet" href="{{ asset('asset/frontend/default/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
+    @if(file_exists($userPanelThemePath))
+        <link rel="stylesheet" href="{{ asset('asset/frontend/' . $theme . '/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
+    @else
+        <link rel="stylesheet" href="{{ asset('asset/frontend/default/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
+    @endif
     
     <!-- Inline style as final override to ensure light background -->
     <style>
@@ -71,6 +80,7 @@
         $heading = optional($config)->fonts ? optional($config->fonts)->heading_font_family : 'DM Sans';
         $paragraph = optional($config)->fonts ? optional($config->fonts)->paragraph_font_family : 'Poppins';
     @endphp
+    <style>
         :root {
             --h-font: <?=$heading ?>;
             --p-font: <?=$paragraph ?>;
@@ -81,7 +91,7 @@
 
 <body class="user-pages-body">
 
-    @include(Config::themeView('layout.user_sidebar_new')
+    @include(Config::themeView('layout.user_sidebar_new'))
 
     <header class="user-header">
         <a href="{{ route('user.dashboard') }}" class="site-logo">

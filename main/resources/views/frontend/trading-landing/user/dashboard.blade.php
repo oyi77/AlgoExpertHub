@@ -21,14 +21,14 @@
             <div class="d-left-wrapper">
                 <!-- Onboarding Checklist Widget -->
                 @if(isset($onboardingChecklist) && !empty($onboardingChecklist) && $onboardingProgress < 100)
-                    @include(Config::themeView('user.onboarding._checklist_widget', [
+                    @include(Config::themeView('user.onboarding._checklist_widget'), [
                         'checklist' => $onboardingChecklist,
                         'progress' => $onboardingProgress
                     ])
                 @endif
                 
                 <!-- Quick Action Banner Section -->
-                @include(Config::themeView('user.dashboard._quick_actions_banner')
+                @include(Config::themeView('user.dashboard._quick_actions_banner'))
                 
                 <div class="d-left-countdown">
                     <div id="countdownTwo"></div>

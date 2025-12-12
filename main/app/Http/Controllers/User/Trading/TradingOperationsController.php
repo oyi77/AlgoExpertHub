@@ -67,6 +67,6 @@ class TradingOperationsController extends Controller
             }
         }
 
-        return view(Helper::themeView('user.trading.operations', $data);
+        return view(Helper::themeView('user.trading.operations'), $data);
     }
 }
