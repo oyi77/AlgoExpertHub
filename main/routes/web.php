@@ -1101,5 +1101,6 @@ Route::get('sw.js', [\App\Http\Controllers\PWAController::class, 'serviceWorker'
 Route::get('offline', [\App\Http\Controllers\PWAController::class, 'offline'])->name('pwa.offline');
 Route::get('install', [\App\Http\Controllers\PWAController::class, 'install'])->name('pwa.install');
 
-// Catch-all route must be last
-Route::get('{pages}', [FrontendController::class, 'page'])->name('pages');
+// Catch-all route for dynamic CMS pages
+// This must be LAST to avoid interfering with other routes
+Route::get('{pages}', [FrontendController::class, 'page'])->name('pages')->where('pages', '^(?!admin|api).*$');

@@ -374,6 +374,10 @@ class MetaApiStreamingService
                 if ($this->client->isConnected()) {
                     $this->connected = true;
                     
+                    // Pre-fetch initial historical data for faster startup
+                    // This ensures data is available immediately when bots start consuming
+                    $this->prefetchInitialDataForActiveStreams();
+                    
                     Log::info('MetaAPI Socket.IO connected successfully', [
                         'account_id' => $this->accountId,
                         'client_id' => $clientId,
@@ -388,6 +392,18 @@ class MetaApiStreamingService
                     
                     // Process any immediate responses
                     $this->processPendingResponses(5);
+                    
+                    // Pre-fetch initial historical data for faster startup (non-blocking)
+                    // This ensures data is available immediately when bots start consuming
+                    try {
+                        $this->prefetchInitialDataForActiveStreams();
+                    } catch (\Exception $e) {
+                        Log::debug('MetaApiStreamingService: Pre-fetch failed (non-critical)', [
+                            'account_id' => $this->accountId,
+                            'error' => $e->getMessage(),
+                        ]);
+                        // Don't fail connection if pre-fetch fails
+                    }
                     
                     return true;
                 } else {
@@ -1070,6 +1086,10 @@ class MetaApiStreamingService
                             'region' => $this->region,
                             'polling_interval' => $this->pollingInterval . 's',
                         ]);
+                        
+                        // Pre-fetch initial historical data for faster startup
+                        $this->prefetchInitialData();
+                        
                         return true;
                     }
                 } catch (\Exception $e) {
@@ -1190,15 +1210,56 @@ class MetaApiStreamingService
                         : now()->toIso8601String(),
                 ];
                 
-                // Cache the data in same format as Socket.IO would (JSON string)
+                // Cache the latest candle in same format as Socket.IO would (JSON string) for backward compatibility
                 $cacheKey = $this->getCacheKey($symbol, $timeframe);
                 Redis::setex($cacheKey, $this->streamTtl, json_encode($candleData));
+                
+                // Cache multiple candles in Redis list for historical data access
+                // Format: metaapi:stream:{account_id}:{symbol}:{timeframe}:candles
+                $candlesCacheKey = $this->getCandlesCacheKey($symbol, $timeframe);
+                
+                // Convert all candles to cache format and store in list
+                $candlesToCache = [];
+                foreach ($candles as $candle) {
+                    $candlesToCache[] = json_encode([
+                        'symbol' => $symbol,
+                        'timeframe' => $timeframe,
+                        'open' => $candle['open'] ?? 0,
+                        'high' => $candle['high'] ?? 0,
+                        'low' => $candle['low'] ?? 0,
+                        'close' => $candle['close'] ?? 0,
+                        'volume' => $candle['volume'] ?? 0,
+                        'tickVolume' => $candle['tick_volume'] ?? $candle['volume'] ?? 0,
+                        'time' => isset($candle['timestamp']) 
+                            ? date('c', (int)($candle['timestamp'] / 1000))
+                            : now()->toIso8601String(),
+                        'timestamp' => isset($candle['timestamp']) 
+                            ? (int)($candle['timestamp'] < 10000000000 ? $candle['timestamp'] * 1000 : $candle['timestamp'])
+                            : time() * 1000,
+                        'brokerTime' => isset($candle['broker_time']) 
+                            ? $candle['broker_time']
+                            : now()->toIso8601String(),
+                    ]);
+                }
+                
+                // Store candles in Redis list (newest first, limit to 100)
+                // Delete old list and create new one with all candles
+                Redis::del($candlesCacheKey);
+                if (!empty($candlesToCache)) {
+                    // Use RPUSH to add candles (oldest to newest)
+                    // Reverse array so newest is at the end (for easier retrieval)
+                    Redis::rpush($candlesCacheKey, ...array_reverse($candlesToCache));
+                    // Set TTL on the list
+                    Redis::expire($candlesCacheKey, $this->streamTtl);
+                }
                 
                 Log::info('Polled market data via REST API and cached', [
                     'account_id' => $this->accountId,
                     'symbol' => $symbol,
                     'timeframe' => $timeframe,
                     'cache_key' => $cacheKey,
+                    'candles_cache_key' => $candlesCacheKey,
+                    'candles_count' => count($candles),
                     'close_price' => $candleData['close'],
                     'timestamp' => $candleData['time'],
                 ]);
@@ -1362,11 +1423,19 @@ class MetaApiStreamingService
     }
 
     /**
-     * Get cache key for symbol/timeframe
+     * Get cache key for symbol/timeframe (latest candle)
      */
     protected function getCacheKey(string $symbol, string $timeframe): string
     {
         return sprintf('%s:%s:%s:%s', $this->redisPrefix, $this->accountId, $symbol, $timeframe);
+    }
+
+    /**
+     * Get cache key for candles list (historical candles)
+     */
+    protected function getCandlesCacheKey(string $symbol, string $timeframe): string
+    {
+        return sprintf('%s:%s:%s:%s:candles', $this->redisPrefix, $this->accountId, $symbol, $timeframe);
     }
 
     /**
@@ -1485,5 +1554,127 @@ class MetaApiStreamingService
         }
 
         return null;
+    }
+    
+    /**
+     * Pre-fetch initial historical data for active streams (for Socket.IO mode)
+     * 
+     * Called after Socket.IO connection is established
+     * Uses polling adapter (which has SDK support) to fetch initial data
+     */
+    protected function prefetchInitialDataForActiveStreams(): void
+    {
+        try {
+            // Initialize polling adapter if not already done (for SDK access)
+            if (!$this->pollingAdapter) {
+                $baseUrl = "https://mt-client-api-v1.{$this->region}.agiliumtrade.ai";
+                $marketDataBaseUrl = "https://mt-market-data-client-api-v1.{$this->region}.agiliumtrade.ai";
+                
+                $this->pollingAdapter = new MetaApiAdapter([
+                    'api_token' => $this->apiToken,
+                    'account_id' => $this->accountId,
+                    'base_url' => $baseUrl,
+                    'market_data_base_url' => $marketDataBaseUrl,
+                ]);
+                
+                // Connect adapter (will use SDK if available)
+                if (!$this->pollingAdapter->connect([])) {
+                    Log::debug('MetaApiStreamingService: Polling adapter connection failed, skipping pre-fetch', [
+                        'account_id' => $this->accountId,
+                    ]);
+                    return;
+                }
+            }
+            
+            // Get all active streams for this account
+            $streams = \Addons\TradingManagement\Modules\DataProvider\Models\MetaapiStream::where('account_id', $this->accountId)
+                ->where('status', 'active')
+                ->get();
+            
+            if ($streams->isEmpty()) {
+                Log::debug('MetaApiStreamingService: No active streams to pre-fetch', [
+                    'account_id' => $this->accountId,
+                ]);
+                return;
+            }
+            
+            Log::info('MetaApiStreamingService: Pre-fetching initial data for active streams', [
+                'account_id' => $this->accountId,
+                'streams_count' => $streams->count(),
+            ]);
+            
+            $prefetchedCount = 0;
+            foreach ($streams as $stream) {
+                try {
+                    $symbol = $stream->symbol;
+                    $timeframe = $stream->timeframe;
+                    $standardTimeframe = $this->convertToStandardTimeframe($timeframe);
+                    
+                    // Fetch last 200 candles via SDK (MetaApiAdapter uses SDK with fallback)
+                    $candles = $this->pollingAdapter->fetchOHLCV($symbol, $standardTimeframe, 200);
+                    
+                    if (!empty($candles)) {
+                        // Store in Redis list (same format as streaming)
+                        $candlesCacheKey = $this->getCandlesCacheKey($symbol, $timeframe);
+                        
+                        // Convert to cache format
+                        $candlesToCache = [];
+                        foreach ($candles as $candle) {
+                            $timestamp = $candle['timestamp'] ?? time() * 1000;
+                            $candlesToCache[] = json_encode([
+                                'symbol' => $symbol,
+                                'timeframe' => $timeframe,
+                                'open' => $candle['open'] ?? 0,
+                                'high' => $candle['high'] ?? 0,
+                                'low' => $candle['low'] ?? 0,
+                                'close' => $candle['close'] ?? 0,
+                                'volume' => $candle['volume'] ?? 0,
+                                'tickVolume' => $candle['tick_volume'] ?? $candle['volume'] ?? 0,
+                                'time' => date('c', (int)($timestamp / 1000)),
+                                'timestamp' => (int)($timestamp < 10000000000 ? $timestamp * 1000 : $timestamp),
+                                'brokerTime' => date('c', (int)($timestamp / 1000)),
+                            ]);
+                        }
+                        
+                        // Store candles in Redis list (oldest to newest)
+                        Redis::del($candlesCacheKey);
+                        if (!empty($candlesToCache)) {
+                            Redis::rpush($candlesCacheKey, ...$candlesToCache);
+                            Redis::expire($candlesCacheKey, $this->streamTtl);
+                            $prefetchedCount++;
+                            
+                            Log::info('MetaApiStreamingService: Pre-fetched initial data for stream', [
+                                'account_id' => $this->accountId,
+                                'symbol' => $symbol,
+                                'timeframe' => $timeframe,
+                                'candles_count' => count($candles),
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::debug('MetaApiStreamingService: Failed to pre-fetch data for stream', [
+                        'account_id' => $this->accountId,
+                        'symbol' => $stream->symbol ?? 'unknown',
+                        'timeframe' => $stream->timeframe ?? 'unknown',
+                        'error' => $e->getMessage(),
+                    ]);
+                    continue;
+                }
+            }
+            
+            if ($prefetchedCount > 0) {
+                Log::info('MetaApiStreamingService: Initial data pre-fetch complete', [
+                    'account_id' => $this->accountId,
+                    'streams_prefetched' => $prefetchedCount,
+                    'total_streams' => $streams->count(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::debug('MetaApiStreamingService: Failed to pre-fetch initial data (non-critical)', [
+                'account_id' => $this->accountId,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail connection if pre-fetch fails
+        }
     }
 }

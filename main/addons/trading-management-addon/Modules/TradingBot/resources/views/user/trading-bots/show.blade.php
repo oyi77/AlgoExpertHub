@@ -76,7 +76,7 @@
                                         </button>
                                     </form>
                                 @elseif($isRunning)
-                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restart this bot?');">
+                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to restart this bot?">
                                         @csrf
                                         <button type="submit" class="btn btn-info btn-lg">
                                             <i class="fa fa-redo"></i> Restart Bot
@@ -88,14 +88,14 @@
                                             <i class="fa fa-pause"></i> Pause Bot
                                         </button>
                                     </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to stop this bot?');">
+                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to stop this bot?">
                                         @csrf
                                         <button type="submit" class="btn btn-danger btn-lg">
                                             <i class="fa fa-stop"></i> Stop Bot
                                         </button>
                                     </form>
                                 @elseif($isPaused)
-                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restart this bot?');">
+                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to restart this bot?">
                                         @csrf
                                         <button type="submit" class="btn btn-info btn-lg">
                                             <i class="fa fa-redo"></i> Restart Bot
@@ -107,7 +107,7 @@
                                             <i class="fa fa-play"></i> Resume Bot
                                         </button>
                                     </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to stop this bot?');">
+                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to stop this bot?">
                                         @csrf
                                         <button type="submit" class="btn btn-danger btn-lg">
                                             <i class="fa fa-stop"></i> Stop Bot
@@ -709,6 +709,41 @@
             .catch(error => console.error('Error fetching queue stats:', error));
     }, 15000);
 })();
+
+// Handle bot action forms with confirmation
+$(document).ready(function() {
+    $('.bot-action-form').on('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const form = $(this);
+        const message = form.data('confirm-message') || 'Are you sure?';
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: '{{ __("Confirmation") }}',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '{{ __("Confirm") }}',
+                cancelButtonText: '{{ __("Cancel") }}'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.off('submit').submit();
+                }
+            });
+        } else {
+            if (confirm(message)) {
+                form.off('submit').submit();
+            }
+        }
+        
+        return false;
+    });
+});
 </script>
 @endpush
 @endsection

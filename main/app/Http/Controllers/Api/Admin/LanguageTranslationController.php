@@ -5,16 +5,9 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Backend\LanguageController as WebLanguageController;
 
 class LanguageTranslationController extends Controller
 {
-    protected $webController;
-
-    public function __construct()
-    {
-        $this->webController = new WebLanguageController();
-    }
 
     /**
      * Get translations for a language

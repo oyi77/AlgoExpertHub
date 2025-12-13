@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\DataProvider\Adapters;
 use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * MetaApi.cloud Adapter
@@ -39,6 +40,8 @@ class MetaApiAdapter implements DataProviderInterface
     protected string $marketDataBaseUrl;
     protected bool $connected = false;
     protected int $timeout;
+    protected ?object $sdkAccountApi = null;
+    protected bool $useSdk = false;
 
     public function __construct(array $credentials = [])
     {
@@ -84,6 +87,42 @@ class MetaApiAdapter implements DataProviderInterface
                 'Content-Type' => 'application/json',
             ],
         ]);
+        
+        // Try to initialize SDK if available
+        $this->initializeSdk();
+    }
+    
+    /**
+     * Initialize MetaAPI SDK if available
+     * 
+     * @return void
+     */
+    protected function initializeSdk(): void
+    {
+        try {
+            // Check if SDK is available via composer
+            if (class_exists('\Oyi77\MetaapiCloudPhpSdk\AccountApi')) {
+                $apiToken = $this->credentials['api_token'] 
+                    ?? config('trading-management.metaapi.api_token')
+                    ?? $this->getTokenFromGlobalSettings();
+                
+                if (!empty($apiToken)) {
+                    $this->sdkAccountApi = new \Oyi77\MetaapiCloudPhpSdk\AccountApi($apiToken);
+                    $this->useSdk = true;
+                    
+                    Log::info('MetaApiAdapter: SDK initialized successfully', [
+                        'use_sdk' => true,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            // SDK not available or failed to initialize - use fallback
+            Log::debug('MetaApiAdapter: SDK not available, using fallback implementation', [
+                'error' => $e->getMessage(),
+                'use_sdk' => false,
+            ]);
+            $this->useSdk = false;
+        }
     }
 
     /**
@@ -167,6 +206,93 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function fetchOHLCV(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
     {
+        // Try SDK first if available
+        if ($this->useSdk && $this->sdkAccountApi) {
+            try {
+                return $this->fetchOHLCVUsingSdk($symbol, $timeframe, $limit, $since);
+            } catch (\Exception $e) {
+                Log::warning('MetaApiAdapter: SDK fetch failed, falling back to direct API', [
+                    'symbol' => $symbol,
+                    'timeframe' => $timeframe,
+                    'error' => $e->getMessage(),
+                ]);
+                // Fall through to fallback implementation
+            }
+        }
+        
+        // Fallback to direct API implementation
+        return $this->fetchOHLCVDirect($symbol, $timeframe, $limit, $since);
+    }
+    
+    /**
+     * Fetch OHLCV using MetaAPI SDK
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @param int $limit
+     * @param int|null $since
+     * @return array
+     */
+    protected function fetchOHLCVUsingSdk(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
+    {
+        $accountId = $this->getAccountId();
+        $metaApiTimeframe = $this->convertTimeframe($timeframe);
+        
+        try {
+            // Convert timestamp format if provided
+            $startTime = null;
+            if ($since !== null) {
+                // SDK expects ISO 8601 format: "YYYY-MM-DD HH:MM:SS.fff"
+                $startTime = date('Y-m-d H:i:s', $since) . '.000';
+            }
+            
+            // Use SDK's getHistoricalCandles method
+            // Based on SDK README: getHistoricalCandles(accountId, symbol, timeframe, startTime, limit)
+            // SDK returns candles array directly
+            if (!method_exists($this->sdkAccountApi, 'getHistoricalCandles')) {
+                throw new \Exception('SDK does not have getHistoricalCandles method');
+            }
+            
+            // Call SDK method with parameters
+            // Note: SDK may expect startTime before limit, or may have different signature
+            // If this fails, exception will be caught and fallback to direct API will occur
+            $candles = $this->sdkAccountApi->getHistoricalCandles(
+                $accountId,
+                $symbol,
+                $metaApiTimeframe,
+                $startTime,  // null if not provided
+                min($limit, 1000)
+            );
+            
+            if (empty($candles) || !is_array($candles)) {
+                return [];
+            }
+            
+            // Convert SDK format to our normalized format
+            return $this->normalizeOHLCVDataFromSdk($candles);
+            
+        } catch (\Exception $e) {
+            Log::error('MetaApiAdapter: SDK fetchOHLCV error', [
+                'account_id' => $accountId,
+                'symbol' => $symbol,
+                'timeframe' => $timeframe,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Fetch OHLCV using direct API (fallback implementation)
+     * 
+     * @param string $symbol
+     * @param string $timeframe
+     * @param int $limit
+     * @param int|null $since
+     * @return array
+     */
+    protected function fetchOHLCVDirect(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
+    {
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -247,6 +373,47 @@ class MetaApiAdapter implements DataProviderInterface
                 $message
             ));
         }
+    }
+    
+    /**
+     * Normalize OHLCV data from SDK format to our standard format
+     * 
+     * @param array $sdkCandles SDK candle data
+     * @return array Normalized OHLCV array
+     */
+    protected function normalizeOHLCVDataFromSdk(array $sdkCandles): array
+    {
+        $normalized = [];
+        
+        foreach ($sdkCandles as $candle) {
+            // SDK format may vary - handle different possible structures
+            $timestamp = null;
+            if (isset($candle['time'])) {
+                $time = $candle['time'];
+                if (is_string($time)) {
+                    $timestamp = strtotime($time) * 1000;
+                } elseif (is_numeric($time)) {
+                    $timestamp = $time < 10000000000 ? $time * 1000 : $time;
+                }
+            } elseif (isset($candle['timestamp'])) {
+                $timestamp = $candle['timestamp'] < 10000000000 ? $candle['timestamp'] * 1000 : $candle['timestamp'];
+            }
+            
+            if (!$timestamp) {
+                continue; // Skip invalid candles
+            }
+            
+            $normalized[] = [
+                'timestamp' => (int) $timestamp,
+                'open' => (float) ($candle['open'] ?? 0),
+                'high' => (float) ($candle['high'] ?? 0),
+                'low' => (float) ($candle['low'] ?? 0),
+                'close' => (float) ($candle['close'] ?? 0),
+                'volume' => (int) ($candle['volume'] ?? $candle['tickVolume'] ?? 0),
+            ];
+        }
+        
+        return $normalized;
     }
 
     /**
@@ -710,11 +877,33 @@ class MetaApiAdapter implements DataProviderInterface
 
             $data = json_decode($response->getBody()->getContents(), true);
 
+            Log::info('MetaApiAdapter: Market order response from MetaAPI', [
+                'response_data' => $data,
+                'has_numericTicket' => isset($data['numericTicket']),
+                'has_orderId' => isset($data['orderId']),
+                'has_positionId' => isset($data['positionId']),
+                'all_keys' => array_keys($data ?? []),
+            ]);
+
+            // Check if response contains an error code
+            if (isset($data['stringCode']) && strpos($data['stringCode'], 'RETCODE_') !== false) {
+                $errorMessage = $data['message'] ?? $data['stringCode'];
+                
+                Log::warning('MetaApiAdapter: Market order failed with retcode', [
+                    'symbol' => $symbol,
+                    'direction' => $direction,
+                    'code' => $data['stringCode'],
+                    'message' => $errorMessage,
+                ]);
+                
+                throw new \Exception($errorMessage . ' (Code: ' . $data['stringCode'] . ')');
+            }
+
             // MetaAPI returns TradeResponse with numericTicket (order ID) or position ID
             return [
                 'success' => true,
                 'orderId' => $data['numericTicket'] ?? $data['orderId'] ?? null,
-                'positionId' => $data['positionId'] ?? null,
+                'positionId' => $data['positionId'] ?? $data['position'] ?? null,
                 'data' => $data,
             ];
 
@@ -796,9 +985,33 @@ class MetaApiAdapter implements DataProviderInterface
 
             $data = json_decode($response->getBody()->getContents(), true);
 
+            Log::info('MetaApiAdapter: Limit order response from MetaAPI', [
+                'response_data' => $data,
+                'has_numericTicket' => isset($data['numericTicket']),
+                'has_orderId' => isset($data['orderId']),
+                'has_positionId' => isset($data['positionId']),
+                'all_keys' => array_keys($data ?? []),
+            ]);
+
+            // Check if response contains an error code
+            if (isset($data['stringCode']) && strpos($data['stringCode'], 'RETCODE_') !== false) {
+                $errorMessage = $data['message'] ?? $data['stringCode'];
+                
+                Log::warning('MetaApiAdapter: Limit order failed with retcode', [
+                    'symbol' => $symbol,
+                    'direction' => $direction,
+                    'price' => $price,
+                    'code' => $data['stringCode'],
+                    'message' => $errorMessage,
+                ]);
+                
+                throw new \Exception($errorMessage . ' (Code: ' . $data['stringCode'] . ')');
+            }
+
             return [
                 'success' => true,
                 'orderId' => $data['numericTicket'] ?? $data['orderId'] ?? null,
+                'positionId' => $data['positionId'] ?? $data['position'] ?? null,
                 'data' => $data,
             ];
 
@@ -1081,6 +1294,50 @@ class MetaApiAdapter implements DataProviderInterface
     }
 
     /**
+     * Create market order (alias for ExecutionJob compatibility)
+     * 
+     * @param string $symbol Trading symbol
+     * @param string $side 'buy' or 'sell'
+     * @param float $amount Order volume
+     * @param array $params Additional parameters (stopLoss, takeProfit, comment)
+     * @return array Order result
+     */
+    public function createMarketOrder(string $symbol, string $side, float $amount, array $params = []): array
+    {
+        return $this->placeMarketOrder(
+            $symbol,
+            $side,
+            $amount,
+            $params['stopLoss'] ?? null,
+            $params['takeProfit'] ?? null,
+            $params['comment'] ?? null
+        );
+    }
+
+    /**
+     * Create limit order (alias for ExecutionJob compatibility)
+     * 
+     * @param string $symbol Trading symbol
+     * @param string $side 'buy' or 'sell'
+     * @param float $amount Order volume
+     * @param float $price Limit price
+     * @param array $params Additional parameters (stopLoss, takeProfit, comment)
+     * @return array Order result
+     */
+    public function createLimitOrder(string $symbol, string $side, float $amount, float $price, array $params = []): array
+    {
+        return $this->placeLimitOrder(
+            $symbol,
+            $side,
+            $amount,
+            $price,
+            $params['stopLoss'] ?? null,
+            $params['takeProfit'] ?? null,
+            $params['comment'] ?? null
+        );
+    }
+
+    /**
      * Test connection
      */
     public function testConnection(): array
@@ -1299,7 +1556,7 @@ class MetaApiAdapter implements DataProviderInterface
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::debug('Failed to get MetaApi token from global settings', [
+            Log::debug('Failed to get MetaApi token from global settings', [
                 'error' => $e->getMessage()
             ]);
         }

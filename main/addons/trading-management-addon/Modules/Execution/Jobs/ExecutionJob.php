@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\Execution\Jobs;
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection;
 use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
 use Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory;
+use Addons\TradingManagement\Modules\Execution\Services\MarketStatusChecker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,11 +34,20 @@ class ExecutionJob implements ShouldQueue
 
     public function handle()
     {
+        $botId = $this->executionData['bot_id'] ?? null;
+        $symbol = $this->executionData['symbol'] ?? null;
+        $direction = $this->executionData['direction'] ?? null;
+        
+        // Setup bot-specific logging if bot_id is provided
+        if ($botId) {
+            $this->setupBotLogger($botId);
+        }
+        
         Log::info('ExecutionJob: Starting trade execution', [
-            'bot_id' => $this->executionData['bot_id'] ?? null,
+            'bot_id' => $botId,
             'connection_id' => $this->executionData['connection_id'] ?? null,
-            'symbol' => $this->executionData['symbol'] ?? null,
-            'direction' => $this->executionData['direction'] ?? null,
+            'symbol' => $symbol,
+            'direction' => $direction,
             'quantity' => $this->executionData['quantity'] ?? null,
         ]);
         
@@ -59,6 +69,28 @@ class ExecutionJob implements ShouldQueue
                 return;
             }
 
+            // Validate market status before execution (skip in test mode)
+            $isTestMode = $this->executionData['test_mode'] ?? false;
+            if (!$isTestMode) {
+                $marketChecker = app(MarketStatusChecker::class);
+                $validation = $marketChecker->validateTradeExecution(
+                    $this->executionData,
+                    $connection->credentials['account_id'] ?? null,
+                    false // Not test mode
+                );
+                
+                if (!$validation['should_proceed']) {
+                    $this->logMarketClosedError($validation, $connection, $botId);
+                    return;
+                }
+                
+                Log::info('ExecutionJob: Market validation passed', [
+                    'bot_id' => $botId,
+                    'symbol' => $symbol,
+                    'data_age_minutes' => $validation['freshness_check']['age_minutes'] ?? null,
+                ]);
+            }
+
             // Get adapter for connection - create directly based on connection type
             $adapter = $this->createAdapter($connection);
 
@@ -69,10 +101,31 @@ class ExecutionJob implements ShouldQueue
                 'direction' => $this->executionData['direction'],
             ]);
 
+            // Create execution log FIRST to track all attempts (success or failure)
+            $executionLog = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::create([
+                'connection_id' => $connection->id,
+                'signal_id' => $this->executionData['signal_id'] ?? null,
+                'status' => 'pending',
+                'execution_type' => ($this->executionData['entry_price'] ?? null) ? 'limit' : 'market',
+                'symbol' => $this->executionData['symbol'] ?? '',
+                'direction' => $this->executionData['direction'] ?? '',
+                'quantity' => $this->executionData['quantity'] ?? 0,
+                'entry_price' => $this->executionData['entry_price'] ?? null,
+                'sl_price' => $this->executionData['stop_loss'] ?? null,
+                'tp_price' => $this->executionData['take_profit'] ?? null,
+            ]);
+
             // Execute trade
             $result = $this->executeTrade($adapter, $connection);
+            $result['execution_log_id'] = $executionLog->id;
 
             if ($result['success']) {
+                // Update execution log to executed status
+                $executionLog->update([
+                    'status' => 'executed',
+                    'executed_at' => now(),
+                ]);
+                
                 // Create position record
                 $this->createPosition($connection, $result);
                 
@@ -84,14 +137,22 @@ class ExecutionJob implements ShouldQueue
                     'symbol' => $this->executionData['symbol'],
                     'direction' => $this->executionData['direction'],
                     'quantity' => $this->executionData['quantity'],
+                    'execution_log_id' => $executionLog->id,
                 ]);
             } else {
+                // Update execution log to failed status
+                $executionLog->update([
+                    'status' => 'failed',
+                    'error_message' => $result['error'] ?? 'Unknown error',
+                ]);
+                
                 Log::error('ExecutionJob: Trade execution failed', [
                     'connection_id' => $connection->id,
                     'bot_id' => $this->executionData['bot_id'] ?? null,
                     'symbol' => $this->executionData['symbol'],
                     'direction' => $this->executionData['direction'],
                     'error' => $result['error'] ?? 'Unknown error',
+                    'execution_log_id' => $executionLog->id,
                     'result' => $result,
                 ]);
             }
@@ -171,16 +232,33 @@ class ExecutionJob implements ShouldQueue
             ];
 
         } catch (\Exception $e) {
-            Log::error('ExecutionJob: Exception during trade execution', [
-                'symbol' => $this->executionData['symbol'] ?? null,
-                'direction' => $this->executionData['direction'] ?? null,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            $errorMessage = $e->getMessage();
+            $isMarketClosedError = stripos($errorMessage, 'MARKET_CLOSED') !== false || 
+                                    stripos($errorMessage, 'market is closed') !== false;
+            
+            if ($isMarketClosedError) {
+                Log::error('ExecutionJob: Market closed error during execution', [
+                    'bot_id' => $this->executionData['bot_id'] ?? null,
+                    'symbol' => $this->executionData['symbol'] ?? null,
+                    'direction' => $this->executionData['direction'] ?? null,
+                    'error' => $errorMessage,
+                    'recommendation' => 'Market is closed. Trade will retry when market reopens.',
+                    'note' => 'This error indicates the broker rejected the trade because the market is currently closed.',
+                ]);
+            } else {
+                Log::error('ExecutionJob: Exception during trade execution', [
+                    'bot_id' => $this->executionData['bot_id'] ?? null,
+                    'symbol' => $this->executionData['symbol'] ?? null,
+                    'direction' => $this->executionData['direction'] ?? null,
+                    'error' => $errorMessage,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
             
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
+                'is_market_closed' => $isMarketClosedError,
             ];
         }
     }
@@ -200,7 +278,7 @@ class ExecutionJob implements ShouldQueue
                     'connection_id' => $connection->id,
                     'signal_id' => null, // Bot execution, not signal-based
                     'status' => $result['success'] ? 'executed' : 'failed',
-                    'execution_type' => $entryPrice ? 'limit' : 'market',
+                    'execution_type' => ($this->executionData['entry_price'] ?? null) ? 'limit' : 'market',
                     'symbol' => $this->executionData['symbol'] ?? '',
                     'direction' => $this->executionData['direction'] ?? '',
                     'quantity' => $this->executionData['quantity'] ?? 0,
@@ -212,14 +290,54 @@ class ExecutionJob implements ShouldQueue
                 $executionLogId = $executionLog->id;
             }
 
+            // Get entry price - for market orders, try to get from result or fetch current price
+            $entryPrice = $this->executionData['entry_price'];
+            
+            if ($entryPrice === null || $entryPrice === 0) {
+                // Try to get from order result
+                $entryPrice = $result['data']['price'] ?? $result['data']['openPrice'] ?? null;
+                
+                // If still null, try to fetch current price from account
+                if ($entryPrice === null) {
+                    try {
+                        $adapter = $this->createAdapter($connection);
+                        $accountInfo = $adapter->getAccountInfo();
+                        
+                        // Try to get current price from positions or use a default based on symbol
+                        if (isset($accountInfo['positions']) && !empty($accountInfo['positions'])) {
+                            foreach ($accountInfo['positions'] as $position) {
+                                if ($position['symbol'] === $this->executionData['symbol']) {
+                                    $entryPrice = $position['currentPrice'] ?? null;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Last resort: use 0 and log warning
+                        if ($entryPrice === null) {
+                            $entryPrice = 0;
+                            Log::warning('ExecutionJob: Could not determine entry price for market order, using 0', [
+                                'symbol' => $this->executionData['symbol'],
+                                'connection_id' => $connection->id,
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        $entryPrice = 0;
+                        Log::warning('ExecutionJob: Failed to fetch current price', [
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
             // Prepare position data
             $positionData = [
                 'connection_id' => $connection->id,
                 'execution_log_id' => $executionLogId,
                 'symbol' => $this->executionData['symbol'],
                 'direction' => $this->executionData['direction'],
-                'entry_price' => $this->executionData['entry_price'],
-                'current_price' => $this->executionData['entry_price'],
+                'entry_price' => $entryPrice,
+                'current_price' => $entryPrice,
                 'sl_price' => $this->executionData['stop_loss'],
                 'tp_price' => $this->executionData['take_profit'],
                 'quantity' => $this->executionData['quantity'],
@@ -431,5 +549,71 @@ class ExecutionJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Setup bot-specific logging to write to trading-bot-{id}.log
+     */
+    protected function setupBotLogger(int $botId): void
+    {
+        try {
+            $logPath = storage_path("logs/trading-bot-{$botId}.log");
+            
+            // Configure a custom log channel for this bot
+            config(['logging.channels.trading-bot-' . $botId => [
+                'driver' => 'single',
+                'path' => $logPath,
+                'level' => env('LOG_LEVEL', 'debug'),
+            ]]);
+            
+            // Set this as the default channel for this job
+            config(['logging.default' => 'trading-bot-' . $botId]);
+            
+            // Clear the log manager cache to pick up the new config
+            app()->forgetInstance('log');
+        } catch (\Exception $e) {
+            // Fallback to default logging if setup fails
+            Log::warning('ExecutionJob: Failed to setup bot logger, using default', [
+                'bot_id' => $botId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Log market closed/stale data error to bot log
+     */
+    protected function logMarketClosedError(array $validation, ExecutionConnection $connection, ?int $botId): void
+    {
+        $freshnessCheck = $validation['freshness_check'] ?? [];
+        
+        Log::error('ExecutionJob: Trade rejected - Market closed or data stale', [
+            'bot_id' => $botId,
+            'connection_id' => $connection->id,
+            'connection_name' => $connection->name,
+            'symbol' => $this->executionData['symbol'] ?? null,
+            'direction' => $this->executionData['direction'] ?? null,
+            'reason' => $validation['reason'] ?? 'Unknown',
+            'market_status' => $freshnessCheck['status'] ?? 'unknown',
+            'data_age_minutes' => $freshnessCheck['age_minutes'] ?? null,
+            'max_age_minutes' => $freshnessCheck['max_age_minutes'] ?? null,
+            'last_candle_timestamp' => $freshnessCheck['last_timestamp'] ?? null,
+            'recommendation' => 'Wait for market to open or check data stream connection',
+        ]);
+        
+        // Also create failed execution log for tracking
+        \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::create([
+            'connection_id' => $connection->id,
+            'signal_id' => $this->executionData['signal_id'] ?? null,
+            'status' => 'failed',
+            'execution_type' => ($this->executionData['entry_price'] ?? null) ? 'limit' : 'market',
+            'symbol' => $this->executionData['symbol'] ?? '',
+            'direction' => $this->executionData['direction'] ?? '',
+            'quantity' => $this->executionData['quantity'] ?? 0,
+            'entry_price' => $this->executionData['entry_price'] ?? null,
+            'sl_price' => $this->executionData['stop_loss'] ?? null,
+            'tp_price' => $this->executionData['take_profit'] ?? null,
+            'error_message' => $validation['reason'] ?? 'Market validation failed',
+        ]);
     }
 }

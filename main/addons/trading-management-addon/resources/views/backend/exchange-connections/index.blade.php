@@ -293,8 +293,8 @@
                                         </button>
                                         <form action="{{ route('admin.trading-management.config.exchange-connections.destroy', $conn) }}" 
                                               method="POST" 
-                                              class="d-inline" 
-                                              onsubmit="return confirm('Are you sure you want to delete this connection? This action cannot be undone.');">
+                                              class="d-inline delete-connection-form"
+                                              data-confirm-message="Are you sure you want to delete this connection? This action cannot be undone.">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -459,5 +459,43 @@
         }
     }
 </style>
+@endpush
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        // Handle delete connection form with confirmation
+        $('.delete-connection-form').on('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const message = form.data('confirm-message') || 'Are you sure?';
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __("Confirmation") }}',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __("Delete") }}',
+                    cancelButtonText: '{{ __("Cancel") }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit();
+                    }
+                });
+            } else {
+                if (confirm(message)) {
+                    form.off('submit').submit();
+                }
+            }
+            
+            return false;
+        });
+    });
+</script>
 @endpush
 @endsection

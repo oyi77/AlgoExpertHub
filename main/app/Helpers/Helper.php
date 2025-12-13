@@ -1116,7 +1116,41 @@ class Helper
      */
     public static function buildPhpCommand(string $command = '', ?string $workingDir = null): array
     {
-        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        // Detect PHP CLI binary - prefer 'php' command over PHP_BINARY
+        // PHP_BINARY might point to php-fpm (FastCGI) which can't run CLI commands
+        $phpBinary = 'php';
+        
+        // Check if PHP_BINARY is php-fpm (FastCGI) - these can't run CLI commands
+        if (defined('PHP_BINARY') && PHP_BINARY) {
+            $phpBinaryPath = PHP_BINARY;
+            // Check if it's php-fpm (FastCGI) - these can't run CLI commands
+            if (strpos($phpBinaryPath, 'php-fpm') === false && strpos($phpBinaryPath, 'fpm') === false) {
+                // PHP_BINARY is not php-fpm, use it
+                $phpBinary = $phpBinaryPath;
+            } else {
+                // PHP_BINARY is php-fpm, find actual PHP CLI using 'which php'
+                $whichPhp = shell_exec('which php 2>/dev/null');
+                if ($whichPhp && trim($whichPhp)) {
+                    $phpBinary = trim($whichPhp);
+                } else {
+                    // Fallback: try common locations
+                    $possiblePaths = ['/usr/bin/php', '/usr/local/bin/php'];
+                    foreach ($possiblePaths as $path) {
+                        if (file_exists($path) && is_executable($path)) {
+                            $phpBinary = $path;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            // PHP_BINARY not defined, use 'which php' to find it
+            $whichPhp = shell_exec('which php 2>/dev/null');
+            if ($whichPhp && trim($whichPhp)) {
+                $phpBinary = trim($whichPhp);
+            }
+        }
+        
         $mode = self::getCommandMode();
         $workingDir = $workingDir ?? base_path();
 

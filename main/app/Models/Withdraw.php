@@ -18,7 +18,7 @@ class Withdraw extends Model
 
     public function withdrawMethod()
     {
-        return $this->belongsTo(WithdrawGateway::class)->withDefault();
+        return $this->belongsTo(WithdrawGateway::class, 'withdraw_method_id')->withDefault();
     }
 
     public function user()

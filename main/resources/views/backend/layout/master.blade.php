@@ -133,6 +133,7 @@
 
     <!-- Dialog Wrapper - Replaces native alert/confirm/prompt with custom modals -->
     <script defer src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
+    <script defer src="{{ asset('js/fix-onsubmit-confirm.js') }}"></script>
 
     <script defer src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
 

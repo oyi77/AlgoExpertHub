@@ -6,14 +6,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Backend\ConfigurationController as WebConfigController;
+use App\Services\ConfigurationService;
+use App\Services\ThemeManager;
+use App\Services\DatabaseBackupService;
 
 class SystemManagementController extends Controller
 {
     protected $webController;
 
-    public function __construct()
-    {
-        $this->webController = new WebConfigController();
+    public function __construct(
+        ConfigurationService $configurationService,
+        ThemeManager $themeManager,
+        DatabaseBackupService $backupService
+    ) {
+        $this->webController = app(WebConfigController::class);
     }
 
     /**

@@ -635,6 +635,8 @@
     </div>
     <div class="card-body">
         <div class="form-check">
+            {{-- Hidden input to ensure value is sent when unchecked --}}
+            <input type="hidden" name="is_paper_trading" value="0">
             <input class="form-check-input" 
                    type="checkbox" 
                    id="is_paper_trading" 

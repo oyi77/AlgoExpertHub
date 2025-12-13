@@ -4,6 +4,7 @@ namespace Addons\AlgoExpertPlus\App\Http\Controllers\Backend;
 
 use Addons\AlgoExpertPlus\App\Http\Controllers\Controller;
 use Addons\AlgoExpertPlus\App\Services\BackupService;
+use App\Services\DatabaseBackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,10 +16,12 @@ use Spatie\Backup\BackupDestination\BackupDestination;
 class BackupController extends Controller
 {
     protected $backupService;
+    protected $databaseBackupService;
 
-    public function __construct(BackupService $backupService)
+    public function __construct(BackupService $backupService, DatabaseBackupService $databaseBackupService)
     {
         $this->backupService = $backupService;
+        $this->databaseBackupService = $databaseBackupService;
     }
 
     /**
@@ -26,34 +29,57 @@ class BackupController extends Controller
      */
     public function index(): View
     {
-        if (!$this->backupService->isAvailable()) {
-            abort(503, 'Backup service is not available. Please install spatie/laravel-backup package.');
+        // Get Spatie backups (full system backups)
+        $spatieBackups = [];
+        $spatieStats = [
+            'total_count' => 0,
+            'total_size' => 0,
+            'total_size_human' => '0 B',
+            'oldest_backup' => null,
+            'newest_backup' => null,
+        ];
+
+        if ($this->backupService->isAvailable()) {
+            try {
+                $spatieBackups = $this->listBackups();
+                $spatieStats = $this->getBackupStats($spatieBackups);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to list Spatie backups', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
+        // Get SQL database backups
+        $sqlBackups = [];
+        $sqlStats = [
+            'total_count' => 0,
+            'total_size' => 0,
+            'total_size_human' => '0 B',
+            'oldest_backup' => null,
+            'newest_backup' => null,
+        ];
+
         try {
-            $backups = $this->listBackups();
-            $stats = $this->getBackupStats($backups);
+            $sqlBackups = $this->databaseBackupService->listBackups();
+            $sqlStats = $this->getSqlBackupStats($sqlBackups);
         } catch (\Throwable $e) {
-            \Log::error('Backup dashboard error', [
+            \Log::warning('Failed to list SQL backups', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
-            
-            // Return empty state on error
-            $backups = [];
-            $stats = [
-                'total_count' => 0,
-                'total_size' => 0,
-                'total_size_human' => '0 B',
-                'oldest_backup' => null,
-                'newest_backup' => null,
-            ];
         }
+
+        // Get seeder count for factory state info
+        $seederCount = $this->getSeederCount();
 
         $data = [
             'title' => 'Backup Dashboard',
-            'backups' => $backups,
-            'stats' => $stats,
+            'spatieBackups' => $spatieBackups,
+            'spatieStats' => $spatieStats,
+            'sqlBackups' => $sqlBackups,
+            'sqlStats' => $sqlStats,
+            'seederCount' => $seederCount,
+            'spatieAvailable' => $this->backupService->isAvailable(),
         ];
 
         return view('algoexpert-plus::backend.backup.index', $data);
@@ -85,17 +111,30 @@ class BackupController extends Controller
                     $backups = $backupDestination->backups();
 
                     foreach ($backups as $backup) {
-                        $allBackups[] = [
-                            'path' => $backup->path(),
-                            'disk' => $diskName,
-                            'name' => $backup->path(),
-                            'size' => $backup->size(),
-                            'size_human' => $this->formatBytes($backup->size()),
-                            'date' => $backup->date(),
-                            'date_human' => $backup->date()->format('Y-m-d H:i:s'),
-                            'age_days' => $backup->date()->diffInDays(now()),
-                            'age_human' => $backup->date()->diffForHumans(),
-                        ];
+                        try {
+                            // Get size from storage disk (Backup object doesn't have size() method in v8)
+                            $storage = Storage::disk($diskName);
+                            $backupPath = $backup->path();
+                            $backupSize = $storage->exists($backupPath) ? $storage->size($backupPath) : 0;
+                            
+                            $allBackups[] = [
+                                'path' => $backupPath,
+                                'disk' => $diskName,
+                                'name' => $backupPath,
+                                'size' => $backupSize,
+                                'size_human' => $this->formatBytes($backupSize),
+                                'date' => $backup->date(),
+                                'date_human' => $backup->date()->format('Y-m-d H:i:s'),
+                                'age_days' => $backup->date()->diffInDays(now()),
+                                'age_human' => $backup->date()->diffForHumans(),
+                            ];
+                        } catch (\Throwable $e) {
+                            \Log::warning('Failed to process backup entry', [
+                                'disk' => $diskName,
+                                'error' => $e->getMessage(),
+                            ]);
+                            continue;
+                        }
                     }
                 } catch (\Throwable $e) {
                     \Log::warning('Failed to list backups from disk', [
@@ -277,6 +316,272 @@ class BackupController extends Controller
             
             return redirect()->route('admin.algoexpert-plus.backup.index')
                 ->with('error', $message);
+        }
+    }
+
+    /**
+     * Get SQL backup statistics
+     */
+    protected function getSqlBackupStats(array $backups): array
+    {
+        $totalSize = 0;
+        $totalCount = count($backups);
+        $oldestBackup = null;
+        $newestBackup = null;
+
+        foreach ($backups as $backup) {
+            $totalSize += $backup['size'];
+            $backupDate = \Carbon\Carbon::parse($backup['created_at']);
+            
+            if (!$oldestBackup || $backupDate < \Carbon\Carbon::parse($oldestBackup['created_at'])) {
+                $oldestBackup = $backup;
+            }
+            if (!$newestBackup || $backupDate > \Carbon\Carbon::parse($newestBackup['created_at'])) {
+                $newestBackup = $backup;
+            }
+        }
+
+        return [
+            'total_count' => $totalCount,
+            'total_size' => $totalSize,
+            'total_size_human' => $this->formatBytes($totalSize),
+            'oldest_backup' => $oldestBackup,
+            'newest_backup' => $newestBackup,
+        ];
+    }
+
+    /**
+     * Create SQL database backup
+     */
+    public function createSqlBackup(Request $request)
+    {
+        try {
+            set_time_limit(300);
+            
+            $name = $request->input('backup_name') ?? 'backup_' . date('Y-m-d_H-i-s');
+            $result = $this->databaseBackupService->createBackup($name);
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+        } catch (\Throwable $e) {
+            $message = 'Backup failed: ' . $e->getMessage();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+    }
+
+    /**
+     * Load SQL database backup
+     */
+    public function loadSqlBackup(Request $request)
+    {
+        try {
+            if (empty($request->input('backup_file'))) {
+                $message = 'Please select a backup file';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $message], 400);
+                }
+                return redirect()->back()->with('error', $message);
+            }
+
+            set_time_limit(600);
+            
+            $result = $this->databaseBackupService->loadBackup($request->input('backup_file'));
+            
+            if ($result['type'] === 'success') {
+                $message = 'Database restored successfully! Please login again.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message,
+                        'redirect' => route('admin.login')
+                    ]);
+                }
+                return redirect()->route('admin.login')->with('success', $message);
+            }
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+        } catch (\Throwable $e) {
+            $message = 'Restore failed: ' . $e->getMessage();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+    }
+
+    /**
+     * Delete SQL database backup
+     */
+    public function deleteSqlBackup(Request $request)
+    {
+        try {
+            if (empty($request->input('backup_file'))) {
+                $message = 'Please select a backup file';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $message], 400);
+                }
+                return redirect()->back()->with('error', $message);
+            }
+
+            $result = $this->databaseBackupService->deleteBackup($request->input('backup_file'));
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+        } catch (\Throwable $e) {
+            $message = 'Delete failed: ' . $e->getMessage();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+    }
+
+    /**
+     * Download SQL database backup
+     */
+    public function downloadSqlBackup(Request $request)
+    {
+        $filename = $request->input('backup_file');
+        
+        if (!$filename) {
+            return redirect()->back()->with('error', 'Backup filename is required');
+        }
+
+        try {
+            $backupPath = storage_path('app/database-backups/' . $filename);
+            
+            if (!File::exists($backupPath)) {
+                return redirect()->back()->with('error', 'Backup file not found');
+            }
+
+            return response()->download($backupPath);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to download SQL backup', [
+                'filename' => $filename,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to download backup: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Save backup as factory state
+     */
+    public function saveAsFactoryState(Request $request)
+    {
+        try {
+            $result = $this->databaseBackupService->saveAsFactoryState($request->input('backup_file'));
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => $result['type'] === 'success',
+                    'message' => $result['message'],
+                    'refresh' => true
+                ]);
+            }
+            
+            return redirect()->back()->with($result['type'], $result['message']);
+        } catch (\Throwable $e) {
+            $message = 'Save failed: ' . $e->getMessage();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+    }
+
+    /**
+     * Load factory state
+     */
+    public function loadFactoryState(Request $request)
+    {
+        try {
+            set_time_limit(600);
+
+            $result = $this->databaseBackupService->loadFactoryState();
+
+            if ($result['type'] === 'success') {
+                $message = 'Restored to factory state! Please login again.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message,
+                        'redirect' => route('admin.login')
+                    ]);
+                }
+                return redirect()->route('admin.login')->with('success', $message);
+            }
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
+            }
+
+            return redirect()->back()->with($result['type'], $result['message']);
+        } catch (\Throwable $e) {
+            $message = 'Factory restore failed: ' . $e->getMessage();
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            
+            return redirect()->back()->with('error', $message);
+        }
+    }
+
+    /**
+     * Get seeder count
+     */
+    protected function getSeederCount(): int
+    {
+        try {
+            $seederFile = database_path('seeders/DatabaseSeeder.php');
+            
+            if (!file_exists($seederFile)) {
+                return 0;
+            }
+
+            $content = file_get_contents($seederFile);
+            $count = substr_count($content, 'Seeder::class') + substr_count($content, 'RolePermission::class');
+            
+            return $count;
+        } catch (\Exception $e) {
+            return 0;
         }
     }
 

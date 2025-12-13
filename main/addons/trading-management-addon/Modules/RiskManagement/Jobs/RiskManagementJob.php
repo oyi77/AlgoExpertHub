@@ -132,18 +132,31 @@ class RiskManagementJob implements ShouldQueue
             }
 
             // Prepare execution data
+            // For test mode, use market orders (entry_price = null) for immediate execution
+            // Otherwise use limit orders at current close price
+            $isTestMode = isset($this->decision['test_mode']) && $this->decision['test_mode'] === true;
+            
             $executionData = [
                 'bot_id' => $this->bot->id,
                 'connection_id' => $connection->id,
                 'symbol' => $this->marketData[0]['symbol'] ?? '',
+                'timeframe' => $this->marketData[0]['timeframe'] ?? '1h',
                 'direction' => $this->decision['direction'],
                 'quantity' => $positionSize['lot_size'] ?? $positionSize['volume'] ?? 0.01,
                 'stop_loss' => $this->decision['stop_loss'],
                 'take_profit' => $this->decision['take_profit'],
-                'entry_price' => $this->marketData[0]['close'] ?? 0,
+                'entry_price' => $isTestMode ? null : ($this->marketData[0]['close'] ?? 0),
                 'risk_amount' => $positionSize['risk_amount'] ?? 0,
                 'risk_percent' => $positionSize['risk_percent'] ?? 0,
+                'test_mode' => $isTestMode,
             ];
+            
+            Log::info('RiskManagementJob: Execution data prepared', [
+                'bot_id' => $this->bot->id,
+                'test_mode' => $isTestMode,
+                'order_type' => $isTestMode ? 'market' : 'limit',
+                'entry_price' => $executionData['entry_price'],
+            ]);
 
             // Validate execution data before dispatching
             if (empty($executionData['symbol'])) {

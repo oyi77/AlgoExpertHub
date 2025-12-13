@@ -45,28 +45,49 @@ class DatabaseBackupService
             }
             
             // Check current plugin for root user
-            $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ? AND host = ?", [$username, $host]);
-            if (empty($currentPluginResult)) {
-                // Try with % wildcard
-                $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ?", [$username]);
+            // Note: This may fail if current DB user doesn't have permission to access mysql.user table
+            // In that case, we'll skip the check and proceed with the fix attempt
+            $currentPlugin = null;
+            $availablePlugins = [];
+            
+            try {
+                $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ? AND host = ?", [$username, $host]);
+                if (empty($currentPluginResult)) {
+                    // Try with % wildcard
+                    $currentPluginResult = DB::select("SELECT plugin FROM mysql.user WHERE user = ?", [$username]);
+                }
+                
+                $currentPlugin = $currentPluginResult[0]->plugin ?? null;
+                \Log::info('Current root user auth plugin', ['plugin' => $currentPlugin, 'username' => $username, 'host' => $host]);
+                
+                // Only fix if using caching_sha2_password
+                if ($currentPlugin !== 'caching_sha2_password') {
+                    \Log::info('Root user already has compatible auth plugin', ['plugin' => $currentPlugin]);
+                    return;
+                }
+                
+                // Check available auth plugins
+                $plugins = DB::select("SHOW PLUGINS WHERE Type = 'AUTHENTICATION'");
+                $availablePlugins = array_map(function($p) {
+                    return $p->Name ?? null;
+                }, $plugins);
+                
+                \Log::info('Available auth plugins', ['plugins' => $availablePlugins]);
+            } catch (\Exception $e) {
+                // Permission denied or other error accessing mysql.user table
+                // This is expected when using root credentials but Laravel DB connection uses regular user
+                if (stripos($e->getMessage(), 'denied') !== false || stripos($e->getMessage(), 'Access denied') !== false) {
+                    \Log::info('Cannot access mysql.user table (permission denied) - skipping plugin check, will attempt fix directly', [
+                        'username' => $username,
+                        'host' => $host,
+                        'note' => 'This is normal when using root credentials with regular DB user connection'
+                    ]);
+                    // Continue with default plugin selection
+                } else {
+                    // Re-throw unexpected errors
+                    throw $e;
+                }
             }
-            
-            $currentPlugin = $currentPluginResult[0]->plugin ?? null;
-            \Log::info('Current root user auth plugin', ['plugin' => $currentPlugin, 'username' => $username, 'host' => $host]);
-            
-            // Only fix if using caching_sha2_password
-            if ($currentPlugin !== 'caching_sha2_password') {
-                \Log::info('Root user already has compatible auth plugin', ['plugin' => $currentPlugin]);
-                return;
-            }
-            
-            // Check available auth plugins
-            $plugins = DB::select("SHOW PLUGINS WHERE Type = 'AUTHENTICATION'");
-            $availablePlugins = array_map(function($p) {
-                return $p->Name ?? null;
-            }, $plugins);
-            
-            \Log::info('Available auth plugins', ['plugins' => $availablePlugins]);
             
             // Determine which auth plugin to use (MariaDB compatible)
             $authPlugin = null;

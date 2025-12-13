@@ -5,17 +5,10 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\ChannelSignalController as BackendController;
 use App\Models\Signal;
 
 class ChannelSignalController extends Controller
 {
-    protected $backendController;
-
-    public function __construct()
-    {
-        $this->backendController = new BackendController();
-    }
 
     /**
      * List channel signals (auto-created signals)

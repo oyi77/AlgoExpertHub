@@ -4,17 +4,14 @@ namespace Addons\AlgoExpertPlus\App\Http\Controllers\Backend;
 
 use Addons\AlgoExpertPlus\App\Http\Controllers\Controller;
 use Addons\AlgoExpertPlus\App\Services\SystemHealthService;
-use App\Services\DatabaseBackupService;
 use Illuminate\View\View;
 
 class PerformanceController extends Controller
 {
-    protected $backupService;
     protected $systemHealthService;
 
-    public function __construct(DatabaseBackupService $backupService, SystemHealthService $systemHealthService)
+    public function __construct(SystemHealthService $systemHealthService)
     {
-        $this->backupService = $backupService;
         $this->systemHealthService = $systemHealthService;
     }
 
@@ -43,21 +40,8 @@ class PerformanceController extends Controller
         // Get Octane status
         $octaneStatus = $this->systemHealthService->getOctaneStatus();
 
-        // Get backups with error handling
-        $backups = [];
-        try {
-            $backups = $this->backupService->listBackups();
-        } catch (\Throwable $e) {
-            \Log::error('Failed to list backups in PerformanceController', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            // Continue with empty backups array
-        }
-
         $data = [
             'title' => 'Performance Settings',
-            'backups' => $backups,
             'performanceTips' => [
                 'database' => [],
                 'server' => [],
