@@ -623,16 +623,7 @@ class DatabaseBackupService
                 }
             }
             
-            // #region agent log
-            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
-            $debugLogDir = dirname($debugLogPath);
-            if (!is_dir($debugLogDir)) {
-                @mkdir($debugLogDir, 0755, true);
-            }
-            if (is_dir($debugLogDir)) {
-                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'DatabaseBackupService.php:487','message'=>'MariaDB detection result','data'=>['isMariaDB'=>$isMariaDB,'mysqlContainer'=>$mysqlContainer??null,'useDocker'=>$useDocker],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-            }
-            // #endregion
+            
             
             // Build mysqldump/mariadb-dump command with proper password handling
             $errorFile = $filepath . '.error';
@@ -661,16 +652,6 @@ class DatabaseBackupService
             File::put($configFile, $configContent);
             chmod($configFile, 0600); // Secure permissions
             
-            // #region agent log
-            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
-            $debugLogDir = dirname($debugLogPath);
-            if (!is_dir($debugLogDir)) {
-                @mkdir($debugLogDir, 0755, true);
-            }
-            if (is_dir($debugLogDir)) {
-                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'B','location'=>'DatabaseBackupService.php:518','message'=>'Config file created in createBackup','data'=>['configFile'=>$configFile,'configContent'=>str_replace($password??'','***',$configContent),'isMariaDB'=>$isMariaDB,'hasDefaultAuth'=>!$isMariaDB,'username'=>$username,'host'=>$host,'port'=>$port,'useRootCredentials'=>$useRootCredentials],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-            }
-            // #endregion
             
             // Always use mariadb-dump when in Docker mode (it's compatible with both MySQL and MariaDB)
             // For host mode, detect which is available
@@ -728,7 +709,7 @@ class DatabaseBackupService
                 $dumpParts[] = "--single-transaction";
                 $dumpParts[] = "--quick";
                 $dumpParts[] = "--lock-tables=false";
-                $dumpParts[] = "--ssl-mode=DISABLED";
+                $dumpParts[] = "--ssl=0";
                 // Don't specify auth plugin - let it use default (works better with MariaDB)
                 
                 $baseCommand = implode(' ', $dumpParts);
@@ -782,7 +763,7 @@ class DatabaseBackupService
                     $dumpParts[] = "--single-transaction";
                     $dumpParts[] = "--quick";
                     $dumpParts[] = "--lock-tables=false";
-                    $dumpParts[] = "--ssl-mode=DISABLED";
+                    $dumpParts[] = "--ssl=0";
                     // Don't specify auth plugin - let it use default (works better with MariaDB)
                     
                     $baseCommand = implode(' ', $dumpParts);
@@ -851,7 +832,7 @@ class DatabaseBackupService
                             $dumpParts[] = "--single-transaction";
                             $dumpParts[] = "--quick";
                             $dumpParts[] = "--lock-tables=false";
-                            $dumpParts[] = "--ssl-mode=DISABLED";
+                            $dumpParts[] = "--ssl=0";
                             // Don't specify auth plugin - let it use default (works better with MariaDB)
                             
                             $baseCommand = implode(' ', $dumpParts);
@@ -902,7 +883,7 @@ class DatabaseBackupService
                     $dumpParts[] = "--single-transaction";
                     $dumpParts[] = "--quick";
                     $dumpParts[] = "--lock-tables=false";
-                    $dumpParts[] = "--ssl-mode=DISABLED";
+                    $dumpParts[] = "--ssl=0";
                     // Don't specify auth plugin - let MariaDB use default
                     
                     $baseCommand = implode(' ', $dumpParts);
@@ -972,13 +953,6 @@ class DatabaseBackupService
             $returnVar = 0;
             Helper::execCommand($command, null, $output, $returnVar);
             
-            // #region agent log
-            $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
-            $debugLogDir = dirname($debugLogPath);
-            if (is_dir($debugLogDir)) {
-                @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'DatabaseBackupService.php:853','message'=>'Command executed','data'=>['returnVar'=>$returnVar,'outputLines'=>count($output),'outputSample'=>array_slice($output,0,5)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-            }
-            // #endregion
             
             // Restore original MYSQL_PWD if we set it via putenv
             if ($useLocalMysqldump && !empty($password)) {
@@ -1010,13 +984,6 @@ class DatabaseBackupService
                         $errorMsg = trim($errorContent);
                     }
                     
-                    // #region agent log
-                    $debugLogPath = '/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.cursor/debug.log';
-                    $debugLogDir = dirname($debugLogPath);
-                    if (is_dir($debugLogDir)) {
-                        @file_put_contents($debugLogPath, json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'DatabaseBackupService.php:877','message'=>'Error file content','data'=>['errorFile'=>$errorFile,'errorContent'=>$errorContent,'hasCachingSha2'=>stripos($errorContent,'caching_sha2_password')!==false,'hasPluginError'=>stripos($errorContent,'Plugin')!==false],'timestamp'=>time()*1000])."\n", FILE_APPEND);
-                    }
-                    // #endregion
                     
                     File::delete($errorFile);
                 } else {
@@ -1178,18 +1145,18 @@ class DatabaseBackupService
             if ($useDocker) {
                 // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('cat %s | %s 2>&1', escapeshellarg($filepath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($filepath));
@@ -1402,18 +1369,18 @@ class DatabaseBackupService
             if ($useDocker) {
                 // Use Docker: pipe file into container
                 if (!empty($password)) {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);
             } else {
                 // Use host mysql
                 if (!empty($password)) {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, "-p{$password}", $database];
                 } else {
-                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
+                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-h', $host, '-P', (string)$port, '-u', $username, $database];
                 }
                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                 $command = sprintf('%s < %s 2>&1', $mysqlCommand, escapeshellarg($this->factoryStatePath));
@@ -1476,9 +1443,9 @@ class DatabaseBackupService
                             // Re-import factory state data after fresh migration
                             if ($useDocker) {
                                 if (!empty($password)) {
-                                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
+                                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, "-p{$password}", $database];
                                 } else {
-                                    $args = ['--ssl-mode=DISABLED', '--default-auth=mysql_native_password', '-u', $username, $database];
+                                    $args = ['--ssl=0', '--default-auth=mysql_native_password', '-u', $username, $database];
                                 }
                                 $mysqlCommand = Helper::buildMysqlCommand('mysql', $args);
                                 $reimportCommand = sprintf('cat %s | %s 2>&1', escapeshellarg($this->factoryStatePath), $mysqlCommand);

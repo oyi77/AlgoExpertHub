@@ -53,11 +53,8 @@ Thumbs.db
 /.env.backup
 
 # Laravel Mix
-/public/css/
-/public/js/
 /public/mix-manifest.json
 /public/vendor
 
 # Npm package lock
 package-lock.json
-asset/

@@ -43,9 +43,21 @@ class PerformanceController extends Controller
         // Get Octane status
         $octaneStatus = $this->systemHealthService->getOctaneStatus();
 
+        // Get backups with error handling
+        $backups = [];
+        try {
+            $backups = $this->backupService->listBackups();
+        } catch (\Throwable $e) {
+            \Log::error('Failed to list backups in PerformanceController', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Continue with empty backups array
+        }
+
         $data = [
             'title' => 'Performance Settings',
-            'backups' => $this->backupService->listBackups(),
+            'backups' => $backups,
             'performanceTips' => [
                 'database' => [],
                 'server' => [],

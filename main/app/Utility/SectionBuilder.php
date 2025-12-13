@@ -11,9 +11,6 @@ class SectionBuilder
     public static function render($section)
     {
         try {
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A,E','location'=>'SectionBuilder.php:render:entry','message'=>'Section render entry','data'=>['raw_section'=>is_string($section)?$section:json_encode($section),'type'=>gettype($section)]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
             
             // Handle array input (from PageSection model cast)
             if (is_array($section)) {
@@ -41,27 +38,14 @@ class SectionBuilder
                 }
             }
             
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'SectionBuilder.php:render:before_classmap','message'=>'Before classMap','data'=>['section_name'=>$section]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
             
             $class = self::classMap($section);
             
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'SectionBuilder.php:render:after_classmap','message'=>'After classMap','data'=>['section_name'=>$section,'class'=>get_class($class)]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
             
             $result = $class->sectionHtml($section);
             
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'SectionBuilder.php:render:after_render','message'=>'After sectionHtml','data'=>['section_name'=>$section,'result_type'=>gettype($result),'result_length'=>is_string($result)?strlen($result):null]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
-            
             return $result;
         } catch (\Exception $e) {
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'SectionBuilder.php:render:exception','message'=>'Exception caught','data'=>['section'=>is_string($section)?$section:json_encode($section),'error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine()]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
             Log::error('Section render error', [
                 'section' => $section,
                 'error' => $e->getMessage(),
@@ -74,21 +58,12 @@ class SectionBuilder
     public static function classMap($request)
     {
         try {
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'SectionBuilder.php:classMap:entry','message'=>'classMap entry','data'=>['request'=>$request]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
             
             $element = ucfirst(Str::camel($request));
             
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'SectionBuilder.php:classMap:after_camel','message'=>'After Str::camel','data'=>['request'=>$request,'camel_case'=>$element]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
 
             $section = __NAMESPACE__ . '\\Sections\\' . $element;
             
-            // #region agent log
-            file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'SectionBuilder.php:classMap:before_exists','message'=>'Before class_exists','data'=>['class_name'=>$section,'exists'=>class_exists($section)]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-            // #endregion
 
             if (!class_exists($section)) {
                 Log::error('Section class not found', [

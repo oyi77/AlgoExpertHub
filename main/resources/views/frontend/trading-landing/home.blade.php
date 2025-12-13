@@ -2,9 +2,6 @@
 
 @section('content')
     @php
-        // #region agent log
-        file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'home.blade.php:content:entry','message'=>'Home page content entry','data'=>['page_exists'=>isset($page),'page_widgets_exists'=>isset($page)&&isset($page->widgets),'page_widgets_count'=>isset($page)&&isset($page->widgets)?$page->widgets->count():0]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-        // #endregion
     @endphp
     @if (isset($page) && $page && $page->widgets && $page->widgets->count() > 0)
         @php
@@ -40,9 +37,6 @@
         @endif
         @foreach ($widgetsToRender as $section)
             @php
-                // #region agent log
-                file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'home.blade.php:foreach:entry','message'=>'Foreach section entry','data'=>['section_sections'=>$section->sections??null]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-                // #endregion
                 try {
                     $renderedSection = Section::render($section->sections);
                     // Add source identifier if it's a banner
@@ -58,9 +52,6 @@
                         $renderedSection = preg_replace('/data-banner-source="[^"]*"/', 'data-banner-source="home-widgets"', $renderedSection);
                     }
                 } catch (\Exception $e) {
-                    // #region agent log
-                    file_put_contents('/home/algotrad/public_html/.cursor/debug.log', json_encode(['timestamp'=>time()*1000,'sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'home.blade.php:catch','message'=>'Exception in home blade','data'=>['section'=>$section->sections??null,'error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine()]], JSON_UNESCAPED_SLASHES)."\n", FILE_APPEND);
-                    // #endregion
                     $renderedSection = '<!-- Error rendering section: ' . htmlspecialchars($e->getMessage()) . ' -->';
                 }
             @endphp

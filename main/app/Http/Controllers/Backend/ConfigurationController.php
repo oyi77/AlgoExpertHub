@@ -901,20 +901,13 @@ class ConfigurationController extends Controller
 
     public function ConfigurationUpdate(ConfigurationRequest $request)
     {
-        // #region agent log
-        \Log::error('DEBUG: ConfigurationUpdate called', ['type' => $request->type ?? 'null', 'has_preloader' => $request->has('preloader_status'), 'has_user_reg' => $request->has('user_reg'), 'all_keys' => array_keys($request->all())]);
-        // #endregion
+        
         
         try {
-            // #region agent log
-            \Log::error('DEBUG: Before calling config->general', ['request_type' => $request->type]);
-            // #endregion
+
             
             $isSuccess = $this->config->general($request);
 
-            // #region agent log
-            \Log::error('DEBUG: After config->general call', ['result_type' => $isSuccess['type'] ?? 'null', 'message' => $isSuccess['message'] ?? 'null']);
-            // #endregion
 
             if ($isSuccess['type'] == 'success') {
                 // Clear cache and redirect explicitly to avoid stale data
@@ -924,9 +917,6 @@ class ConfigurationController extends Controller
                 return redirect()->route('admin.general.index')->with('error', $isSuccess['message'] ?? 'Failed to update settings.');
             }
         } catch (\Exception $e) {
-            // #region agent log
-            \Log::error('DEBUG: Exception caught in ConfigurationUpdate', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
-            // #endregion
             
             \Log::error('Configuration update error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             // Clear cache even on error to prevent stale data

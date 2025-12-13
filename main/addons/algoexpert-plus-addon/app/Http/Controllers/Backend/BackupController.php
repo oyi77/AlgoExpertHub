@@ -30,8 +30,25 @@ class BackupController extends Controller
             abort(503, 'Backup service is not available. Please install spatie/laravel-backup package.');
         }
 
-        $backups = $this->listBackups();
-        $stats = $this->getBackupStats($backups);
+        try {
+            $backups = $this->listBackups();
+            $stats = $this->getBackupStats($backups);
+        } catch (\Throwable $e) {
+            \Log::error('Backup dashboard error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Return empty state on error
+            $backups = [];
+            $stats = [
+                'total_count' => 0,
+                'total_size' => 0,
+                'total_size_human' => '0 B',
+                'oldest_backup' => null,
+                'newest_backup' => null,
+            ];
+        }
 
         $data = [
             'title' => 'Backup Dashboard',
@@ -52,10 +69,19 @@ class BackupController extends Controller
         try {
             // Get backup disks from config
             $backupDisks = config('backup.backup.destination.disks', ['local']);
+            $backupName = config('backup.backup.name', env('APP_NAME', 'laravel-backup'));
+            
+            if (empty($backupDisks) || !is_array($backupDisks)) {
+                \Log::warning('Invalid backup disks configuration', ['disks' => $backupDisks]);
+                return [];
+            }
             
             foreach ($backupDisks as $diskName) {
                 try {
-                    $backupDestination = BackupDestination::create($diskName, config('backup.backup.name'));
+                    if (empty($diskName)) {
+                        continue;
+                    }
+                    $backupDestination = BackupDestination::create($diskName, $backupName);
                     $backups = $backupDestination->backups();
 
                     foreach ($backups as $backup) {
@@ -122,7 +148,7 @@ class BackupController extends Controller
     /**
      * Download a backup file
      */
-    public function download(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse|RedirectResponse
+    public function download(Request $request)
     {
         $path = $request->input('path');
         $disk = $request->input('disk', 'local');
@@ -153,7 +179,7 @@ class BackupController extends Controller
     /**
      * Delete a backup file
      */
-    public function delete(Request $request): JsonResponse|RedirectResponse
+    public function delete(Request $request)
     {
         $path = $request->input('path');
         $disk = $request->input('disk', 'local');
@@ -202,7 +228,7 @@ class BackupController extends Controller
     /**
      * Run a new backup
      */
-    public function run(): JsonResponse|RedirectResponse
+    public function run()
     {
         try {
             $result = $this->backupService->run();
@@ -228,7 +254,7 @@ class BackupController extends Controller
     /**
      * Clean old backups
      */
-    public function clean(): JsonResponse|RedirectResponse
+    public function clean()
     {
         try {
             \Artisan::call('backup:clean');
