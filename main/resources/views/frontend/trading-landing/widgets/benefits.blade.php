@@ -5,9 +5,9 @@
 
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">Why Choose Us</span>
-            <h2 class="section-title">Powerful Benefits for Every Trader</h2>
-            <p class="section-description">Discover what makes AlgoExpertHub the preferred choice for traders worldwide</p>
+            <span class="section-badge">{{ Config::trans(isset($content) ? ($content->section_header ?? 'Why Choose Us') : 'Why Choose Us') }}</span>
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Powerful Benefits for Every Trader') : 'Powerful Benefits for Every Trader') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->color_text_for_title ?? 'Discover what makes AlgoExpertHub the preferred choice for traders worldwide') : 'Discover what makes AlgoExpertHub the preferred choice for traders worldwide') }}</p>
         </div>
 
         <div class="benefits-grid">

@@ -1,5 +1,10 @@
 @php
-    $hero = Config::builder('hero');
+    // Use $content if available (from Section::render), fallback to Config::builder
+    if (isset($content) && is_object($content)) {
+        $hero = (object)['content' => $content];
+    } else {
+        $hero = Config::builder('hero');
+    }
 @endphp
 
 <section class="trading-hero-section">
@@ -10,7 +15,7 @@
 
     <div class="container">
         <div class="hero-content">
-            @if($hero && $hero->content)
+            @if($hero && isset($hero->content) && !empty((array)$hero->content))
                 <div class="hero-badge">
                     <div class="user-avatars">
                         <div class="avatar"></div>

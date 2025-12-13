@@ -5,8 +5,8 @@
 <section class="account-types-section">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Compare Our Account Types</h2>
-            <p class="section-description">Choose the Right Trading Account for Your Strategy and Risk Appetite</p>
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Compare Our Account Types') : 'Compare Our Account Types') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->description ?? 'Choose the Right Trading Account for Your Strategy and Risk Appetite') : 'Choose the Right Trading Account for Your Strategy and Risk Appetite') }}</p>
         </div>
 
         <div class="pricing-cards">

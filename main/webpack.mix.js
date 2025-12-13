@@ -36,6 +36,7 @@ mix.js('resources/js/app.js', 'public/js')
             }]
         })
     ])
+    .copy('resources/css/trading-landing.css', 'public/asset/css/trading-landing.css')
     .options({
         processCssUrls: false,
         postCss: [

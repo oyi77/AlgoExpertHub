@@ -6,6 +6,7 @@
   "author": "AlgoExpertHub",
   "type": "frontend",
   "preview": "preview.jpg",
-  "requires_plan": null
+  "requires_plan": null,
+  "parent": "default"
 }
 

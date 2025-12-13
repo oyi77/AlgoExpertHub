@@ -8,8 +8,8 @@
     <div class="trading-demo-background">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Try Demo Trading</h2>
-                <p class="section-description">Experience our trading platform with virtual money. No risk, no commitment.</p>
+                <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Try Demo Trading') : 'Try Demo Trading') }}</h2>
+                <p class="section-description">{{ Config::trans(isset($content) ? ($content->description ?? 'Experience our trading platform with virtual money. No risk, no commitment.') : 'Experience our trading platform with virtual money. No risk, no commitment.') }}</p>
             </div>
 
             <div class="trading-demo-container">

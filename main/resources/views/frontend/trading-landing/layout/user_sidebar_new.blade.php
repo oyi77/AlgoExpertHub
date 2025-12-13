@@ -37,12 +37,13 @@
 @endphp
 
 <aside class="user-sidebar">
-    <a href="{{ route('user.dashboard') }}" class="site-logo">
-        <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}" alt="image">
-    </a>
-
-    <div class="user-sidebar-bottom">
-        <div id="countdown"></div>
+    <div class="sidebar-header">
+        <a href="{{ route('user.dashboard') }}" class="site-logo">
+            <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}" alt="image">
+        </a>
+        <button type="button" class="sidebar-close-btn" aria-label="Close sidebar">
+            <i class="las la-times"></i>
+        </button>
     </div>
 
     <ul class="sidebar-menu">
@@ -260,6 +261,10 @@
             </a>
         </li>
     </ul>
+
+    <div class="user-sidebar-bottom">
+        <div id="countdown"></div>
+    </div>
 </aside>
 
 <!-- mobile bottom menu start -->

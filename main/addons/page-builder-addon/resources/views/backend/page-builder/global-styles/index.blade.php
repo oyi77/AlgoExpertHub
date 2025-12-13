@@ -58,7 +58,22 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center">{{ __('No global styles found') }}</td>
+                                            <td colspan="4" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i data-feather="edit" style="width: 64px; height: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                                                    <h5 class="text-muted mb-2">{{ __('No Global Styles Found') }}</h5>
+                                                    <p class="text-muted mb-3">{{ __('Create global CSS, SCSS, or LESS styles that apply across all pages and themes.') }}</p>
+                                                    <a href="{{ route('admin.page-builder.global-styles.create') }}" class="btn btn-primary">
+                                                        <i data-feather="plus"></i> {{ __('Create Your First Global Style') }}
+                                                    </a>
+                                                    <div class="mt-3">
+                                                        <small class="text-muted">
+                                                            <i data-feather="info" style="width: 14px; height: 14px;"></i>
+                                                            {{ __('Tip: Global styles are compiled and automatically included in all pages.') }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>

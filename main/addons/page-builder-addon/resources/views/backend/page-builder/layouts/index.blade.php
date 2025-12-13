@@ -61,7 +61,16 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center">{{ __('No layouts found') }}</td>
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i data-feather="layout" style="width: 64px; height: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                                                    <h5 class="text-muted mb-2">{{ __('No Layouts Found') }}</h5>
+                                                    <p class="text-muted mb-3">{{ __('Create custom page layouts (header, footer, sidebar, content areas) for your pages.') }}</p>
+                                                    <a href="{{ route('admin.page-builder.layouts.create') }}" class="btn btn-primary">
+                                                        <i data-feather="plus"></i> {{ __('Create Your First Layout') }}
+                                                    </a>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>

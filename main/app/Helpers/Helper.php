@@ -106,7 +106,30 @@ class Helper
             return asset("asset/{$folder}/css/{$filename}");
         }
 
-        return asset("asset/{$folder}/{$template}/css/{$filename}");
+        // Check if file exists in current theme
+        $assetPath = public_path("asset/{$folder}/{$template}/css/{$filename}");
+        if (file_exists($assetPath)) {
+            return asset("asset/{$folder}/{$template}/css/{$filename}");
+        }
+
+        // Use inheritance chain to find asset in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($template);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentAssetPath = public_path("asset/{$folder}/{$parentTheme}/css/{$filename}");
+                if (file_exists($parentAssetPath)) {
+                    return asset("asset/{$folder}/{$parentTheme}/css/{$filename}");
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to default
+        }
+
+        // Final fallback to default theme
+        return asset("asset/{$folder}/default/css/{$filename}");
     }
 
     public static function jsLib($folder, $filename)
@@ -122,7 +145,30 @@ class Helper
             return asset("asset/{$folder}/js/{$filename}");
         }
 
-        return asset("asset/{$folder}/{$template}/js/{$filename}");
+        // Check if file exists in current theme
+        $assetPath = public_path("asset/{$folder}/{$template}/js/{$filename}");
+        if (file_exists($assetPath)) {
+            return asset("asset/{$folder}/{$template}/js/{$filename}");
+        }
+
+        // Use inheritance chain to find asset in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($template);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentAssetPath = public_path("asset/{$folder}/{$parentTheme}/js/{$filename}");
+                if (file_exists($parentAssetPath)) {
+                    return asset("asset/{$folder}/{$parentTheme}/js/{$filename}");
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to default
+        }
+
+        // Final fallback to default theme
+        return asset("asset/{$folder}/default/js/{$filename}");
     }
 
     public static function verificationCode($length)
@@ -285,13 +331,25 @@ class Helper
                 return 'frontend.default.' . $view;
             }
             
-            // For other themes, check if theme-specific view exists
+            // Check if theme-specific view exists
             $themeView = 'frontend.' . $theme . '.' . $view;
             if (view()->exists($themeView)) {
                 return $themeView;
             }
             
-            // Fallback to default theme
+            // Use inheritance chain to find view in parent themes
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($theme);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentView = 'frontend.' . $parentTheme . '.' . $view;
+                if (view()->exists($parentView)) {
+                    return $parentView;
+                }
+            }
+            
+            // Final fallback to default theme
             return 'frontend.default.' . $view;
         } catch (\Exception $e) {
             // Fallback to default on error
@@ -380,9 +438,28 @@ class Helper
             }
         }
 
-        if (file_exists(self::filePath($folder_name) . '/' . $filename) && $filename != null) {
-            $theme = $general && $general->theme ? $general->theme : 'default';
+        $theme = $general && $general->theme ? $general->theme : 'default';
+
+        // Check if file exists in current theme
+        $filePath = self::filePath($folder_name) . '/' . $filename;
+        if (file_exists($filePath) && $filename != null) {
             return asset('asset/frontend/' . $theme . '/images/' . $folder_name . '/' . $filename);
+        }
+
+        // Use inheritance chain to find file in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($theme);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentFilePath = public_path('asset/frontend/' . $parentTheme . '/images/' . $folder_name . '/' . $filename);
+                if (file_exists($parentFilePath) && $filename != null) {
+                    return asset('asset/frontend/' . $parentTheme . '/images/' . $folder_name . '/' . $filename);
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to placeholder
         }
 
         return asset('asset/images/placeholder.png');

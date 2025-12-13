@@ -1,8 +1,11 @@
 <section class="why-choose-us-section">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Built for Traders, Backed by Experts</h2>
-            <p class="section-description">Discover the tools, insights, and support that set us apart in global markets</p>
+            @if(isset($content) && isset($content->section_header))
+                <span class="section-badge">{{ Config::trans($content->section_header) }}</span>
+            @endif
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Built for Traders, Backed by Experts') : 'Built for Traders, Backed by Experts') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->color_text_for_title ?? 'Discover the tools, insights, and support that set us apart in global markets') : 'Discover the tools, insights, and support that set us apart in global markets') }}</p>
         </div>
         
         <div class="features-grid">

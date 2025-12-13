@@ -78,7 +78,16 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center">{{ __('No widgets found') }}</td>
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i data-feather="package" style="width: 64px; height: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                                                    <h5 class="text-muted mb-2">{{ __('No Widgets Found') }}</h5>
+                                                    <p class="text-muted mb-3">{{ __('Get started by creating your first widget for the page builder.') }}</p>
+                                                    <a href="{{ route('admin.page-builder.widgets.create') }}" class="btn btn-primary">
+                                                        <i data-feather="plus"></i> {{ __('Create Your First Widget') }}
+                                                    </a>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>

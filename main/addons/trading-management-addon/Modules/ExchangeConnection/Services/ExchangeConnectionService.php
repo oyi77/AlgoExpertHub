@@ -153,8 +153,8 @@ class ExchangeConnectionService
         // Crypto exchanges always use CCXT adapter
         if ($isCrypto) {
             return new CcxtAdapter(
-                $connection->credentials ?? [],
-                $provider ?? 'binance'
+                $provider ?? 'binance',
+                $connection->credentials ?? []
             );
         }
         

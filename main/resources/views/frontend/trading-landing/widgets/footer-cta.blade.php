@@ -1,13 +1,13 @@
 <section class="footer-cta-section">
     <div class="registration-banner">
         <div class="container">
-            <h2 class="banner-title">Open Your Account in Minutes with Our Simple Registration Process</h2>
+            <h2 class="banner-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Open Your Account in Minutes with Our Simple Registration Process') : 'Open Your Account in Minutes with Our Simple Registration Process') }}</h2>
 
             <div class="banner-actions">
-                <a href="{{ route('user.register') }}" class="btn btn-banner-cta btn-interactive" data-action="register">
-                    <i class="fas fa-user-plus"></i> Start Trading Now
+                <a href="{{ isset($content) ? ($content->button_text_link ?? route('user.register')) : route('user.register') }}" class="btn btn-banner-cta btn-interactive" data-action="register">
+                    <i class="fas fa-user-plus"></i> {{ Config::trans(isset($content) ? ($content->button_text ?? 'Start Trading Now') : 'Start Trading Now') }}
                 </a>
-                <p class="banner-subtitle">Join over 10,000+ traders worldwide</p>
+                <p class="banner-subtitle">{{ Config::trans(isset($content) ? ($content->subtitle ?? 'Join over 10,000+ traders worldwide') : 'Join over 10,000+ traders worldwide') }}</p>
             </div>
 
             <div class="registration-steps">

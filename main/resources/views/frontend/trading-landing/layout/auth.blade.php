@@ -36,6 +36,8 @@
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202">
+    {{-- Trading Landing Theme CSS - Provides CSS variables for inheritance --}}
+    <link href="{{ asset('asset/css/trading-landing.css') }}?v={{ time() }}" rel="stylesheet">
     @php
         $theme = \App\Models\Configuration::first()->theme ?? 'default';
         $menuGroupsPath = public_path('asset/frontend/' . $theme . '/css/menu-groups.css');
@@ -55,20 +57,20 @@
         <link rel="stylesheet" href="{{ asset('asset/frontend/default/css/user-panel-admin-theme.css') }}?v=20251208_2" media="all">
     @endif
     
-    <!-- Inline style as final override to ensure light background -->
+    <!-- Trading Landing Dark Theme for User Panel -->
     <style>
-        /* Final override - ensure light background on all user pages */
+        /* Trading Landing Dark Theme - Uses CSS variables from trading-landing.css */
         body.user-pages-body,
         .user-pages-body {
-            background-color: #F1F5F9 !important;
-            background: #F1F5F9 !important;
+            background-color: var(--trading-neutral-060f11) !important;
+            color: var(--trading-neutral-fdfd) !important;
         }
         body.user-pages-body .dashboard-main,
         .user-pages-body .dashboard-main,
         body.user-pages-body main.dashboard-main,
         .user-pages-body main.dashboard-main {
-            background-color: #F1F5F9 !important;
-            background: #F1F5F9 !important;
+            background-color: var(--trading-neutral-060f11) !important;
+            color: var(--trading-neutral-fdfd) !important;
         }
     </style>
 
@@ -80,6 +82,7 @@
         $heading = optional($config)->fonts ? optional($config->fonts)->heading_font_family : 'DM Sans';
         $paragraph = optional($config)->fonts ? optional($config->fonts)->paragraph_font_family : 'Poppins';
     @endphp
+    <style>
         :root {
             --h-font: <?=$heading ?>;
             --p-font: <?=$paragraph ?>;
@@ -93,11 +96,11 @@
     @include(Config::themeView('layout.user_sidebar_new'))
 
     <header class="user-header">
+        <button type="button" class="sidebar-toggeler"><i class="las la-bars"></i></button>
+
         <a href="{{ route('user.dashboard') }}" class="site-logo">
             <img src="{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}" alt="image">
         </a>
-
-        <button type="button" class="sidebar-toggeler"><i class="las la-bars"></i></button>
 
 
 
@@ -121,7 +124,9 @@
     </header>
 
     <main class="dashboard-main">
-        @yield('content')
+        <div class="dashboard-content-wrapper">
+            @yield('content')
+        </div>
     </main>
 
     <script src="{{ Config::jsLib('frontend', 'lib/bootstrap.bundle.min.js') }}"></script>
@@ -149,21 +154,110 @@
 
     <script>
         'use strict'
+        
+        // Wait for jQuery and DOM to be ready
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ready(function($) {
+                // Initialize sidebar state based on screen size
+                function initSidebarState() {
+                    var windowWidth = $(window).width();
+                    if (windowWidth <= 1199) {
+                        // Mobile/Tablet: Start hidden (no active class)
+                        $('.user-sidebar').removeClass('active');
+                        $('.dashboard-main').removeClass('active');
+                    } else {
+                        // Desktop: Always visible (add active class for consistency)
+                        $('.user-sidebar').addClass('active');
+                    }
+                }
+                
+                // Initialize on page load
+                initSidebarState();
+                
+                // Re-initialize on window resize
+                $(window).on('resize', function() {
+                    initSidebarState();
+                });
+                
+                // Sidebar menu submenu toggle
+                $(".sidebar-menu>li>a").each(function() {
+                    let submenuParent = $(this).parent('li');
+                    $(this).on('click', function() {
+                        submenuParent.toggleClass('open')
+                    })
+                });
 
+                // Sidebar toggle from header button
+                $('.sidebar-toggeler').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var windowWidth = $(window).width();
+                    
+                    // Only toggle on mobile/tablet
+                    if (windowWidth <= 1199) {
+                        var currentState = $('.user-sidebar').hasClass('active');
+                        console.log('Sidebar toggle clicked (mobile)');
+                        console.log('Current state:', currentState);
+                        console.log('Window width:', windowWidth);
+                        
+                        $('.user-sidebar').toggleClass('active');
+                        $('.dashboard-main').toggleClass('active');
+                        
+                        var newState = $('.user-sidebar').hasClass('active');
+                        console.log('New state:', newState);
+                        console.log('Sidebar computed left:', $('.user-sidebar').css('left'));
+                        console.log('Sidebar computed visibility:', $('.user-sidebar').css('visibility'));
+                        console.log('Sidebar computed opacity:', $('.user-sidebar').css('opacity'));
+                    } else {
+                        console.log('Sidebar toggle clicked (desktop - no action needed)');
+                    }
+                    
+                    return false;
+                });
 
-        $(".sidebar-menu>li>a").each(function() {
-            let submenuParent = $(this).parent('li');
+                // Sidebar close button (inside sidebar)
+                $('.sidebar-close-btn').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sidebar close clicked');
+                    $('.user-sidebar').removeClass('active');
+                    $('.dashboard-main').removeClass('active');
+                    return false;
+                });
 
-            $(this).on('click', function() {
-                submenuParent.toggleClass('open')
-            })
-        });
+                // Mobile bottom menu sidebar toggle
+                $('.sidebar-open-btn').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Mobile menu toggle clicked');
+                    $(this).toggleClass('active');
+                    $('.user-sidebar').toggleClass('active');
+                    $('.dashboard-main').toggleClass('active');
+                    return false;
+                });
 
-        $('.sidebar-open-btn').on('click', function() {
-            $(this).toggleClass('active');
-            $('.user-sidebar').toggleClass('active');
-            $('.dashboard-main').toggleClass('active');
-        });
+                // Close sidebar when clicking overlay or outside (on mobile only)
+                $(document).on('click', function(e) {
+                    // Only handle on mobile/tablet
+                    if ($(window).width() <= 1199 && $('.user-sidebar').hasClass('active')) {
+                        // Check if click is outside sidebar and not on any toggle buttons
+                        var target = $(e.target);
+                        var isSidebar = target.closest('.user-sidebar').length > 0;
+                        var isToggle = target.closest('.sidebar-toggeler').length > 0;
+                        var isCloseBtn = target.closest('.sidebar-close-btn').length > 0;
+                        var isOpenBtn = target.closest('.sidebar-open-btn').length > 0;
+                        
+                        if (!isSidebar && !isToggle && !isCloseBtn && !isOpenBtn) {
+                            console.log('Closing sidebar - clicked outside');
+                            $('.user-sidebar').removeClass('active');
+                            $('.dashboard-main').removeClass('active');
+                        }
+                    }
+                });
+            });
+        } else {
+            console.error('jQuery is not loaded!');
+        }
     </script>
 
 </body>

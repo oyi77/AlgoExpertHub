@@ -1,9 +1,9 @@
 <section class="how-works-section">
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">How It Works</span>
-            <h2 class="section-title">Start Trading in 4 Simple Steps</h2>
-            <p class="section-description">Get started with AlgoExpertHub and begin your automated trading journey in minutes</p>
+            <span class="section-badge">{{ Config::trans(isset($content) ? ($content->section_header ?? 'How It Works') : 'How It Works') }}</span>
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Start Trading in 4 Simple Steps') : 'Start Trading in 4 Simple Steps') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->color_text_for_title ?? 'Get started with AlgoExpertHub and begin your automated trading journey in minutes') : 'Get started with AlgoExpertHub and begin your automated trading journey in minutes') }}</p>
         </div>
 
         <div class="steps-container">

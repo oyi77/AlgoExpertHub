@@ -13,8 +13,8 @@
 
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Real-Time Market Trends</h2>
-            <p class="section-description">Stay Ahead with Up-to-the-Second Market Data on Major Currency Pairs and Cryptocurrencies</p>
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Real-Time Market Trends') : 'Real-Time Market Trends') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->description ?? 'Stay Ahead with Up-to-the-Second Market Data on Major Currency Pairs and Cryptocurrencies') : 'Stay Ahead with Up-to-the-Second Market Data on Major Currency Pairs and Cryptocurrencies') }}</p>
         </div>
         
         <div class="market-cards-grid">

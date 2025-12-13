@@ -5,9 +5,9 @@
 
     <div class="container">
         <div class="section-header">
-            <span class="section-badge">Testimonials</span>
-            <h2 class="section-title">Trusted by Thousands of Traders Worldwide</h2>
-            <p class="section-description">See what our community says about their trading experience with AlgoExpertHub</p>
+            <span class="section-badge">{{ Config::trans(isset($content) ? ($content->section_header ?? 'Testimonials') : 'Testimonials') }}</span>
+            <h2 class="section-title">{{ Config::trans(isset($content) ? ($content->title ?? 'Trusted by Thousands of Traders Worldwide') : 'Trusted by Thousands of Traders Worldwide') }}</h2>
+            <p class="section-description">{{ Config::trans(isset($content) ? ($content->color_text_for_title ?? 'See what our community says about their trading experience with AlgoExpertHub') : 'See what our community says about their trading experience with AlgoExpertHub') }}</p>
         </div>
 
         <div class="testimonials-grid">

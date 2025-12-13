@@ -13,10 +13,42 @@ class SectionController extends Controller
     /**
      * List sections
      */
-    public function index()
+    public function index(Request $request)
     {
+        $theme = $request->get('theme');
+        $themeManager = app(\App\Services\ThemeManager::class);
+        
+        // Get all available themes
+        $allThemes = $themeManager->list();
+        
+        // Get active theme if no theme specified
+        if (!$theme) {
+            try {
+                $config = \App\Helpers\Helper\Helper::config();
+                $theme = $config && !empty($config->theme) ? $config->theme : 'default';
+            } catch (\Exception $e) {
+                $theme = 'default';
+            }
+        }
+        
         $data['title'] = 'Section Builder';
         $data['sections'] = Config::sections();
+        $data['themes'] = $allThemes;
+        $data['selectedTheme'] = $theme;
+        
+        // Get sections available for selected theme (check if Content records exist)
+        $themeSections = [];
+        foreach ($data['sections'] as $sectionName) {
+            $hasContent = \App\Models\Content::where('name', $sectionName)
+                ->where('theme', $theme)
+                ->exists();
+            
+            $themeSections[] = [
+                'name' => $sectionName,
+                'has_content' => $hasContent,
+            ];
+        }
+        $data['themeSections'] = $themeSections;
 
         return view('page-builder-addon::backend.page-builder.sections.index', $data);
     }
@@ -24,32 +56,39 @@ class SectionController extends Controller
     /**
      * Edit section in pagebuilder
      */
-    public function edit($name)
+    public function edit(Request $request, $name)
     {
         try {
-            $data['title'] = 'Edit Section: ' . ucwords(str_replace('_', ' ', $name));
+            $data['title'] = 'Edit Section: ' . ucwords(str_replace(['_', '-'], ' ', $name));
             $data['sectionName'] = $name;
             
-            // Get theme safely with multiple fallbacks
-            $theme = 'default';
-            try {
-                $config = \App\Helpers\Helper\Helper::config();
-                if ($config && property_exists($config, 'theme') && !empty($config->theme)) {
-                    $theme = $config->theme;
-                } elseif ($config && isset($config->theme)) {
-                    $theme = $config->theme ?: 'default';
-                } else {
-                    // Try to get from database directly
-                    $dbConfig = \App\Models\Configuration::first();
-                    if ($dbConfig && !empty($dbConfig->theme)) {
-                        $theme = $dbConfig->theme;
+            // Get theme from request parameter or config
+            $theme = $request->get('theme');
+            if (!$theme) {
+                try {
+                    $config = \App\Helpers\Helper\Helper::config();
+                    if ($config && property_exists($config, 'theme') && !empty($config->theme)) {
+                        $theme = $config->theme;
+                    } elseif ($config && isset($config->theme)) {
+                        $theme = $config->theme ?: 'default';
+                    } else {
+                        // Try to get from database directly
+                        $dbConfig = \App\Models\Configuration::first();
+                        if ($dbConfig && !empty($dbConfig->theme)) {
+                            $theme = $dbConfig->theme;
+                        } else {
+                            $theme = 'default';
+                        }
                     }
+                } catch (\Exception $e) {
+                    Log::warning('Could not get theme from config, using default', [
+                        'error' => $e->getMessage()
+                    ]);
+                    $theme = 'default';
                 }
-            } catch (\Exception $e) {
-                Log::warning('Could not get theme from config, using default', [
-                    'error' => $e->getMessage()
-                ]);
             }
+            
+            $data['theme'] = $theme;
             
             // Load section content (empty collection if none found)
             $data['elements'] = Content::where('theme', $theme)

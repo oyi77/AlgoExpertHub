@@ -1,4 +1,5 @@
 
+@if(isset($content) && $content && (is_object($content) || is_array($content)) && !empty((array)$content))
 <section class="about-section sp_pt_120 sp_pb_120">
     <div class="container">
         <div class="row gy-5 align-items-center justify-content-between">
@@ -9,9 +10,9 @@
             </div>
             <div class="col-lg-7 ps-lg-5">
                 <h2 class="sp_theme_top_title">
-                    <?= Config::trans($content->title) ?>
+                    <?= Config::trans($content->title ?? '') ?>
                 </h2>
-                <p class="fs-lg mt-3"><?= Config::trans($content->description) ?></p>
+                <p class="fs-lg mt-3"><?= Config::trans($content->description ?? '') ?></p>
                 <ul class="sp_check_list mt-4">
                     @if ($content && isset($content->repeater))
                         @if (is_array($content->repeater))
@@ -24,8 +25,9 @@
                     @endif
                 </ul>
                 <a href="{{ optional($content)->button_link ?? '' }}"
-                    class="btn btn-primary btn-lg mt-4">{{ Config::trans($content->button_text) }}</a>
+                    class="btn btn-primary btn-lg mt-4">{{ Config::trans($content->button_text ?? '') }}</a>
             </div>
         </div>
     </div>
 </section>
+@endif

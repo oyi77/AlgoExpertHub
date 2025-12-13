@@ -35,6 +35,8 @@
 
     <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
+    {{-- Trading Landing Theme CSS - Provides CSS variables and dark theme styling --}}
+    <link href="{{ asset('asset/css/trading-landing.css') }}?v={{ time() }}" rel="stylesheet">
 
     @php
         $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
@@ -88,6 +90,14 @@
         $content = App\Models\Content::where('name', 'auth')->where('theme', Config::config()->theme)->first();
     @endphp
 
+    {{-- Apply trading-landing dark theme to body --}}
+    <style>
+        body {
+            background-color: var(--trading-neutral-060f11) !important;
+            color: var(--trading-neutral-fdfd) !important;
+            font-family: var(--font-inter) !important;
+        }
+    </style>
 
     <div class="account-page">
         <div class="form-wrapper">

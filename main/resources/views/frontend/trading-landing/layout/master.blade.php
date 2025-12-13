@@ -98,31 +98,9 @@
     @endif
 
     <div class="body-content-area trading-landing-page">
-        @if (request()->routeIs('home'))
-            @php
-                $hasBannerInWidgets = false;
-                if (isset($page) && $page && $page->widgets) {
-                    $hasBannerInWidgets = $page->widgets->contains(function($widget) {
-                        $sectionValue = $widget->sections;
-                        // Handle JSON string
-                        if (is_string($sectionValue)) {
-                            $decoded = json_decode($sectionValue, true);
-                            if ($decoded !== null) {
-                                $sectionValue = is_array($decoded) ? ($decoded[0] ?? $decoded['name'] ?? $sectionValue) : $decoded;
-                            } else {
-                                $sectionValue = trim($sectionValue, '"\'');
-                            }
-                        }
-                        return $sectionValue === 'banner';
-                    });
-                }
-            @endphp
-            @if (!$hasBannerInWidgets)
-                @include(Config::themeView('widgets.hero'))
-            @endif
-        @endif
-
         @include(Config::themeView('layout.header'))
+
+        {{-- Hero will be included in home.blade.php content if needed --}}
 
         @if (!request()->routeIs('home'))
             @include(Config::themeView('widgets.breadcrumb'))
@@ -152,6 +130,44 @@
     @endif
 
     <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
+
+    {{-- Sticky Header Script --}}
+    <script>
+        (function() {
+            'use strict';
+            const header = document.querySelector('.trading-landing-header');
+            if (header) {
+                let lastScroll = 0;
+                
+                function handleScroll() {
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    
+                    if (scrollTop > 20) {
+                        header.classList.add('scrolled');
+                    } else {
+                        header.classList.remove('scrolled');
+                    }
+                    
+                    lastScroll = scrollTop;
+                }
+                
+                // Throttle scroll events
+                let ticking = false;
+                window.addEventListener('scroll', function() {
+                    if (!ticking) {
+                        window.requestAnimationFrame(function() {
+                            handleScroll();
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }, { passive: true });
+                
+                // Initial check
+                handleScroll();
+            }
+        })();
+    </script>
 
     @stack('script')
 

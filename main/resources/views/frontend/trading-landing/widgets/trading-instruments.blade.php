@@ -1,12 +1,17 @@
 @php
-    $instruments = Config::builder('trading_instruments');
+    // Use $content if available (from Section::render), fallback to Config::builder
+    if (isset($content) && is_object($content)) {
+        $instruments = (object)['content' => $content];
+    } else {
+        $instruments = Config::builder('trading_instruments');
+    }
 @endphp
 
 <section class="trading-instruments-section">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">{{ Config::trans($instruments->content->title ?? 'Explore Global Market Opportunities') }}</h2>
-            <p class="section-description">{{ Config::trans($instruments->content->description ?? 'Diversified Trading Instruments Across Major Asset Classes') }}</p>
+            <h2 class="section-title">{{ Config::trans(($instruments->content->title ?? null) ?? 'Explore Global Market Opportunities') }}</h2>
+            <p class="section-description">{{ Config::trans(($instruments->content->description ?? null) ?? 'Diversified Trading Instruments Across Major Asset Classes') }}</p>
         </div>
         
         <div class="instruments-container">

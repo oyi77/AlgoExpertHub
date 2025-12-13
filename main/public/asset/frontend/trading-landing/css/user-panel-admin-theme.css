@@ -1,387 +1,1074 @@
 /**
- * User Panel Admin Theme Override
- * Makes user panel match admin panel's light theme styling
- * Applied globally to all user panel pages
- * IMPORTANT: This file must be loaded AFTER main.css to override dark theme
+ * Trading Landing User Panel Theme
+ * Inherits CSS variables from trading-landing.css
+ * Applies dark theme with teal/cyan accents to user panel components
+ * IMPORTANT: This file must be loaded AFTER trading-landing.css to use its variables
+ * CRITICAL: Only override COLORS, never override layout properties (position, display, width, height, padding, margin, etc.)
+ * Layout is handled by main.css - this file only changes colors to match trading-landing theme
  */
 
-/* Override body and main wrapper - Light Background (like admin) */
+/* ========================================
+   BODY & MAIN WRAPPER - Dark Background
+   ======================================== */
 body.user-pages-body,
 .user-pages-body {
-    background-color: #F1F5F9 !important;
+    background-color: var(--trading-neutral-060f11) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-inter) !important;
 }
 
-/* Main Content Area - Light Background (like admin) */
 .dashboard-main {
-    background-color: #F1F5F9 !important;
+    position: relative !important;
+    background-color: var(--trading-neutral-060f11) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 6.25rem 1.875rem 1.875rem 1.875rem !important;
+    min-height: 100vh !important;
+    width: calc(100vw - 270px) !important;
+    max-width: calc(100vw - 270px) !important;
+    margin-left: 270px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
-/* Override any dark background on main content */
 body.user-pages-body .dashboard-main,
 .user-pages-body .dashboard-main,
-.dashboard-main {
-    background-color: #F1F5F9 !important;
+body.user-pages-body main.dashboard-main,
+.user-pages-body main.dashboard-main {
+    background-color: var(--trading-neutral-060f11) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 6.25rem 1.875rem 1.875rem 1.875rem !important;
+    width: calc(100vw - 270px) !important;
+    max-width: calc(100vw - 270px) !important;
+    margin-left: 270px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
-/* Cards - White Background */
+/* Content wrapper - ensures full width and responsive behavior */
+.dashboard-content-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    position: relative !important;
+}
+
+/* Ensure containers inside fill available space */
+.dashboard-main .container,
+.dashboard-main .container-fluid,
+.dashboard-content-wrapper .container,
+.dashboard-content-wrapper .container-fluid {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Rows should use full width - Bootstrap handles spacing automatically */
+.dashboard-main .row,
+.dashboard-content-wrapper .row {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Remove any max-width constraints from content wrappers */
+.dashboard-main > *,
+.dashboard-content-wrapper > *,
+.dashboard-main .content-wrapper,
+.dashboard-main .page-content {
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Ensure cards and other content elements use full available width */
+.dashboard-main .sp_site_card,
+.dashboard-main .card,
+.dashboard-main .d-card,
+.dashboard-content-wrapper .sp_site_card,
+.dashboard-content-wrapper .card,
+.dashboard-content-wrapper .d-card {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 1399px) {
+    .dashboard-main,
+    body.user-pages-body .dashboard-main,
+    .user-pages-body .dashboard-main {
+        padding: 3.75rem 0.9375rem 1.875rem 0.9375rem !important;
+        width: calc(100vw - 220px) !important;
+        max-width: calc(100vw - 220px) !important;
+        margin-left: 220px !important;
+    }
+}
+
+@media (max-width: 1199px) {
+    .dashboard-main,
+    body.user-pages-body .dashboard-main,
+    .user-pages-body .dashboard-main {
+        padding: 3.75rem 0.9375rem 1.875rem 0.9375rem !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        margin-left: 0 !important;
+    }
+    
+    /* When sidebar is active on mobile, add margin to prevent content overlap */
+    .user-sidebar.active ~ .dashboard-main,
+    .user-sidebar.active ~ body.user-pages-body .dashboard-main {
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .dashboard-main,
+    body.user-pages-body .dashboard-main,
+    .user-pages-body .dashboard-main {
+        padding: 5rem 0.9375rem 6.25rem 0.9375rem !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* Mobile sidebar overlay */
+@media (max-width: 1199px) {
+    .user-sidebar.active ~ .dashboard-main::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        cursor: pointer;
+    }
+    
+    .dashboard-main.active {
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .dashboard-main.active::before {
+        pointer-events: auto;
+    }
+}
+
+/* ========================================
+   SIDEBAR - Dark Theme (COLORS + LAYOUT)
+   ======================================== */
+.user-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    width: 270px !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    background: var(--trading-neutral-121212) !important;
+    border-right: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    opacity: 1 !important;
+    /* Default: visible on desktop, hidden on mobile (set in media queries) */
+}
+
+@media (max-width: 1399px) {
+    .user-sidebar {
+        width: 220px !important;
+    }
+}
+
+/* Desktop: Sidebar always visible */
+@media (min-width: 1200px) {
+    .user-sidebar {
+        left: 0 !important;
+        visibility: visible !important;
+        z-index: 1000 !important;
+    }
+    
+    /* On desktop, active class doesn't change visibility */
+    .user-sidebar.active {
+        left: 0 !important;
+        visibility: visible !important;
+    }
+}
+
+/* Mobile/Tablet: Sidebar hidden by default, shows when active */
+@media (max-width: 1199px) {
+    .user-sidebar {
+        left: -100% !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        transition: left 0.3s ease, visibility 0.3s ease, opacity 0.3s ease !important;
+    }
+    
+    /* Override when active - must come after base rule */
+    body .user-sidebar.active,
+    .user-pages-body .user-sidebar.active,
+    .user-sidebar.active {
+        left: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001 !important;
+        display: flex !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .user-sidebar {
+        width: 280px !important;
+        padding-bottom: 75px !important;
+    }
+}
+
+.user-sidebar .sidebar-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.625rem 1.25rem !important;
+    margin-bottom: 1.875rem !important;
+    border-bottom: 1px solid var(--trading-neutral-444) !important;
+    flex-shrink: 0 !important;
+}
+
+.user-sidebar .sidebar-header .site-logo {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    display: block !important;
+    flex: 1 !important;
+}
+
+.user-sidebar .sidebar-header .site-logo img {
+    max-height: 50px !important;
+    width: auto !important;
+}
+
+.user-sidebar .sidebar-close-btn {
+    display: none !important;
+    background-color: transparent !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    width: 35px !important;
+    height: 35px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    flex-shrink: 0 !important;
+    margin-left: 12px !important;
+}
+
+.user-sidebar .sidebar-close-btn:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-primary) !important;
+}
+
+.user-sidebar .sidebar-close-btn i {
+    font-size: 1.25rem !important;
+}
+
+@media (max-width: 1199px) {
+    .user-sidebar .sidebar-close-btn {
+        display: flex !important;
+    }
+    
+    .user-sidebar .sidebar-header .site-logo img {
+        max-height: 40px !important;
+    }
+}
+
+@media (max-width: 1399px) {
+    .user-sidebar .sidebar-header .site-logo img {
+        max-height: 40px !important;
+    }
+}
+
+.user-sidebar-bottom {
+    margin-top: auto !important;
+    padding: 1rem !important;
+    background: var(--trading-neutral-292929) !important;
+    border-top: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* Countdown in sidebar - Make it smaller */
+.user-sidebar-bottom #countdown {
+    font-size: 12px !important;
+}
+
+.user-sidebar-bottom .user-sidebar-bottom-title {
+    font-size: 11px !important;
+    margin-bottom: 8px !important;
+    color: var(--trading-neutral-444) !important;
+    font-family: var(--font-inter) !important;
+    font-weight: 500 !important;
+}
+
+.user-sidebar-bottom .countdown-wrapper {
+    display: flex !important;
+    gap: 6px !important;
+    justify-content: center !important;
+}
+
+.user-sidebar-bottom .countdown-single {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-radius: 6px !important;
+    padding: 6px 8px !important;
+    text-align: center !important;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    min-width: 40px !important;
+    line-height: 1.2 !important;
+}
+
+.user-sidebar-bottom .countdown-single span {
+    display: block !important;
+    color: var(--trading-neutral-444) !important;
+    font-size: 9px !important;
+    font-weight: 400 !important;
+    margin-top: 2px !important;
+    font-family: var(--font-inter) !important;
+}
+
+.user-sidebar-bottom .upgrade-text {
+    color: var(--trading-primary) !important;
+    font-family: var(--font-manrope) !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+    text-align: center !important;
+}
+
+.user-sidebar-bottom .upgrade-text i {
+    color: var(--trading-primary) !important;
+    margin-right: 4px !important;
+}
+
+/* ========================================
+   SIDEBAR MENU - Dark Theme (COLORS + LAYOUT)
+   ======================================== */
+.sidebar-menu {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    list-style: none !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu .nav-label {
+    color: var(--trading-neutral-444) !important;
+    font-family: var(--font-manrope) !important;
+}
+
+.sidebar-menu > li > a {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu > li > a > i {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu > li > a:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-primary) !important;
+}
+
+.sidebar-menu > li > a:hover > i {
+    color: var(--trading-primary) !important;
+}
+
+.sidebar-menu > li.active > a,
+.sidebar-menu > li.open > a {
+    background-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.sidebar-menu > li.active > a > i,
+.sidebar-menu > li.open > a > i {
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.sidebar-menu .submenu {
+    background-color: var(--trading-neutral-292929) !important;
+    border-left-color: var(--trading-neutral-444) !important;
+}
+
+.sidebar-menu .submenu li a {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu .submenu li a > i {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu .submenu li a:hover {
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-primary) !important;
+}
+
+.sidebar-menu .submenu li a:hover > i,
+.sidebar-menu .submenu li.active a > i {
+    color: var(--trading-primary) !important;
+}
+
+.sidebar-menu .has_submenu > a::after {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.sidebar-menu .has_submenu.open > a::after {
+    color: var(--trading-neutral-060f11) !important;
+}
+
+/* ========================================
+   HEADER - Dark Theme (COLORS + LAYOUT)
+   ======================================== */
+.user-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 270px !important;
+    right: 0 !important;
+    height: 75px !important;
+    z-index: 999 !important;
+    background-color: var(--trading-neutral-121212) !important;
+    border-bottom: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.625rem 1.875rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+.user-header .sidebar-toggeler {
+    order: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.user-header .site-logo {
+    order: 2 !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.user-header .user-dropdown {
+    order: 3 !important;
+    margin-left: auto !important;
+}
+
+@media (max-width: 1399px) {
+    .user-header {
+        left: 220px !important;
+        padding: 0.625rem 0.9375rem !important;
+        height: 60px !important;
+    }
+}
+
+@media (max-width: 1199px) {
+    .user-header {
+        left: 0 !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .user-header {
+        height: 60px !important;
+        padding: 0.625rem 0.9375rem !important;
+    }
+}
+
+.user-header .sidebar-toggeler {
+    display: none !important;
+    color: var(--trading-neutral-fdfd) !important;
+    background-color: transparent !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    width: 40px !important;
+    height: 35px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 1.25rem !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+@media (max-width: 1199px) {
+    .user-header .sidebar-toggeler {
+        display: inline-flex !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .user-header .sidebar-toggeler {
+        display: none !important;
+    }
+}
+
+.user-header .sidebar-toggeler:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-primary) !important;
+}
+
+@media (max-width: 1199px) {
+    .user-header .site-logo {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    .user-header .site-logo img {
+        max-height: 40px !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .user-header .site-logo {
+        max-width: 145px !important;
+    }
+    
+    .user-header .site-logo img {
+        max-height: 35px !important;
+    }
+}
+
+/* ========================================
+   USER DROPDOWN - Dark Theme (COLORS ONLY)
+   ======================================== */
+.user-dropdown {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.user-dropdown .user-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    color: var(--trading-neutral-fdfd) !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.user-dropdown .user-btn img {
+    width: 35px !important;
+    height: 35px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+@media (max-width: 575px) {
+    .user-dropdown .user-btn span {
+        display: none !important;
+    }
+}
+
+.user-dropdown .user-btn::after {
+    border-top-color: var(--trading-neutral-fdfd) !important;
+}
+
+.user-dropdown .user-btn:hover {
+    color: var(--trading-primary) !important;
+}
+
+.user-dropdown .dropdown-menu {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+}
+
+.user-dropdown .dropdown-item {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.user-dropdown .dropdown-item:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-primary) !important;
+}
+
+.user-dropdown .dropdown-item i {
+    color: inherit;
+}
+
+/* ========================================
+   COUNTDOWN WIDGET - Dark Theme (COLORS ONLY)
+   ======================================== */
+.user-sidebar-bottom-title {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+}
+
+.countdown-wrapper {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.countdown-single {
+    color: var(--trading-neutral-fdfd) !important;
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+}
+
+.countdown-single span {
+    color: var(--trading-neutral-444) !important;
+}
+
+.upgrade-text {
+    color: var(--trading-primary) !important;
+    font-family: var(--font-manrope) !important;
+}
+
+.upgrade-text i {
+    color: var(--trading-primary) !important;
+}
+
+/* ========================================
+   MOBILE BOTTOM MENU - Dark Theme (COLORS + LAYOUT)
+   ======================================== */
+.mobile-bottom-menu-wrapper {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    background-color: var(--trading-neutral-121212) !important;
+    border-top: 1px solid var(--trading-neutral-444) !important;
+    padding: 8px 0 !important;
+    display: none !important;
+}
+
+@media (max-width: 575px) {
+    .mobile-bottom-menu-wrapper {
+        display: block !important;
+    }
+}
+
+.mobile-bottom-menu {
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.mobile-bottom-menu li {
+    flex: 1 !important;
+    text-align: center !important;
+}
+
+.mobile-bottom-menu li a {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 8px !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+.mobile-bottom-menu li a i {
+    font-size: 20px !important;
+}
+
+.mobile-bottom-menu a {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.mobile-bottom-menu a:hover {
+    color: var(--trading-primary) !important;
+}
+
+.mobile-bottom-menu a.active {
+    color: var(--trading-primary) !important;
+}
+
+.mobile-bottom-menu a i {
+    color: inherit;
+}
+
+.mobile-bottom-menu a span {
+    color: inherit;
+}
+
+/* ========================================
+   CARDS - Dark Theme
+   ======================================== */
 .dashboard-main .sp_site_card,
 .dashboard-main .card {
-    background: #ffffff !important;
-    border: 1px solid #e0e0e0 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-    color: #333 !important;
+    background: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
 .dashboard-main .sp_site_card .card-header,
 .dashboard-main .card .card-header {
-    background: #ffffff !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-    color: #333 !important;
+    background: var(--trading-neutral-121212) !important;
+    border-bottom-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
 .dashboard-main .sp_site_card .card-header h4,
 .dashboard-main .sp_site_card .card-header h5,
 .dashboard-main .card .card-header h4,
 .dashboard-main .card .card-header h5 {
-    color: #333 !important;
-    font-weight: 600;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
 }
 
 .dashboard-main .sp_site_card .card-body,
 .dashboard-main .card .card-body {
-    background: #ffffff !important;
-    color: #333 !important;
+    background: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
-/* Form Elements - Light Theme */
+.dashboard-main .d-left-wrapper {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .d-card {
+    background: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* ========================================
+   FORM ELEMENTS - Dark Theme
+   ======================================== */
 .dashboard-main .form-control,
 .dashboard-main .form-select,
 .dashboard-main select {
-    background: #ffffff !important;
-    border: 1px solid #ddd !important;
-    color: #333 !important;
-    /* Remove duplicate dropdown arrows */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 0.75rem center !important;
-    background-size: 16px 12px !important;
-    padding-right: 2.5rem !important;
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
 .dashboard-main .form-control:focus,
 .dashboard-main .form-select:focus {
-    border-color: #5169df !important;
-    box-shadow: 0 0 0 0.2rem rgba(81, 105, 223, 0.25) !important;
-    background-color: #ffffff !important;
-    color: #333 !important;
+    border-color: var(--trading-primary) !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
 .dashboard-main .form-control::placeholder {
-    color: #999 !important;
+    color: var(--trading-neutral-444) !important;
 }
 
-.dashboard-main select.form-control::-ms-expand,
-.dashboard-main select.form-select::-ms-expand {
-    display: none !important;
-}
-
-.dashboard-main select.form-control::after,
-.dashboard-main select.form-select::after {
-    display: none !important;
-}
-
-/* Labels */
 .dashboard-main .form-group label,
 .dashboard-main label {
-    color: #333 !important;
-    font-weight: 500;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
 }
 
-/* Text Colors */
+.dashboard-main select option {
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main optgroup {
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .input-group-text {
+    background-color: var(--trading-neutral-292929) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* ========================================
+   TEXT COLORS
+   ======================================== */
 .dashboard-main,
 .dashboard-main p,
 .dashboard-main span,
 .dashboard-main div {
-    color: #333 !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
 .dashboard-main .text-muted {
-    color: #6c757d !important;
+    color: var(--trading-neutral-444) !important;
 }
 
 .dashboard-main .text-danger {
-    color: #dc3545 !important;
+    color: #ef4444 !important;
 }
 
 .dashboard-main .text-success {
-    color: #28a745 !important;
+    color: var(--trading-primary) !important;
 }
 
 .dashboard-main .text-info {
-    color: #17a2b8 !important;
+    color: var(--trading-primary-50) !important;
 }
 
 .dashboard-main .text-warning {
     color: #ffc107 !important;
 }
 
-/* Tables */
-.dashboard-main .table,
-.dashboard-main .sp_site_table {
-    background: #ffffff !important;
-    color: #333 !important;
-}
-
-.dashboard-main .table thead th,
-.dashboard-main .sp_site_table thead th {
-    background: #f8f9fa !important;
-    color: #333 !important;
-    border-bottom: 2px solid #e0e0e0 !important;
-}
-
-.dashboard-main .table tbody td,
-.dashboard-main .sp_site_table tbody td {
-    color: #333 !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-}
-
-.dashboard-main .table tbody tr:hover,
-.dashboard-main .sp_site_table tbody tr:hover {
-    background: #f8f9fa !important;
-}
-
-/* Buttons */
-.dashboard-main .btn-secondary {
-    background: #6c757d !important;
-    border-color: #6c757d !important;
-    color: #fff !important;
-}
-
-.dashboard-main .btn-secondary:hover {
-    background: #5a6268 !important;
-    border-color: #545b62 !important;
-    color: #fff !important;
-}
-
-.dashboard-main .sp_theme_btn {
-    background: #5169df !important;
-    border-color: #5169df !important;
-    color: #fff !important;
-}
-
-.dashboard-main .sp_theme_btn:hover {
-    background: #4058d0 !important;
-    border-color: #3d52c8 !important;
-    color: #fff !important;
-}
-
-/* Badges */
-.dashboard-main .badge {
-    color: #fff !important;
-}
-
-.dashboard-main .badge.bg-info {
-    background-color: #17a2b8 !important;
-}
-
-.dashboard-main .badge.bg-success {
-    background-color: #28a745 !important;
-}
-
-.dashboard-main .badge.bg-secondary {
-    background-color: #6c757d !important;
-}
-
-/* Alerts */
-.dashboard-main .alert {
-    background: #ffffff !important;
-    border: 1px solid #e0e0e0 !important;
-    color: #333 !important;
-}
-
-.dashboard-main .alert-info {
-    background: #d1ecf1 !important;
-    border-color: #bee5eb !important;
-    color: #0c5460 !important;
-}
-
-.dashboard-main .alert-success {
-    background: #d4edda !important;
-    border-color: #c3e6cb !important;
-    color: #155724 !important;
-}
-
-.dashboard-main .alert-warning {
-    background: #fff3cd !important;
-    border-color: #ffeaa7 !important;
-    color: #856404 !important;
-}
-
-.dashboard-main .alert-danger {
-    background: #f8d7da !important;
-    border-color: #f5c6cb !important;
-    color: #721c24 !important;
-}
-
-/* Nav Tabs */
-.dashboard-main .nav-tabs,
-.dashboard-main .nav-pills {
-    border-bottom: 1px solid #e0e0e0 !important;
-}
-
-.dashboard-main .nav-tabs .nav-link,
-.dashboard-main .nav-pills .nav-link {
-    color: #333 !important;
-    border-color: transparent !important;
-}
-
-.dashboard-main .nav-tabs .nav-link.active,
-.dashboard-main .nav-pills .nav-link.active {
-    background: #5169df !important;
-    color: #fff !important;
-    border-color: #5169df !important;
-}
-
-.dashboard-main .nav-tabs .nav-link:hover,
-.dashboard-main .nav-pills .nav-link:hover {
-    color: #5169df !important;
-    border-color: #e0e0e0 #e0e0e0 #5169df !important;
-}
-
-/* Pagination */
-.dashboard-main .pagination .page-link {
-    background: #ffffff !important;
-    border-color: #ddd !important;
-    color: #5169df !important;
-}
-
-.dashboard-main .pagination .page-link:hover {
-    background: #f8f9fa !important;
-    color: #4058d0 !important;
-}
-
-.dashboard-main .pagination .page-item.active .page-link {
-    background: #5169df !important;
-    border-color: #5169df !important;
-    color: #fff !important;
-}
-
-/* Input Groups */
-.dashboard-main .input-group-text {
-    background: #f8f9fa !important;
-    border-color: #ddd !important;
-    color: #333 !important;
-}
-
-/* Dropdowns */
-.dashboard-main .dropdown-menu {
-    background: #ffffff !important;
-    border: 1px solid #e0e0e0 !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-}
-
-.dashboard-main .dropdown-item {
-    color: #333 !important;
-}
-
-.dashboard-main .dropdown-item:hover {
-    background: #f8f9fa !important;
-    color: #333 !important;
-}
-
-/* Override dark theme body background */
-.user-pages-body {
-    background-color: #F1F5F9 !important;
-}
-
-/* Wrapper for dashboard content */
-.d-left-wrapper {
-    background-color: #ffffff !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
-}
-
-/* Ensure all nested cards are also white */
-.dashboard-main .d-card {
-    background: #ffffff !important;
-    color: #333 !important;
-}
-
-/* Links */
-.dashboard-main a {
-    color: #5169df !important;
-}
-
-.dashboard-main a:hover {
-    color: #4058d0 !important;
-}
-
-/* Headings */
 .dashboard-main h1,
 .dashboard-main h2,
 .dashboard-main h3,
 .dashboard-main h4,
 .dashboard-main h5,
 .dashboard-main h6 {
-    color: #333 !important;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
 }
 
-/* Lists */
 .dashboard-main ul,
 .dashboard-main ol {
-    color: #333 !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
+/* ========================================
+   TABLES - Dark Theme
+   ======================================== */
+.dashboard-main .table,
+.dashboard-main .sp_site_table {
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .table thead th,
+.dashboard-main .sp_site_table thead th {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    border-bottom-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .table tbody td,
+.dashboard-main .sp_site_table tbody td {
+    color: var(--trading-neutral-fdfd) !important;
+    border-bottom-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .table tbody tr:hover,
+.dashboard-main .sp_site_table tbody tr:hover {
+    background-color: var(--trading-neutral-292929) !important;
+}
+
+/* ========================================
+   BUTTONS - Trading Primary Colors
+   ======================================== */
+.dashboard-main .btn-secondary {
+    background-color: var(--trading-neutral-444) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .btn-secondary:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    border-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .sp_theme_btn {
+    background: linear-gradient(180deg, var(--trading-primary) 55.932%, var(--trading-primary-dark) 100%) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+    font-family: var(--font-manrope) !important;
+}
+
+.dashboard-main .sp_theme_btn:hover {
+    background: linear-gradient(180deg, var(--trading-primary-dark) 55.932%, var(--trading-primary-600) 100%) !important;
+    border-color: var(--trading-primary-dark) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .btn-primary {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .btn-primary:hover {
+    background-color: var(--trading-primary-dark) !important;
+    border-color: var(--trading-primary-dark) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+/* ========================================
+   BADGES
+   ======================================== */
+.dashboard-main .badge {
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .badge.bg-info {
+    background-color: var(--trading-primary-500) !important;
+}
+
+.dashboard-main .badge.bg-success {
+    background-color: var(--trading-primary) !important;
+}
+
+.dashboard-main .badge.bg-secondary {
+    background-color: var(--trading-neutral-444) !important;
+}
+
+/* ========================================
+   ALERTS - Dark Theme
+   ======================================== */
+.dashboard-main .alert {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .alert-info {
+    background-color: rgba(26, 255, 213, 0.1) !important;
+    border-color: var(--trading-primary-500) !important;
+    color: var(--trading-primary-50) !important;
+}
+
+.dashboard-main .alert-success {
+    background-color: rgba(26, 255, 213, 0.15) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-primary-50) !important;
+}
+
+.dashboard-main .alert-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-color: #ffc107 !important;
+    color: #ffc107 !important;
+}
+
+.dashboard-main .alert-danger {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+/* ========================================
+   NAV TABS - Dark Theme
+   ======================================== */
+.dashboard-main .nav-tabs,
+.dashboard-main .nav-pills {
+    border-bottom-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .nav-tabs .nav-link,
+.dashboard-main .nav-pills .nav-link {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .nav-tabs .nav-link.active,
+.dashboard-main .nav-pills .nav-link.active {
+    background-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+    border-color: var(--trading-primary) !important;
+}
+
+.dashboard-main .nav-tabs .nav-link:hover,
+.dashboard-main .nav-pills .nav-link:hover {
+    color: var(--trading-primary) !important;
+}
+
+/* ========================================
+   PAGINATION - Dark Theme
+   ======================================== */
+.dashboard-main .pagination .page-link {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .pagination .page-link:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-primary-50) !important;
+}
+
+.dashboard-main .pagination .page-item.active .page-link {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+/* ========================================
+   DROPDOWNS - Dark Theme
+   ======================================== */
+.dashboard-main .dropdown-menu {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .dropdown-item {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .dropdown-item:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-primary) !important;
+}
+
+/* ========================================
+   LINKS - Trading Primary Color
+   ======================================== */
+.dashboard-main a {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main a:hover {
+    color: var(--trading-primary-50) !important;
+}
+
+/* ========================================
+   LISTS - Dark Theme
+   ======================================== */
 .dashboard-main .list-group-item {
-    background: #ffffff !important;
-    border-color: #e0e0e0 !important;
-    color: #333 !important;
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
-/* Progress Bars */
+.dashboard-main .list-group-item:hover {
+    background-color: var(--trading-neutral-292929) !important;
+}
+
+/* ========================================
+   PROGRESS BARS - Trading Primary
+   ======================================== */
 .dashboard-main .progress {
-    background: #e9ecef !important;
+    background-color: var(--trading-neutral-292929) !important;
 }
 
 .dashboard-main .progress-bar {
-    background: #5169df !important;
+    background-color: var(--trading-primary) !important;
 }
 
-/* Modals */
+/* ========================================
+   MODALS - Dark Theme
+   ======================================== */
 .dashboard-main .modal-content {
-    background: #ffffff !important;
-    color: #333 !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    border-color: var(--trading-neutral-444) !important;
 }
 
 .dashboard-main .modal-header {
-    border-bottom: 1px solid #e0e0e0 !important;
+    border-bottom-color: var(--trading-neutral-444) !important;
 }
 
 .dashboard-main .modal-footer {
-    border-top: 1px solid #e0e0e0 !important;
+    border-top-color: var(--trading-neutral-444) !important;
 }
 
-/* Select Options */
-.dashboard-main select option {
-    background: #ffffff !important;
-    color: #333 !important;
-}
-
-.dashboard-main optgroup {
-    background: #ffffff !important;
-    color: #333 !important;
-}
-
-/* Remove any dark theme overrides */
-.dashboard-main * {
-    box-sizing: border-box;
-}
-
-/* Ensure icons are visible */
+/* ========================================
+   ICONS - Inherit Color
+   ======================================== */
 .dashboard-main i,
 .dashboard-main .las,
 .dashboard-main .fas,
@@ -389,34 +1076,59 @@ body.user-pages-body .dashboard-main,
     color: inherit;
 }
 
-/* CRITICAL: Override dark theme body background - MUST be at the end for maximum specificity */
-body.user-pages-body,
-.user-pages-body {
-    background-color: #F1F5F9 !important;
-    background: #F1F5F9 !important;
+/* ========================================
+   GLOBAL BUTTONS/LINKS - Trading Primary
+   ======================================== */
+body.user-pages-body .sp_theme_btn,
+.user-pages-body .sp_theme_btn {
+    background: linear-gradient(180deg, var(--trading-primary) 55.932%, var(--trading-primary-dark) 100%) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+    font-family: var(--font-manrope) !important;
 }
 
-/* Override main content wrapper - ensure it's light */
-body.user-pages-body .dashboard-main,
-.user-pages-body .dashboard-main,
-body.user-pages-body main.dashboard-main,
-.user-pages-body main.dashboard-main {
-    background-color: #F1F5F9 !important;
-    background: #F1F5F9 !important;
+body.user-pages-body .sp_theme_btn:hover,
+.user-pages-body .sp_theme_btn:hover {
+    background: linear-gradient(180deg, var(--trading-primary-dark) 55.932%, var(--trading-primary-600) 100%) !important;
+    border-color: var(--trading-primary-dark) !important;
+    color: var(--trading-neutral-white) !important;
 }
 
-/* Override any dark cards inside user-pages-body */
+body.user-pages-body .btn-primary,
+.user-pages-body .btn-primary {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+body.user-pages-body .btn-primary:hover,
+.user-pages-body .btn-primary:hover {
+    background-color: var(--trading-primary-dark) !important;
+    border-color: var(--trading-primary-dark) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+body.user-pages-body a:not(.btn):not(.dropdown-item):not(.nav-link),
+.user-pages-body a:not(.btn):not(.dropdown-item):not(.nav-link) {
+    color: var(--trading-primary) !important;
+}
+
+body.user-pages-body a:not(.btn):not(.dropdown-item):not(.nav-link):hover,
+.user-pages-body a:not(.btn):not(.dropdown-item):not(.nav-link):hover {
+    color: var(--trading-primary-50) !important;
+}
+
+/* ========================================
+   OVERRIDE ANY REMAINING LIGHT THEME
+   ======================================== */
 body.user-pages-body .card,
 .user-pages-body .card,
 body.user-pages-body .sp_site_card,
 .user-pages-body .sp_site_card {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
-/* Override dark text colors */
-body.user-pages-body,
-.user-pages-body,
 body.user-pages-body h1,
 body.user-pages-body h2,
 body.user-pages-body h3,
@@ -426,6 +1138,821 @@ body.user-pages-body h6,
 body.user-pages-body p,
 body.user-pages-body span,
 body.user-pages-body div {
-    color: #333 !important;
+    color: var(--trading-neutral-fdfd) !important;
 }
 
+/* ========================================
+   DASHBOARD WRAPPERS & LAYOUT
+   ======================================== */
+.dashboard-main .d-left-wrapper,
+.dashboard-main .d-right-wrapper {
+    background-color: transparent !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .d-custom-left,
+.dashboard-main .d-custom-right {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* ========================================
+   DASHBOARD CARDS (d-card, user-card)
+   ======================================== */
+.dashboard-main .d-card,
+.dashboard-main .user-card {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-radius: 12px !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 24px !important;
+}
+
+.dashboard-main .d-card.user-card {
+    background-color: var(--trading-neutral-121212) !important;
+}
+
+.dashboard-main .d-card .user-card-title,
+.dashboard-main .user-card .user-card-title {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.dashboard-main .d-card .d-card-balance,
+.dashboard-main .user-card .d-card-balance {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.dashboard-main .d-card hr,
+.dashboard-main .user-card hr {
+    border-color: var(--trading-neutral-444) !important;
+    opacity: 0.3;
+}
+
+/* ========================================
+   STATS CARDS (x-ui.stats-card component)
+   ======================================== */
+.dashboard-main .bg-white {
+    background-color: var(--trading-neutral-121212) !important;
+}
+
+.dashboard-main .rounded-lg {
+    border-radius: 12px !important;
+}
+
+.dashboard-main .shadow-md {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dashboard-main .text-gray-600 {
+    color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .text-gray-900 {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .bg-primary-100 {
+    background-color: rgba(26, 255, 213, 0.1) !important;
+}
+
+.dashboard-main .bg-primary-100 i {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .text-success-600 {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .text-danger-600 {
+    color: #ef4444 !important;
+}
+
+/* ========================================
+   RECENT TRANSACTION LIST
+   ======================================== */
+.dashboard-main .recent-transaction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--trading-neutral-444);
+    opacity: 0.7;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction:last-child {
+    border-bottom: none;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .content {
+    flex: 1;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .content .title {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-inter);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .content span {
+    color: var(--trading-neutral-444) !important;
+    font-size: 12px;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .recent-transaction-amount {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope);
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .recent-transaction-amount.sp_text_success {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .recent-transaction-list .single-recent-transaction .recent-transaction-amount.sp_text_danger {
+    color: #ef4444 !important;
+}
+
+/* ========================================
+   COUNTDOWN WIDGETS
+   ======================================== */
+.dashboard-main .d-left-countdown,
+.dashboard-main #countdownTwo {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .d-left-countdown-title {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.dashboard-main .countdown-wrapper {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.dashboard-main .countdown-single {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope);
+    font-weight: 700;
+    font-size: 20px;
+    min-width: 60px;
+}
+
+.dashboard-main .countdown-single span {
+    display: block;
+    color: var(--trading-neutral-444) !important;
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 4px;
+}
+
+.dashboard-main .upgrade-text {
+    color: var(--trading-primary) !important;
+    font-family: var(--font-manrope) !important;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px;
+}
+
+.dashboard-main .upgrade-text i {
+    color: var(--trading-primary) !important;
+    margin-right: 8px;
+}
+
+/* ========================================
+   QUICK ACTIONS BANNER
+   ======================================== */
+.dashboard-main .quick-actions-banner {
+    background: linear-gradient(135deg, var(--trading-primary-500) 0%, var(--trading-primary-dark) 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+}
+
+.dashboard-main .quick-actions-banner .card-body {
+    background: transparent !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .quick-actions-banner h4,
+.dashboard-main .quick-actions-banner .text-white {
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .quick-actions-banner .text-white-50 {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dashboard-main .quick-actions-banner .btn-light {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .quick-actions-banner .btn-light:hover {
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dashboard-main .quick-actions-banner .quick-action-item {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .quick-actions-banner .quick-action-item h6 {
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .quick-actions-banner .quick-action-item p {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ========================================
+   BUTTON VARIANTS
+   ======================================== */
+.dashboard-main .btn-success,
+.dashboard-main .sp_btn_success {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .btn-success:hover,
+.dashboard-main .sp_btn_success:hover {
+    background-color: var(--trading-primary-dark) !important;
+    border-color: var(--trading-primary-dark) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .btn-danger,
+.dashboard-main .sp_btn_danger {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .btn-danger:hover,
+.dashboard-main .sp_btn_danger:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .btn-outline-primary {
+    background-color: transparent !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .btn-outline-primary:hover {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .btn-outline-danger {
+    background-color: transparent !important;
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.dashboard-main .btn-outline-danger:hover {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+/* ========================================
+   CARD MODERN VARIANT
+   ======================================== */
+.dashboard-main .card-modern {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-radius: 12px !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .card-modern .card-header {
+    background-color: var(--trading-neutral-121212) !important;
+    border-bottom-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 20px 24px !important;
+}
+
+.dashboard-main .card-modern .card-header h4,
+.dashboard-main .card-modern .card-header h5 {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope) !important;
+    font-weight: 600;
+    margin: 0;
+}
+
+.dashboard-main .card-modern .card-body {
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 24px !important;
+}
+
+/* ========================================
+   SEARCH FORMS
+   ======================================== */
+.dashboard-main .search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-main .search-form .form-control {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    border-radius: 8px;
+    padding: 10px 16px;
+}
+
+.dashboard-main .search-form .form-control:focus {
+    border-color: var(--trading-primary) !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .search-form .form-control::placeholder {
+    color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .search-form button {
+    background-color: var(--trading-neutral-292929) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dashboard-main .search-form button:hover {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .search-form button i {
+    color: inherit;
+}
+
+.dashboard-main .card-bg {
+    background-color: var(--trading-neutral-121212) !important;
+}
+
+/* ========================================
+   SIGNAL CARDS
+   ======================================== */
+.dashboard-main .singnal-card {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-radius: 12px !important;
+    padding: 20px;
+    color: var(--trading-neutral-fdfd) !important;
+    transition: all 0.3s ease;
+}
+
+.dashboard-main .singnal-card:hover {
+    border-color: var(--trading-primary) !important;
+    box-shadow: 0 4px 12px rgba(26, 255, 213, 0.2);
+    transform: translateY(-2px);
+}
+
+.dashboard-main .singnal-card.border-success {
+    border-left: 4px solid var(--trading-primary) !important;
+}
+
+.dashboard-main .singnal-card.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.dashboard-main .singnal-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.dashboard-main .singnal-card-top .left .status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.dashboard-main .singnal-card-top .left .status.buy {
+    background-color: rgba(26, 255, 213, 0.2) !important;
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .singnal-card-top .left .status.sell {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #ef4444 !important;
+}
+
+.dashboard-main .singnal-card-top .left .fw-medium {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope);
+    font-weight: 500;
+}
+
+.dashboard-main .singnal-card-top .right p {
+    color: var(--trading-neutral-444) !important;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* ========================================
+   CHART CONTAINERS
+   ======================================== */
+.dashboard-main #chart,
+.dashboard-main #chart2,
+.dashboard-main #chart3 {
+    background-color: var(--trading-neutral-121212) !important;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+/* ========================================
+   TEXT UTILITY CLASSES
+   ======================================== */
+.dashboard-main .sp_text_success {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .sp_text_danger {
+    color: #ef4444 !important;
+}
+
+.dashboard-main .sp_text_warning {
+    color: #ffc107 !important;
+}
+
+.dashboard-main .sp_text_info {
+    color: var(--trading-primary-50) !important;
+}
+
+/* ========================================
+   INPUT GROUPS
+   ======================================== */
+.dashboard-main .input-group .form-control {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .input-group .form-control:focus {
+    border-color: var(--trading-primary) !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .input-group .btn {
+    border-color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .input-group .btn-primary {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+/* ========================================
+   BREADCRUMBS
+   ======================================== */
+.dashboard-main .breadcrumb {
+    background-color: transparent !important;
+    padding: 0;
+    margin-bottom: 24px;
+}
+
+.dashboard-main .breadcrumb-item {
+    color: var(--trading-neutral-444) !important;
+}
+
+.dashboard-main .breadcrumb-item.active {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .breadcrumb-item a {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .breadcrumb-item a:hover {
+    color: var(--trading-primary-50) !important;
+}
+
+/* ========================================
+   BADGES & LABELS
+   ======================================== */
+.dashboard-main .badge {
+    background-color: var(--trading-neutral-292929) !important;
+    color: var(--trading-neutral-fdfd) !important;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.dashboard-main .badge.bg-success,
+.dashboard-main .badge.badge-success {
+    background-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .badge.bg-danger,
+.dashboard-main .badge.badge-danger {
+    background-color: #ef4444 !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .badge.bg-warning,
+.dashboard-main .badge.badge-warning {
+    background-color: #ffc107 !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .badge.bg-info,
+.dashboard-main .badge.badge-info {
+    background-color: var(--trading-primary-500) !important;
+    color: var(--trading-neutral-white) !important;
+}
+
+/* ========================================
+   ONBOARDING CHECKLIST WIDGET
+   ======================================== */
+.dashboard-main .onboarding-checklist-widget {
+    background-color: var(--trading-neutral-121212) !important;
+    border: 1px solid var(--trading-neutral-444) !important;
+    border-left: 4px solid var(--trading-primary) !important;
+    border-radius: 12px;
+}
+
+.dashboard-main .onboarding-checklist-widget .card-header {
+    background: linear-gradient(135deg, var(--trading-primary-500) 0%, var(--trading-primary-dark) 100%) !important;
+    color: var(--trading-neutral-white) !important;
+    border: none !important;
+}
+
+.dashboard-main .onboarding-checklist-widget .card-header h5 {
+    color: var(--trading-neutral-white) !important;
+}
+
+.dashboard-main .onboarding-checklist-widget .progress-bar {
+    background: linear-gradient(90deg, var(--trading-primary) 0%, var(--trading-primary-dark) 100%) !important;
+}
+
+.dashboard-main .onboarding-checklist-widget .list-unstyled li {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .onboarding-checklist-widget .list-unstyled li a {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .onboarding-checklist-widget .list-unstyled li a:hover {
+    color: var(--trading-primary-50) !important;
+}
+
+/* ========================================
+   SIGNAL CARD DETAILS
+   ======================================== */
+.dashboard-main .singnal-card-thumb {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dashboard-main .singnal-card-thumb img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+.dashboard-main .singnal-card-body {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .singnal-card-body .title {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.dashboard-main .singnal-card-body .title a {
+    color: var(--trading-neutral-fdfd) !important;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.dashboard-main .singnal-card-body .title a:hover {
+    color: var(--trading-primary) !important;
+}
+
+.dashboard-main .signal-info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px 0;
+}
+
+.dashboard-main .signal-info-list .signal-single-list {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--trading-neutral-444);
+    opacity: 0.7;
+}
+
+.dashboard-main .signal-info-list .signal-single-list:last-child {
+    border-bottom: none;
+}
+
+.dashboard-main .signal-info-list .signal-single-list .caption {
+    color: var(--trading-neutral-444) !important;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dashboard-main .signal-info-list .signal-single-list .caption i {
+    color: var(--trading-primary) !important;
+    font-size: 14px;
+}
+
+.dashboard-main .signal-info-list .signal-single-list .value {
+    color: var(--trading-neutral-fdfd) !important;
+    font-family: var(--font-manrope);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.dashboard-main .view-signal-btn {
+    background: linear-gradient(180deg, var(--trading-primary) 55.932%, var(--trading-primary-dark) 100%) !important;
+    border: none !important;
+    color: var(--trading-neutral-060f11) !important;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: var(--font-manrope) !important;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: block;
+    transition: all 0.3s ease;
+    box-shadow: inset 0px -1.2px 1.2px 0px rgba(0, 0, 0, 0.3),
+                inset 0px 1.2px 6px 0px rgba(255, 255, 255, 0.3);
+}
+
+.dashboard-main .view-signal-btn:hover {
+    background: linear-gradient(180deg, var(--trading-primary-dark) 55.932%, var(--trading-primary-600) 100%) !important;
+    color: var(--trading-neutral-white) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 255, 213, 0.3);
+}
+
+/* ========================================
+   EMPTY STATES
+   ======================================== */
+.dashboard-main .text-center {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main .text-center .display-3 {
+    color: var(--trading-neutral-444) !important;
+    font-size: 64px;
+    opacity: 0.5;
+}
+
+.dashboard-main .text-center p {
+    color: var(--trading-neutral-444) !important;
+    font-size: 16px;
+    margin-top: 16px;
+}
+
+/* ========================================
+   PAGINATION (Laravel)
+   ======================================== */
+.dashboard-main .pagination {
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.dashboard-main .pagination .page-item .page-link {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-primary) !important;
+    padding: 8px 16px;
+    margin: 0 4px;
+    border-radius: 8px;
+}
+
+.dashboard-main .pagination .page-item .page-link:hover {
+    background-color: var(--trading-neutral-292929) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-primary-50) !important;
+}
+
+.dashboard-main .pagination .page-item.active .page-link {
+    background-color: var(--trading-primary) !important;
+    border-color: var(--trading-primary) !important;
+    color: var(--trading-neutral-060f11) !important;
+}
+
+.dashboard-main .pagination .page-item.disabled .page-link {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-444) !important;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
+   DATE INPUTS
+   ======================================== */
+.dashboard-main input[type="date"],
+.dashboard-main input[type="datetime-local"] {
+    background-color: var(--trading-neutral-121212) !important;
+    border-color: var(--trading-neutral-444) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+.dashboard-main input[type="date"]:focus,
+.dashboard-main input[type="datetime-local"]:focus {
+    border-color: var(--trading-primary) !important;
+    background-color: var(--trading-neutral-121212) !important;
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* ========================================
+   HR (HORIZONTAL RULES)
+   ======================================== */
+.dashboard-main hr {
+    border-color: var(--trading-neutral-444) !important;
+    opacity: 0.3;
+    margin: 24px 0;
+}
+
+/* ========================================
+   FLEX UTILITIES
+   ======================================== */
+.dashboard-main .d-flex {
+    color: inherit;
+}
+
+.dashboard-main .d-flex h4,
+.dashboard-main .d-flex h5,
+.dashboard-main .d-flex h6 {
+    color: var(--trading-neutral-fdfd) !important;
+}
+
+/* ========================================
+   TEXT UTILITIES
+   ======================================== */
+.dashboard-main .text-uppercase {
+    text-transform: uppercase;
+}
+
+.dashboard-main .fw-medium {
+    font-weight: 500;
+}
+
+.dashboard-main .fw-semibold {
+    font-weight: 600;
+}
+
+.dashboard-main .fw-bold {
+    font-weight: 700;
+}
