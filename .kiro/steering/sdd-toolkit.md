@@ -4,6 +4,8 @@ inclusion: always
 
 # SDD Toolkit Rules
 
+**ALIGNMENT NOTICE**: This configuration aligns with and references the authoritative SDD guidelines in `.sdd/guidelines.md`.
+
 ## Core Principles
 
 1. **Spec Before Code**: Always create specifications before implementation
@@ -35,7 +37,7 @@ Use `/evolve [feature-name] [changes]` to keep specs aligned with implementation
 
 ## Documentation Structure
 
-All specifications should be in `specs/active/[feature-name]/`:
+**ALIGNMENT WITH .SDD**: Following the structure defined in `.sdd/guidelines.md`, all specifications should be in `specs/active/[feature-name]/`:
 - `feature-brief.md` - Quick 30-minute brief
 - `research.md` - Research findings
 - `spec.md` - Full specification

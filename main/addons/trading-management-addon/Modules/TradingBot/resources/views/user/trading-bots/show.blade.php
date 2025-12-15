@@ -559,6 +559,12 @@
 <script>
 // Auto-refresh monitoring data
 (function() {
+    // Check if jQuery is loaded
+    if (typeof jQuery === 'undefined') {
+        console.error('jQuery is not loaded! Monitoring features will not work.');
+        return;
+    }
+    
     const botId = {{ $bot->id }};
     let logLevelFilter = '';
     
@@ -711,39 +717,44 @@
 })();
 
 // Handle bot action forms with confirmation
-$(document).ready(function() {
-    $('.bot-action-form').on('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        
-        const form = $(this);
-        const message = form.data('confirm-message') || 'Are you sure?';
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: '{{ __("Confirmation") }}',
-                text: message,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '{{ __("Confirm") }}',
-                cancelButtonText: '{{ __("Cancel") }}'
-            }).then((result) => {
-                if (result.isConfirmed) {
+// Use vanilla JS or check if jQuery is loaded
+if (typeof jQuery !== 'undefined') {
+    jQuery(document).ready(function($) {
+        $('.bot-action-form').on('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const form = $(this);
+            const message = form.data('confirm-message') || 'Are you sure?';
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __("Confirmation") }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __("Confirm") }}',
+                    cancelButtonText: '{{ __("Cancel") }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.off('submit').submit();
+                    }
+                });
+            } else {
+                if (confirm(message)) {
                     form.off('submit').submit();
                 }
-            });
-        } else {
-            if (confirm(message)) {
-                form.off('submit').submit();
             }
-        }
-        
-        return false;
+            
+            return false;
+        });
     });
-});
+} else {
+    console.error('jQuery not loaded - bot action confirmations will not work');
+}
 </script>
 @endpush
 @endsection

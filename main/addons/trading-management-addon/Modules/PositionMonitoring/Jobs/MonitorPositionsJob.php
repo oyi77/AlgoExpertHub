@@ -242,6 +242,11 @@ class MonitorPositionsJob implements ShouldQueue
      */
     protected function broadcastPositionUpdate(ExecutionPosition $position): void
     {
+        // Skip broadcasting if not configured
+        if (config('broadcasting.default') === 'null' || !config('broadcasting.default')) {
+            return;
+        }
+
         try {
             // Broadcast to user's private channel
             if ($position->connection && $position->connection->user_id) {

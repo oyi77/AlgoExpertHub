@@ -91,7 +91,7 @@ class ChannelSignalController extends Controller
             ]);
 
             // Distribute signal to users
-            \App\Services\SignalService::sent($signal->id);
+            (new \App\Services\SignalService())->sent($signal->id);
 
             return response()->json([
                 'success' => true,
@@ -145,7 +145,7 @@ class ChannelSignalController extends Controller
                     'is_published' => 1,
                     'published_date' => now()
                 ]);
-                \App\Services\SignalService::sent($signal->id);
+                (new \App\Services\SignalService())->sent($signal->id);
                 $approved++;
             } catch (\Exception $e) {
                 \Log::error('Failed to approve signal ' . $signal->id . ': ' . $e->getMessage());

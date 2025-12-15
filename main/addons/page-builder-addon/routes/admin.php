@@ -10,16 +10,7 @@ use Addons\PageBuilderAddon\App\Http\Controllers\Backend\ThemeController;
 use Addons\PageBuilderAddon\App\Http\Controllers\Backend\WidgetController;
 use Illuminate\Support\Facades\Route;
 
-// Pages
-Route::get('/', [PageBuilderController::class, 'index'])->name('index');
-Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
-Route::post('/', [PageBuilderController::class, 'store'])->name('store');
-Route::get('/{id}/edit', [PageBuilderController::class, 'edit'])->name('edit');
-Route::get('/pages/{pageId}/builder', [PageBuilderController::class, 'editFromPage'])->name('pages.builder');
-Route::put('/{id}', [PageBuilderController::class, 'update'])->name('update');
-Route::delete('/{id}', [PageBuilderController::class, 'destroy'])->name('destroy');
-
-// Themes
+// Themes (must be before parameterized routes to avoid route conflicts)
 Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
 Route::get('/themes/create', [ThemeController::class, 'create'])->name('themes.create');
 Route::post('/themes', [ThemeController::class, 'store'])->name('themes.store');
@@ -28,14 +19,23 @@ Route::post('/themes/activate', [ThemeController::class, 'activate'])->name('the
 Route::post('/themes/upload', [ThemeController::class, 'upload'])->name('themes.upload');
 Route::put('/themes/{themeName}', [ThemeController::class, 'updateTemplate'])->name('themes.update');
 
-// Templates
-Route::resource('templates', TemplateController::class);
-Route::post('/templates/{id}/apply', [TemplateController::class, 'apply'])->name('templates.apply');
-
-// Sections
+// Sections (must be before parameterized routes)
 Route::get('/sections', [SectionController::class, 'index'])->name('sections.index');
 Route::get('/sections/{name}/edit', [SectionController::class, 'edit'])->name('sections.edit');
 Route::put('/sections/{name}', [SectionController::class, 'update'])->name('sections.update');
+
+// Pages
+Route::get('/', [PageBuilderController::class, 'index'])->name('index');
+Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
+Route::post('/', [PageBuilderController::class, 'store'])->name('store');
+Route::get('/pages/{pageId}/builder', [PageBuilderController::class, 'editFromPage'])->name('pages.builder');
+Route::get('/{id}/edit', [PageBuilderController::class, 'edit'])->name('edit');
+Route::put('/{id}', [PageBuilderController::class, 'update'])->name('update');
+Route::delete('/{id}', [PageBuilderController::class, 'destroy'])->name('destroy');
+
+// Templates
+Route::resource('templates', TemplateController::class);
+Route::post('/templates/{id}/apply', [TemplateController::class, 'apply'])->name('templates.apply');
 
 // Menus
 Route::resource('menus', MenuController::class);

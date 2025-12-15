@@ -4,10 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
 
@@ -343,16 +339,18 @@ class SignalService
 
         $calling_code = rtrim(file_get_contents('https://ipapi.co/103.100.232.0/country_calling_code/'), "0");
 
-        $basic  = new \Nexmo\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
-        $client = new \Nexmo\Client($basic);
+        $basic  = new \Vonage\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+        $client = new \Vonage\Client($basic);
 
         $receiverNumber = $calling_code . $user->phone;
 
-        $message = $client->message()->send([
-            'to' => $receiverNumber,
-            'from' => $general->appname,
-            'text' => strip_tags($message)
-        ]);
+        $client->sms()->send(
+            new \Vonage\SMS\Message\SMS(
+                $receiverNumber,
+                $general->appname,
+                strip_tags($message)
+            )
+        );
     }
 
 

@@ -449,7 +449,11 @@
         // Reinitialize feather icons after tab switch
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             if (typeof feather !== 'undefined') {
-                feather.replace();
+                try {
+                    feather.replace();
+                } catch (e) {
+                    console.warn('Feather icons initialization failed:', e);
+                }
             }
         });
     })

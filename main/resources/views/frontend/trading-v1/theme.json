@@ -1,0 +1,26 @@
+{
+    "name": "trading-v1",
+    "version": "1.0.0",
+    "description": "Modern Trading Landing Page Theme - Finance & Forex",
+    "author": "AlgoExpertHub",
+    "preview": "images/landing/preview.png",
+    "colors": {
+        "primary": "#1AFFD5",
+        "secondary": "#0D9488",
+        "background": "#121212",
+        "text": "#FFFFFF"
+    },
+    "fonts": {
+        "heading": "Manrope",
+        "body": "Inter"
+    },
+    "sections": [
+        "hero",
+        "why-choose-us",
+        "market-trends",
+        "account-types",
+        "cta-education",
+        "footer-cta"
+    ]
+}
+

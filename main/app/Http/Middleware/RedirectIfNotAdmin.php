@@ -19,12 +19,13 @@ class RedirectIfNotAdmin
     {
         if (!Auth::guard($guard)->check()) {
             // Check if this is an AJAX/JSON request
+            $acceptHeader = $request->header('Accept', '');
             $isAjax = $request->ajax() 
                 || $request->expectsJson() 
                 || $request->wantsJson()
                 || $request->header('X-Requested-With') === 'XMLHttpRequest'
                 || $request->header('Accept') === 'application/json'
-                || str_contains($request->header('Accept', ''), 'application/json');
+                || strpos($acceptHeader, 'application/json') !== false;
             
             if ($isAjax) {
                 return response()->json([
@@ -34,7 +35,10 @@ class RedirectIfNotAdmin
                 ], 401);
             }
             
-            return redirect()->route('admin.login');
+            return redirect()->route('admin.login')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
         }
 
         return $next($request);

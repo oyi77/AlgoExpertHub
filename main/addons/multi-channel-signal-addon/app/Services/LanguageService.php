@@ -3,7 +3,6 @@
 namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 
 class LanguageService
 {

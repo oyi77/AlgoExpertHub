@@ -60,6 +60,14 @@ class MetaApiStreamingService
     protected bool $usePollingFallback = false;
     protected ?MetaApiAdapter $pollingAdapter = null;
     protected int $pollingInterval = 5; // seconds
+    
+    // Connection health monitoring
+    protected int $connectionAttempts = 0;
+    protected int $maxConnectionAttempts = 5;
+    protected int $successfulPolls = 0;
+    protected int $failedPolls = 0;
+    protected ?float $lastPollTime = null;
+    protected array $connectionMetrics = [];
 
     public function __construct(string $apiToken, string $accountId, ?string $region = null)
     {
@@ -324,6 +332,8 @@ class MetaApiStreamingService
         
         // Retry loop matching SDK's "while not socket_instance.connected" pattern
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $this->connectionAttempts++;
+            
             try {
                 // Generate client ID with exactly 10 decimal places (matches SDK format)
                 // SDK uses: "{:01.10f}".format(random()) which produces "0.1234567890"
@@ -374,6 +384,11 @@ class MetaApiStreamingService
                 if ($this->client->isConnected()) {
                     $this->connected = true;
                     
+                    // Record connection success metrics
+                    $this->connectionMetrics['last_connected'] = time();
+                    $this->connectionMetrics['connection_attempts'] = $this->connectionAttempts;
+                    $this->connectionMetrics['mode'] = 'socket.io';
+                    
                     // Pre-fetch initial historical data for faster startup
                     // This ensures data is available immediately when bots start consuming
                     $this->prefetchInitialDataForActiveStreams();
@@ -384,6 +399,7 @@ class MetaApiStreamingService
                         'url' => $baseUrl,
                         'region' => $this->region,
                         'attempt' => $attempt + 1,
+                        'total_attempts' => $this->connectionAttempts,
                     ]);
                     
                     // Subscribe to account first (required before market data subscriptions)
@@ -1081,10 +1097,17 @@ class MetaApiStreamingService
                 try {
                     if ($this->pollingAdapter->connect([])) {
                         $this->connected = true;
+                        
+                        // Record connection success metrics
+                        $this->connectionMetrics['last_connected'] = time();
+                        $this->connectionMetrics['connection_attempts'] = $this->connectionAttempts;
+                        $this->connectionMetrics['mode'] = 'polling';
+                        
                         Log::info('MetaAPI polling fallback enabled successfully (REST API mode)', [
                             'account_id' => $this->accountId,
                             'region' => $this->region,
                             'polling_interval' => $this->pollingInterval . 's',
+                            'total_attempts' => $this->connectionAttempts,
                         ]);
                         
                         // Pre-fetch initial historical data for faster startup
@@ -1189,6 +1212,9 @@ class MetaApiStreamingService
             $candles = $this->pollingAdapter->fetchOHLCV($symbol, $standardTimeframe, 100);
             
             if (!empty($candles)) {
+                $this->successfulPolls++;
+                $this->lastPollTime = microtime(true);
+                
                 $latestCandle = $candles[0];
                 
                 // Ensure we have the required candle fields
@@ -1266,6 +1292,8 @@ class MetaApiStreamingService
                 
                 return true;
             } else {
+                $this->failedPolls++;
+                
                 Log::warning('Polled market data but got empty result', [
                     'account_id' => $this->accountId,
                     'symbol' => $symbol,
@@ -1274,6 +1302,7 @@ class MetaApiStreamingService
                 ]);
             }
         } catch (\Exception $e) {
+            $this->failedPolls++;
             $errorMessage = $e->getMessage();
             $isSymbolNotFound = strpos($errorMessage, 'symbol not defined') !== false || 
                                 strpos($errorMessage, '404') !== false ||
@@ -1554,6 +1583,41 @@ class MetaApiStreamingService
         }
 
         return null;
+    }
+    
+    /**
+     * Get connection health metrics
+     */
+    public function getHealthMetrics(): array
+    {
+        $totalPolls = $this->successfulPolls + $this->failedPolls;
+        $successRate = $totalPolls > 0 ? ($this->successfulPolls / $totalPolls) * 100 : 0;
+        
+        return [
+            'connected' => $this->connected,
+            'mode' => $this->usePollingFallback ? 'polling' : 'socket.io',
+            'account_subscribed' => $this->accountSubscribed,
+            'region' => $this->region,
+            'connection_attempts' => $this->connectionAttempts,
+            'successful_polls' => $this->successfulPolls,
+            'failed_polls' => $this->failedPolls,
+            'success_rate' => round($successRate, 2),
+            'last_poll_time' => $this->lastPollTime,
+            'subscribed_symbols_count' => count($this->subscribedSymbols),
+            'metrics' => $this->connectionMetrics,
+        ];
+    }
+    
+    /**
+     * Reset connection metrics
+     */
+    public function resetMetrics(): void
+    {
+        $this->connectionAttempts = 0;
+        $this->successfulPolls = 0;
+        $this->failedPolls = 0;
+        $this->lastPollTime = null;
+        $this->connectionMetrics = [];
     }
     
     /**

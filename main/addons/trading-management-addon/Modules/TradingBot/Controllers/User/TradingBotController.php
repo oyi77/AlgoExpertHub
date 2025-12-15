@@ -210,11 +210,13 @@ class TradingBotController extends Controller
         }
 
         // Get monitoring data
+        // Skip exchange fetch for initial page load (AJAX will fetch positions)
+        // This prevents page timeout if MetaAPI is slow
         try {
             $data['workerStatus'] = $this->monitoringService->getWorkerStatus($bot);
             $data['botMetrics'] = $this->monitoringService->getBotMetrics($bot);
-            $data['openPositions'] = $this->monitoringService->getOpenPositions($bot);
-            $data['positionStats'] = $this->monitoringService->calculatePositionStats($bot);
+            $data['openPositions'] = $this->monitoringService->getOpenPositions($bot, skipExchangeFetch: true);
+            $data['positionStats'] = $this->monitoringService->calculatePositionStats($bot, skipExchangeFetch: true);
             $data['queueStats'] = $this->monitoringService->getQueueStats($bot->id);
         } catch (\Exception $e) {
             \Log::error('Failed to load monitoring data for bot', [
@@ -642,13 +644,19 @@ class TradingBotController extends Controller
 
     /**
      * Get positions (AJAX)
+     * 
+     * Fetches positions from database only (skipExchangeFetch=true) to prevent
+     * slow API calls on every AJAX poll. Exchange positions should be synced
+     * via background job instead.
      */
     public function positions($id): JsonResponse
     {
         $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
         
-        $openPositions = $this->monitoringService->getOpenPositions($bot);
-        $positionStats = $this->monitoringService->calculatePositionStats($bot);
+        // Skip exchange fetch for AJAX - use database positions only
+        // This prevents slow MetaAPI calls from blocking the AJAX response
+        $openPositions = $this->monitoringService->getOpenPositions($bot, skipExchangeFetch: true);
+        $positionStats = $this->monitoringService->calculatePositionStats($bot, skipExchangeFetch: true);
         
         return response()->json([
             'success' => true,

@@ -42,54 +42,151 @@ class MetaApiAdapter implements DataProviderInterface
     protected int $timeout;
     protected ?object $sdkAccountApi = null;
     protected bool $useSdk = false;
+    protected ?object $sdkService = null;
+    
+    // Latency monitoring
+    protected array $latencies = [
+        'trade' => [],
+        'request' => [],
+        'update' => [],
+        'quote' => [],
+    ];
+    protected int $maxLatencyRecords = 100;
 
     public function __construct(array $credentials = [])
     {
-        $this->credentials = $credentials;
-        
-        // Get base URLs: credentials -> config -> global settings -> default
-        $this->baseUrl = $credentials['base_url'] 
-            ?? config('trading-management.metaapi.base_url')
-            ?? $this->getBaseUrlFromGlobalSettings();
-        
-        $this->marketDataBaseUrl = $credentials['market_data_base_url'] 
-            ?? config('trading-management.metaapi.market_data_base_url')
-            ?? $this->getMarketDataBaseUrlFromGlobalSettings();
-        
-        $this->timeout = $credentials['timeout'] 
-            ?? config('trading-management.metaapi.timeout', 30);
-        
-        // Prefer account token if available (more secure, scoped to account)
-        // Fallback to main API token: credentials -> config -> global settings
-        if (empty($this->credentials['api_token'])) {
-            // First check for account-specific token (if generated via Profile API)
-            $this->credentials['api_token'] = $this->credentials['account_token']
-                ?? config('trading-management.metaapi.api_token')
-                ?? $this->getTokenFromGlobalSettings();
+        try {
+            $this->credentials = $credentials;
+            
+            // Get base URLs: credentials -> config -> global settings -> default
+            $this->baseUrl = $credentials['base_url'] 
+                ?? config('trading-management.metaapi.base_url')
+                ?? $this->getBaseUrlFromGlobalSettings();
+            
+            $this->marketDataBaseUrl = $credentials['market_data_base_url'] 
+                ?? config('trading-management.metaapi.market_data_base_url')
+                ?? $this->getMarketDataBaseUrlFromGlobalSettings();
+            
+            $this->timeout = $credentials['timeout'] 
+                ?? config('trading-management.metaapi.timeout', 30);
+            
+            // Prefer account token if available (more secure, scoped to account)
+            // Fallback to main API token: credentials -> config -> global settings
+            if (empty($this->credentials['api_token'])) {
+                // First check for account-specific token (if generated via Profile API)
+                $this->credentials['api_token'] = $this->credentials['account_token']
+                    ?? config('trading-management.metaapi.api_token')
+                    ?? $this->getTokenFromGlobalSettings();
+            }
+            
+            // Check memory before creating clients
+            $memoryBefore = memory_get_usage(true);
+            $memoryLimit = ini_get('memory_limit');
+            $memoryLimitBytes = $this->convertToBytes($memoryLimit);
+            
+            // If memory usage is already high, use lazy client creation
+            if ($memoryBefore > ($memoryLimitBytes * 0.7)) {
+                Log::warning('Memory usage high, using lazy client creation', [
+                    'memory_usage' => $memoryBefore,
+                    'memory_limit' => $memoryLimitBytes,
+                ]);
+                // Clients will be created on first use
+                return;
+            }
+            
+            // Main API client
+            $this->client = new Client([
+                'base_uri' => $this->baseUrl,
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+
+            // Market Data API client
+            $this->marketDataClient = new Client([
+                'base_uri' => $this->marketDataBaseUrl,
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+            
+            // Try to initialize SDK if available (but don't fail if it doesn't work)
+            try {
+                $this->initializeSdk();
+            } catch (\Throwable $sdkEx) {
+                Log::debug('SDK initialization failed (non-critical)', [
+                    'error' => $sdkEx->getMessage(),
+                ]);
+                // Continue without SDK
+            }
+        } catch (\Throwable $e) {
+            Log::error('MetaApiAdapter constructor error', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            // Set defaults to prevent fatal errors
+            $this->baseUrl = 'https://mt-client-api-v1.london.agiliumtrade.ai';
+            $this->marketDataBaseUrl = 'https://mt-market-data-client-api-v1.london.agiliumtrade.ai';
+            $this->timeout = 30;
+        }
+    }
+    
+    /**
+     * Convert memory limit string to bytes
+     */
+    protected function convertToBytes(string $memoryLimit): int
+    {
+        $memoryLimit = trim($memoryLimit);
+        if (empty($memoryLimit)) {
+            return 128 * 1024 * 1024; // Default 128MB
         }
         
-        // Main API client
-        $this->client = new Client([
-            'base_uri' => $this->baseUrl,
-            'timeout' => $this->timeout,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ],
-        ]);
-
-        // Market Data API client
-        $this->marketDataClient = new Client([
-            'base_uri' => $this->marketDataBaseUrl,
-            'timeout' => $this->timeout,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $last = strtolower($memoryLimit[strlen($memoryLimit) - 1]);
+        $value = (int) $memoryLimit;
         
-        // Try to initialize SDK if available
-        $this->initializeSdk();
+        switch ($last) {
+            case 'g':
+                $value *= 1024;
+            case 'm':
+                $value *= 1024;
+            case 'k':
+                $value *= 1024;
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Lazy client creation - create clients on first use if not already created
+     */
+    protected function ensureClientsCreated(): void
+    {
+        if (!isset($this->client)) {
+            $this->client = new Client([
+                'base_uri' => $this->baseUrl,
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+        }
+        
+        if (!isset($this->marketDataClient)) {
+            $this->marketDataClient = new Client([
+                'base_uri' => $this->marketDataBaseUrl,
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+        }
     }
     
     /**
@@ -110,8 +207,30 @@ class MetaApiAdapter implements DataProviderInterface
                     $this->sdkAccountApi = new \Oyi77\MetaapiCloudPhpSdk\AccountApi($apiToken);
                     $this->useSdk = true;
                     
-                    Log::info('MetaApiAdapter: SDK initialized successfully', [
+                    Log::debug('MetaApiAdapter: SDK initialized successfully', [
                         'use_sdk' => true,
+                    ]);
+                }
+            }
+            
+            // Try to initialize enhanced SDK service if available
+            if (class_exists('\Addons\TradingManagement\Modules\DataProvider\Services\MetaApiSdkService')) {
+                $apiToken = $this->credentials['api_token'] 
+                    ?? config('trading-management.metaapi.api_token')
+                    ?? $this->getTokenFromGlobalSettings();
+                
+                $accountId = $this->credentials['account_id'] ?? null;
+                $region = $this->credentials['region'] ?? null;
+                
+                if (!empty($apiToken) && !empty($accountId)) {
+                    $this->sdkService = new \Addons\TradingManagement\Modules\DataProvider\Services\MetaApiSdkService(
+                        $apiToken,
+                        $accountId,
+                        $region
+                    );
+                    
+                    Log::debug('MetaApiAdapter: Enhanced SDK service initialized', [
+                        'account_id' => $accountId,
                     ]);
                 }
             }
@@ -123,6 +242,51 @@ class MetaApiAdapter implements DataProviderInterface
             ]);
             $this->useSdk = false;
         }
+    }
+    
+    /**
+     * Record latency for monitoring
+     */
+    protected function recordLatency(string $type, float $latencySeconds): void
+    {
+        $latencyMs = $latencySeconds * 1000;
+        
+        if (!isset($this->latencies[$type])) {
+            $this->latencies[$type] = [];
+        }
+        
+        $this->latencies[$type][] = $latencyMs;
+        
+        // Keep only last N records
+        if (count($this->latencies[$type]) > $this->maxLatencyRecords) {
+            array_shift($this->latencies[$type]);
+        }
+    }
+    
+    /**
+     * Get latency statistics
+     */
+    public function getLatencyStats(string $type): ?array
+    {
+        if (empty($this->latencies[$type])) {
+            return null;
+        }
+        
+        $latencies = $this->latencies[$type];
+        $count = count($latencies);
+        sort($latencies);
+        $middle = floor($count / 2);
+        $median = ($count % 2 == 0) 
+            ? ($latencies[$middle - 1] + $latencies[$middle]) / 2 
+            : $latencies[$middle];
+        
+        return [
+            'count' => $count,
+            'min' => min($latencies),
+            'max' => max($latencies),
+            'avg' => array_sum($latencies) / $count,
+            'median' => $median,
+        ];
     }
 
     /**
@@ -293,6 +457,9 @@ class MetaApiAdapter implements DataProviderInterface
      */
     protected function fetchOHLCVDirect(string $symbol, string $timeframe, int $limit = 100, ?int $since = null): array
     {
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -425,6 +592,9 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function fetchTicks(string $symbol, int $limit = 100, ?int $since = null, int $offset = 0): array
     {
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
         $accountId = $this->getAccountId();
         
         $endpoint = sprintf(
@@ -507,6 +677,11 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function getAccountInfo(): array
     {
+        $startTime = microtime(true);
+        
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -539,6 +714,8 @@ class MetaApiAdapter implements DataProviderInterface
 
             $data = json_decode($response->getBody()->getContents(), true);
 
+            $this->recordLatency('request', microtime(true) - $startTime);
+            
             // Map MetatraderAccountInformation fields to our format
             return [
                 'balance' => (float) ($data['balance'] ?? 0),
@@ -580,6 +757,9 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function getAvailableSymbols(): array
     {
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -658,8 +838,19 @@ class MetaApiAdapter implements DataProviderInterface
      * 
      * @return array Array of position data
      */
+    /**
+     * Fetch open positions (pending positions)
+     * 
+     * Uses GET /users/current/accounts/{accountId}/positions endpoint
+     * This returns OPEN positions only (not closed positions)
+     * 
+     * @return array Array of position data
+     */
     public function fetchPositions(): array
     {
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -734,11 +925,95 @@ class MetaApiAdapter implements DataProviderInterface
      * Fetch pending orders
      * 
      * Uses GET /users/current/accounts/{accountId}/orders endpoint
+     * Note: This endpoint returns PENDING orders only, not order history
      * 
-     * @return array Array of order data
+     * @return array Array of pending order data
      */
-    public function fetchOrders(): array
+    public function fetchPendingOrders(): array
     {
+        return $this->fetchOrders(false);
+    }
+    
+    /**
+     * Fetch order history (filled, completed, cancelled orders)
+     * 
+     * Note: MetaApi REST API /orders endpoint only returns PENDING orders.
+     * For order history, we try:
+     * 1. SDK methods (if available)
+     * 2. Deals endpoint (if available)
+     * 3. Return empty with helpful message
+     * 
+     * @param int $limit Maximum number of orders to return (default: 100)
+     * @return array Array of order history data
+     */
+    public function fetchOrderHistory(int $limit = 100): array
+    {
+        // Try SDK first if available (SDK might have order history methods)
+        if ($this->useSdk && $this->sdkAccountApi) {
+            try {
+                $history = $this->fetchOrderHistoryUsingSdk($limit);
+                if (!empty($history)) {
+                    return $history;
+                }
+            } catch (\Exception $e) {
+                Log::debug('MetaApiAdapter: SDK order history fetch failed, trying alternative', [
+                    'error' => $e->getMessage(),
+                ]);
+                // Fall through to alternative method
+            }
+        }
+        
+        // Alternative: Try to fetch from deals endpoint (deals contain order execution history)
+        try {
+            $history = $this->fetchOrderHistoryFromApi($limit);
+            if (!empty($history)) {
+                return $history;
+            }
+        } catch (\Exception $e) {
+            Log::debug('MetaApiAdapter: Order history API fetch failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+        
+        // If all methods fail, return empty with note
+        Log::info('MetaApiAdapter: Order history not available', [
+            'note' => 'MetaApi REST API only provides pending orders. Order history requires MetaApi SDK, deals endpoint, or database storage.',
+        ]);
+        
+        return [];
+    }
+    
+    /**
+     * Fetch order history using MetaApi SDK
+     * 
+     * @param int $limit
+     * @return array
+     */
+    protected function fetchOrderHistoryUsingSdk(int $limit): array
+    {
+        // SDK might have methods like getOrderHistory, getHistoricalOrders, etc.
+        // Check available methods and use appropriate one
+        if (method_exists($this->sdkAccountApi, 'getOrderHistory')) {
+            $accountId = $this->getAccountId();
+            $history = $this->sdkAccountApi->getOrderHistory($accountId, $limit);
+            return $this->normalizeOrderHistoryData($history);
+        }
+        
+        // If SDK doesn't have order history method, throw exception to fall back
+        throw new \Exception('SDK does not have order history method');
+    }
+    
+    /**
+     * Fetch order history from REST API (alternative endpoint if available)
+     * 
+     * @param int $limit
+     * @return array
+     */
+    protected function fetchOrderHistoryFromApi(int $limit): array
+    {
+        // Ensure clients are created
+        $this->ensureClientsCreated();
+        
         // Ensure API token is available
         $this->ensureApiToken();
         
@@ -747,6 +1022,228 @@ class MetaApiAdapter implements DataProviderInterface
             throw new \Exception('MetaApi account ID is required');
         }
         
+        // Try historical orders endpoint (if available)
+        // Note: MetaApi REST API might not have this endpoint
+        $endpoint = sprintf('/users/current/accounts/%s/historical-orders', $accountId);
+        
+        try {
+            $response = $this->client->get($endpoint, [
+                'headers' => [
+                    'auth-token' => $this->credentials['api_token'],
+                ],
+                'http_errors' => false,
+            ]);
+            
+            $statusCode = $response->getStatusCode();
+            
+            // If endpoint doesn't exist (404), try alternative approach
+            if ($statusCode === 404) {
+                // Try to get order history from positions/deals endpoint
+                // Some brokers store order history in deals/positions
+                return $this->fetchOrderHistoryFromDeals($limit);
+            }
+            
+            if ($statusCode !== 200) {
+                $responseBody = $response->getBody()->getContents();
+                $errorData = json_decode($responseBody, true);
+                $errorMessage = $errorData['message'] ?? "HTTP {$statusCode}";
+                throw new \Exception('MetaApi error: ' . $errorMessage);
+            }
+            
+            $data = json_decode($response->getBody()->getContents(), true);
+            
+            if (!is_array($data)) {
+                return [];
+            }
+            
+            return $this->normalizeOrderHistoryData($data);
+            
+        } catch (RequestException $e) {
+            // If endpoint doesn't exist, try alternative
+            if ($e->hasResponse() && $e->getResponse()->getStatusCode() === 404) {
+                return $this->fetchOrderHistoryFromDeals($limit);
+            }
+            throw $e;
+        }
+    }
+    
+    /**
+     * Try to fetch order history from deals endpoint (alternative approach)
+     * 
+     * MetaApi might have a deals endpoint that shows order execution history
+     * 
+     * @param int $limit
+     * @return array
+     */
+    protected function fetchOrderHistoryFromDeals(int $limit): array
+    {
+        // Ensure clients are created
+        $this->ensureClientsCreated();
+        
+        // Ensure API token is available
+        $this->ensureApiToken();
+        
+        $accountId = $this->getAccountId();
+        if (empty($accountId)) {
+            return [];
+        }
+        
+        // Try deals endpoint - MetaApi might store order history in deals
+        $endpoint = sprintf('/users/current/accounts/%s/deals', $accountId);
+        
+        try {
+            $response = $this->client->get($endpoint, [
+                'query' => [
+                    'limit' => min($limit, 1000),
+                ],
+                'headers' => [
+                    'auth-token' => $this->credentials['api_token'],
+                ],
+                'http_errors' => false,
+            ]);
+            
+            $statusCode = $response->getStatusCode();
+            
+            if ($statusCode === 200) {
+                $data = json_decode($response->getBody()->getContents(), true);
+                
+                if (is_array($data)) {
+                    // Convert deals to order history format
+                    return $this->convertDealsToOrderHistory($data);
+                }
+            }
+            
+            // If deals endpoint doesn't work, try to get from positions (closed positions might have order info)
+            return $this->fetchOrderHistoryFromClosedPositions($limit);
+            
+        } catch (\Exception $e) {
+            Log::debug('MetaApiAdapter: Deals endpoint failed, trying closed positions', [
+                'error' => $e->getMessage(),
+            ]);
+            return $this->fetchOrderHistoryFromClosedPositions($limit);
+        }
+    }
+    
+    /**
+     * Try to get order history from closed positions
+     * 
+     * @param int $limit
+     * @return array
+     */
+    protected function fetchOrderHistoryFromClosedPositions(int $limit): array
+    {
+        // MetaApi REST API doesn't provide order history directly
+        // For now, return empty with helpful message
+        // In the future, this could:
+        // 1. Use MetaApi SDK which might have order history
+        // 2. Store orders in database when executed
+        // 3. Use MetaApi streaming API to capture order events
+        
+        Log::info('MetaApiAdapter: Order history not available via REST API', [
+            'note' => 'MetaApi REST API /orders endpoint only returns pending orders. Order history requires MetaApi SDK, database storage, or streaming API.',
+        ]);
+        
+        return [];
+    }
+    
+    /**
+     * Convert deals data to order history format
+     * 
+     * @param array $deals
+     * @return array
+     */
+    protected function convertDealsToOrderHistory(array $deals): array
+    {
+        if (!is_array($deals)) {
+            return [];
+        }
+        
+        return array_map(function ($deal) {
+            if (!is_array($deal)) {
+                return null;
+            }
+            
+            return [
+                'id' => $deal['id'] ?? $deal['dealId'] ?? null,
+                'orderId' => $deal['orderId'] ?? null,
+                'symbol' => $deal['symbol'] ?? null,
+                'type' => $deal['type'] ?? $deal['dealType'] ?? null,
+                'volume' => isset($deal['volume']) ? (float) $deal['volume'] : 0,
+                'openPrice' => isset($deal['openPrice']) ? (float) $deal['openPrice'] : (isset($deal['price']) ? (float) $deal['price'] : 0),
+                'closePrice' => isset($deal['closePrice']) ? (float) $deal['closePrice'] : null,
+                'time' => $deal['time'] ?? $deal['timeCreated'] ?? null,
+                'closeTime' => $deal['closeTime'] ?? $deal['timeClosed'] ?? null,
+                'state' => 'FILLED', // Deals are filled orders
+                'profit' => isset($deal['profit']) ? (float) $deal['profit'] : null,
+                'swap' => isset($deal['swap']) ? (float) $deal['swap'] : null,
+                'commission' => isset($deal['commission']) ? (float) $deal['commission'] : null,
+                'comment' => $deal['comment'] ?? null,
+            ];
+        }, $deals);
+    }
+    
+    /**
+     * Normalize order history data
+     * 
+     * @param array $data
+     * @return array
+     */
+    protected function normalizeOrderHistoryData(array $data): array
+    {
+        if (!is_array($data)) {
+            return [];
+        }
+        
+        return array_map(function ($order) {
+            if (!is_array($order)) {
+                return null;
+            }
+            return [
+                'id' => $order['id'] ?? $order['orderId'] ?? null,
+                'symbol' => $order['symbol'] ?? null,
+                'type' => $order['type'] ?? $order['orderType'] ?? null,
+                'volume' => isset($order['volume']) ? (float) $order['volume'] : 0,
+                'openPrice' => isset($order['openPrice']) ? (float) $order['openPrice'] : (isset($order['price']) ? (float) $order['price'] : 0),
+                'closePrice' => isset($order['closePrice']) ? (float) $order['closePrice'] : null,
+                'stopLoss' => isset($order['stopLoss']) ? (float) $order['stopLoss'] : null,
+                'takeProfit' => isset($order['takeProfit']) ? (float) $order['takeProfit'] : null,
+                'time' => $order['time'] ?? $order['timeCreated'] ?? null,
+                'closeTime' => $order['closeTime'] ?? $order['timeClosed'] ?? null,
+                'expirationTime' => $order['expirationTime'] ?? $order['expiration'] ?? null,
+                'state' => $order['state'] ?? $order['orderState'] ?? null,
+                'comment' => $order['comment'] ?? null,
+                'magic' => $order['magic'] ?? null,
+                'profit' => isset($order['profit']) ? (float) $order['profit'] : null,
+                'swap' => isset($order['swap']) ? (float) $order['swap'] : null,
+                'commission' => isset($order['commission']) ? (float) $order['commission'] : null,
+            ];
+        }, $data);
+    }
+    
+    /**
+     * Fetch orders (all or pending only)
+     * 
+     * Uses GET /users/current/accounts/{accountId}/orders endpoint
+     * 
+     * @param bool $includeAll If true, fetch all orders (pending + history), if false, only pending
+     * @return array Array of order data
+     */
+    public function fetchOrders(bool $includeAll = false): array
+    {
+        // Ensure clients are created (lazy initialization)
+        $this->ensureClientsCreated();
+        
+        // Ensure API token is available
+        $this->ensureApiToken();
+        
+        $accountId = $this->getAccountId();
+        if (empty($accountId)) {
+            throw new \Exception('MetaApi account ID is required');
+        }
+        
+        $orders = [];
+        
+        // Fetch pending orders
         $endpoint = sprintf('/users/current/accounts/%s/orders', $accountId);
 
         try {
@@ -763,6 +1260,13 @@ class MetaApiAdapter implements DataProviderInterface
                 $errorData = json_decode($responseBody, true);
                 $errorMessage = $errorData['message'] ?? "HTTP {$statusCode}";
                 
+                Log::warning('MetaApi fetchOrders: API returned non-200 status', [
+                    'account_id' => $accountId,
+                    'status_code' => $statusCode,
+                    'error' => $errorMessage,
+                    'response' => $responseBody,
+                ]);
+                
                 if ($statusCode === 401) {
                     throw new \Exception('MetaApi authentication failed. Please check your API token.');
                 } elseif ($statusCode === 404) {
@@ -776,28 +1280,59 @@ class MetaApiAdapter implements DataProviderInterface
 
             // MetaApi returns array of MetatraderOrder objects
             if (!is_array($data)) {
+                Log::debug('MetaApi fetchOrders: Response is not an array', [
+                    'account_id' => $accountId,
+                    'data_type' => gettype($data),
+                    'data' => $data,
+                ]);
                 return [];
             }
 
             // Normalize order data
-            return array_map(function ($order) {
+            $orders = array_map(function ($order) {
+                if (!is_array($order)) {
+                    return null;
+                }
                 return [
-                    'id' => $order['id'] ?? null,
+                    'id' => $order['id'] ?? $order['orderId'] ?? null,
                     'symbol' => $order['symbol'] ?? null,
-                    'type' => $order['type'] ?? null, // ORDER_TYPE_BUY_LIMIT, ORDER_TYPE_SELL_LIMIT, etc.
+                    'type' => $order['type'] ?? $order['orderType'] ?? null, // ORDER_TYPE_BUY_LIMIT, ORDER_TYPE_SELL_LIMIT, etc.
                     'volume' => isset($order['volume']) ? (float) $order['volume'] : 0,
-                    'openPrice' => isset($order['openPrice']) ? (float) $order['openPrice'] : 0,
+                    'openPrice' => isset($order['openPrice']) ? (float) $order['openPrice'] : (isset($order['price']) ? (float) $order['price'] : 0),
                     'stopLoss' => isset($order['stopLoss']) ? (float) $order['stopLoss'] : null,
                     'takeProfit' => isset($order['takeProfit']) ? (float) $order['takeProfit'] : null,
-                    'time' => $order['time'] ?? null,
-                    'expirationTime' => $order['expirationTime'] ?? null,
-                    'state' => $order['state'] ?? null, // ORDER_STATE_STARTED, ORDER_STATE_FILLED, etc.
+                    'time' => $order['time'] ?? $order['timeCreated'] ?? null,
+                    'expirationTime' => $order['expirationTime'] ?? $order['expiration'] ?? null,
+                    'state' => $order['state'] ?? $order['orderState'] ?? null, // ORDER_STATE_STARTED, ORDER_STATE_FILLED, etc.
                     'comment' => $order['comment'] ?? null,
+                    'magic' => $order['magic'] ?? null,
+                    'positionId' => $order['positionId'] ?? null,
                 ];
             }, $data);
+            
+            // Filter out null values
+            $orders = array_filter($orders, function($order) {
+                return $order !== null;
+            });
+            
+            // Re-index array
+            $orders = array_values($orders);
+            
+            Log::debug('MetaApi fetchOrders: Fetched pending orders', [
+                'account_id' => $accountId,
+                'count' => count($orders),
+            ]);
 
         } catch (RequestException $e) {
             $statusCode = $e->hasResponse() ? $e->getResponse()->getStatusCode() : 0;
+            $responseBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : '';
+            
+            Log::error('MetaApi fetchOrders: RequestException', [
+                'account_id' => $accountId,
+                'status_code' => $statusCode,
+                'error' => $e->getMessage(),
+                'response' => $responseBody,
+            ]);
             
             if ($statusCode === 401) {
                 throw new \Exception('MetaApi authentication failed. Please check your API token.');
@@ -806,7 +1341,22 @@ class MetaApiAdapter implements DataProviderInterface
             }
             
             throw new \Exception('Failed to fetch orders: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('MetaApi fetchOrders: Unexpected error', [
+                'account_id' => $accountId,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
         }
+        
+        // If includeHistory is true, also fetch order history
+        // Note: MetaApi might have a separate endpoint for order history
+        // For now, we only return pending orders
+        // TODO: Implement order history endpoint if available
+        
+        return $orders;
     }
 
     /**
@@ -824,6 +1374,7 @@ class MetaApiAdapter implements DataProviderInterface
      */
     public function placeMarketOrder(string $symbol, string $direction, float $volume, ?float $sl = null, ?float $tp = null, ?string $comment = null): array
     {
+        $startTime = microtime(true);
         $accountId = $this->getAccountId();
         $endpoint = sprintf('/users/current/accounts/%s/trade', $accountId);
 
@@ -900,6 +1451,8 @@ class MetaApiAdapter implements DataProviderInterface
             }
 
             // MetaAPI returns TradeResponse with numericTicket (order ID) or position ID
+            $this->recordLatency('trade', microtime(true) - $startTime);
+            
             return [
                 'success' => true,
                 'orderId' => $data['numericTicket'] ?? $data['orderId'] ?? null,

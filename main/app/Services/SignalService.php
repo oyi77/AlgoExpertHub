@@ -384,13 +384,15 @@ class SignalService extends BaseService
         $message .= 'direction : ' . $signal->direction;
 
         try {
-            $basic  = new \Nexmo\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
-            $client = new \Nexmo\Client($basic);
-            $client->message()->send([
-                'to' => $user->phone,
-                'from' => $general->appname,
-                'text' => strip_tags($message)
-            ]);
+            $basic  = new \Vonage\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+            $client = new \Vonage\Client($basic);
+            $client->sms()->send(
+                new \Vonage\SMS\Message\SMS(
+                    $user->phone,
+                    $general->appname,
+                    strip_tags($message)
+                )
+            );
         } catch (\Throwable $e) {}
     }
 

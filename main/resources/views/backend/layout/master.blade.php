@@ -61,6 +61,78 @@
 
     @stack('style')
 
+    {{-- WebSocket Support (Pusher + Laravel Echo) --}}
+    @if(config('broadcasting.default') !== 'null' && config('broadcasting.connections.pusher.key'))
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+    <script>
+        // Initialize Laravel Echo with Pusher (Soketi)
+        try {
+            const pusherConfig = {
+                broadcaster: 'pusher',
+                key: '{{ config("broadcasting.connections.pusher.key") }}',
+                forceTLS: {{ config('broadcasting.connections.pusher.options.scheme') === 'https' ? 'true' : 'false' }},
+                disableStats: true,
+                enabledTransports: ['ws', 'wss'],
+                authEndpoint: '/broadcasting/auth',
+                auth: {
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                }
+            };
+            
+            // Use configured WebSocket host (reverse proxy subdomain) or fallback to current hostname
+            @if(config('broadcasting.connections.pusher.options.ws_host'))
+                // When using reverse proxy subdomain, use standard ports (443 for WSS, 80 for WS)
+                pusherConfig.wsHost = '{{ config("broadcasting.connections.pusher.options.ws_host") }}';
+                pusherConfig.wsPort = {{ config('broadcasting.connections.pusher.options.scheme') === 'https' ? 443 : 80 }};
+                pusherConfig.wssPort = 443;
+            @else
+                // Direct connection to Soketi server (no reverse proxy)
+                pusherConfig.wsHost = window.location.hostname;
+                pusherConfig.wsPort = {{ config('broadcasting.connections.pusher.options.scheme') === 'https' ? 443 : config('broadcasting.connections.pusher.options.port', 6001) }};
+                pusherConfig.wssPort = {{ config('broadcasting.connections.pusher.options.scheme') === 'https' ? 443 : config('broadcasting.connections.pusher.options.port', 6001) }};
+            @endif
+
+            // Add cluster if configured (required by Pusher.js even for custom hosts)
+            @if(config('broadcasting.connections.pusher.options.cluster'))
+                pusherConfig.cluster = '{{ config("broadcasting.connections.pusher.options.cluster") }}';
+            @else
+                pusherConfig.cluster = 'mt1'; // Default cluster for Pusher.js compatibility
+            @endif
+
+            window.Echo = new Echo(pusherConfig);
+
+            // Log connection status
+            if (window.Echo && window.Echo.connector && window.Echo.connector.pusher) {
+                window.Echo.connector.pusher.connection.bind('connected', function() {
+                    console.log('✅ WebSocket connected to Soketi');
+                });
+
+                window.Echo.connector.pusher.connection.bind('disconnected', function() {
+                    console.warn('⚠️ WebSocket disconnected');
+                });
+
+                window.Echo.connector.pusher.connection.bind('error', function(err) {
+                    console.error('❌ WebSocket error:', err);
+                    // Don't show error to user if WebSocket server is not available
+                    // This is expected if BROADCAST_DRIVER=null or server is not running
+                });
+
+                // Handle connection state changes
+                window.Echo.connector.pusher.connection.bind('state_change', function(states) {
+                    if (states.current === 'failed' || states.current === 'unavailable') {
+                        console.warn('⚠️ WebSocket server unavailable. Real-time features disabled.');
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('⚠️ WebSocket initialization failed:', e);
+        }
+    </script>
+    @endif
+
 </head>
 <body>
 
@@ -133,7 +205,7 @@
 
     <!-- Dialog Wrapper - Replaces native alert/confirm/prompt with custom modals -->
     <script defer src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
-    <script defer src="{{ asset('js/fix-onsubmit-confirm.js') }}"></script>
+    <script defer src="{{ asset('asset/js/fix-onsubmit-confirm.js') }}"></script>
 
     <script defer src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
 

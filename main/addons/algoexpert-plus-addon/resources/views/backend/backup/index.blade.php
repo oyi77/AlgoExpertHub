@@ -381,11 +381,26 @@
 
 @push('script')
 <script>
-$(document).ready(function() {
-    // Initialize feather icons
-    if (typeof feather !== 'undefined') {
-        feather.replace();
+// Wait for jQuery to be available
+(function() {
+    function waitForJQuery(callback) {
+        if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
+            callback();
+        } else {
+            setTimeout(function() { waitForJQuery(callback); }, 50);
+        }
     }
+    
+    waitForJQuery(function() {
+        $(document).ready(function() {
+            // Initialize feather icons
+            if (typeof feather !== 'undefined') {
+                try {
+                    feather.replace();
+                } catch (e) {
+                    console.warn('Feather icons initialization failed:', e);
+                }
+            }
 
     // Run Full Backup (Spatie)
     $('#run-backup-btn').on('click', function() {
@@ -753,11 +768,17 @@ $(document).ready(function() {
     
     // Re-initialize feather icons after AJAX
     $(document).ajaxComplete(function() {
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+                if (typeof feather !== 'undefined') {
+                    try {
+                        feather.replace();
+                    } catch (e) {
+                        console.warn('Feather icons re-initialization failed:', e);
+                    }
+                }
+            });
+        });
     });
-});
+})();
 </script>
 @endpush
 @endsection

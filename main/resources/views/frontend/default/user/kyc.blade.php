@@ -1,4 +1,4 @@
-@extends(Config::themeView( 'layout.auth')
+@extends(Config::themeView( 'layout.auth'))
 
 @section('content')
     <div class="row gy-4">

@@ -146,17 +146,19 @@ class SendSignalNotificationJob extends OptimizedJob
     {
         $message = $this->formatSignalMessage($signal, true); // Short format for SMS
         
-        // Use your SMS service here (Nexmo, Twilio, etc.)
+        // Use your SMS service here (Vonage, Twilio, etc.)
         // This is a placeholder implementation
         try {
-            $basic = new \Nexmo\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
-            $client = new \Nexmo\Client($basic);
+            $basic = new \Vonage\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+            $client = new \Vonage\Client($basic);
             
-            $client->message()->send([
-                'to' => $user->phone,
-                'from' => config('app.name'),
-                'text' => $message
-            ]);
+            $client->sms()->send(
+                new \Vonage\SMS\Message\SMS(
+                    $user->phone,
+                    config('app.name'),
+                    $message
+                )
+            );
         } catch (\Throwable $e) {
             Log::error('SMS service error', [
                 'user_id' => $user->id,

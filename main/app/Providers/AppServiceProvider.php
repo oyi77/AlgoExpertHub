@@ -75,6 +75,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
 
+        // Ignore SIGPIPE signals when using Swoole/Octane
+        // SIGPIPE occurs when clients disconnect before response is sent (normal behavior)
+        // This prevents "Unable to find callback function for signal Broken pipe: 13" warnings
+        if (extension_loaded('swoole')) {
+            if (function_exists('pcntl_signal')) {
+                pcntl_signal(SIGPIPE, SIG_IGN);
+            }
+        }
     }
 
     /**

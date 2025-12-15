@@ -1,0 +1,58 @@
+################################################################################
+# AlgoExpertHub Deployment Configuration - Production
+################################################################################
+# Copy this file to deploy.config.production and customize for your environment
+################################################################################
+
+# Server Configuration
+DEPLOY_SERVER="your-server-ip-or-domain"
+DEPLOY_USER="root"
+DEPLOY_PATH="/opt/algoexpert"
+SSH_KEY_PATH="$HOME/.ssh/id_rsa"
+
+# Application Configuration
+APP_NAME="AlgoExpertHub"
+APP_URL="https://yourdomain.com"
+APP_DEBUG=false
+LOG_LEVEL="warning"
+
+# Database Configuration
+DB_DATABASE="algoexpert"
+DB_USERNAME="algoexpert"
+DB_PASSWORD="CHANGE_ME_SECURE_PASSWORD"
+DB_ROOT_PASSWORD="CHANGE_ME_ROOT_PASSWORD"
+
+# Redis Configuration
+REDIS_PASSWORD="null"
+
+# Pusher/Soketi Configuration
+PUSHER_APP_ID="app-id"
+PUSHER_APP_KEY="app-key"
+PUSHER_APP_SECRET="app-secret"
+PUSHER_APP_CLUSTER="mt1"
+PUSHER_WS_HOST="socket.yourdomain.com"
+
+# Mail Configuration
+MAIL_MAILER="smtp"
+MAIL_HOST="smtp.gmail.com"
+MAIL_PORT="587"
+MAIL_USERNAME="your-email@gmail.com"
+MAIL_PASSWORD="your-app-password"
+MAIL_ENCRYPTION="tls"
+MAIL_FROM_ADDRESS="noreply@yourdomain.com"
+
+# Octane Configuration
+OCTANE_HTTPS=true
+
+# Deployment Settings
+RUN_MIGRATIONS=true
+RUN_SEEDERS=false
+AUTO_CONFIRM=false
+
+# Port Configuration
+APP_PORT=8000
+NGINX_HTTP_PORT=80
+NGINX_HTTPS_PORT=443
+
+# Application Key (leave empty to auto-generate)
+APP_KEY=""

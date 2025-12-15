@@ -4,7 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services\Gateway;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Illuminate\Http\Request;
 
 class PaytmService

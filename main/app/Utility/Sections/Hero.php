@@ -20,6 +20,13 @@ class Hero
             'description' => 'Textarea',
             'button_text' => 'Text',
             'button_text_link' => 'Text',
+        ],
+        'trading-v1' => [
+            'badge_text' => 'Text',
+            'title' => 'Text',
+            'description' => 'Textarea',
+            'button_text' => 'Text',
+            'button_text_link' => 'Text',
         ]
     ];
 
@@ -30,11 +37,25 @@ class Hero
             'description' => 'col-md-12',
             'button_text' => 'col-md-6',
             'button_text_link' => 'col-md-6',
+        ],
+        'trading-v1' => [
+            'badge_text' => 'col-md-12',
+            'title' => 'col-md-12',
+            'description' => 'col-md-12',
+            'button_text' => 'col-md-6',
+            'button_text_link' => 'col-md-6',
         ]
     ];
 
     public $validation = [
         'trading-landing' => [
+            'badge_text' => 'nullable',
+            'title' => 'required',
+            'description' => 'required',
+            'button_text' => 'required',
+            'button_text_link' => 'required',
+        ],
+        'trading-v1' => [
             'badge_text' => 'nullable',
             'title' => 'required',
             'description' => 'required',

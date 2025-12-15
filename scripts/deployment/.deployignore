@@ -1,0 +1,59 @@
+# Files and directories to exclude from deployment
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# Documentation (keep only essential)
+docs/
+specs/
+.github/
+*.md
+!README.md
+!DOCKER.md
+
+# Dependencies (will be built in container)
+main/vendor/
+main/node_modules/
+
+# Build artifacts
+main/storage/logs/
+main/storage/framework/cache/
+main/storage/framework/sessions/
+main/storage/framework/views/
+main/bootstrap/cache/*.php
+
+# Environment files (will be generated)
+main/.env
+main/.env.*
+
+# Testing
+main/tests/
+main/phpunit.xml
+main/.phpunit.result.cache
+
+# Temporary files
+*.log
+*.tmp
+*.cache
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Deployment files
+deploy.config.*
+!deploy.config.example
+.deployignore
+
+# Other
+MadelineProto.log

@@ -1,0 +1,12 @@
+{
+    "name": "trading-v1",
+    "version": "1.0.0",
+    "description": "Modern Trading Landing Page Theme Assets",
+    "cssFiles": [
+        "css/main.css"
+    ],
+    "jsFiles": [
+        "js/main.js"
+    ]
+}
+

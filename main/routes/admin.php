@@ -33,6 +33,7 @@ use App\Http\Controllers\Backend\{
     SignalTimeFrameController,
     TicketController
 };
+use App\Http\Controllers\DocumentationController;
 
 
 
@@ -69,6 +70,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('change/password', [AdminProfileController::class, 'changePassword'])->name('change.password');
 
         Route::get('logout', [LoginController::class, 'logout'])->name('logout');
+        
+        // Documentation Routes
+        Route::prefix('wiki')->name('wiki.')->group(function () {
+            Route::get('/', [DocumentationController::class, 'index'])->name('index');
+            Route::get('/search', [DocumentationController::class, 'search'])->name('search');
+            Route::get('/docs/{file}', [DocumentationController::class, 'showDocs'])->name('docs');
+            Route::get('/{path?}', [DocumentationController::class, 'showWiki'])->name('show')->where('path', '.*');
+        });
 
 
         Route::get('language/ajax',[LanguageController::class ,'languageAjax'])->name('cms-builder');
@@ -295,10 +304,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('pages/edit/{id}', [PagesController::class, 'pageUpdate']);
             Route::get('pages/search', [PagesController::class, 'index'])->name('frontend.search');
             Route::post('pages/delete/{id}', [PagesController::class, 'pageDelete'])->name('frontend.pages.delete');
-            Route::get('page-builder/{id?}', [PagesController::class, 'pageBuilder'])->name('page-builder.index');
+            // Route::get('page-builder/{id?}', [PagesController::class, 'pageBuilder'])->name('page-builder.index'); // Disabled: Conflicts with page-builder-addon
 
             Route::get('manage/section/{name}', [ManageSectionController::class, 'section'])->name('frontend.section.manage');
             Route::post('manage/section/{name}', [ManageSectionController::class, 'sectionContentUpdate']);
+            Route::post('manage/sections/reorder', [ManageSectionController::class, 'reorderSections'])->name('frontend.sections.reorder');
             Route::get('manage/element/{name}', [ManageSectionController::class, 'sectionElement'])->name('frontend.element');
             Route::get('manage/element/{name}/search', [ManageSectionController::class, 'section'])->name('frontend.element.search');
             Route::post('manage/element/{name}', [ManageSectionController::class, 'sectionElementCreate']);

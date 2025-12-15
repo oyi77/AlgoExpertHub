@@ -372,7 +372,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -506,7 +505,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -550,7 +548,6 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-                        </table>
                         </table>
                     </div>
                 </div>
@@ -716,18 +713,23 @@
             }]
         };
 
+        // Store chart instances to prevent duplicates
+        window.__adminDashboardCharts = window.__adminDashboardCharts || {};
+
         // Initialize charts after ApexCharts is loaded
         waitForApexCharts(function() {
+            // Only render chart2 if it doesn't exist and element is visible
             var chart2Element = document.querySelector("#chart2");
-            if (chart2Element) {
-                var chart2 = new ApexCharts(chart2Element, user);
-                chart2.render();
+            if (chart2Element && !window.__adminDashboardCharts.chart2) {
+                window.__adminDashboardCharts.chart2 = new ApexCharts(chart2Element, user);
+                window.__adminDashboardCharts.chart2.render();
             }
             
+            // Only render chart5 if it doesn't exist and element is visible
             var chart5Element = document.querySelector("#chart5");
-            if (chart5Element) {
-                var chart5 = new ApexCharts(chart5Element, user);
-                chart5.render();
+            if (chart5Element && !window.__adminDashboardCharts.chart5) {
+                window.__adminDashboardCharts.chart5 = new ApexCharts(chart5Element, user);
+                window.__adminDashboardCharts.chart5.render();
             }
         });
 
@@ -886,9 +888,9 @@
         // Initialize profit chart after ApexCharts is loaded
         waitForApexCharts(function() {
             var profitChartElement = document.querySelector("#profit-chart");
-            if (profitChartElement) {
-                var chart = new ApexCharts(profitChartElement, payment);
-                chart.render();
+            if (profitChartElement && !window.__adminDashboardCharts.profitChart) {
+                window.__adminDashboardCharts.profitChart = new ApexCharts(profitChartElement, payment);
+                window.__adminDashboardCharts.profitChart.render();
             }
         });
     </script>

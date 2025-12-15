@@ -1,6 +1,5 @@
 @extends('backend.layout.master')
 
-@section('element')
 @push('external-style')
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
 <style>
@@ -62,15 +61,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Load existing template content
-    @if(isset($content))
-        editor.setComponents(`{!! addslashes($content) !!}`);
+    // Store Blade placeholders for restoration on save
+    const bladePlaceholders = @json($bladePlaceholders ?? []);
+    
+    // Load existing template content (use pre-converted content from server)
+    @if(isset($editorContent) && !empty($editorContent))
+        try {
+            const htmlContent = @json($editorContent);
+            if (htmlContent && htmlContent.trim()) {
+                // Remove any placeholder comments that might have been left
+                const cleanHtml = htmlContent.replace(/<!--BLADE_PLACEHOLDERS:.*?-->/s, '').trim();
+                if (cleanHtml) {
+                    editor.setComponents(cleanHtml);
+                }
+            }
+        } catch (e) {
+            console.error('Error loading template content:', e);
+        }
     @endif
 
     document.getElementById('saveThemeTemplate').addEventListener('click', function() {
-        const html = editor.getHtml();
+        let html = editor.getHtml();
         const css = editor.getCss();
         const content = editor.getComponents().toJSON();
+
+        // Restore Blade placeholders in HTML before saving
+        if (bladePlaceholders && Object.keys(bladePlaceholders).length > 0) {
+            Object.keys(bladePlaceholders).forEach(function(placeholder) {
+                html = html.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), bladePlaceholders[placeholder]);
+            });
+        }
 
         fetch('{{ route("admin.page-builder.themes.update", $theme) }}', {
             method: 'PUT',
@@ -83,7 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 template_path: '{{ $templatePath }}',
                 content: content,
                 html: html,
-                css: css
+                css: css,
+                placeholders: bladePlaceholders
             })
         })
         .then(response => response.json())
@@ -105,5 +126,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
-@endsection
-

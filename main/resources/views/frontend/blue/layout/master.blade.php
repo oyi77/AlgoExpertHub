@@ -175,7 +175,7 @@
                         @include(Config::themeView('layout.ajax_alert', [
                             'message' => 'Successfully Subscribe',
                             'message_error' => '',
-                        ])
+                        ]))
 
                     },
                     error: () => {

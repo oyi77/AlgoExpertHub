@@ -70,12 +70,13 @@ class SendChannelMessageJob implements ShouldQueue
             }
         } elseif ($this->channel === 'sms') {
             try {
-                $basic  = new \Nexmo\Client\Credentials\Basic(env('NEXMO_KEY'), env('NEXMO_SECRET'));
-                $client = new \Nexmo\Client($basic);
-                $client->message()->send([
-                    'to' => $user->phone,
-                    'from' => config('app.name'),
-                    'text' => sprintf(
+                $basic  = new \Vonage\Client\Credentials\Basic(env('NEXMO_KEY'), env('NEXMO_SECRET'));
+                $client = new \Vonage\Client($basic);
+                $client->sms()->send(
+                    new \Vonage\SMS\Message\SMS(
+                        $user->phone,
+                        config('app.name'),
+                        sprintf(
                         'Title:%s Market:%s Pair:%s TF:%s Open:%s SL:%s TP:%s Dir:%s',
                         $signal->title,
                         $signal->market->name,
@@ -85,8 +86,9 @@ class SendChannelMessageJob implements ShouldQueue
                         $signal->sl,
                         $signal->tp,
                         $signal->direction
-                    ),
-                ]);
+                        )
+                    )
+                );
             } catch (\Throwable $e) {}
         } elseif ($this->channel === 'whatsapp') {
             try {

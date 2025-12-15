@@ -3,10 +3,6 @@
 namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use App\Notifications\WithdrawNotification;
 use Nette\Utils\Random;
 

@@ -1,5 +1,7 @@
 # Specs-Driven Development (SDD) Guidelines
 
+**AUTHORITATIVE SOURCE**: This document serves as the single source of truth for SDD practices across all AI tools in this project (.kiro, .cursor, .qoder, .opencode, .trae).
+
 Inspired by Kiro's streamlined approach to building features with clarity and confidence.
 
 ## 🎯 Core Philosophy

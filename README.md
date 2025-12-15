@@ -14,9 +14,10 @@
 8. [Addon System](#addon-system)
 9. [Documentation Wiki](#documentation-wiki)
 10. [Installation](#installation)
-11. [Configuration](#configuration)
-12. [Development Guide](#development-guide)
-13. [API Documentation](#api-documentation)
+11. [Docker Deployment](#docker-deployment)
+12. [Configuration](#configuration)
+13. [Development Guide](#development-guide)
+14. [API Documentation](#api-documentation)
 
 ---
 
@@ -385,6 +386,85 @@ Add to crontab:
 ```bash
 * * * * * cd /path/to/main && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+---
+
+## Docker Deployment
+
+### 🐳 Containerized Deployment (Recommended)
+
+For production deployments, we provide a **complete Docker setup** with automated deployment scripts and CI/CD integration.
+
+#### Quick Start with Docker
+
+```bash
+# 1. Copy environment template
+cp docker/.env.docker .env
+
+# 2. Generate APP_KEY
+docker run --rm -v $(pwd)/main:/app composer/composer:latest \
+  php artisan key:generate --show
+
+# 3. Update .env with generated key
+
+# 4. Build and start
+docker-compose build
+docker-compose up -d
+
+# 5. Run migrations
+docker-compose exec app php artisan migrate --force
+
+# 6. Access application
+open http://localhost:8000
+```
+
+#### Services Included
+
+- **Laravel Octane (Swoole)** - High-performance application server
+- **Laravel Horizon** - Queue management dashboard
+- **Queue Workers** - 4 parallel background job processors
+- **Scheduler** - Automated task scheduling
+- **MySQL 8.0** - Primary database
+- **Redis 7** - Cache and queue backend
+- **Soketi** - WebSocket server for real-time features
+- **Nginx** (optional) - Reverse proxy for production
+
+#### Deployment Methods
+
+1. **Automated Script** - One-command deployment with SSH
+   ```bash
+   ./scripts/deployment/deploy.sh production
+   ```
+
+2. **CI/CD Pipeline** - Auto-deploy on git push (GitHub Actions)
+   ```bash
+   git push origin main  # Auto-deploys to production
+   ```
+
+3. **1Panel Quick Deploy** - Interactive deployment from 1Panel terminal
+   ```bash
+   ./scripts/deployment/deploy-1panel.sh
+   ```
+
+4. **Manual Docker Compose** - Traditional approach
+   ```bash
+   docker-compose up -d
+   ```
+
+#### Complete Documentation
+
+📚 **[Complete Docker & Deployment Guide](./docs/docker-deployment/DOCKER_DEPLOYMENT_GUIDE.md)**
+
+This comprehensive guide covers everything you need:
+- Quick start (5 minutes)
+- Detailed setup instructions
+- Service architecture and configuration
+- All 4 deployment methods (Script, CI/CD, 1Panel, Manual)
+- CI/CD integration with GitHub Actions
+- 1Panel integration options
+- Common commands and operations
+- Comprehensive troubleshooting
+- Production deployment checklist
 
 ---
 

@@ -46,15 +46,26 @@
     min-height: 100vh;
 }
 
-.container {
+.trading-landing-page .container {
     max-width: 1344px;
     margin: 0 auto;
     padding: 0 48px;
 }
 
 @media (max-width: 768px) {
-    .container {
+    .trading-landing-page .container {
         padding: 0 24px;
+    }
+}
+
+/* Section Spacing */
+.trading-landing-page section {
+    padding: 80px 0;
+}
+
+@media (max-width: 768px) {
+    .trading-landing-page section {
+        padding: 60px 0;
     }
 }
 
@@ -81,9 +92,9 @@
 }
 
 .trading-navbar {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: linear-gradient(180deg, rgba(29, 29, 29, 1) 0%, rgba(131, 131, 131, 1) 100%);
+    backdrop-filter: blur(60px);
+    -webkit-backdrop-filter: blur(60px);
     border: 1.205px solid rgba(255, 255, 255, 0);
     border-radius: 38.55px;
     padding: 12px 24px;
@@ -608,6 +619,21 @@
     margin-bottom: 48px;
 }
 
+.section-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    background: rgba(26, 255, 213, 0.1);
+    border: 1px solid rgba(26, 255, 213, 0.2);
+    border-radius: 20px;
+    color: var(--trading-primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-inter);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .section-title {
     font-family: var(--font-manrope);
     font-weight: 700;
@@ -628,6 +654,28 @@
     line-height: 1.5;
     color: var(--trading-neutral-f6);
     margin: 0;
+}
+
+/* Responsive section headers */
+@media (max-width: 768px) {
+    .section-header {
+        margin-bottom: 32px;
+    }
+    
+    .section-badge {
+        font-size: 12px;
+        padding: 6px 16px;
+        margin-bottom: 16px;
+    }
+    
+    .section-title {
+        font-size: 32px;
+        margin-bottom: 16px;
+    }
+    
+    .section-description {
+        font-size: 16px;
+    }
 }
 
 .category-tabs {
@@ -667,10 +715,12 @@
 }
 
 .instruments-table-wrapper {
-    background: var(--trading-neutral-060f11);
-    border: 1px solid var(--trading-neutral-444);
-    border-radius: 12px;
-    padding: 12px;
+    background: rgba(6, 15, 17, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 24px;
 }
 
 .sub-tabs {
@@ -827,16 +877,33 @@
 }
 
 .market-card {
-    background: var(--trading-neutral-121212);
-    border: 1px solid var(--trading-neutral-444);
-    border-radius: 12px;
-    padding: 24px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    background: rgba(18, 18, 18, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 32px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.market-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(26, 255, 213, 0.2), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
 
 .market-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(26, 255, 213, 0.1);
+    border-color: rgba(26, 255, 213, 0.3);
+    box-shadow: 0 8px 32px rgba(26, 255, 213, 0.15);
 }
 
 .card-header {
@@ -942,13 +1009,35 @@
 }
 
 .feature-card {
-    background: var(--trading-neutral-121212);
-    border: 1px solid var(--trading-neutral-444);
-    border-radius: 12px;
+    background: rgba(18, 18, 18, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
     padding: 32px;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(26, 255, 213, 0.3), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.feature-card:hover {
+    border-color: rgba(26, 255, 213, 0.3);
+    box-shadow: 0 8px 32px rgba(26, 255, 213, 0.1);
 }
 
 .card-content {
@@ -1258,18 +1347,27 @@
 }
 
 .pricing-card {
-    background: var(--trading-neutral-121212);
-    border: 1px solid var(--trading-neutral-444);
-    border-radius: 12px;
-    padding: 24px;
+    background: rgba(18, 18, 18, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 32px;
     position: relative;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover {
+    border-color: rgba(26, 255, 213, 0.3);
+    box-shadow: 0 8px 32px rgba(26, 255, 213, 0.1);
 }
 
 .pricing-card.featured {
     border-color: var(--trading-primary);
-    box-shadow: 0 0 20px rgba(26, 255, 213, 0.2);
+    box-shadow: 0 0 32px rgba(26, 255, 213, 0.25);
+    background: rgba(18, 18, 18, 0.8);
 }
 
 .popular-badge {
@@ -2155,8 +2253,10 @@
 
 .benefit-card {
     background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 24px;
     padding: 32px;
     transition: all 0.3s ease;
     position: relative;

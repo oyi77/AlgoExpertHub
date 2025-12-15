@@ -4,10 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Carbon\Carbon;
 use DB;
 

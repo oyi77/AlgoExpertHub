@@ -1,0 +1,89 @@
+# Docker ignore file for AlgoExpertHub
+# Optimizes Docker build by excluding unnecessary files
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+.cursor
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+!README.md
+!DOCKER.md
+docs/
+.github/
+
+# Dependencies (will be installed in container)
+main/vendor/
+main/node_modules/
+main/package-lock.json
+main/composer.lock
+
+# Build artifacts
+main/public/hot
+main/public/storage
+main/public/mix-manifest.json
+main/public/js/
+main/public/css/
+
+# Laravel
+main/.env
+main/.env.*
+!main/.env.example
+main/storage/
+main/bootstrap/cache/
+main/.phpunit.result.cache
+
+# Logs
+*.log
+main/storage/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Testing
+main/tests/
+main/phpunit.xml
+main/.phpunit.result.cache
+
+# Temporary files
+*.cache
+*.temp
+*.bak
+
+# Deployment
+.railway.env.example
+.railwayignore
+railway.sh
+railway.json
+railway.toml
+nixpacks.toml
+Procfile
+
+# Other project files
+.beads/
+.kiro/
+.opencode/
+.qoder/
+.sdd/
+.trae/
+specs/
+install/
+scripts/
+
+# MadelineProto
+MadelineProto.log
+main/madeline.php

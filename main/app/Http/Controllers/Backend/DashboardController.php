@@ -38,7 +38,7 @@ class DashboardController extends Controller
         $data['emailUser'] = User::where('status', 1)->where('is_email_verified',1)->count();
 
         $data['totalTicket'] = Ticket::count();
-        $data['pendingTicket'] = Ticket::whereStatus(2)->count();
+        $data['pendingTicket'] = Ticket::where('status', 2)->count();
 
         $data['totalOnlineGateway'] = Gateway::where('type', 1)->count();
         $data['totalOfflineGateway'] = Gateway::where('type', 0)->count();

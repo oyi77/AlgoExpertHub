@@ -152,7 +152,14 @@ $('.mobile-search-toggle').on('click', function(){
     $('.header-search form').toggleClass('active');
 });
 
-feather.replace();
+// Initialize Feather icons safely
+if (typeof feather !== 'undefined') {
+    try {
+        feather.replace();
+    } catch (e) {
+        console.warn('Feather icons initialization failed:', e);
+    }
+}
 
 $('.header-search .header-search-res-btn').on('click', function(){
     $('.header-search .form').toggleClass('active');

@@ -13,7 +13,7 @@
                     <div class="text-center py-5">
                         <i class="las la-chart-line la-3x text-muted mb-3"></i>
                         <h5 class="mb-2">{{ __('No Trading Setups') }}</h5>
-                        <p class="text-muted mb-4">{{ __('You don't have any active trading setups yet.') }}</p>
+                        <p class="text-muted mb-4">{{ __("You don't have any active trading setups yet.") }}</p>
                         <div class="d-flex gap-2 justify-content-center flex-wrap">
                             @if(Route::has('user.execution-connections.create'))
                                 <a href="{{ route('user.execution-connections.create') }}" class="btn btn-primary">

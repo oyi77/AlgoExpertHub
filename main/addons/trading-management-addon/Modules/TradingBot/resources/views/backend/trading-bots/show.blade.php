@@ -767,6 +767,101 @@
 (function() {
     const botId = {{ $bot->id }};
     let logLevelFilter = '';
+    let useWebSocket = false;
+    let positionsPollTimer = null;
+    
+    // WebSocket integration (if enabled)
+    // To enable: Set BROADCAST_DRIVER=pusher in .env and configure Pusher credentials
+    function initWebSocket() {
+        if (typeof window.Echo === 'undefined') {
+            console.log('WebSocket not available (Echo not initialized). Using AJAX polling.');
+            return false;
+        }
+        
+        try {
+            const channel = window.Echo.private(`admin.trading-bot.${botId}`);
+            
+            channel.listen('.position.updated', function(data) {
+                console.log('WebSocket: Position update', data);
+                updatePositionsUI(data.positions, data.stats);
+            });
+            
+            channel.listen('.order.executed', function(data) {
+                console.log('WebSocket: Order executed', data);
+                if (typeof toastr !== 'undefined') {
+                    toastr.info(`Order ${data.action}: ${data.order?.symbol || 'Unknown'}`);
+                }
+            });
+            
+            channel.listen('.bot.status', function(data) {
+                console.log('WebSocket: Status change', data);
+                updateBotStatus(data.status, data.message);
+            });
+            
+            useWebSocket = true;
+            console.log('WebSocket: Connected to admin.trading-bot.' + botId);
+            
+            // Stop AJAX polling for positions since WebSocket handles it
+            if (positionsPollTimer) {
+                clearInterval(positionsPollTimer);
+                positionsPollTimer = null;
+                console.log('AJAX position polling disabled (using WebSocket)');
+            }
+            
+            return true;
+        } catch (e) {
+            console.warn('WebSocket init failed:', e);
+            return false;
+        }
+    }
+    
+    function updatePositionsUI(positions, stats) {
+        // Update stats
+        if (document.getElementById('total-open-positions')) document.getElementById('total-open-positions').textContent = stats.total_open || 0;
+        if (document.getElementById('overview-open-positions')) document.getElementById('overview-open-positions').textContent = stats.total_open || 0;
+        if (document.getElementById('total-unrealized-pnl')) {
+            const pnlEl = document.getElementById('total-unrealized-pnl');
+            pnlEl.textContent = '$' + parseFloat(stats.total_unrealized_pnl || 0).toFixed(2);
+            pnlEl.className = (stats.total_unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger';
+        }
+        if (document.getElementById('positions-at-risk')) document.getElementById('positions-at-risk').textContent = stats.positions_at_risk || 0;
+        if (document.getElementById('positions-near-tp')) document.getElementById('positions-near-tp').textContent = stats.positions_near_tp || 0;
+        
+        // Update positions table
+        const tbody = document.getElementById('positions-tbody');
+        if (tbody) {
+            if (!positions || positions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No open positions</td></tr>';
+            } else {
+                tbody.innerHTML = positions.map(p => `
+                    <tr>
+                        <td>${p.symbol}</td>
+                        <td><span class="badge bg-${p.direction === 'buy' ? 'success' : 'danger'}">${p.direction.toUpperCase()}</span></td>
+                        <td>${parseFloat(p.entry_price).toFixed(8)}</td>
+                        <td id="price-${p.id}">${parseFloat(p.current_price || p.entry_price).toFixed(8)}</td>
+                        <td>${p.stop_loss ? parseFloat(p.stop_loss).toFixed(8) : 'N/A'}</td>
+                        <td>${p.take_profit ? parseFloat(p.take_profit).toFixed(8) : 'N/A'}</td>
+                        <td>${parseFloat(p.quantity).toFixed(8)}</td>
+                        <td class="${(p.profit_loss || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-${p.id}">$${parseFloat(p.profit_loss || 0).toFixed(2)}</td>
+                        <td class="${(p.profit_loss_percent || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-pct-${p.id}">${p.profit_loss_percent ? parseFloat(p.profit_loss_percent).toFixed(2) + '%' : '0%'}</td>
+                        <td><span class="badge bg-success">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
+                        <td>${p.opened_at ? new Date(p.opened_at).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    }
+    
+    function updateBotStatus(status, message) {
+        const badge = document.getElementById('worker-status-badge');
+        if (badge) {
+            badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            badge.className = 'badge bg-' + (status === 'running' ? 'success' : (status === 'error' ? 'danger' : 'secondary'));
+        }
+    }
+    
+    // Try WebSocket first
+    initWebSocket();
     
     // Worker status refresh (every 10 seconds)
     setInterval(function() {
@@ -809,53 +904,35 @@
             .catch(error => console.error('Error fetching worker status:', error));
     }, 10000);
     
-    // Positions refresh (every 5 seconds)
-    setInterval(function() {
-        fetch(`{{ route('admin.trading-management.trading-bots.positions', $bot->id) }}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const stats = data.stats;
-                    const positions = data.positions;
-                    
-                    // Update stats
-                    if (document.getElementById('total-open-positions')) document.getElementById('total-open-positions').textContent = stats.total_open || 0;
-                    if (document.getElementById('overview-open-positions')) document.getElementById('overview-open-positions').textContent = stats.total_open || 0;
-                    if (document.getElementById('total-unrealized-pnl')) {
-                        const pnlEl = document.getElementById('total-unrealized-pnl');
-                        pnlEl.textContent = '$' + parseFloat(stats.total_unrealized_pnl || 0).toFixed(2);
-                        pnlEl.className = (stats.total_unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger';
+    // Positions refresh (every 5 seconds) - fallback when WebSocket not available
+    // If WebSocket connected, this will be disabled
+    function startPositionsPolling() {
+        if (useWebSocket) {
+            console.log('Skipping AJAX polling - WebSocket active');
+            return;
+        }
+        
+        positionsPollTimer = setInterval(function() {
+            if (useWebSocket) {
+                // WebSocket became active, stop polling
+                clearInterval(positionsPollTimer);
+                positionsPollTimer = null;
+                return;
+            }
+            
+            fetch(`{{ route('admin.trading-management.trading-bots.positions', $bot->id) }}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePositionsUI(data.positions, data.stats);
                     }
-                    if (document.getElementById('positions-at-risk')) document.getElementById('positions-at-risk').textContent = stats.positions_at_risk || 0;
-                    if (document.getElementById('positions-near-tp')) document.getElementById('positions-near-tp').textContent = stats.positions_near_tp || 0;
-                    
-                    // Update positions table
-                    const tbody = document.getElementById('positions-tbody');
-                    if (tbody) {
-                        if (positions.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No open positions</td></tr>';
-                        } else {
-                            tbody.innerHTML = positions.map(p => `
-                                <tr>
-                                    <td>${p.symbol}</td>
-                                    <td><span class="badge bg-${p.direction === 'buy' ? 'success' : 'danger'}">${p.direction.toUpperCase()}</span></td>
-                                    <td>${parseFloat(p.entry_price).toFixed(8)}</td>
-                                    <td id="price-${p.id}">${parseFloat(p.current_price || p.entry_price).toFixed(8)}</td>
-                                    <td>${p.stop_loss ? parseFloat(p.stop_loss).toFixed(8) : 'N/A'}</td>
-                                    <td>${p.take_profit ? parseFloat(p.take_profit).toFixed(8) : 'N/A'}</td>
-                                    <td>${parseFloat(p.quantity).toFixed(8)}</td>
-                                    <td class="${(p.profit_loss || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-${p.id}">$${parseFloat(p.profit_loss || 0).toFixed(2)}</td>
-                                    <td class="${(p.profit_loss_percent || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-pct-${p.id}">${p.profit_loss_percent ? parseFloat(p.profit_loss_percent).toFixed(2) + '%' : '0%'}</td>
-                                    <td><span class="badge bg-success">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
-                                    <td>${p.opened_at ? new Date(p.opened_at).toLocaleString() : 'N/A'}</td>
-                                </tr>
-                            `).join('');
-                        }
-                    }
-                }
-            })
-            .catch(error => console.error('Error fetching positions:', error));
-    }, 5000);
+                })
+                .catch(error => console.error('Error fetching positions:', error));
+        }, 5000);
+    }
+    
+    // Start polling (will be disabled if WebSocket connects)
+    startPositionsPolling();
     
     // Logs refresh (every 5 seconds for real-time feel)
     function refreshLogs() {
@@ -962,38 +1039,42 @@
     }, 15000);
 })();
 
-// Handle bot action forms with confirmation
-$(document).ready(function() {
-    $('.bot-action-form').on('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        
-        const form = $(this);
-        const message = form.data('confirm-message') || 'Are you sure?';
-        
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: '{{ __("Confirmation") }}',
-                text: message,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '{{ __("Confirm") }}',
-                cancelButtonText: '{{ __("Cancel") }}'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.off('submit').submit();
+// Handle bot action forms with confirmation (vanilla JS, jQuery not loaded)
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.bot-action-form').forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const message = form.getAttribute('data-confirm-message') || 'Are you sure?';
+
+            // SweetAlert2 availability check
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '{{ __("Confirmation") }}',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '{{ __("Confirm") }}',
+                    cancelButtonText: '{{ __("Cancel") }}'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Remove this handler to avoid infinite loop, then submit natively
+                        form.removeEventListener('submit', arguments.callee);
+                        form.submit();
+                    }
+                });
+            } else {
+                if (confirm(message)) {
+                    form.removeEventListener('submit', arguments.callee);
+                    form.submit();
                 }
-            });
-        } else {
-            if (confirm(message)) {
-                form.off('submit').submit();
             }
-        }
-        
-        return false;
+
+            return false;
+        });
     });
 });
 </script>

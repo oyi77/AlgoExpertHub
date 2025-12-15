@@ -108,10 +108,10 @@ Route::name('user.')->group(function () {
 
     Route::middleware('guest')->group(function () {
         Route::get('register/{reffer?}', [RegistrationController::class, 'index'])->name('register')->middleware('reg_off');
-        Route::post('register/{reffer?}', [RegistrationController::class, 'register'])->middleware('reg_off');
+        Route::post('register/{reffer?}', [RegistrationController::class, 'register'])->name('register.post')->middleware('reg_off');
 
         Route::get('login', [LoginController::class, 'index'])->name('login');
-        Route::post('login', [LoginController::class, 'login']);
+        Route::post('login', [LoginController::class, 'login'])->name('login.post');
 
         Route::get('auth/facebook', [FacebookController::class, 'redirectToFacebook'])->name('facebook.login');
         Route::get('auth/facebook/callback', [FacebookController::class, 'handleFacebookCallback']);

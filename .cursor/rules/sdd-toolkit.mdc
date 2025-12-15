@@ -1,10 +1,12 @@
 ---
-description: SDD (Specs-Driven Development) Toolkit - Kiro-style workflow. Use /sdd, /build, /requirements, /design, /tasks, /evolve commands. Auto-detects beads (bd) or falls back to Cursor tasks.
+description: SDD (Specs-Driven Development) Toolkit - Authoritative guidelines in .sdd/guidelines.md. Use /sdd, /build, /requirements, /design, /tasks, /evolve commands. Auto-detects beads (bd) or falls back to Cursor tasks.
 globs: ["**/*"]
 alwaysApply: true
 ---
 
 # Specs-Driven Development (SDD) Toolkit
+
+**PRIMARY SOURCE**: This configuration implements the authoritative SDD guidelines found in `.sdd/guidelines.md`.
 
 Inspired by Kiro's streamlined approach to building features with clarity and confidence.
 
