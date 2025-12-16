@@ -1,11 +1,11 @@
 <!-- Footer CTA Banner -->
 <section class="tv-footer-cta" id="footer-cta">
     <div class="tv-container">
-        <h2 class="tv-footer-cta-title tv-gradient-text">
+        <h2 class="tv-footer-cta-title tv-gradient-text scroll-reveal">
             Ready to Start Your Trading Journey?
         </h2>
         
-        <div class="tv-footer-cta-actions">
+        <div class="tv-footer-cta-actions scroll-reveal scroll-reveal-scale scroll-reveal-delay-1">
             <a href="{{ route('user.register') }}" class="tv-btn tv-btn-primary tv-btn-lg">
                 Create Free Account
                 <i class="fas fa-arrow-right"></i>
@@ -16,23 +16,26 @@
         </div>
         
         <!-- Registration Steps -->
-        <div class="tv-registration-steps">
+        <div class="tv-registration-steps scroll-reveal scroll-reveal-fade scroll-reveal-delay-2">
             <div class="tv-step">
                 <div class="tv-step-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
+                <span class="tv-step-label">Sign Up</span>
             </div>
             <div class="tv-step-line"></div>
             <div class="tv-step">
                 <div class="tv-step-icon">
                     <i class="fas fa-credit-card"></i>
                 </div>
+                <span class="tv-step-label">Choose Plan</span>
             </div>
             <div class="tv-step-line"></div>
             <div class="tv-step">
                 <div class="tv-step-icon">
                     <i class="fas fa-chart-line"></i>
                 </div>
+                <span class="tv-step-label">Start Trading</span>
             </div>
         </div>
     </div>

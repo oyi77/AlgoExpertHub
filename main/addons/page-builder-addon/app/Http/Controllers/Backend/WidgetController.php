@@ -20,19 +20,47 @@ class WidgetController extends Controller
      */
     public function index(Request $request)
     {
-        $result = $this->widgetLibraryService->listWidgets([
-            'category' => $request->get('category'),
-            'active' => true,
-        ]);
+        try {
+            $result = $this->widgetLibraryService->listWidgets([
+                'category' => $request->get('category'),
+                'active' => true,
+            ]);
 
-        $categoriesResult = $this->widgetLibraryService->getCategories();
+            $categoriesResult = $this->widgetLibraryService->getCategories();
 
-        $data['title'] = 'Widget Library';
-        $data['widgets'] = $result['data'] ?? [];
-        $data['categories'] = $categoriesResult['data'] ?? [];
-        $data['selectedCategory'] = $request->get('category', 'all');
+            // Ensure widgets is always a collection
+            $widgets = $result['data'] ?? collect();
+            if (!($widgets instanceof \Illuminate\Support\Collection)) {
+                $widgets = collect($widgets);
+            }
 
-        return view('page-builder-addon::backend.page-builder.widgets.index', $data);
+            // Ensure categories is always an array
+            $categories = $categoriesResult['data'] ?? [];
+            if (!is_array($categories)) {
+                $categories = [];
+            }
+
+            $data['title'] = 'Widget Library';
+            $data['widgets'] = $widgets;
+            $data['categories'] = $categories;
+            $data['selectedCategory'] = $request->get('category', 'all');
+
+            return view('page-builder-addon::backend.page-builder.widgets.index', $data);
+        } catch (\Exception $e) {
+            \Log::error('WidgetController::index failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return view with empty data on error
+            $data['title'] = 'Widget Library';
+            $data['widgets'] = collect();
+            $data['categories'] = [];
+            $data['selectedCategory'] = 'all';
+            $data['error'] = 'Failed to load widgets: ' . $e->getMessage();
+
+            return view('page-builder-addon::backend.page-builder.widgets.index', $data);
+        }
     }
 
     /**

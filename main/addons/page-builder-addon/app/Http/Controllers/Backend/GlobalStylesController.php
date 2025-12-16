@@ -20,11 +20,45 @@ class GlobalStylesController extends Controller
      */
     public function index()
     {
-        $result = $this->globalStylesService->listStyles(['active' => true]);
+        $data = [
+            'title' => 'Global Styles',
+            'styles' => collect(),
+            'compiledCss' => '',
+            'error' => null
+        ];
 
-        $data['title'] = 'Global Styles';
-        $data['styles'] = $result['data'] ?? [];
-        $data['compiledCss'] = $this->globalStylesService->getCompiledCss();
+        try {
+            // Get all styles (not just active ones) for admin view
+            $result = $this->globalStylesService->listStyles([]);
+
+            // Handle service response
+            if (isset($result['type']) && $result['type'] === 'error') {
+                $data['error'] = $result['message'] ?? 'Failed to load global styles';
+                \Log::warning('GlobalStylesController::index service error', ['error' => $data['error']]);
+            }
+
+            // Ensure styles is always a collection
+            $styles = $result['data'] ?? collect();
+            if (!($styles instanceof \Illuminate\Support\Collection)) {
+                $styles = collect($styles);
+            }
+            $data['styles'] = $styles;
+            
+            // Get compiled CSS (optional, don't fail if this errors)
+            try {
+                $data['compiledCss'] = $this->globalStylesService->getCompiledCss();
+            } catch (\Exception $e) {
+                \Log::warning('GlobalStylesController::getCompiledCss failed', ['error' => $e->getMessage()]);
+                $data['compiledCss'] = '';
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('GlobalStylesController::index failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $data['error'] = 'Failed to load global styles: ' . $e->getMessage();
+        }
 
         return view('page-builder-addon::backend.page-builder.global-styles.index', $data);
     }

@@ -1,19 +1,12 @@
 <header class="tv-header" id="header">
     <div class="tv-container">
         <nav class="tv-navbar">
-            <!-- Mobile Toggle -->
-            <button class="tv-navbar-toggle" id="navToggle" aria-label="Toggle Menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            
-            <!-- Logo -->
+            <!-- Logo (Left) -->
             <a href="{{ route('home') }}" class="tv-navbar-logo">
                 <img src="{{ Config::getFile('logo', Config::config()->logo ?? '') }}" alt="{{ Config::config()->appname ?? 'Logo' }}">
             </a>
             
-            <!-- Menu -->
+            <!-- Menu (Center) -->
             <div class="tv-navbar-menu" id="navMenu">
                 <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
                 @auth
@@ -31,7 +24,7 @@
                 <a href="{{ route('home') }}#footer-cta">Contact</a>
             </div>
             
-            <!-- Actions -->
+            <!-- Actions (Right) -->
             <div class="tv-navbar-actions">
                 @auth
                     <a href="{{ route('user.dashboard') }}" class="tv-btn tv-btn-primary">
@@ -39,10 +32,21 @@
                         <span>Dashboard</span>
                     </a>
                 @else
-                    <a href="{{ route('user.register') }}" class="tv-btn tv-btn-outline">Open Account</a>
-                    <a href="{{ route('user.login') }}" class="tv-btn tv-btn-primary">Login</a>
+                    <a href="{{ route('user.register') }}" class="tv-btn tv-btn-outline">
+                        <span>Open Account</span>
+                    </a>
+                    <a href="{{ route('user.login') }}" class="tv-btn tv-btn-primary">
+                        <span>Login</span>
+                    </a>
                 @endauth
             </div>
+            
+            <!-- Mobile Toggle -->
+            <button class="tv-navbar-toggle" id="navToggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </nav>
     </div>
 </header>

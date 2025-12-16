@@ -7,16 +7,34 @@
     'use strict';
 
     // ========================================
-    // NAVBAR SCROLL EFFECT
+    // NAVBAR SCROLL EFFECT - Enhanced
     // ========================================
     const header = $('#header');
+    let lastScrollTop = 0;
+    let scrollTimeout;
 
     $(window).on('scroll', function () {
-        if ($(this).scrollTop() > 50) {
+        const scrollTop = $(this).scrollTop();
+        
+        // Add scrolled class
+        if (scrollTop > 50) {
             header.addClass('scrolled');
         } else {
             header.removeClass('scrolled');
         }
+        
+        // Hide/show navbar on scroll (optional - can be removed if not desired)
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            if (scrollTop > lastScrollTop && scrollTop > 100) {
+                // Scrolling down
+                header.css('transform', 'translateY(-100%)');
+            } else {
+                // Scrolling up
+                header.css('transform', 'translateY(0)');
+            }
+            lastScrollTop = scrollTop;
+        }, 100);
     });
 
     // ========================================
@@ -124,7 +142,7 @@
     });
 
     // ========================================
-    // PROFILE DROPDOWN TOGGLE
+    // PROFILE DROPDOWN TOGGLE (Desktop)
     // ========================================
     const profileToggle = $('#profileToggle');
     const profileDropdown = $('#profileDropdown');
@@ -140,6 +158,34 @@
             if (!$(e.target).closest('#profileToggle, #profileDropdown').length) {
                 profileDropdown.removeClass('show');
             }
+        });
+    }
+
+    // ========================================
+    // MOBILE PROFILE DROPDOWN TOGGLE
+    // ========================================
+    const mobileProfileToggle = $('#mobileProfileToggle');
+    const mobileProfileDropdown = $('#mobileProfileDropdown');
+
+    if (mobileProfileToggle.length) {
+        mobileProfileToggle.on('click', function (e) {
+            e.stopPropagation();
+            $(this).toggleClass('active');
+            mobileProfileDropdown.toggleClass('show');
+        });
+
+        // Close dropdown when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#mobileProfileToggle, #mobileProfileDropdown').length) {
+                mobileProfileToggle.removeClass('active');
+                mobileProfileDropdown.removeClass('show');
+            }
+        });
+
+        // Close dropdown when clicking on a link
+        mobileProfileDropdown.find('a').on('click', function () {
+            mobileProfileToggle.removeClass('active');
+            mobileProfileDropdown.removeClass('show');
         });
     }
 
@@ -367,6 +413,366 @@
     }
 
     // ========================================
+    // FAKE ORDER POPUP NOTIFICATIONS
+    // ========================================
+    const fakeOrderNotifications = {
+        templates: [
+            {
+                type: 'purchase',
+                icon: 'fa-shopping-cart',
+                color: '#1AFFD5',
+                messages: [
+                    '{name} telah membeli paket {plan}',
+                    '{name} baru saja berlangganan {plan}',
+                    '{name} membeli paket {plan} monthly'
+                ],
+                plans: ['Basic', 'Premium', 'Pro', 'Enterprise', 'Starter']
+            },
+            {
+                type: 'trial',
+                icon: 'fa-gift',
+                color: '#3AFFE2',
+                messages: [
+                    '{name} mendaftar free trial',
+                    '{name} memulai free trial',
+                    '{name} mencoba free trial'
+                ]
+            },
+            {
+                type: 'liquidation',
+                icon: 'fa-exclamation-triangle',
+                color: '#FF1D48',
+                messages: [
+                    '{name} liquidation triggered',
+                    '{name} mengalami liquidation',
+                    'Liquidation untuk {name}'
+                ]
+            },
+            {
+                type: 'profit',
+                icon: 'fa-chart-line',
+                color: '#3AFFE2',
+                messages: [
+                    '{name} profits {amount}+ USD from {pair}',
+                    '{name} mendapat profit {amount}+ USD dari {pair}',
+                    'Profit {amount}+ USD untuk {name} dari {pair}'
+                ],
+                pairs: ['XAUUSD', 'EURUSD', 'GBPUSD', 'BTCUSD', 'ETHUSD', 'XAUUSD', 'GBPJPY']
+            },
+            {
+                type: 'copy',
+                icon: 'fa-users',
+                color: '#1AFFD5',
+                messages: [
+                    '{name} copy trade {trader}',
+                    '{name} mengikuti trading {trader}',
+                    '{name} mulai copy trading {trader}'
+                ]
+            },
+            {
+                type: 'signal',
+                icon: 'fa-bell',
+                color: '#F59E0B',
+                messages: [
+                    'Signal baru untuk {pair}',
+                    'New signal: {pair}',
+                    'Signal {pair} telah dipublikasi'
+                ],
+                pairs: ['EUR/USD', 'GBP/USD', 'XAU/USD', 'BTC/USD', 'ETH/USD']
+            }
+        ],
+        
+        names: [
+            'John', 'Sarah', 'Michael', 'Emma', 'David', 'Lisa', 'James', 'Maria',
+            'Robert', 'Anna', 'William', 'Sophia', 'Richard', 'Olivia', 'Daniel', 'Isabella',
+            'Ahmad', 'Siti', 'Budi', 'Dewi', 'Andi', 'Rina', 'Eko', 'Lina',
+            'Rizki', 'Putri', 'Fajar', 'Sari', 'Dedi', 'Maya', 'Hadi', 'Nina'
+        ],
+        
+        activeNotifications: [],
+        maxNotifications: 3,
+        interval: null,
+        
+        init: function() {
+            // Create notification container
+            if (!$('#fakeOrderNotifications').length) {
+                $('body').append(`
+                    <div id="fakeOrderNotifications" style="
+                        position: fixed;
+                        top: 100px;
+                        right: 20px;
+                        z-index: 10000;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                        max-width: 350px;
+                        pointer-events: none;
+                    "></div>
+                `);
+            }
+            
+            // Start showing notifications after 5 seconds
+            setTimeout(() => {
+                this.showRandomNotification();
+                this.interval = setInterval(() => {
+                    this.showRandomNotification();
+                }, 8000 + Math.random() * 7000); // 8-15 seconds
+            }, 5000);
+        },
+        
+        showRandomNotification: function() {
+            if (this.activeNotifications.length >= this.maxNotifications) {
+                return;
+            }
+            
+            const template = this.templates[Math.floor(Math.random() * this.templates.length)];
+            const name = this.names[Math.floor(Math.random() * this.names.length)];
+            
+            let message = template.messages[Math.floor(Math.random() * template.messages.length)];
+            
+            // Replace placeholders
+            message = message.replace('{name}', name);
+            
+            if (template.type === 'purchase' && template.plans) {
+                const plan = template.plans[Math.floor(Math.random() * template.plans.length)];
+                message = message.replace('{plan}', plan);
+            }
+            
+            if (template.type === 'profit' && template.pairs) {
+                const pair = template.pairs[Math.floor(Math.random() * template.pairs.length)];
+                const amount = (Math.random() * 500 + 50).toFixed(0);
+                message = message.replace('{amount}', amount).replace('{pair}', pair);
+            }
+            
+            if (template.type === 'copy') {
+                const trader = this.names[Math.floor(Math.random() * this.names.length)];
+                message = message.replace('{trader}', trader);
+            }
+            
+            if (template.type === 'signal' && template.pairs) {
+                const pair = template.pairs[Math.floor(Math.random() * template.pairs.length)];
+                message = message.replace('{pair}', pair);
+            }
+            
+            this.createNotification(message, template.icon, template.color, template.type);
+        },
+        
+        createNotification: function(message, icon, color, type) {
+            const id = 'notif_' + Date.now();
+            const notification = $(`
+                <div class="fake-order-notification" data-id="${id}" style="
+                    background: linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%);
+                    border: 1px solid ${color}40;
+                    border-left: 3px solid ${color};
+                    border-radius: 12px;
+                    padding: 16px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px ${color}20;
+                    backdrop-filter: blur(10px);
+                    transform: translateX(400px);
+                    opacity: 0;
+                    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                    pointer-events: auto;
+                    cursor: pointer;
+                ">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 50%;
+                            background: ${color}20;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                        ">
+                            <i class="fas ${icon}" style="color: ${color}; font-size: 18px;"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="
+                                color: #FFFFFF;
+                                font-size: 14px;
+                                font-weight: 500;
+                                line-height: 1.4;
+                                font-family: var(--tv-font-body, 'Inter', sans-serif);
+                            ">${message}</div>
+                            <div style="
+                                color: #666D80;
+                                font-size: 12px;
+                                margin-top: 4px;
+                            ">${this.getTimeAgo()}</div>
+                        </div>
+                        <button class="notif-close" style="
+                            background: none;
+                            border: none;
+                            color: #666D80;
+                            cursor: pointer;
+                            padding: 4px;
+                            opacity: 0.6;
+                            transition: opacity 0.2s;
+                        " onclick="fakeOrderNotifications.remove('${id}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `);
+            
+            $('#fakeOrderNotifications').append(notification);
+            this.activeNotifications.push(id);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.css({
+                    transform: 'translateX(0)',
+                    opacity: 1
+                });
+            }, 10);
+            
+            // Auto remove after 6 seconds
+            setTimeout(() => {
+                this.remove(id);
+            }, 6000);
+            
+            // Hover effect
+            notification.on('mouseenter', function() {
+                $(this).css('transform', 'translateX(-5px) scale(1.02)');
+            }).on('mouseleave', function() {
+                $(this).css('transform', 'translateX(0) scale(1)');
+            });
+        },
+        
+        remove: function(id) {
+            const notification = $(`.fake-order-notification[data-id="${id}"]`);
+            if (notification.length) {
+                notification.css({
+                    transform: 'translateX(400px)',
+                    opacity: 0
+                });
+                
+                setTimeout(() => {
+                    notification.remove();
+                    this.activeNotifications = this.activeNotifications.filter(n => n !== id);
+                }, 400);
+            }
+        },
+        
+        getTimeAgo: function() {
+            const times = ['baru saja', '1 menit lalu', '2 menit lalu', '3 menit lalu'];
+            return times[Math.floor(Math.random() * times.length)];
+        }
+    };
+
+    // ========================================
+    // BOOTSTRAP TAB COMPATIBILITY
+    // ========================================
+    $(document).on('click', '[data-bs-toggle="tab"]', function(e) {
+        e.preventDefault();
+        const target = $(this).attr('href');
+        
+        // Remove active from all tabs and panes
+        $(this).closest('.nav-pills').find('.nav-link').removeClass('active');
+        $(this).addClass('active');
+        
+        // Show target pane
+        $(target).closest('.tab-content').find('.tab-pane').removeClass('active show');
+        $(target).addClass('active show');
+    });
+
+    // ========================================
+    // HERO TYPING ANIMATION
+    // ========================================
+    const heroTyping = {
+        element: null,
+        phrases: [
+            'master yourself!',
+            'maximize your profits!',
+            'trade with confidence!',
+            'achieve financial freedom!',
+            'join 1M+ traders!',
+            'unlock your potential!'
+        ],
+        currentPhraseIndex: 0,
+        currentCharIndex: 0,
+        isDeleting: false,
+        typingSpeed: 100,
+        deletingSpeed: 50,
+        pauseTime: 2000,
+        
+        init: function() {
+            this.element = document.getElementById('heroTyping');
+            if (!this.element) return;
+            
+            // Start typing
+            setTimeout(() => this.type(), 500);
+        },
+        
+        type: function() {
+            const currentPhrase = this.phrases[this.currentPhraseIndex];
+            
+            if (this.isDeleting) {
+                // Delete character
+                this.currentCharIndex--;
+                this.element.textContent = currentPhrase.substring(0, this.currentCharIndex);
+                
+                if (this.currentCharIndex === 0) {
+                    this.isDeleting = false;
+                    this.currentPhraseIndex = (this.currentPhraseIndex + 1) % this.phrases.length;
+                    setTimeout(() => this.type(), 500);
+                } else {
+                    setTimeout(() => this.type(), this.deletingSpeed);
+                }
+            } else {
+                // Type character
+                this.currentCharIndex++;
+                this.element.textContent = currentPhrase.substring(0, this.currentCharIndex);
+                
+                if (this.currentCharIndex === currentPhrase.length) {
+                    this.isDeleting = true;
+                    setTimeout(() => this.type(), this.pauseTime);
+                } else {
+                    setTimeout(() => this.type(), this.typingSpeed);
+                }
+            }
+        }
+    };
+
+    // ========================================
+    // SCROLL REVEAL ANIMATIONS
+    // ========================================
+    const scrollReveal = {
+        elements: [],
+        
+        init: function() {
+            // Get all elements with scroll-reveal classes
+            this.elements = document.querySelectorAll('[class*="scroll-reveal"]');
+            
+            if (this.elements.length === 0) return;
+            
+            // Check if user prefers reduced motion
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReducedMotion) {
+                this.elements.forEach(el => el.classList.add('revealed'));
+                return;
+            }
+            
+            // Create intersection observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            // Observe all elements
+            this.elements.forEach(el => observer.observe(el));
+        }
+    };
+
+    // ========================================
     // INITIALIZE ON DOCUMENT READY
     // ========================================
     $(document).ready(function () {
@@ -376,6 +782,17 @@
         // Log theme info
         console.log('%c Trading V1 Theme ', 'background: #1AFFD5; color: #121212; padding: 5px 10px; font-weight: bold;');
         console.log('Version: 1.0.0');
+        
+        // Initialize hero typing animation
+        heroTyping.init();
+        
+        // Initialize scroll reveal animations
+        scrollReveal.init();
+        
+        // Initialize fake order notifications (only on home page)
+        if ($('#market-trends').length) {
+            fakeOrderNotifications.init();
+        }
     });
 
 })(jQuery);

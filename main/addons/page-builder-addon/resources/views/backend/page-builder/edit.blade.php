@@ -45,7 +45,15 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div id="pagebuilder-editor"></div>
+                    <div class="row m-0">
+                        <div class="col-md-2 p-3 border-end">
+                            <h6>{{ __('Blocks') }}</h6>
+                            <div id="blocks-container"></div>
+                        </div>
+                        <div class="col-md-10 p-0">
+                            <div id="pagebuilder-editor"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,11 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('savePageBuilder').addEventListener('click', function() {
         saveContent();
     });
-
-    // Auto-save on change
-    editor.on('update', function() {
-        // Auto-save is handled by storageManager
-    });
 });
 
 function loadExistingContent() {
@@ -153,9 +156,17 @@ function loadExistingContent() {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.warn('API returned non-JSON response, using default content');
+            return null;
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.success && data.data) {
+        if (data && data.success && data.data) {
             // Load content into editor
             if (data.data.html) {
                 editor.setComponents(data.data.html);
@@ -165,14 +176,18 @@ function loadExistingContent() {
             }
         } else {
             // Set default content if no existing content
-            editor.setComponents('<div class="container"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
+            setDefaultContent();
         }
     })
     .catch(error => {
         console.error('Error loading content:', error);
         // Set default content on error
-        editor.setComponents('<div class="container"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
+        setDefaultContent();
     });
+}
+
+function setDefaultContent() {
+    editor.setComponents('<div class="container" style="padding: 50px;"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
 }
 
 function saveContent() {

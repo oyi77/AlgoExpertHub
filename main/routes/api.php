@@ -61,6 +61,18 @@ Route::middleware(['cache.response:600'])->group(function () {
     Route::post('/social/{provider}/callback', [\App\Http\Controllers\Api\Auth\SocialAuthController::class, 'callback']);
 });
 
+// Real-time market data (no cache for live updates)
+Route::get('/market-data/realtime', function () {
+    $service = app(\App\Services\Trading\MarketDataService::class);
+    $data = $service->getLandingPageData();
+    
+    return response()->json([
+        'success' => true,
+        'data' => $data,
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 // Authenticated User Routes
 Route::middleware('auth:sanctum')->group(function () {
     // Get authenticated user

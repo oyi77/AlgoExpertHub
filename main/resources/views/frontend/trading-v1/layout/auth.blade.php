@@ -34,7 +34,25 @@
             <span></span>
         </button>
         <h2 class="tv-mobile-title">@yield('page_title', 'Dashboard')</h2>
-        <div class="tv-mobile-spacer"></div>
+        <div class="tv-mobile-profile">
+            @php
+                $userImage = auth()->user()->image ? file_exists(storage_path('app/public/' . auth()->user()->image)) ? asset('storage/'.auth()->user()->image) : asset('asset/images/avatar.png') : asset('asset/images/avatar.png');
+            @endphp
+            <button class="tv-mobile-profile-btn" id="mobileProfileToggle" aria-label="Profile Menu">
+                <img src="{{ $userImage }}" alt="Profile" class="tv-mobile-profile-img">
+                <i class="las la-angle-down"></i>
+            </button>
+            <div class="tv-mobile-profile-dropdown" id="mobileProfileDropdown">
+                <a href="{{ route('user.profile') }}" class="tv-mobile-dropdown-item">
+                    <i class="las la-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="{{ route('user.logout') }}" class="tv-mobile-dropdown-item tv-mobile-dropdown-item-danger">
+                    <i class="las la-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Mobile Overlay -->
