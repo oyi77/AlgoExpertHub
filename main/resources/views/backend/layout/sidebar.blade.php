@@ -452,9 +452,6 @@
                                 <ul aria-expanded="false">
                                     <li><a href="{{ route('admin.frontend.pages') }}">{{ __('All Pages') }}</a></li>
                                     <li><a href="{{ route('admin.frontend.pages.create') }}">{{ __('Create Page') }}</a></li>
-                                    @if ($pageBuilderEnabled)
-                                        <li><a href="{{ route('admin.page-builder.index') }}">{{ __('Page Builder') }}</a></li>
-                                    @endif
                                 </ul>
                             </li>
                         @endif

@@ -198,8 +198,8 @@
             </a>
         @endif
         
-        @if(Route::has('user.trade'))
-            <a href="{{ route('user.trade') }}" class="tv-sidebar-link {{ request()->routeIs('user.trade') ? 'active' : '' }}">
+        @if(Route::has('terminal.index'))
+            <a href="{{ route('terminal.index') }}" class="tv-sidebar-link {{ request()->routeIs('terminal.*') ? 'active' : '' }}">
                 <i class="las la-chart-line"></i>
                 <span>Trade</span>
             </a>

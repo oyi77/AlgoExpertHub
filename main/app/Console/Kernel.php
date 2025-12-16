@@ -172,6 +172,13 @@ class Kernel extends ConsoleKernel
                     ->withoutOverlapping();
             }
         }
+
+        // Internal Broker - Monitor Positions (every 30 seconds)
+        if (class_exists(\App\Jobs\MonitorInternalPositions::class)) {
+            $schedule->job(new \App\Jobs\MonitorInternalPositions())
+                ->everyThirtySeconds()
+                ->withoutOverlapping();
+        }
     }
 
     /**

@@ -4,7 +4,7 @@
     {{ $title }}
 @endsection
 
-@section('content')
+@section('element')
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">

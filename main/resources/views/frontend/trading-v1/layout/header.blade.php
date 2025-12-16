@@ -1,12 +1,19 @@
 <header class="tv-header" id="header">
     <div class="tv-container">
         <nav class="tv-navbar">
-            <!-- Logo (Left) -->
+            <!-- Mobile Toggle (Left) -->
+            <button class="tv-navbar-toggle" id="navToggle" aria-label="Toggle Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <!-- Logo (Center) -->
             <a href="{{ route('home') }}" class="tv-navbar-logo">
                 <img src="{{ Config::getFile('logo', Config::config()->logo ?? '') }}" alt="{{ Config::config()->appname ?? 'Logo' }}">
             </a>
             
-            <!-- Menu (Center) -->
+            <!-- Menu (Hidden on mobile, shown in dropdown) -->
             <div class="tv-navbar-menu" id="navMenu">
                 <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
                 @auth
@@ -33,20 +40,15 @@
                     </a>
                 @else
                     <a href="{{ route('user.register') }}" class="tv-btn tv-btn-outline">
+                        <i class="fas fa-user-plus"></i>
                         <span>Open Account</span>
                     </a>
                     <a href="{{ route('user.login') }}" class="tv-btn tv-btn-primary">
+                        <i class="fas fa-sign-in-alt"></i>
                         <span>Login</span>
                     </a>
                 @endauth
             </div>
-            
-            <!-- Mobile Toggle -->
-            <button class="tv-navbar-toggle" id="navToggle" aria-label="Toggle Menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </nav>
     </div>
 </header>

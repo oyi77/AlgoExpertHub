@@ -60,7 +60,7 @@ class RealTimeFeedback {
         container.className = `notification-container position-${this.config.notifications.position}`;
         container.setAttribute('aria-live', 'polite');
         container.setAttribute('aria-label', 'Notifications');
-        
+
         document.body.appendChild(container);
     }
 
@@ -151,7 +151,7 @@ class RealTimeFeedback {
             element.style.opacity = '0';
             element.style.transform = 'translateX(100%)';
             container.appendChild(element);
-            
+
             requestAnimationFrame(() => {
                 element.style.transition = `all ${this.config.animations.duration}ms ${this.config.animations.easing}`;
                 element.style.opacity = '1';
@@ -173,7 +173,7 @@ class RealTimeFeedback {
             element.style.transition = `all ${this.config.animations.duration}ms ${this.config.animations.easing}`;
             element.style.opacity = '0';
             element.style.transform = 'translateX(100%)';
-            
+
             setTimeout(() => {
                 element.remove();
             }, this.config.animations.duration);
@@ -244,7 +244,7 @@ class RealTimeFeedback {
         if (!loadingState) return;
 
         const duration = new Date() - new Date(loadingState.startedAt);
-        
+
         // Show completion notification
         this.showNotification(message, type, {
             dismissAfter: 3000
@@ -322,11 +322,11 @@ class RealTimeFeedback {
 
         const progressFill = element.querySelector('.progress-fill');
         const progressText = element.querySelector('.progress-text');
-        
+
         if (progressFill && loadingState.progress !== null) {
             progressFill.style.width = `${loadingState.progress}%`;
         }
-        
+
         if (progressText && loadingState.progress !== null) {
             progressText.textContent = `${loadingState.progress}%`;
         }
@@ -404,7 +404,7 @@ class RealTimeFeedback {
      */
     updateFieldValidationState(field, isValid, message = '') {
         const fieldContainer = field.closest('.form-group, .field-container') || field.parentElement;
-        
+
         // Remove existing validation classes
         fieldContainer.classList.remove('field-valid', 'field-invalid');
         field.classList.remove('is-valid', 'is-invalid');
@@ -456,7 +456,7 @@ class RealTimeFeedback {
     handleFormSubmit(form) {
         const actionId = `form-${form.id || 'submit'}`;
         const message = form.dataset.loadingMessage || 'Submitting...';
-        
+
         this.showLoading(actionId, message, {
             type: 'form-submit',
             cancelable: false
@@ -495,10 +495,10 @@ class RealTimeFeedback {
         if (originalText) {
             button.textContent = originalText;
         }
-        
+
         button.disabled = false;
         button.classList.remove('loading');
-        
+
         if (success) {
             button.classList.add('success');
             setTimeout(() => button.classList.remove('success'), 2000);

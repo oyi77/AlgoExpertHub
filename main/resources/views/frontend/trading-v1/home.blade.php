@@ -10,6 +10,9 @@
     <!-- Hero Section -->
     @include(\App\Helpers\Helper\Helper::theme().'widgets.hero')
     
+    <!-- Stats Showcase Section -->
+    @include(\App\Helpers\Helper\Helper::theme().'widgets.stats')
+    
     <!-- Why Choose Us Section -->
     @include(\App\Helpers\Helper\Helper::theme().'widgets.why-choose-us')
     
