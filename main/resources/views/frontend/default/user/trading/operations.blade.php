@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.auth')
+@extends(Config::themeView('layout.auth'))
 
 @section('content')
 <div class="row gy-4">
@@ -147,15 +147,15 @@
                         <div class="tab-pane fade {{ $activeTab === 'trading-bots' ? 'show active' : '' }}" 
                              id="trading-bots" 
                              role="tabpanel">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">{{ __('My Trading Bots') }}</h5>
-                                @if(Route::has('user.trading-management.trading-bots.create'))
-                                    <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn sp_theme_btn">
-                                        <i class="las la-plus"></i> {{ __('Create Bot') }}
-                                    </a>
-                                @endif
-                            </div>
                             @if(isset($bots) && $bots->count() > 0)
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">{{ __('My Trading Bots') }}</h5>
+                                    @if(Route::has('user.trading-management.trading-bots.create'))
+                                        <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn sp_theme_btn">
+                                            <i class="las la-plus"></i> {{ __('Create Bot') }}
+                                        </a>
+                                    @endif
+                                </div>
                                 <div class="row gy-3">
                                     @foreach($bots as $bot)
                                     <div class="col-md-6">

@@ -1,18 +1,14 @@
 @php
-    
     $chunks = $element->chunk(3);
-
     $left = isset($chunks[0]) ? $chunks[0] : [];
-
     $right = isset($chunks[1]) ? $chunks[1] : [];
-
 @endphp
 
 <section class="benefit-section sp_pt_120 sp_pb_120">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
-                <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
+                <div class="sp_theme_top">
                     <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans($content->section_header) }}</div>
                     <h2 class="sp_theme_top_title">
                         <?= Config::trans($content->title) ?>
@@ -21,42 +17,44 @@
             </div>
         </div>
         <div class="row gy-4 align-items-center">
-
-            <div class="col-xl-4 col-md-6 wow fadeInUp" data-wow-duration="0.5s" data-wow-delay="0.7s">
+            <div class="col-xl-4 col-md-6">
                 @foreach ($left as $item)
-                    <div class="sp_benefit_item">
+                    <div class="sp_benefit_item card-modern mb-4">
                         <div class="sp_benefit_icon">
-                            <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="image">
-                            <i class="{{ $item->content->icon}}"></i>
+                            @if($item->content->icon)
+                                <i class="{{ $item->content->icon}}"></i>
+                            @elseif($item->content->image_one)
+                                <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="{{ Config::trans($item->content->title) }}" loading="lazy">
+                            @endif
                         </div>
                         <div class="sp_benefit_content">
                             <h4 class="title">{{ Config::trans($item->content->title)}}</h4>
                             <p class="mt-2">{{ Config::trans($item->content->description)}}</p>
                         </div>
-                    </div><!-- sp_benefit_item end -->
+                    </div>
                 @endforeach
             </div>
             <div class="col-lg-4 d-xl-block d-none">
-                <div class="sp_benefit_thumb paroller" data-paroller-factor="0.2" data-paroller-factor-xs="0.0"
-                    data-paroller-factor-sm="0.0" data-paroller-factor-md="0.0" data-paroller-factor-md="0.0"
-                    data-paroller-factor-lg="0.0" data-paroller-type="foreground" data-paroller-direction="vertical">
-                    <img src="{{ Config::getFile('benefits', $content->image_one) }}" alt="image">
+                <div class="sp_benefit_thumb">
+                    <img src="{{ Config::getFile('benefits', $content->image_one) }}" alt="Benefits" loading="lazy">
                 </div>
             </div>
-            <div class="col-xl-4 col-md-6 wow fadeInUp" data-wow-duration="0.5s" data-wow-delay="0.9s">
+            <div class="col-xl-4 col-md-6">
                 @foreach ($right as $item)
-                    <div class="sp_benefit_item">
+                    <div class="sp_benefit_item card-modern mb-4">
                         <div class="sp_benefit_icon">
-                            <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="image">
-                            <i class="{{ $item->content->icon}}"></i>
+                            @if($item->content->icon)
+                                <i class="{{ $item->content->icon}}"></i>
+                            @elseif($item->content->image_one)
+                                <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="{{ Config::trans($item->content->title) }}" loading="lazy">
+                            @endif
                         </div>
                         <div class="sp_benefit_content">
                             <h4 class="title">{{ Config::trans($item->content->title)}}</h4>
                             <p class="mt-2">{{ Config::trans($item->content->description)}}</p>
                         </div>
-                    </div><!-- sp_benefit_item end -->
+                    </div>
                 @endforeach
-
             </div>
         </div>
     </div>

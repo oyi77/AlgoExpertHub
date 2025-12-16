@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.master')
+@extends(Config::themeView('layout.master'))
 
 @section('content')
     <section class="sp_pt_120 sp_pb_120">

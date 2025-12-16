@@ -108,10 +108,10 @@ Route::name('user.')->group(function () {
 
     Route::middleware('guest')->group(function () {
         Route::get('register/{reffer?}', [RegistrationController::class, 'index'])->name('register')->middleware('reg_off');
-        Route::post('register/{reffer?}', [RegistrationController::class, 'register'])->middleware('reg_off');
+        Route::post('register/{reffer?}', [RegistrationController::class, 'register'])->name('register.post')->middleware('reg_off');
 
         Route::get('login', [LoginController::class, 'index'])->name('login');
-        Route::post('login', [LoginController::class, 'login']);
+        Route::post('login', [LoginController::class, 'login'])->name('login.post');
 
         Route::get('auth/facebook', [FacebookController::class, 'redirectToFacebook'])->name('facebook.login');
         Route::get('auth/facebook/callback', [FacebookController::class, 'handleFacebookCallback']);
@@ -1095,5 +1095,12 @@ Route::post('subscribe', [FrontendController::class, 'subscribe'])->name('subscr
 
 Route::post('contact', [FrontendController::class, 'contactSend'])->name('contact');
 
-// Catch-all route must be last
-Route::get('{pages}', [FrontendController::class, 'page'])->name('pages');
+// PWA Routes
+Route::get('manifest.json', [\App\Http\Controllers\PWAController::class, 'manifest'])->name('pwa.manifest');
+Route::get('sw.js', [\App\Http\Controllers\PWAController::class, 'serviceWorker'])->name('pwa.serviceworker');
+Route::get('offline', [\App\Http\Controllers\PWAController::class, 'offline'])->name('pwa.offline');
+Route::get('install', [\App\Http\Controllers\PWAController::class, 'install'])->name('pwa.install');
+
+// Catch-all route for dynamic CMS pages
+// This must be LAST to avoid interfering with other routes
+Route::get('{pages}', [FrontendController::class, 'page'])->name('pages')->where('pages', '^(?!admin|api).*$');

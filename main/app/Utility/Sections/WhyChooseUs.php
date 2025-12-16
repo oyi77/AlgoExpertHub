@@ -27,6 +27,11 @@ class WhyChooseUs
         'blue' => [
             'title' => 'Text',
             'color_text_for_title' => 'Text',
+        ],
+        'trading-landing' => [
+            'section_header' => 'Text',
+            'title' => 'Text',
+            'color_text_for_title' => 'Text',
         ]
     ];
 
@@ -44,6 +49,11 @@ class WhyChooseUs
         'blue' => [
             'color_text_for_title' => 'col-md-6',
             'title' => 'col-md-6',
+        ],
+        'trading-landing' => [
+            'section_header' => 'col-md-12',
+            'color_text_for_title' => 'col-md-6',
+            'title' => 'col-md-6',
         ]
     ];
 
@@ -59,6 +69,11 @@ class WhyChooseUs
             'section_header' => 'required',
         ],
         'blue' => [
+            'title' => 'required',
+            'color_text_for_title' => 'required',
+        ],
+        'trading-landing' => [
+            'section_header' => 'nullable',
             'title' => 'required',
             'color_text_for_title' => 'required',
         ]
@@ -80,6 +95,11 @@ class WhyChooseUs
             'title' => 'Text',
             'description' => 'Textarea',
             'image_one' => 'Upload',
+        ],
+        'trading-landing' => [
+            'title' => 'Text',
+            'icon' => 'Icon',
+            'description' => 'Textarea',
         ]
     ]; 
 
@@ -99,6 +119,11 @@ class WhyChooseUs
             'image_one' => 'col-md-3',
             'title' => 'col-md-6',
             'description' => 'col-md-12'
+        ],
+        'trading-landing' => [
+            'title' => 'col-md-12',
+            'icon' => 'col-md-12',
+            'description' => 'col-md-12'
         ]
     ];
 
@@ -117,6 +142,11 @@ class WhyChooseUs
         'blue' => [
             "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
             'title' => 'required',
+            'description' => 'required'
+        ],
+        'trading-landing' => [
+            'title' => 'required',
+            'icon' => 'nullable',
             'description' => 'required'
         ]
     ];

@@ -21,13 +21,16 @@ class UserDashboardService
 
         $data['currentPlan'] = $user->currentplan()->first();
 
+        // Initialize TTL with default value
+        $perf = GlobalConfiguration::getValue('performance', config('performance'));
+        $ttlMap = $perf['cache']['ttl_map'] ?? [];
+        $ttl = (int)($ttlMap['dashboard.user'] ?? 300);
+
         if ($data['currentPlan'] != null) {
-            $perf = GlobalConfiguration::getValue('performance', config('performance'));
-            $ttlMap = $perf['cache']['ttl_map'] ?? [];
-            $ttl = (int)($ttlMap['dashboard.user'] ?? 300);
             $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
-                return UserSignal::where('user_id', auth()->id())->select(DB::raw('COUNT(*) as total'), DB::raw('MONTHNAME(created_at) month'))
-                    ->groupby('month')
+                return UserSignal::where('user_id', auth()->id())
+                    ->selectRaw('COUNT(*) as total, MONTHNAME(created_at) as month')
+                    ->groupBy('month')
                     ->get();
             });
         }
@@ -62,47 +65,50 @@ class UserDashboardService
             $signalGrapTotal->push(0);
         }
 
-        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl ?? 300, function () {
+        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl, function () {
             return Payment::where('status', 1)
                 ->where('user_id', auth()->id())
-                ->whereYear('created_at', '=', now())
-                ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-                ->groupby('month')->get();
-        });
-
-        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl ?? 300, function () {
-            return Withdraw::where('status', 1)
-                ->where('user_id', auth()->id())
-                ->select(DB::raw('SUM(withdraw_amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-                ->groupby('month')
+                ->whereYear('created_at', now()->year)
+                ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
+                ->groupBy('month')
                 ->get();
         });
 
+        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl, function () {
+            return Withdraw::where('status', 1)
+                ->where('user_id', auth()->id())
+                ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
+                ->groupBy('month')
+                ->get();
+        });
 
-        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl ?? 300, function () {
+        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl, function () {
             return Deposit::where('status', 1)
                 ->where('user_id', auth()->id())
-                ->select(DB::raw('SUM(amount) as total'), DB::raw('MONTHNAME(created_at) month'))
-                ->groupby('month')
+                ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
+                ->groupBy('month')
                 ->get();
         });
 
         foreach ($payment as $pay) {
             $result = array_search($pay->month, $months);
-
-            $totalAmount[$result] = $pay->total;
+            if ($result !== false) {
+                $totalAmount[$result] = $pay->total;
+            }
         }
 
         foreach ($withdraw as $with) {
             $result = array_search($with->month, $months);
-
-            $withdrawTotalAmount[$result] = $with->total;
+            if ($result !== false) {
+                $withdrawTotalAmount[$result] = $with->total;
+            }
         }
 
         foreach ($deposit as $depo) {
-
             $result = array_search($depo->month, $months);
-            $depositTotalAmount[$result] = $depo->total;
+            if ($result !== false) {
+                $depositTotalAmount[$result] = $depo->total;
+            }
         }
 
 
@@ -111,8 +117,9 @@ class UserDashboardService
 
         foreach ($graphs as $sig) {
             $result = array_search($sig->month, $months);
-
-            $signalGrapTotal[$result] = $sig->total;
+            if ($result !== false) {
+                $signalGrapTotal[$result] = $sig->total;
+            }
         }
 
         $data['totalAmount'] = $totalAmount;

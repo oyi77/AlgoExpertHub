@@ -1,12 +1,21 @@
-@extends(Config::theme() . 'layout.auth')
+@extends(Config::themeView('layout.auth'))
 
 @section('content')
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h2 class="mb-3">{{ __('Choose Your Plan') }}</h2>
+                <p class="text-muted">{{ __('Select the perfect plan for your trading needs') }}</p>
+            </div>
+        </div>
+    </div>
 
-
-    <div class="row gy-4">
+    <!-- Plans Grid -->
+    <div class="row gy-4 justify-content-center">
 
         @forelse ($plans as $plan)
-            <div class="col-lg-4">
+            <div class="col-xl-4 col-lg-6 col-md-6">
                 <div class="sp_pricing_item">
                     <div class="pricing-header">
                         <div class="left">

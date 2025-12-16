@@ -26,21 +26,12 @@ class ConfigurationRequest extends FormRequest
     public function rules()
     {
         try {
-            // #region agent log
-            \Log::error('DEBUG: ConfigurationRequest rules() called', ['type' => request()->type ?? 'null']);
-            // #endregion
 
             $type = request()->type;
 
             $general = Configuration::first();
             
-            // #region agent log
-            \Log::error('DEBUG: ConfigurationRequest got general config', ['config_exists' => $general !== null]);
-            // #endregion
         } catch (\Exception $e) {
-            // #region agent log
-            \Log::error('DEBUG: ConfigurationRequest rules() exception', ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
-            // #endregion
             // If there's an error getting config, still return rules based on type
             $type = request()->type ?? 'unknown';
             $general = null;

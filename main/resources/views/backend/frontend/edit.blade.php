@@ -44,10 +44,6 @@
 @endsection
 
 
-@push('external-script')
-    <script src="{{ Config::jsLib('backend', 'repeater.js') }}"></script>
-@endpush
-
 @push('style')
     <style>
         td img {
@@ -65,8 +61,40 @@
 
 @push('script')
     <script>
-        $(function() {
-            'use strict'
+        // Wait for jQuery and then load repeater.js
+        (function() {
+            function loadRepeaterAndInit() {
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                    setTimeout(loadRepeaterAndInit, 50);
+                    return;
+                }
+                
+                // Load repeater.js dynamically after jQuery is ready
+                if (typeof $.fn.repeater === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = '{{ Config::jsLib('backend', 'repeater.js') }}';
+                    script.onload = function() {
+                        initRepeater();
+                    };
+                    script.onerror = function() {
+                        console.error('Failed to load repeater.js');
+                        // Try to initialize anyway after a delay
+                        setTimeout(initRepeater, 500);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    initRepeater();
+                }
+            }
+            
+            function initRepeater() {
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined' || typeof $.fn.repeater === 'undefined') {
+                    setTimeout(initRepeater, 50);
+                    return;
+                }
+                
+                $(function() {
+                    'use strict'
 
             $('.repeater').repeater({
                 initEmpty: false,
@@ -144,6 +172,15 @@
 
 
 
-        })
+                });
+            }
+            
+            // Start loading process
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadRepeaterAndInit);
+            } else {
+                loadRepeaterAndInit();
+            }
+        })();
     </script>
 @endpush

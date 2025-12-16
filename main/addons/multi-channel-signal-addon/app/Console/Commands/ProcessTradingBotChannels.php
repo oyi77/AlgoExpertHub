@@ -34,9 +34,27 @@ class ProcessTradingBotChannels extends Command
     {
         $this->info('Processing Trading Bot channels...');
 
-        $channels = ChannelSource::where('type', 'trading_bot')
-            ->where('status', 'active')
-            ->get();
+        try {
+            // Check if table exists (handle table prefix automatically)
+            $tableName = (new ChannelSource())->getTable();
+            if (!\Illuminate\Support\Facades\Schema::hasTable($tableName)) {
+                $this->warn("Table '{$tableName}' does not exist. Skipping trading bot processing.");
+                Log::info("ProcessTradingBotChannels: Table '{$tableName}' does not exist, skipping.");
+                return 0;
+            }
+
+            $channels = ChannelSource::where('type', 'trading_bot')
+                ->where('status', 'active')
+                ->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (str_contains($e->getMessage(), "doesn't exist") || str_contains($e->getMessage(), 'Base table or view not found')) {
+                $tableName = (new ChannelSource())->getTable();
+                $this->warn("Table '{$tableName}' does not exist. Skipping trading bot processing.");
+                Log::info("ProcessTradingBotChannels: Database error - table does not exist, skipping.", ['error' => $e->getMessage()]);
+                return 0;
+            }
+            throw $e;
+        }
 
         if ($channels->isEmpty()) {
             $this->info('No active Trading Bot channels found.');

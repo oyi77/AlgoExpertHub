@@ -3,13 +3,14 @@
 namespace Addons\TradingManagement\Modules\DataProvider\Adapters;
 
 use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
+use Addons\TradingManagement\Shared\Contracts\ExchangeAdapterInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
 /**
  * mtapi.io Adapter
  * 
- * Implements DataProviderInterface for mtapi.io MT4/MT5 connections
+ * Implements DataProviderInterface and ExchangeAdapterInterface for mtapi.io MT4/MT5 connections
  * 
  * API Documentation: https://docs.mtapi.io/
  * 
@@ -18,7 +19,7 @@ use GuzzleHttp\Exception\RequestException;
  * - account_id: MT account ID
  * - base_url: mtapi.io base URL (optional, defaults to config)
  */
-class MtapiAdapter implements DataProviderInterface
+class MtapiAdapter implements DataProviderInterface, ExchangeAdapterInterface
 {
     protected Client $client;
     protected array $credentials;
@@ -303,6 +304,211 @@ class MtapiAdapter implements DataProviderInterface
         }
 
         return $normalized;
+    }
+
+    // ExchangeAdapterInterface Implementation
+
+    public function createMarketOrder(string $symbol, string $side, float $amount, array $params = []): array
+    {
+        $endpoint = sprintf('/v1/accounts/%s/orders', $this->getAccountId());
+        
+        // Map side to MT4/MT5 operation type
+        // This is simplified, actual constant values depend on broker/API
+        $type = strtolower($side) === 'buy' ? 0 : 1; // 0=Buy, 1=Sell usually
+
+        $payload = [
+            'symbol' => $symbol,
+            'operation' => $type,
+            'volume' => $amount,
+            // 'price' => 0, // Market order
+            'slippage' => $params['slippage'] ?? 10,
+            'stoploss' => $params['stopLoss'] ?? 0,
+            'takeprofit' => $params['takeProfit'] ?? 0,
+            'comment' => $params['comment'] ?? 'AutoTrade',
+        ];
+
+        try {
+            $response = $this->client->post($endpoint, [
+                'json' => $payload,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to create market order: ' . $e->getMessage());
+        }
+    }
+
+    public function createLimitOrder(string $symbol, string $side, float $amount, float $price, array $params = []): array
+    {
+        $endpoint = sprintf('/v1/accounts/%s/orders', $this->getAccountId());
+        
+        $type = strtolower($side) === 'buy' ? 2 : 3; // 2=Buy Limit, 3=Sell Limit (Example)
+
+        $payload = [
+            'symbol' => $symbol,
+            'operation' => $type,
+            'volume' => $amount,
+            'price' => $price,
+            'slippage' => $params['slippage'] ?? 10,
+            'stoploss' => $params['stopLoss'] ?? 0,
+            'takeprofit' => $params['takeProfit'] ?? 0,
+        ];
+
+        try {
+            $response = $this->client->post($endpoint, [
+                'json' => $payload,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to create limit order: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelOrder(string $orderId, string $symbol): array
+    {
+        // Cancel pending order
+        $endpoint = sprintf('/v1/accounts/%s/orders/%s', $this->getAccountId(), $orderId);
+        
+        try {
+            $response = $this->client->delete($endpoint, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to cancel order: ' . $e->getMessage());
+        }
+    }
+
+    public function getOrder(string $orderId, string $symbol): array
+    {
+        $endpoint = sprintf('/v1/accounts/%s/orders/%s', $this->getAccountId(), $orderId);
+        
+        try {
+            $response = $this->client->get($endpoint, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to get order: ' . $e->getMessage());
+        }
+    }
+
+    public function getOpenPositions(?string $symbol = null): array
+    {
+        $endpoint = sprintf('/v1/accounts/%s/positions', $this->getAccountId());
+        
+        try {
+            $response = $this->client->get($endpoint, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            $positions = json_decode($response->getBody()->getContents(), true);
+            
+            // Filter by symbol if needed
+            if ($symbol) {
+                return array_filter($positions, fn($p) => ($p['symbol'] ?? '') == $symbol);
+            }
+            return $positions;
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to get positions: ' . $e->getMessage());
+        }
+    }
+
+    public function closePosition(string $positionId, string $symbol, ?float $amount = null): array
+    {
+        // Close position
+        $endpoint = sprintf('/v1/accounts/%s/positions/%s/close', $this->getAccountId(), $positionId);
+        
+        $payload = [];
+        if ($amount) {
+            $payload['volume'] = $amount;
+        }
+
+        try {
+            $response = $this->client->post($endpoint, [
+                'json' => $payload,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to close position: ' . $e->getMessage());
+        }
+    }
+
+    public function getBalance(): array
+    {
+        return $this->getAccountInfo();
+    }
+
+    public function modifyPosition(string $positionId, string $symbol, ?float $stopLoss = null, ?float $takeProfit = null): array
+    {
+        $endpoint = sprintf('/v1/accounts/%s/positions/%s', $this->getAccountId(), $positionId);
+        
+        $payload = [];
+        if ($stopLoss !== null) $payload['stoploss'] = $stopLoss;
+        if ($takeProfit !== null) $payload['takeprofit'] = $takeProfit;
+
+        try {
+            $response = $this->client->patch($endpoint, [ // PATCH for update
+                'json' => $payload,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+             throw new \Exception('Failed to modify position: ' . $e->getMessage());
+        }
+    }
+
+    public function getCurrentPrice(string $symbol): array
+    {
+        // fetchOHLCV for 1 min candle isn't same as tick, but mtapi might have /prices endpoint
+        $endpoint = sprintf('/v1/accounts/%s/symbols/%s/price', $this->getAccountId(), $symbol);
+        
+        try {
+            $response = $this->client->get($endpoint, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->credentials['api_key'],
+                ],
+            ]);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            // Fallback: fetchOHLCV
+             try {
+                $candles = $this->fetchOHLCV($symbol, 'M1', 1);
+                if (!empty($candles)) {
+                    $last = end($candles);
+                    return [
+                        'bid' => $last['close'],
+                        'ask' => $last['close'], // Approx
+                        'last' => $last['close'],
+                        'timestamp' => $last['timestamp'],
+                    ];
+                }
+             } catch (\Exception $ex) {}
+             
+             throw new \Exception('Failed to get current price: ' . $e->getMessage());
+        }
+    }
+
+    public function getExchangeName(): string
+    {
+        return 'mtapi';
     }
 }
 

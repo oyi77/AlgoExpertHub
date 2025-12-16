@@ -6,6 +6,7 @@ use Addons\TradingManagement\Modules\DataProvider\Workers\MetaApiStreamWorker;
 use Addons\TradingManagement\Modules\DataProvider\Services\MetaApiProvisioningService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Services\LogRotationService;
 
 /**
  * MetaApiStreamWorker Command
@@ -48,12 +49,13 @@ class MetaApiStreamWorkerCommand extends Command
         
         // Get log file path for direct writing
         $logFile = storage_path("logs/metaapi-stream-{$accountId}.log");
+        $logRotation = app(LogRotationService::class);
         
         // Helper function to write to both log file and Laravel log
-        $writeLog = function($message, $level = 'INFO') use ($logFile, $accountId) {
+        $writeLog = function($message, $level = 'INFO') use ($logFile, $accountId, $logRotation) {
             $timestamp = date('Y-m-d H:i:s');
             $logMessage = "[{$timestamp}] {$level}: {$message}\n";
-            file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+            $logRotation->appendWithRotation($logFile, $logMessage, FILE_APPEND | LOCK_EX, 1000);
             error_log($message);
         };
         

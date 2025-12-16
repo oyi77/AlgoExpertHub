@@ -218,10 +218,12 @@ class TradingBotController extends Controller
         }
 
         // Get monitoring data
+        // Skip exchange fetch for initial page load (AJAX will fetch positions)
+        // This prevents page timeout if MetaAPI is slow
         $data['workerStatus'] = $this->monitoringService->getWorkerStatus($bot);
         $data['botMetrics'] = $this->monitoringService->getBotMetrics($bot);
-        $data['openPositions'] = $this->monitoringService->getOpenPositions($bot);
-        $data['positionStats'] = $this->monitoringService->calculatePositionStats($bot);
+        $data['openPositions'] = $this->monitoringService->getOpenPositions($bot, skipExchangeFetch: true);
+        $data['positionStats'] = $this->monitoringService->calculatePositionStats($bot, skipExchangeFetch: true);
         $data['queueStats'] = $this->monitoringService->getQueueStats($bot->id);
 
         return view('trading-management::backend.trading-bots.show', $data);
@@ -268,8 +270,16 @@ class TradingBotController extends Controller
             'streaming_timeframes' => 'nullable|array',
             'market_analysis_interval' => 'nullable|integer|min:10',
             'position_monitoring_interval' => 'nullable|integer|min:1',
-            'is_paper_trading' => 'boolean',
+            'is_paper_trading' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        // Handle checkbox values - with hidden inputs, value will always be present
+        // Convert to boolean (0 = false, 1 = true)
+        $validated['is_paper_trading'] = $request->boolean('is_paper_trading', false);
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active', false);
+        }
 
         // Process streaming symbols (filter empty values)
         // If manual entry is provided and streaming_symbols is empty, parse manual entry
@@ -612,13 +622,20 @@ class TradingBotController extends Controller
 
     /**
      * Get positions (AJAX)
+     * 
+     * Fetches positions from database only (skipExchangeFetch=true) to prevent
+     * slow API calls on every AJAX poll. Exchange positions should be synced
+     * via background job instead.
      */
     public function positions($id): JsonResponse
     {
         $bot = TradingBot::findOrFail($id);
         
-        $openPositions = $this->monitoringService->getOpenPositions($bot);
-        $positionStats = $this->monitoringService->calculatePositionStats($bot);
+        // Skip exchange fetch for AJAX - use database positions only
+        // This prevents slow MetaAPI calls from blocking the AJAX response
+        // Exchange positions should be synced via MonitorPositionsJob instead
+        $openPositions = $this->monitoringService->getOpenPositions($bot, skipExchangeFetch: true);
+        $positionStats = $this->monitoringService->calculatePositionStats($bot, skipExchangeFetch: true);
         
         return response()->json([
             'success' => true,
@@ -760,12 +777,26 @@ class TradingBotController extends Controller
         try {
             $connection = ExchangeConnection::findOrFail($connectionId);
             
-            if (!$connection->isActive()) {
+            // For getting symbols, we don't need connection to be fully active
+            // Getting symbols is a read-only operation - just need valid credentials
+            // Only block if connection has an error status
+            if ($connection->status === 'error') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Connection is not active',
-                    'symbols' => []
+                    'message' => 'Connection has an error. Please fix the connection before getting symbols.',
+                    'symbols' => [],
+                    'connection_status' => $connection->status,
+                    'connection_error' => $connection->last_error
                 ], 400);
+            }
+            
+            // Warn if connection is not active, but still allow getting symbols
+            if (!$connection->is_active) {
+                \Log::info('Getting symbols from inactive connection', [
+                    'connection_id' => $connectionId,
+                    'status' => $connection->status,
+                    'is_active' => $connection->is_active
+                ]);
             }
 
             // Create adapter directly based on connection type (same logic as ExchangeConnectionService)

@@ -90,11 +90,11 @@
                                                                                 <li class="tocify-item level-2" data-unique="authentication-POSTapi-auth-reset-password">
                                 <a href="#authentication-POSTapi-auth-reset-password">Reset Password</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="authentication-GETapi-auth-social--provider--redirect">
-                                <a href="#authentication-GETapi-auth-social--provider--redirect">Get Social Redirect URL</a>
+                                                                                <li class="tocify-item level-2" data-unique="authentication-GETapi-social--provider--redirect">
+                                <a href="#authentication-GETapi-social--provider--redirect">Get Social Redirect URL</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="authentication-POSTapi-auth-social--provider--callback">
-                                <a href="#authentication-POSTapi-auth-social--provider--callback">Handle Social Callback</a>
+                                                                                <li class="tocify-item level-2" data-unique="authentication-POSTapi-social--provider--callback">
+                                <a href="#authentication-POSTapi-social--provider--callback">Handle Social Callback</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="authentication-POSTapi-auth-logout">
                                 <a href="#authentication-POSTapi-auth-logout">User Logout</a>
@@ -406,6 +406,28 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-admin-addon-management" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="admin-addon-management">
+                    <a href="#admin-addon-management">Admin - Addon Management</a>
+                </li>
+                                    <ul id="tocify-subheader-admin-addon-management" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="admin-addon-management-GETapi-admin-addons">
+                                <a href="#admin-addon-management-GETapi-admin-addons">List Addons</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-addon-management-POSTapi-admin-addons-upload">
+                                <a href="#admin-addon-management-POSTapi-admin-addons-upload">Upload Addon</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-addon-management-POSTapi-admin-addons--addon--status">
+                                <a href="#admin-addon-management-POSTapi-admin-addons--addon--status">Update Addon Status</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-addon-management-GETapi-admin-addons--addon--modules">
+                                <a href="#admin-addon-management-GETapi-admin-addons--addon--modules">Get Addon Modules</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-addon-management-POSTapi-admin-addons--addon--modules--module-">
+                                <a href="#admin-addon-management-POSTapi-admin-addons--addon--modules--module-">Update Module Status</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-admin-admin-users" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="admin-admin-users">
                     <a href="#admin-admin-users">Admin - Admin Users</a>
@@ -544,6 +566,38 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-admin-system-tools" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="admin-system-tools">
+                    <a href="#admin-system-tools">Admin - System Tools</a>
+                </li>
+                                    <ul id="tocify-subheader-admin-system-tools" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="admin-system-tools-GETapi-admin-system-health">
+                                <a href="#admin-system-tools-GETapi-admin-system-health">System Health Check</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-system-tools-GETapi-admin-system-performance-stats">
+                                <a href="#admin-system-tools-GETapi-admin-system-performance-stats">Performance Status</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-system-tools-GETapi-admin-system-cron-jobs">
+                                <a href="#admin-system-tools-GETapi-admin-system-cron-jobs">List Cron Jobs</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-system-tools-GETapi-admin-system-horizon-stats">
+                                <a href="#admin-system-tools-GETapi-admin-system-horizon-stats">Horizon Stats</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="admin-system-tools-POSTapi-admin-system-horizon-clear-failed">
+                                <a href="#admin-system-tools-POSTapi-admin-system-horizon-clear-failed">Clear Failed Jobs</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
+                    <ul id="tocify-header-admin-theme-management" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="admin-theme-management">
+                    <a href="#admin-theme-management">Admin - Theme Management</a>
+                </li>
+                                    <ul id="tocify-subheader-admin-theme-management" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="admin-theme-management-POSTapi-admin-themes-activate">
+                                <a href="#admin-theme-management-POSTapi-admin-themes-activate">Activate Theme</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-admin-management" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="admin-management">
                     <a href="#admin-management">Admin Management</a>
@@ -578,12 +632,49 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-backtesting-copy-trading" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="backtesting-copy-trading">
+                    <a href="#backtesting-copy-trading">Backtesting & Copy Trading</a>
+                </li>
+                                    <ul id="tocify-subheader-backtesting-copy-trading" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="backtesting-copy-trading-GETapi-user-copy-trading-traders">
+                                <a href="#backtesting-copy-trading-GETapi-user-copy-trading-traders">List Available Traders (Copy Trading)</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-GETapi-user-copy-trading-subscriptions">
+                                <a href="#backtesting-copy-trading-GETapi-user-copy-trading-subscriptions">My Copy Trading Subscriptions</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-GETapi-user-backtesting">
+                                <a href="#backtesting-copy-trading-GETapi-user-backtesting">List Backtests</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-POSTapi-user-backtesting-run">
+                                <a href="#backtesting-copy-trading-POSTapi-user-backtesting-run">Run Backtest</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-GETapi-user-backtesting--id-">
+                                <a href="#backtesting-copy-trading-GETapi-user-backtesting--id-">Get Backtest Results</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-POSTapi-user-copy-trading-traders--id--follow">
+                                <a href="#backtesting-copy-trading-POSTapi-user-copy-trading-traders--id--follow">Follow Trader</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="backtesting-copy-trading-DELETEapi-user-copy-trading-traders--id--unfollow">
+                                <a href="#backtesting-copy-trading-DELETEapi-user-copy-trading-traders--id--unfollow">Unfollow Trader</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-endpoints" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="endpoints">
                     <a href="#endpoints">Endpoints</a>
                 </li>
                                     <ul id="tocify-subheader-endpoints" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="endpoints-GETapi-user">
+                                                    <li class="tocify-item level-2" data-unique="endpoints-GETapi-plans">
+                                <a href="#endpoints-GETapi-plans">GET api/plans</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-time-frames">
+                                <a href="#endpoints-GETapi-time-frames">GET api/time-frames</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-signals-public">
+                                <a href="#endpoints-GETapi-signals-public">GET api/signals/public</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-user">
                                 <a href="#endpoints-GETapi-user">GET api/user</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-user-trading-operations-execution-logs">
@@ -619,14 +710,8 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-PUTapi-user-copy-trading-settings">
                                 <a href="#endpoints-PUTapi-user-copy-trading-settings">Update copy trading settings</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-user-copy-trading-traders">
-                                <a href="#endpoints-GETapi-user-copy-trading-traders">Browse traders</a>
-                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-user-copy-trading-traders--id-">
                                 <a href="#endpoints-GETapi-user-copy-trading-traders--id-">Get trader profile</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-user-copy-trading-subscriptions">
-                                <a href="#endpoints-GETapi-user-copy-trading-subscriptions">Get copy trading subscriptions</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-user-copy-trading-history">
                                 <a href="#endpoints-GETapi-user-copy-trading-history">Get copy trading history</a>
@@ -652,29 +737,26 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-channel-signals-bulk-reject">
                                 <a href="#endpoints-POSTapi-admin-channel-signals-bulk-reject">Bulk reject signals</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-translation--lang--translations">
-                                <a href="#endpoints-GETapi-admin-translation--lang--translations">Get translations for a language</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-languages--lang--auto-translate">
+                                <a href="#endpoints-POSTapi-admin-languages--lang--auto-translate">Auto translate using AI</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-admin-translation--lang--translations">
-                                <a href="#endpoints-PUTapi-admin-translation--lang--translations">Update translation</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-languages-settings">
+                                <a href="#endpoints-GETapi-admin-languages-settings">Get translation settings</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-admin-translation--lang--translations-bulk">
-                                <a href="#endpoints-PUTapi-admin-translation--lang--translations-bulk">Bulk update translations</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-admin-languages-settings">
+                                <a href="#endpoints-PUTapi-admin-languages-settings">Update translation settings</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-admin-translation--lang--key">
-                                <a href="#endpoints-DELETEapi-admin-translation--lang--key">Delete translation key</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-languages-test">
+                                <a href="#endpoints-POSTapi-admin-languages-test">Test translation API</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-translation--lang--auto-translate">
-                                <a href="#endpoints-POSTapi-admin-translation--lang--auto-translate">Auto translate using AI</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-themes">
+                                <a href="#endpoints-GETapi-admin-themes">List all themes</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-translation-settings">
-                                <a href="#endpoints-GETapi-admin-translation-settings">Get translation settings</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-themes-upload">
+                                <a href="#endpoints-POSTapi-admin-themes-upload">Upload theme</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-PUTapi-admin-translation-settings">
-                                <a href="#endpoints-PUTapi-admin-translation-settings">Update translation settings</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-translation-test">
-                                <a href="#endpoints-POSTapi-admin-translation-test">Test translation API</a>
+                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-admin-themes--theme-">
+                                <a href="#endpoints-DELETEapi-admin-themes--theme-">Delete theme</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-system-status">
                                 <a href="#endpoints-GETapi-admin-system-status">Get system status</a>
@@ -718,9 +800,6 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-system-database-reset">
                                 <a href="#endpoints-POSTapi-admin-system-database-reset">Reset database</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-themes">
-                                <a href="#endpoints-GETapi-admin-themes">List all themes</a>
-                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-PUTapi-admin-themes--name-">
                                 <a href="#endpoints-PUTapi-admin-themes--name-">Update theme</a>
                             </li>
@@ -730,14 +809,8 @@
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-themes--theme--color">
                                 <a href="#endpoints-POSTapi-admin-themes--theme--color">Change theme color</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-themes-upload">
-                                <a href="#endpoints-POSTapi-admin-themes-upload">Upload theme</a>
-                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-GETapi-admin-themes-template-download">
                                 <a href="#endpoints-GETapi-admin-themes-template-download">Download theme template</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="endpoints-DELETEapi-admin-themes--theme-">
-                                <a href="#endpoints-DELETEapi-admin-themes--theme-">Delete theme</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="endpoints-POSTapi-admin-themes-deactivate-all">
                                 <a href="#endpoints-POSTapi-admin-themes-deactivate-all">Deactivate all themes</a>
@@ -861,14 +934,14 @@
                     <a href="#reference-data">Reference Data</a>
                 </li>
                                     <ul id="tocify-subheader-reference-data" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="reference-data-GETapi-currency-pairs">
+                                                    <li class="tocify-item level-2" data-unique="reference-data-GETapi-markets">
+                                <a href="#reference-data-GETapi-markets">List Markets</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="reference-data-GETapi-currency-pairs">
                                 <a href="#reference-data-GETapi-currency-pairs">List Currency Pairs</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="reference-data-GETapi-timeframes">
                                 <a href="#reference-data-GETapi-timeframes">List Timeframes</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="reference-data-GETapi-markets">
-                                <a href="#reference-data-GETapi-markets">List Markets</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -2326,7 +2399,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="authentication-GETapi-auth-social--provider--redirect">Get Social Redirect URL</h2>
+                    <h2 id="authentication-GETapi-social--provider--redirect">Get Social Redirect URL</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -2334,13 +2407,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Returns the URL the frontend should redirect the user to for authentication.</p>
 
-<span id="example-requests-GETapi-auth-social--provider--redirect">
+<span id="example-requests-GETapi-social--provider--redirect">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/auth/social/google/redirect" \
+    --get "https://aitradepulse.com/api/social/google/redirect" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2348,7 +2421,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/auth/social/google/redirect"
+    "https://aitradepulse.com/api/social/google/redirect"
 );
 
 const headers = {
@@ -2365,7 +2438,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/auth/social/google/redirect';
+$url = 'https://aitradepulse.com/api/social/google/redirect';
 $response = $client-&gt;get(
     $url,
     [
@@ -2384,7 +2457,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/auth/social/google/redirect'
+url = 'https://aitradepulse.com/api/social/google/redirect'
 headers = {
   'Authorization': 'Bearer Bearer {TOKEN}',
   'Content-Type': 'application/json',
@@ -2396,7 +2469,7 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-GETapi-auth-social--provider--redirect">
+<span id="example-responses-GETapi-social--provider--redirect">
             <blockquote>
             <p>Example response (200):</p>
         </blockquote>
@@ -2410,43 +2483,43 @@ response.json()</code></pre></div>
 }</code>
  </pre>
     </span>
-<span id="execution-results-GETapi-auth-social--provider--redirect" hidden>
+<span id="execution-results-GETapi-social--provider--redirect" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-GETapi-auth-social--provider--redirect"></span>:
+                id="execution-response-status-GETapi-social--provider--redirect"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-auth-social--provider--redirect"
+    <pre class="json"><code id="execution-response-content-GETapi-social--provider--redirect"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-GETapi-auth-social--provider--redirect" hidden>
+<span id="execution-error-GETapi-social--provider--redirect" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-auth-social--provider--redirect">
+    <pre><code id="execution-error-message-GETapi-social--provider--redirect">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-GETapi-auth-social--provider--redirect" data-method="GET"
-      data-path="api/auth/social/{provider}/redirect"
+<form id="form-GETapi-social--provider--redirect" data-method="GET"
+      data-path="api/social/{provider}/redirect"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-auth-social--provider--redirect', this);">
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-social--provider--redirect', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-auth-social--provider--redirect"
-                    onclick="tryItOut('GETapi-auth-social--provider--redirect');">Try it out ⚡
+                    id="btn-tryout-GETapi-social--provider--redirect"
+                    onclick="tryItOut('GETapi-social--provider--redirect');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-auth-social--provider--redirect"
-                    onclick="cancelTryOut('GETapi-auth-social--provider--redirect');" hidden>Cancel 🛑
+                    id="btn-canceltryout-GETapi-social--provider--redirect"
+                    onclick="cancelTryOut('GETapi-social--provider--redirect');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-auth-social--provider--redirect"
+                    id="btn-executetryout-GETapi-social--provider--redirect"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -2454,7 +2527,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-green">GET</small>
-            <b><code>api/auth/social/{provider}/redirect</code></b>
+            <b><code>api/social/{provider}/redirect</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -2463,7 +2536,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-auth-social--provider--redirect"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-social--provider--redirect"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -2475,7 +2548,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-auth-social--provider--redirect"
+                              name="Content-Type"                data-endpoint="GETapi-social--provider--redirect"
                value="application/json"
                data-component="header">
     <br>
@@ -2487,7 +2560,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-auth-social--provider--redirect"
+                              name="Accept"                data-endpoint="GETapi-social--provider--redirect"
                value="application/json"
                data-component="header">
     <br>
@@ -2500,7 +2573,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="provider"                data-endpoint="GETapi-auth-social--provider--redirect"
+                              name="provider"                data-endpoint="GETapi-social--provider--redirect"
                value="google"
                data-component="url">
     <br>
@@ -2508,7 +2581,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="authentication-POSTapi-auth-social--provider--callback">Handle Social Callback</h2>
+                    <h2 id="authentication-POSTapi-social--provider--callback">Handle Social Callback</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -2516,13 +2589,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Exchange the code from the provider for an authentication token.</p>
 
-<span id="example-requests-POSTapi-auth-social--provider--callback">
+<span id="example-requests-POSTapi-social--provider--callback">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://aitradepulse.com/api/auth/social/google/callback" \
+    "https://aitradepulse.com/api/social/google/callback" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -2534,7 +2607,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/auth/social/google/callback"
+    "https://aitradepulse.com/api/social/google/callback"
 );
 
 const headers = {
@@ -2556,7 +2629,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/auth/social/google/callback';
+$url = 'https://aitradepulse.com/api/social/google/callback';
 $response = $client-&gt;post(
     $url,
     [
@@ -2578,7 +2651,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/auth/social/google/callback'
+url = 'https://aitradepulse.com/api/social/google/callback'
 payload = {
     "code": "architecto"
 }
@@ -2593,7 +2666,7 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-POSTapi-auth-social--provider--callback">
+<span id="example-responses-POSTapi-social--provider--callback">
             <blockquote>
             <p>Example response (200):</p>
         </blockquote>
@@ -2608,43 +2681,43 @@ response.json()</code></pre></div>
 }</code>
  </pre>
     </span>
-<span id="execution-results-POSTapi-auth-social--provider--callback" hidden>
+<span id="execution-results-POSTapi-social--provider--callback" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-auth-social--provider--callback"></span>:
+                id="execution-response-status-POSTapi-social--provider--callback"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-auth-social--provider--callback"
+    <pre class="json"><code id="execution-response-content-POSTapi-social--provider--callback"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-auth-social--provider--callback" hidden>
+<span id="execution-error-POSTapi-social--provider--callback" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-auth-social--provider--callback">
+    <pre><code id="execution-error-message-POSTapi-social--provider--callback">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-auth-social--provider--callback" data-method="POST"
-      data-path="api/auth/social/{provider}/callback"
+<form id="form-POSTapi-social--provider--callback" data-method="POST"
+      data-path="api/social/{provider}/callback"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-auth-social--provider--callback', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-social--provider--callback', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-auth-social--provider--callback"
-                    onclick="tryItOut('POSTapi-auth-social--provider--callback');">Try it out ⚡
+                    id="btn-tryout-POSTapi-social--provider--callback"
+                    onclick="tryItOut('POSTapi-social--provider--callback');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-auth-social--provider--callback"
-                    onclick="cancelTryOut('POSTapi-auth-social--provider--callback');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-social--provider--callback"
+                    onclick="cancelTryOut('POSTapi-social--provider--callback');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-auth-social--provider--callback"
+                    id="btn-executetryout-POSTapi-social--provider--callback"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -2652,7 +2725,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/auth/social/{provider}/callback</code></b>
+            <b><code>api/social/{provider}/callback</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -2661,7 +2734,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-auth-social--provider--callback"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-social--provider--callback"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -2673,7 +2746,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-auth-social--provider--callback"
+                              name="Content-Type"                data-endpoint="POSTapi-social--provider--callback"
                value="application/json"
                data-component="header">
     <br>
@@ -2685,7 +2758,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-auth-social--provider--callback"
+                              name="Accept"                data-endpoint="POSTapi-social--provider--callback"
                value="application/json"
                data-component="header">
     <br>
@@ -2698,7 +2771,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="provider"                data-endpoint="POSTapi-auth-social--provider--callback"
+                              name="provider"                data-endpoint="POSTapi-social--provider--callback"
                value="google"
                data-component="url">
     <br>
@@ -2711,7 +2784,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="code"                data-endpoint="POSTapi-auth-social--provider--callback"
+                              name="code"                data-endpoint="POSTapi-social--provider--callback"
                value="architecto"
                data-component="body">
     <br>
@@ -3266,7 +3339,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "city=New York"\
     --form "zip=10001"\
     --form "state=NY"\
-    --form "image=@/tmp/phpba4i6nrfbncpaLkEdaN" </code></pre></div>
+    --form "image=@/tmp/phpfhba9hc4iihk3loFINN" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -3334,7 +3407,7 @@ $response = $client-&gt;put(
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phpba4i6nrfbncpaLkEdaN', 'r')
+                'contents' =&gt; fopen('/tmp/phpfhba9hc4iihk3loFINN', 'r')
             ],
         ],
     ]
@@ -3355,7 +3428,7 @@ files = {
   'city': (None, 'New York'),
   'zip': (None, '10001'),
   'state': (None, 'NY'),
-  'image': open('/tmp/phpba4i6nrfbncpaLkEdaN', 'rb')}
+  'image': open('/tmp/phpfhba9hc4iihk3loFINN', 'rb')}
 payload = {
     "phone": "+1234567890",
     "telegram_id": "123456789",
@@ -3481,7 +3554,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>optional Profile image Example: <code>/tmp/phpba4i6nrfbncpaLkEdaN</code></p>
+<p>optional Profile image Example: <code>/tmp/phpfhba9hc4iihk3loFINN</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>phone</code></b>&nbsp;&nbsp;
@@ -11671,20 +11744,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "title=EUR/USD Buy Signal"\
-    --form "plans=architecto"\
-    --form "currency_pair=architecto"\
-    --form "time_frame=architecto"\
-    --form "open_price=1.1000"\
-    --form "sl=1.0950"\
-    --form "tp=1.1100"\
-    --form "direction=buy"\
-    --form "market=architecto"\
     --form "description=Eius et animi quos velit et."\
     --form "currency_pair_id=1"\
     --form "time_frame_id=1"\
     --form "market_id=1"\
+    --form "open_price=1.1000"\
+    --form "sl=1.0950"\
+    --form "tp=1.1100"\
+    --form "direction=buy"\
+    --form "plans[]=16"\
     --form "plan_ids[]=1"\
-    --form "image=@/tmp/phpiep0vq5igh1a1dPfNLm" </code></pre></div>
+    --form "image=@/tmp/phpaha8mpqehpi07oaKiop" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -11700,18 +11770,15 @@ const headers = {
 
 const body = new FormData();
 body.append('title', 'EUR/USD Buy Signal');
-body.append('plans', 'architecto');
-body.append('currency_pair', 'architecto');
-body.append('time_frame', 'architecto');
-body.append('open_price', '1.1000');
-body.append('sl', '1.0950');
-body.append('tp', '1.1100');
-body.append('direction', 'buy');
-body.append('market', 'architecto');
 body.append('description', 'Eius et animi quos velit et.');
 body.append('currency_pair_id', '1');
 body.append('time_frame_id', '1');
 body.append('market_id', '1');
+body.append('open_price', '1.1000');
+body.append('sl', '1.0950');
+body.append('tp', '1.1100');
+body.append('direction', 'buy');
+body.append('plans[]', '16');
 body.append('plan_ids[]', '1');
 body.append('image', document.querySelector('input[name="image"]').files[0]);
 
@@ -11739,16 +11806,20 @@ $response = $client-&gt;post(
                 'contents' =&gt; 'EUR/USD Buy Signal'
             ],
             [
-                'name' =&gt; 'plans',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'description',
+                'contents' =&gt; 'Eius et animi quos velit et.'
             ],
             [
-                'name' =&gt; 'currency_pair',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'currency_pair_id',
+                'contents' =&gt; '1'
             ],
             [
-                'name' =&gt; 'time_frame',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'time_frame_id',
+                'contents' =&gt; '1'
+            ],
+            [
+                'name' =&gt; 'market_id',
+                'contents' =&gt; '1'
             ],
             [
                 'name' =&gt; 'open_price',
@@ -11767,24 +11838,8 @@ $response = $client-&gt;post(
                 'contents' =&gt; 'buy'
             ],
             [
-                'name' =&gt; 'market',
-                'contents' =&gt; 'architecto'
-            ],
-            [
-                'name' =&gt; 'description',
-                'contents' =&gt; 'Eius et animi quos velit et.'
-            ],
-            [
-                'name' =&gt; 'currency_pair_id',
-                'contents' =&gt; '1'
-            ],
-            [
-                'name' =&gt; 'time_frame_id',
-                'contents' =&gt; '1'
-            ],
-            [
-                'name' =&gt; 'market_id',
-                'contents' =&gt; '1'
+                'name' =&gt; 'plans[]',
+                'contents' =&gt; '16'
             ],
             [
                 'name' =&gt; 'plan_ids[]',
@@ -11792,7 +11847,7 @@ $response = $client-&gt;post(
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phpiep0vq5igh1a1dPfNLm', 'r')
+                'contents' =&gt; fopen('/tmp/phpaha8mpqehpi07oaKiop', 'r')
             ],
         ],
     ]
@@ -11808,34 +11863,30 @@ import json
 url = 'https://aitradepulse.com/api/admin/signals'
 files = {
   'title': (None, 'EUR/USD Buy Signal'),
-  'plans': (None, 'architecto'),
-  'currency_pair': (None, 'architecto'),
-  'time_frame': (None, 'architecto'),
-  'open_price': (None, '1.1000'),
-  'sl': (None, '1.0950'),
-  'tp': (None, '1.1100'),
-  'direction': (None, 'buy'),
-  'market': (None, 'architecto'),
   'description': (None, 'Eius et animi quos velit et.'),
   'currency_pair_id': (None, '1'),
   'time_frame_id': (None, '1'),
   'market_id': (None, '1'),
+  'open_price': (None, '1.1000'),
+  'sl': (None, '1.0950'),
+  'tp': (None, '1.1100'),
+  'direction': (None, 'buy'),
+  'plans[]': (None, '16'),
   'plan_ids[]': (None, '1'),
-  'image': open('/tmp/phpiep0vq5igh1a1dPfNLm', 'rb')}
+  'image': open('/tmp/phpaha8mpqehpi07oaKiop', 'rb')}
 payload = {
     "title": "EUR\/USD Buy Signal",
-    "plans": "architecto",
-    "currency_pair": "architecto",
-    "time_frame": "architecto",
-    "open_price": "1.1000",
-    "sl": "1.0950",
-    "tp": "1.1100",
-    "direction": "buy",
-    "market": "architecto",
     "description": "Eius et animi quos velit et.",
     "currency_pair_id": 1,
     "time_frame_id": 1,
     "market_id": 1,
+    "open_price": "1.1000",
+    "sl": "1.0950",
+    "tp": "1.1100",
+    "direction": "buy",
+    "plans": [
+        16
+    ],
     "plan_ids": [
         1,
         2
@@ -11961,114 +12012,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Signal title. Example: <code>EUR/USD Buy Signal</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>plans</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="plans"                data-endpoint="POSTapi-admin-signals"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>currency_pair</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="currency_pair"                data-endpoint="POSTapi-admin-signals"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>The <code>id</code> of an existing record in the currency_pairs table. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>time_frame</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="time_frame"                data-endpoint="POSTapi-admin-signals"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>The <code>id</code> of an existing record in the time_frames table. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>open_price</code></b>&nbsp;&nbsp;
-<small>decimal</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="open_price"                data-endpoint="POSTapi-admin-signals"
-               value="1.1000"
-               data-component="body">
-    <br>
-<p>Entry price. Example: <code>1.1000</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>sl</code></b>&nbsp;&nbsp;
-<small>decimal</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="sl"                data-endpoint="POSTapi-admin-signals"
-               value="1.0950"
-               data-component="body">
-    <br>
-<p>Stop loss. Example: <code>1.0950</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>tp</code></b>&nbsp;&nbsp;
-<small>decimal</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="tp"                data-endpoint="POSTapi-admin-signals"
-               value="1.1100"
-               data-component="body">
-    <br>
-<p>Take profit. Example: <code>1.1100</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
-<small>file</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="file" style="display: none"
-                              name="image"                data-endpoint="POSTapi-admin-signals"
-               value=""
-               data-component="body">
-    <br>
-<p>Must be an image. Example: <code>/tmp/phpiep0vq5igh1a1dPfNLm</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="direction"                data-endpoint="POSTapi-admin-signals"
-               value="buy"
-               data-component="body">
-    <br>
-<p>Direction (buy, sell, long, short). Example: <code>buy</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>market</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="market"                data-endpoint="POSTapi-admin-signals"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>The <code>id</code> of an existing record in the markets table. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
@@ -12115,6 +12058,80 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Market ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>open_price</code></b>&nbsp;&nbsp;
+<small>decimal</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="open_price"                data-endpoint="POSTapi-admin-signals"
+               value="1.1000"
+               data-component="body">
+    <br>
+<p>Entry price. Example: <code>1.1000</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>sl</code></b>&nbsp;&nbsp;
+<small>decimal</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sl"                data-endpoint="POSTapi-admin-signals"
+               value="1.0950"
+               data-component="body">
+    <br>
+<p>Stop loss. Example: <code>1.0950</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>tp</code></b>&nbsp;&nbsp;
+<small>decimal</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="tp"                data-endpoint="POSTapi-admin-signals"
+               value="1.1100"
+               data-component="body">
+    <br>
+<p>Take profit. Example: <code>1.1100</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="direction"                data-endpoint="POSTapi-admin-signals"
+               value="buy"
+               data-component="body">
+    <br>
+<p>Direction (buy, sell, long, short). Example: <code>buy</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>file</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="file" style="display: none"
+                              name="image"                data-endpoint="POSTapi-admin-signals"
+               value=""
+               data-component="body">
+    <br>
+<p>Must be an image. Must not be greater than 2048 kilobytes. Example: <code>/tmp/phpaha8mpqehpi07oaKiop</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>plans</code></b>&nbsp;&nbsp;
+<small>integer[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="plans[0]"                data-endpoint="POSTapi-admin-signals"
+               data-component="body">
+        <input type="number" style="display: none"
+               name="plans[1]"                data-endpoint="POSTapi-admin-signals"
+               data-component="body">
+    <br>
+<p>The <code>id</code> of an existing record in the plans table.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>plan_ids</code></b>&nbsp;&nbsp;
@@ -12331,15 +12348,16 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "title=b"\
-    --form "plans=architecto"\
-    --form "currency_pair=architecto"\
-    --form "time_frame=architecto"\
-    --form "open_price=4326.41688"\
-    --form "sl=4326.41688"\
-    --form "tp=4326.41688"\
-    --form "direction=sell"\
-    --form "market=architecto"\
-    --form "image=@/tmp/phpj0t0cnlek8la5MhiKgm" </code></pre></div>
+    --form "description=Eius et animi quos velit et."\
+    --form "currency_pair_id=16"\
+    --form "time_frame_id=16"\
+    --form "market_id=16"\
+    --form "open_price=39"\
+    --form "sl=84"\
+    --form "tp=12"\
+    --form "direction=buy"\
+    --form "plans[]=16"\
+    --form "image=@/tmp/phpkcvbnlbijaj59GeNOPA" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -12355,14 +12373,15 @@ const headers = {
 
 const body = new FormData();
 body.append('title', 'b');
-body.append('plans', 'architecto');
-body.append('currency_pair', 'architecto');
-body.append('time_frame', 'architecto');
-body.append('open_price', '4326.41688');
-body.append('sl', '4326.41688');
-body.append('tp', '4326.41688');
-body.append('direction', 'sell');
-body.append('market', 'architecto');
+body.append('description', 'Eius et animi quos velit et.');
+body.append('currency_pair_id', '16');
+body.append('time_frame_id', '16');
+body.append('market_id', '16');
+body.append('open_price', '39');
+body.append('sl', '84');
+body.append('tp', '12');
+body.append('direction', 'buy');
+body.append('plans[]', '16');
 body.append('image', document.querySelector('input[name="image"]').files[0]);
 
 fetch(url, {
@@ -12389,40 +12408,44 @@ $response = $client-&gt;put(
                 'contents' =&gt; 'b'
             ],
             [
-                'name' =&gt; 'plans',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'description',
+                'contents' =&gt; 'Eius et animi quos velit et.'
             ],
             [
-                'name' =&gt; 'currency_pair',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'currency_pair_id',
+                'contents' =&gt; '16'
             ],
             [
-                'name' =&gt; 'time_frame',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'time_frame_id',
+                'contents' =&gt; '16'
+            ],
+            [
+                'name' =&gt; 'market_id',
+                'contents' =&gt; '16'
             ],
             [
                 'name' =&gt; 'open_price',
-                'contents' =&gt; '4326.41688'
+                'contents' =&gt; '39'
             ],
             [
                 'name' =&gt; 'sl',
-                'contents' =&gt; '4326.41688'
+                'contents' =&gt; '84'
             ],
             [
                 'name' =&gt; 'tp',
-                'contents' =&gt; '4326.41688'
+                'contents' =&gt; '12'
             ],
             [
                 'name' =&gt; 'direction',
-                'contents' =&gt; 'sell'
+                'contents' =&gt; 'buy'
             ],
             [
-                'name' =&gt; 'market',
-                'contents' =&gt; 'architecto'
+                'name' =&gt; 'plans[]',
+                'contents' =&gt; '16'
             ],
             [
                 'name' =&gt; 'image',
-                'contents' =&gt; fopen('/tmp/phpj0t0cnlek8la5MhiKgm', 'r')
+                'contents' =&gt; fopen('/tmp/phpkcvbnlbijaj59GeNOPA', 'r')
             ],
         ],
     ]
@@ -12438,25 +12461,29 @@ import json
 url = 'https://aitradepulse.com/api/admin/signals/1234567'
 files = {
   'title': (None, 'b'),
-  'plans': (None, 'architecto'),
-  'currency_pair': (None, 'architecto'),
-  'time_frame': (None, 'architecto'),
-  'open_price': (None, '4326.41688'),
-  'sl': (None, '4326.41688'),
-  'tp': (None, '4326.41688'),
-  'direction': (None, 'sell'),
-  'market': (None, 'architecto'),
-  'image': open('/tmp/phpj0t0cnlek8la5MhiKgm', 'rb')}
+  'description': (None, 'Eius et animi quos velit et.'),
+  'currency_pair_id': (None, '16'),
+  'time_frame_id': (None, '16'),
+  'market_id': (None, '16'),
+  'open_price': (None, '39'),
+  'sl': (None, '84'),
+  'tp': (None, '12'),
+  'direction': (None, 'buy'),
+  'plans[]': (None, '16'),
+  'image': open('/tmp/phpkcvbnlbijaj59GeNOPA', 'rb')}
 payload = {
     "title": "b",
-    "plans": "architecto",
-    "currency_pair": "architecto",
-    "time_frame": "architecto",
-    "open_price": 4326.41688,
-    "sl": 4326.41688,
-    "tp": 4326.41688,
-    "direction": "sell",
-    "market": "architecto"
+    "description": "Eius et animi quos velit et.",
+    "currency_pair_id": 16,
+    "time_frame_id": 16,
+    "market_id": 16,
+    "open_price": 39,
+    "sl": 84,
+    "tp": 12,
+    "direction": "buy",
+    "plans": [
+        16
+    ]
 }
 headers = {
   'Authorization': 'Bearer Bearer {TOKEN}',
@@ -12581,7 +12608,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>title</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="title"                data-endpoint="PUTapi-admin-signals--id-"
@@ -12591,76 +12618,102 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Must not be greater than 255 characters. Example: <code>b</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>plans</code></b>&nbsp;&nbsp;
+            <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="plans"                data-endpoint="PUTapi-admin-signals--id-"
-               value="architecto"
+                              name="description"                data-endpoint="PUTapi-admin-signals--id-"
+               value="Eius et animi quos velit et."
                data-component="body">
     <br>
-<p>Example: <code>architecto</code></p>
+<p>Example: <code>Eius et animi quos velit et.</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>currency_pair</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
+            <b style="line-height: 2;"><code>currency_pair_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="currency_pair"                data-endpoint="PUTapi-admin-signals--id-"
-               value="architecto"
+                <input type="number" style="display: none"
+               step="any"               name="currency_pair_id"                data-endpoint="PUTapi-admin-signals--id-"
+               value="16"
                data-component="body">
     <br>
-<p>The <code>id</code> of an existing record in the currency_pairs table. Example: <code>architecto</code></p>
+<p>The <code>id</code> of an existing record in the currency_pairs table. Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>time_frame</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
+            <b style="line-height: 2;"><code>time_frame_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="time_frame"                data-endpoint="PUTapi-admin-signals--id-"
-               value="architecto"
+                <input type="number" style="display: none"
+               step="any"               name="time_frame_id"                data-endpoint="PUTapi-admin-signals--id-"
+               value="16"
                data-component="body">
     <br>
-<p>The <code>id</code> of an existing record in the time_frames table. Example: <code>architecto</code></p>
+<p>The <code>id</code> of an existing record in the time_frames table. Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>market_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="market_id"                data-endpoint="PUTapi-admin-signals--id-"
+               value="16"
+               data-component="body">
+    <br>
+<p>The <code>id</code> of an existing record in the markets table. Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>open_price</code></b>&nbsp;&nbsp;
 <small>number</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="open_price"                data-endpoint="PUTapi-admin-signals--id-"
-               value="4326.41688"
+               value="39"
                data-component="body">
     <br>
-<p>Example: <code>4326.41688</code></p>
+<p>Must be at least 0. Example: <code>39</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>sl</code></b>&nbsp;&nbsp;
 <small>number</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="sl"                data-endpoint="PUTapi-admin-signals--id-"
-               value="4326.41688"
+               value="84"
                data-component="body">
     <br>
-<p>Example: <code>4326.41688</code></p>
+<p>Must be at least 0. Example: <code>84</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>tp</code></b>&nbsp;&nbsp;
 <small>number</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="tp"                data-endpoint="PUTapi-admin-signals--id-"
-               value="4326.41688"
+               value="12"
                data-component="body">
     <br>
-<p>Example: <code>4326.41688</code></p>
+<p>Must be at least 0. Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="direction"                data-endpoint="PUTapi-admin-signals--id-"
+               value="buy"
+               data-component="body">
+    <br>
+<p>Example: <code>buy</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>buy</code></li> <li><code>sell</code></li> <li><code>long</code></li> <li><code>short</code></li></ul>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
@@ -12672,33 +12725,21 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Example: <code>/tmp/phpj0t0cnlek8la5MhiKgm</code></p>
+<p>Must be an image. Must not be greater than 2048 kilobytes. Example: <code>/tmp/phpkcvbnlbijaj59GeNOPA</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>direction</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
+            <b style="line-height: 2;"><code>plans</code></b>&nbsp;&nbsp;
+<small>integer[]</small>&nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="direction"                data-endpoint="PUTapi-admin-signals--id-"
-               value="sell"
+                <input type="number" style="display: none"
+               step="any"               name="plans[0]"                data-endpoint="PUTapi-admin-signals--id-"
+               data-component="body">
+        <input type="number" style="display: none"
+               name="plans[1]"                data-endpoint="PUTapi-admin-signals--id-"
                data-component="body">
     <br>
-<p>Example: <code>sell</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>buy</code></li> <li><code>sell</code></li></ul>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>market</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="market"                data-endpoint="PUTapi-admin-signals--id-"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>The <code>id</code> of an existing record in the markets table. Example: <code>architecto</code></p>
+<p>The <code>id</code> of an existing record in the plans table.</p>
         </div>
         </form>
 
@@ -18562,7 +18603,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "message=Thank you for contacting us"\
-    --form "file=@/tmp/phpv7rqo9peelm87PNBBiC" </code></pre></div>
+    --form "file=@/tmp/php6om1ohpvnvbu3eBCLlH" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -18605,7 +18646,7 @@ $response = $client-&gt;post(
             ],
             [
                 'name' =&gt; 'file',
-                'contents' =&gt; fopen('/tmp/phpv7rqo9peelm87PNBBiC', 'r')
+                'contents' =&gt; fopen('/tmp/php6om1ohpvnvbu3eBCLlH', 'r')
             ],
         ],
     ]
@@ -18621,7 +18662,7 @@ import json
 url = 'https://aitradepulse.com/api/admin/tickets/1/reply'
 files = {
   'message': (None, 'Thank you for contacting us'),
-  'file': open('/tmp/phpv7rqo9peelm87PNBBiC', 'rb')}
+  'file': open('/tmp/php6om1ohpvnvbu3eBCLlH', 'rb')}
 payload = {
     "message": "Thank you for contacting us"
 }
@@ -18767,7 +18808,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>optional Attachment file Example: <code>/tmp/phpv7rqo9peelm87PNBBiC</code></p>
+<p>optional Attachment file Example: <code>/tmp/php6om1ohpvnvbu3eBCLlH</code></p>
         </div>
         </form>
 
@@ -22649,6 +22690,980 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Error message if any. Example: <code>architecto</code></p>
+        </div>
+        </form>
+
+                <h1 id="admin-addon-management">Admin - Addon Management</h1>
+
+    <p>Endpoints for managing addons and their modules.</p>
+
+                                <h2 id="admin-addon-management-GETapi-admin-addons">List Addons</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-addons">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/addons" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/addons"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/addons';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/addons'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-addons">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/addons could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-addons" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-addons"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-addons"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-addons" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-addons">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-addons" data-method="GET"
+      data-path="api/admin/addons"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-addons', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-addons"
+                    onclick="tryItOut('GETapi-admin-addons');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-addons"
+                    onclick="cancelTryOut('GETapi-admin-addons');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-addons"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/addons</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-addons"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-addons"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-addons"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="admin-addon-management-POSTapi-admin-addons-upload">Upload Addon</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-addons-upload">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/addons/upload" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: multipart/form-data" \
+    --header "Accept: application/json" \
+    --form "addon=@/tmp/phpha1a4lj8laojfhpHneb" </code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/addons/upload"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "multipart/form-data",
+    "Accept": "application/json",
+};
+
+const body = new FormData();
+body.append('addon', document.querySelector('input[name="addon"]').files[0]);
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/addons/upload';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'multipart/form-data',
+            'Accept' =&gt; 'application/json',
+        ],
+        'multipart' =&gt; [
+            [
+                'name' =&gt; 'addon',
+                'contents' =&gt; fopen('/tmp/phpha1a4lj8laojfhpHneb', 'r')
+            ],
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/addons/upload'
+files = {
+  'addon': open('/tmp/phpha1a4lj8laojfhpHneb', 'rb')}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'multipart/form-data',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, files=files)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-addons-upload">
+</span>
+<span id="execution-results-POSTapi-admin-addons-upload" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-addons-upload"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-addons-upload"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-addons-upload" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-addons-upload">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-addons-upload" data-method="POST"
+      data-path="api/admin/addons/upload"
+      data-authed="1"
+      data-hasfiles="1"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-addons-upload', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-addons-upload"
+                    onclick="tryItOut('POSTapi-admin-addons-upload');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-addons-upload"
+                    onclick="cancelTryOut('POSTapi-admin-addons-upload');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-addons-upload"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/addons/upload</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-addons-upload"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-addons-upload"
+               value="multipart/form-data"
+               data-component="header">
+    <br>
+<p>Example: <code>multipart/form-data</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-addons-upload"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>addon</code></b>&nbsp;&nbsp;
+<small>file</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="file" style="display: none"
+                              name="addon"                data-endpoint="POSTapi-admin-addons-upload"
+               value=""
+               data-component="body">
+    <br>
+<p>Must be a file. Example: <code>/tmp/phpha1a4lj8laojfhpHneb</code></p>
+        </div>
+        </form>
+
+                    <h2 id="admin-addon-management-POSTapi-admin-addons--addon--status">Update Addon Status</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-addons--addon--status">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/addons/architecto/status" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"status\": true
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/addons/architecto/status"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "status": true
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/addons/architecto/status';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'status' =&gt; true,
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/addons/architecto/status'
+payload = {
+    "status": true
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-addons--addon--status">
+</span>
+<span id="execution-results-POSTapi-admin-addons--addon--status" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-addons--addon--status"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-addons--addon--status"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-addons--addon--status" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-addons--addon--status">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-addons--addon--status" data-method="POST"
+      data-path="api/admin/addons/{addon}/status"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-addons--addon--status', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-addons--addon--status"
+                    onclick="tryItOut('POSTapi-admin-addons--addon--status');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-addons--addon--status"
+                    onclick="cancelTryOut('POSTapi-admin-addons--addon--status');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-addons--addon--status"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/addons/{addon}/status</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-addons--addon--status"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-addons--addon--status"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-addons--addon--status"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>addon</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="addon"                data-endpoint="POSTapi-admin-addons--addon--status"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The addon. Example: <code>architecto</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-admin-addons--addon--status" style="display: none">
+            <input type="radio" name="status"
+                   value="true"
+                   data-endpoint="POSTapi-admin-addons--addon--status"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-admin-addons--addon--status" style="display: none">
+            <input type="radio" name="status"
+                   value="false"
+                   data-endpoint="POSTapi-admin-addons--addon--status"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
+        </div>
+        </form>
+
+                    <h2 id="admin-addon-management-GETapi-admin-addons--addon--modules">Get Addon Modules</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-addons--addon--modules">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/addons/architecto/modules" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/addons/architecto/modules"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/addons/architecto/modules';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/addons/architecto/modules'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-addons--addon--modules">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/addons/architecto/modules could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-addons--addon--modules" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-addons--addon--modules"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-addons--addon--modules"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-addons--addon--modules" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-addons--addon--modules">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-addons--addon--modules" data-method="GET"
+      data-path="api/admin/addons/{addon}/modules"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-addons--addon--modules', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-addons--addon--modules"
+                    onclick="tryItOut('GETapi-admin-addons--addon--modules');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-addons--addon--modules"
+                    onclick="cancelTryOut('GETapi-admin-addons--addon--modules');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-addons--addon--modules"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/addons/{addon}/modules</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-addons--addon--modules"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-addons--addon--modules"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-addons--addon--modules"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>addon</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="addon"                data-endpoint="GETapi-admin-addons--addon--modules"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The addon. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="admin-addon-management-POSTapi-admin-addons--addon--modules--module-">Update Module Status</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-addons--addon--modules--module-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/addons/architecto/modules/architecto" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"status\": true
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/addons/architecto/modules/architecto"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "status": true
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/addons/architecto/modules/architecto';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'status' =&gt; true,
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/addons/architecto/modules/architecto'
+payload = {
+    "status": true
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-addons--addon--modules--module-">
+</span>
+<span id="execution-results-POSTapi-admin-addons--addon--modules--module-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-addons--addon--modules--module-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-addons--addon--modules--module-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-addons--addon--modules--module-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-addons--addon--modules--module-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-addons--addon--modules--module-" data-method="POST"
+      data-path="api/admin/addons/{addon}/modules/{module}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-addons--addon--modules--module-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-addons--addon--modules--module-"
+                    onclick="tryItOut('POSTapi-admin-addons--addon--modules--module-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-addons--addon--modules--module-"
+                    onclick="cancelTryOut('POSTapi-admin-addons--addon--modules--module-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-addons--addon--modules--module-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/addons/{addon}/modules/{module}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>addon</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="addon"                data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The addon. Example: <code>architecto</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>module</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="module"                data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The module. Example: <code>architecto</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-admin-addons--addon--modules--module-" style="display: none">
+            <input type="radio" name="status"
+                   value="true"
+                   data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-admin-addons--addon--modules--module-" style="display: none">
+            <input type="radio" name="status"
+                   value="false"
+                   data-endpoint="POSTapi-admin-addons--addon--modules--module-"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
         </div>
         </form>
 
@@ -28954,6 +29969,1048 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                <h1 id="admin-system-tools">Admin - System Tools</h1>
+
+    <p>Endpoints for system monitoring and management (AlgoExpert++).</p>
+
+                                <h2 id="admin-system-tools-GETapi-admin-system-health">System Health Check</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-system-health">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/system/health" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/system/health"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/system/health';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/system/health'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-system-health">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/system/health could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-system-health" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-system-health"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-system-health"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-system-health" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-system-health">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-system-health" data-method="GET"
+      data-path="api/admin/system/health"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-system-health', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-system-health"
+                    onclick="tryItOut('GETapi-admin-system-health');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-system-health"
+                    onclick="cancelTryOut('GETapi-admin-system-health');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-system-health"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/system/health</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-system-health"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-system-health"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-system-health"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="admin-system-tools-GETapi-admin-system-performance-stats">Performance Status</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-system-performance-stats">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/system/performance-stats" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/system/performance-stats"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/system/performance-stats';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/system/performance-stats'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-system-performance-stats">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/system/performance-stats could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-system-performance-stats" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-system-performance-stats"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-system-performance-stats"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-system-performance-stats" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-system-performance-stats">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-system-performance-stats" data-method="GET"
+      data-path="api/admin/system/performance-stats"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-system-performance-stats', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-system-performance-stats"
+                    onclick="tryItOut('GETapi-admin-system-performance-stats');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-system-performance-stats"
+                    onclick="cancelTryOut('GETapi-admin-system-performance-stats');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-system-performance-stats"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/system/performance-stats</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-system-performance-stats"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-system-performance-stats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-system-performance-stats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="admin-system-tools-GETapi-admin-system-cron-jobs">List Cron Jobs</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-system-cron-jobs">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/system/cron-jobs" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/system/cron-jobs"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/system/cron-jobs';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/system/cron-jobs'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-system-cron-jobs">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/system/cron-jobs could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-system-cron-jobs" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-system-cron-jobs"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-system-cron-jobs"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-system-cron-jobs" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-system-cron-jobs">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-system-cron-jobs" data-method="GET"
+      data-path="api/admin/system/cron-jobs"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-system-cron-jobs', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-system-cron-jobs"
+                    onclick="tryItOut('GETapi-admin-system-cron-jobs');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-system-cron-jobs"
+                    onclick="cancelTryOut('GETapi-admin-system-cron-jobs');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-system-cron-jobs"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/system/cron-jobs</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-system-cron-jobs"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-system-cron-jobs"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-system-cron-jobs"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="admin-system-tools-GETapi-admin-system-horizon-stats">Horizon Stats</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-system-horizon-stats">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/system/horizon/stats" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/system/horizon/stats"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/system/horizon/stats';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/system/horizon/stats'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-system-horizon-stats">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/system/horizon/stats could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-system-horizon-stats" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-system-horizon-stats"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-system-horizon-stats"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-system-horizon-stats" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-system-horizon-stats">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-system-horizon-stats" data-method="GET"
+      data-path="api/admin/system/horizon/stats"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-system-horizon-stats', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-system-horizon-stats"
+                    onclick="tryItOut('GETapi-admin-system-horizon-stats');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-system-horizon-stats"
+                    onclick="cancelTryOut('GETapi-admin-system-horizon-stats');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-system-horizon-stats"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/system/horizon/stats</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-system-horizon-stats"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-system-horizon-stats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-system-horizon-stats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="admin-system-tools-POSTapi-admin-system-horizon-clear-failed">Clear Failed Jobs</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-system-horizon-clear-failed">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/system/horizon/clear-failed" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/system/horizon/clear-failed"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/system/horizon/clear-failed';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/system/horizon/clear-failed'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-system-horizon-clear-failed">
+</span>
+<span id="execution-results-POSTapi-admin-system-horizon-clear-failed" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-system-horizon-clear-failed"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-system-horizon-clear-failed"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-system-horizon-clear-failed" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-system-horizon-clear-failed">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-system-horizon-clear-failed" data-method="POST"
+      data-path="api/admin/system/horizon/clear-failed"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-system-horizon-clear-failed', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-system-horizon-clear-failed"
+                    onclick="tryItOut('POSTapi-admin-system-horizon-clear-failed');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-system-horizon-clear-failed"
+                    onclick="cancelTryOut('POSTapi-admin-system-horizon-clear-failed');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-system-horizon-clear-failed"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/system/horizon/clear-failed</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-system-horizon-clear-failed"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-system-horizon-clear-failed"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-system-horizon-clear-failed"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                <h1 id="admin-theme-management">Admin - Theme Management</h1>
+
+    <p>Endpoints for managing themes.</p>
+
+                                <h2 id="admin-theme-management-POSTapi-admin-themes-activate">Activate Theme</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-themes-activate">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/themes/activate" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"theme\": \"architecto\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/themes/activate"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "theme": "architecto"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/themes/activate';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'theme' =&gt; 'architecto',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/themes/activate'
+payload = {
+    "theme": "architecto"
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-themes-activate">
+</span>
+<span id="execution-results-POSTapi-admin-themes-activate" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-themes-activate"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-themes-activate"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-themes-activate" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-themes-activate">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-themes-activate" data-method="POST"
+      data-path="api/admin/themes/activate"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-themes-activate', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-themes-activate"
+                    onclick="tryItOut('POSTapi-admin-themes-activate');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-themes-activate"
+                    onclick="cancelTryOut('POSTapi-admin-themes-activate');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-themes-activate"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/themes/activate</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-themes-activate"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-themes-activate"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-themes-activate"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>theme</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="theme"                data-endpoint="POSTapi-admin-themes-activate"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+        </form>
+
                 <h1 id="admin-management">Admin Management</h1>
 
     <p>Endpoints for managing system settings, themes, and frontend content.</p>
@@ -30878,11 +32935,1888 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
+                <h1 id="backtesting-copy-trading">Backtesting & Copy Trading</h1>
+
+    <p>Endpoints for backtesting strategies and copy trading.</p>
+
+                                <h2 id="backtesting-copy-trading-GETapi-user-copy-trading-traders">List Available Traders (Copy Trading)</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-user-copy-trading-traders">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/user/copy-trading/traders" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/copy-trading/traders"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/copy-trading/traders';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/copy-trading/traders'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-user-copy-trading-traders">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/user/copy-trading/traders could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-user-copy-trading-traders" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-user-copy-trading-traders"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-user-copy-trading-traders"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-user-copy-trading-traders" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-user-copy-trading-traders">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-user-copy-trading-traders" data-method="GET"
+      data-path="api/user/copy-trading/traders"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-copy-trading-traders', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-user-copy-trading-traders"
+                    onclick="tryItOut('GETapi-user-copy-trading-traders');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-user-copy-trading-traders"
+                    onclick="cancelTryOut('GETapi-user-copy-trading-traders');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-user-copy-trading-traders"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/user/copy-trading/traders</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-copy-trading-traders"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-user-copy-trading-traders"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-user-copy-trading-traders"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="backtesting-copy-trading-GETapi-user-copy-trading-subscriptions">My Copy Trading Subscriptions</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-user-copy-trading-subscriptions">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/user/copy-trading/subscriptions" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/copy-trading/subscriptions"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/copy-trading/subscriptions';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/copy-trading/subscriptions'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-user-copy-trading-subscriptions">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/user/copy-trading/subscriptions could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-user-copy-trading-subscriptions" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-user-copy-trading-subscriptions"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-user-copy-trading-subscriptions"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-user-copy-trading-subscriptions" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-user-copy-trading-subscriptions">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-user-copy-trading-subscriptions" data-method="GET"
+      data-path="api/user/copy-trading/subscriptions"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-copy-trading-subscriptions', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-user-copy-trading-subscriptions"
+                    onclick="tryItOut('GETapi-user-copy-trading-subscriptions');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-user-copy-trading-subscriptions"
+                    onclick="cancelTryOut('GETapi-user-copy-trading-subscriptions');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-user-copy-trading-subscriptions"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/user/copy-trading/subscriptions</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-copy-trading-subscriptions"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-user-copy-trading-subscriptions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-user-copy-trading-subscriptions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="backtesting-copy-trading-GETapi-user-backtesting">List Backtests</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-user-backtesting">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/user/backtesting" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/backtesting"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/backtesting';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/backtesting'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-user-backtesting">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/user/backtesting could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-user-backtesting" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-user-backtesting"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-user-backtesting"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-user-backtesting" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-user-backtesting">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-user-backtesting" data-method="GET"
+      data-path="api/user/backtesting"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-backtesting', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-user-backtesting"
+                    onclick="tryItOut('GETapi-user-backtesting');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-user-backtesting"
+                    onclick="cancelTryOut('GETapi-user-backtesting');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-user-backtesting"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/user/backtesting</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-backtesting"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-user-backtesting"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-user-backtesting"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="backtesting-copy-trading-POSTapi-user-backtesting-run">Run Backtest</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-user-backtesting-run">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/user/backtesting/run" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"strategy_id\": 16,
+    \"symbol\": \"architecto\",
+    \"timeframe\": \"architecto\",
+    \"start_date\": \"2025-12-11T12:20:22\",
+    \"end_date\": \"2052-01-04\",
+    \"initial_balance\": 39
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/backtesting/run"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "strategy_id": 16,
+    "symbol": "architecto",
+    "timeframe": "architecto",
+    "start_date": "2025-12-11T12:20:22",
+    "end_date": "2052-01-04",
+    "initial_balance": 39
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/backtesting/run';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'strategy_id' =&gt; 16,
+            'symbol' =&gt; 'architecto',
+            'timeframe' =&gt; 'architecto',
+            'start_date' =&gt; '2025-12-11T12:20:22',
+            'end_date' =&gt; '2052-01-04',
+            'initial_balance' =&gt; 39,
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/backtesting/run'
+payload = {
+    "strategy_id": 16,
+    "symbol": "architecto",
+    "timeframe": "architecto",
+    "start_date": "2025-12-11T12:20:22",
+    "end_date": "2052-01-04",
+    "initial_balance": 39
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-user-backtesting-run">
+</span>
+<span id="execution-results-POSTapi-user-backtesting-run" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-user-backtesting-run"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-user-backtesting-run"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-user-backtesting-run" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-user-backtesting-run">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-user-backtesting-run" data-method="POST"
+      data-path="api/user/backtesting/run"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-user-backtesting-run', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-user-backtesting-run"
+                    onclick="tryItOut('POSTapi-user-backtesting-run');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-user-backtesting-run"
+                    onclick="cancelTryOut('POSTapi-user-backtesting-run');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-user-backtesting-run"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/user/backtesting/run</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-user-backtesting-run"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-user-backtesting-run"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-user-backtesting-run"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>strategy_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="strategy_id"                data-endpoint="POSTapi-user-backtesting-run"
+               value="16"
+               data-component="body">
+    <br>
+<p>Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>symbol</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="symbol"                data-endpoint="POSTapi-user-backtesting-run"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>timeframe</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="timeframe"                data-endpoint="POSTapi-user-backtesting-run"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>start_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="start_date"                data-endpoint="POSTapi-user-backtesting-run"
+               value="2025-12-11T12:20:22"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Example: <code>2025-12-11T12:20:22</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>end_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="end_date"                data-endpoint="POSTapi-user-backtesting-run"
+               value="2052-01-04"
+               data-component="body">
+    <br>
+<p>Must be a valid date. Must be a date after <code>start_date</code>. Example: <code>2052-01-04</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>initial_balance</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="initial_balance"                data-endpoint="POSTapi-user-backtesting-run"
+               value="39"
+               data-component="body">
+    <br>
+<p>Must be at least 0. Example: <code>39</code></p>
+        </div>
+        </form>
+
+                    <h2 id="backtesting-copy-trading-GETapi-user-backtesting--id-">Get Backtest Results</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-user-backtesting--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/user/backtesting/architecto" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/backtesting/architecto"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/backtesting/architecto';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/backtesting/architecto'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-user-backtesting--id-">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/user/backtesting/architecto could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-user-backtesting--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-user-backtesting--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-user-backtesting--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-user-backtesting--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-user-backtesting--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-user-backtesting--id-" data-method="GET"
+      data-path="api/user/backtesting/{id}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-backtesting--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-user-backtesting--id-"
+                    onclick="tryItOut('GETapi-user-backtesting--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-user-backtesting--id-"
+                    onclick="cancelTryOut('GETapi-user-backtesting--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-user-backtesting--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/user/backtesting/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-backtesting--id-"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-user-backtesting--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-user-backtesting--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-user-backtesting--id-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the backtesting. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="backtesting-copy-trading-POSTapi-user-copy-trading-traders--id--follow">Follow Trader</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-user-copy-trading-traders--id--follow">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/user/copy-trading/traders/architecto/follow" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"connection_id\": 16,
+    \"copy_percentage\": 22
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/copy-trading/traders/architecto/follow"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "connection_id": 16,
+    "copy_percentage": 22
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/copy-trading/traders/architecto/follow';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+        'json' =&gt; [
+            'connection_id' =&gt; 16,
+            'copy_percentage' =&gt; 22,
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/copy-trading/traders/architecto/follow'
+payload = {
+    "connection_id": 16,
+    "copy_percentage": 22
+}
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers, json=payload)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-user-copy-trading-traders--id--follow">
+</span>
+<span id="execution-results-POSTapi-user-copy-trading-traders--id--follow" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-user-copy-trading-traders--id--follow"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-user-copy-trading-traders--id--follow"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-user-copy-trading-traders--id--follow" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-user-copy-trading-traders--id--follow">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-user-copy-trading-traders--id--follow" data-method="POST"
+      data-path="api/user/copy-trading/traders/{id}/follow"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-user-copy-trading-traders--id--follow', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-user-copy-trading-traders--id--follow"
+                    onclick="tryItOut('POSTapi-user-copy-trading-traders--id--follow');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-user-copy-trading-traders--id--follow"
+                    onclick="cancelTryOut('POSTapi-user-copy-trading-traders--id--follow');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-user-copy-trading-traders--id--follow"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/user/copy-trading/traders/{id}/follow</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the trader. Example: <code>architecto</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>connection_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="connection_id"                data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="16"
+               data-component="body">
+    <br>
+<p>Example: <code>16</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>copy_percentage</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="copy_percentage"                data-endpoint="POSTapi-user-copy-trading-traders--id--follow"
+               value="22"
+               data-component="body">
+    <br>
+<p>Must be at least 1. Must not be greater than 100. Example: <code>22</code></p>
+        </div>
+        </form>
+
+                    <h2 id="backtesting-copy-trading-DELETEapi-user-copy-trading-traders--id--unfollow">Unfollow Trader</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-user-copy-trading-traders--id--unfollow">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "https://aitradepulse.com/api/user/copy-trading/traders/architecto/unfollow" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/user/copy-trading/traders/architecto/unfollow"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/user/copy-trading/traders/architecto/unfollow';
+$response = $client-&gt;delete(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/user/copy-trading/traders/architecto/unfollow'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('DELETE', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-user-copy-trading-traders--id--unfollow">
+</span>
+<span id="execution-results-DELETEapi-user-copy-trading-traders--id--unfollow" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-user-copy-trading-traders--id--unfollow"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-user-copy-trading-traders--id--unfollow"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-user-copy-trading-traders--id--unfollow" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-user-copy-trading-traders--id--unfollow">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-user-copy-trading-traders--id--unfollow" data-method="DELETE"
+      data-path="api/user/copy-trading/traders/{id}/unfollow"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-user-copy-trading-traders--id--unfollow', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-user-copy-trading-traders--id--unfollow"
+                    onclick="tryItOut('DELETEapi-user-copy-trading-traders--id--unfollow');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-user-copy-trading-traders--id--unfollow"
+                    onclick="cancelTryOut('DELETEapi-user-copy-trading-traders--id--unfollow');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-user-copy-trading-traders--id--unfollow"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/user/copy-trading/traders/{id}/unfollow</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-user-copy-trading-traders--id--unfollow"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-user-copy-trading-traders--id--unfollow"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-user-copy-trading-traders--id--unfollow"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="DELETEapi-user-copy-trading-traders--id--unfollow"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the trader. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
                 <h1 id="endpoints">Endpoints</h1>
 
     
 
-                                <h2 id="endpoints-GETapi-user">GET api/user</h2>
+                                <h2 id="endpoints-GETapi-plans">GET api/plans</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-plans">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/plans" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/plans"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/plans';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/plans'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-plans">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/plans could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-plans" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-plans"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-plans"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-plans" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-plans">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-plans" data-method="GET"
+      data-path="api/plans"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-plans', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-plans"
+                    onclick="tryItOut('GETapi-plans');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-plans"
+                    onclick="cancelTryOut('GETapi-plans');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-plans"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/plans</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-plans"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-plans"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-plans"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-time-frames">GET api/time-frames</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-time-frames">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/time-frames" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/time-frames"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/time-frames';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/time-frames'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-time-frames">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/time-frames could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-time-frames" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-time-frames"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-time-frames"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-time-frames" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-time-frames">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-time-frames" data-method="GET"
+      data-path="api/time-frames"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-time-frames', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-time-frames"
+                    onclick="tryItOut('GETapi-time-frames');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-time-frames"
+                    onclick="cancelTryOut('GETapi-time-frames');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-time-frames"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/time-frames</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-time-frames"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-time-frames"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-time-frames"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-signals-public">GET api/signals/public</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-signals-public">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/signals/public" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/signals/public"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/signals/public';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/signals/public'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-signals-public">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/signals/public could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-signals-public" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-signals-public"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-signals-public"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-signals-public" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-signals-public">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-signals-public" data-method="GET"
+      data-path="api/signals/public"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-signals-public', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-signals-public"
+                    onclick="tryItOut('GETapi-signals-public');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-signals-public"
+                    onclick="cancelTryOut('GETapi-signals-public');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-signals-public"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/signals/public</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-signals-public"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-signals-public"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-signals-public"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-GETapi-user">GET api/user</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -33261,179 +37195,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-user-copy-trading-traders">Browse traders</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-GETapi-user-copy-trading-traders">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/user/copy-trading/traders" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/user/copy-trading/traders"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/user/copy-trading/traders';
-$response = $client-&gt;get(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/user/copy-trading/traders'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('GET', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-user-copy-trading-traders">
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">cache-control: no-cache, private
-content-type: application/json
-access-control-allow-origin: *
- </code></pre></details>         <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;The route api/user/copy-trading/traders could not be found.&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-user-copy-trading-traders" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-user-copy-trading-traders"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-user-copy-trading-traders"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-user-copy-trading-traders" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-user-copy-trading-traders">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-user-copy-trading-traders" data-method="GET"
-      data-path="api/user/copy-trading/traders"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-copy-trading-traders', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-user-copy-trading-traders"
-                    onclick="tryItOut('GETapi-user-copy-trading-traders');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-user-copy-trading-traders"
-                    onclick="cancelTryOut('GETapi-user-copy-trading-traders');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-user-copy-trading-traders"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/user/copy-trading/traders</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-copy-trading-traders"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-user-copy-trading-traders"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-user-copy-trading-traders"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
                     <h2 id="endpoints-GETapi-user-copy-trading-traders--id-">Get trader profile</h2>
 
 <p>
@@ -33619,179 +37380,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>The ID of the trader. Example: <code>architecto</code></p>
             </div>
                     </form>
-
-                    <h2 id="endpoints-GETapi-user-copy-trading-subscriptions">Get copy trading subscriptions</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-GETapi-user-copy-trading-subscriptions">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/user/copy-trading/subscriptions" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/user/copy-trading/subscriptions"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/user/copy-trading/subscriptions';
-$response = $client-&gt;get(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/user/copy-trading/subscriptions'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('GET', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-user-copy-trading-subscriptions">
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">cache-control: no-cache, private
-content-type: application/json
-access-control-allow-origin: *
- </code></pre></details>         <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;The route api/user/copy-trading/subscriptions could not be found.&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-user-copy-trading-subscriptions" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-user-copy-trading-subscriptions"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-user-copy-trading-subscriptions"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-user-copy-trading-subscriptions" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-user-copy-trading-subscriptions">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-user-copy-trading-subscriptions" data-method="GET"
-      data-path="api/user/copy-trading/subscriptions"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-user-copy-trading-subscriptions', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-user-copy-trading-subscriptions"
-                    onclick="tryItOut('GETapi-user-copy-trading-subscriptions');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-user-copy-trading-subscriptions"
-                    onclick="cancelTryOut('GETapi-user-copy-trading-subscriptions');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-user-copy-trading-subscriptions"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/user/copy-trading/subscriptions</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-user-copy-trading-subscriptions"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-user-copy-trading-subscriptions"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-user-copy-trading-subscriptions"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
 
                     <h2 id="endpoints-GETapi-user-copy-trading-history">Get copy trading history</h2>
 
@@ -35327,7 +38915,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-admin-translation--lang--translations">Get translations for a language</h2>
+                    <h2 id="endpoints-POSTapi-admin-languages--lang--auto-translate">Auto translate using AI</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -35335,853 +38923,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 
 
-<span id="example-requests-GETapi-admin-translation--lang--translations">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/admin/translation/architecto/translations" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/architecto/translations"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/architecto/translations';
-$response = $client-&gt;get(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/translation/architecto/translations'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('GET', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-admin-translation--lang--translations">
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">cache-control: no-cache, private
-content-type: application/json
-access-control-allow-origin: *
- </code></pre></details>         <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;The route api/admin/translation/architecto/translations could not be found.&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-admin-translation--lang--translations" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-admin-translation--lang--translations"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-admin-translation--lang--translations"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-admin-translation--lang--translations" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-admin-translation--lang--translations">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-admin-translation--lang--translations" data-method="GET"
-      data-path="api/admin/translation/{lang}/translations"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-translation--lang--translations', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-admin-translation--lang--translations"
-                    onclick="tryItOut('GETapi-admin-translation--lang--translations');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-admin-translation--lang--translations"
-                    onclick="cancelTryOut('GETapi-admin-translation--lang--translations');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-admin-translation--lang--translations"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/admin/translation/{lang}/translations</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-translation--lang--translations"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-admin-translation--lang--translations"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-admin-translation--lang--translations"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
-                    <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>lang</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="lang"                data-endpoint="GETapi-admin-translation--lang--translations"
-               value="architecto"
-               data-component="url">
-    <br>
-<p>Example: <code>architecto</code></p>
-            </div>
-                    </form>
-
-                    <h2 id="endpoints-PUTapi-admin-translation--lang--translations">Update translation</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-PUTapi-admin-translation--lang--translations">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request PUT \
-    "https://aitradepulse.com/api/admin/translation/architecto/translations" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"key\": \"architecto\",
-    \"value\": \"architecto\"
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/architecto/translations"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "key": "architecto",
-    "value": "architecto"
-};
-
-fetch(url, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/architecto/translations';
-$response = $client-&gt;put(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-        'json' =&gt; [
-            'key' =&gt; 'architecto',
-            'value' =&gt; 'architecto',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/translation/architecto/translations'
-payload = {
-    "key": "architecto",
-    "value": "architecto"
-}
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('PUT', url, headers=headers, json=payload)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-PUTapi-admin-translation--lang--translations">
-</span>
-<span id="execution-results-PUTapi-admin-translation--lang--translations" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-PUTapi-admin-translation--lang--translations"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-PUTapi-admin-translation--lang--translations"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-PUTapi-admin-translation--lang--translations" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-PUTapi-admin-translation--lang--translations">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-PUTapi-admin-translation--lang--translations" data-method="PUT"
-      data-path="api/admin/translation/{lang}/translations"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('PUTapi-admin-translation--lang--translations', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-PUTapi-admin-translation--lang--translations"
-                    onclick="tryItOut('PUTapi-admin-translation--lang--translations');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-PUTapi-admin-translation--lang--translations"
-                    onclick="cancelTryOut('PUTapi-admin-translation--lang--translations');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-PUTapi-admin-translation--lang--translations"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-darkblue">PUT</small>
-            <b><code>api/admin/translation/{lang}/translations</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
-                    <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>lang</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="lang"                data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="architecto"
-               data-component="url">
-    <br>
-<p>Example: <code>architecto</code></p>
-            </div>
-                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>key</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="key"                data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>value</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="value"                data-endpoint="PUTapi-admin-translation--lang--translations"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-        </div>
-        </form>
-
-                    <h2 id="endpoints-PUTapi-admin-translation--lang--translations-bulk">Bulk update translations</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-PUTapi-admin-translation--lang--translations-bulk">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request PUT \
-    "https://aitradepulse.com/api/admin/translation/architecto/translations/bulk" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"translations\": [
-        {
-            \"key\": \"architecto\",
-            \"value\": \"architecto\"
-        }
-    ]
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/architecto/translations/bulk"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "translations": [
-        {
-            "key": "architecto",
-            "value": "architecto"
-        }
-    ]
-};
-
-fetch(url, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/architecto/translations/bulk';
-$response = $client-&gt;put(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-        'json' =&gt; [
-            'translations' =&gt; [
-                [
-                    'key' =&gt; 'architecto',
-                    'value' =&gt; 'architecto',
-                ],
-            ],
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/translation/architecto/translations/bulk'
-payload = {
-    "translations": [
-        {
-            "key": "architecto",
-            "value": "architecto"
-        }
-    ]
-}
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('PUT', url, headers=headers, json=payload)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-PUTapi-admin-translation--lang--translations-bulk">
-</span>
-<span id="execution-results-PUTapi-admin-translation--lang--translations-bulk" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-PUTapi-admin-translation--lang--translations-bulk"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-PUTapi-admin-translation--lang--translations-bulk"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-PUTapi-admin-translation--lang--translations-bulk" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-PUTapi-admin-translation--lang--translations-bulk">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-PUTapi-admin-translation--lang--translations-bulk" data-method="PUT"
-      data-path="api/admin/translation/{lang}/translations/bulk"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('PUTapi-admin-translation--lang--translations-bulk', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-PUTapi-admin-translation--lang--translations-bulk"
-                    onclick="tryItOut('PUTapi-admin-translation--lang--translations-bulk');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-PUTapi-admin-translation--lang--translations-bulk"
-                    onclick="cancelTryOut('PUTapi-admin-translation--lang--translations-bulk');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-PUTapi-admin-translation--lang--translations-bulk"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-darkblue">PUT</small>
-            <b><code>api/admin/translation/{lang}/translations/bulk</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
-                    <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>lang</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="lang"                data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="architecto"
-               data-component="url">
-    <br>
-<p>Example: <code>architecto</code></p>
-            </div>
-                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-        <details>
-            <summary style="padding-bottom: 10px;">
-                <b style="line-height: 2;"><code>translations</code></b>&nbsp;&nbsp;
-<small>object[]</small>&nbsp;
- &nbsp;
- &nbsp;
-<br>
-
-            </summary>
-                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>key</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="translations.0.key"                data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-                    </div>
-                                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>value</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="translations.0.value"                data-endpoint="PUTapi-admin-translation--lang--translations-bulk"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-                    </div>
-                                    </details>
-        </div>
-        </form>
-
-                    <h2 id="endpoints-DELETEapi-admin-translation--lang--key">Delete translation key</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-DELETEapi-admin-translation--lang--key">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request DELETE \
-    "https://aitradepulse.com/api/admin/translation/architecto/key" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"key\": \"architecto\"
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/architecto/key"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "key": "architecto"
-};
-
-fetch(url, {
-    method: "DELETE",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/architecto/key';
-$response = $client-&gt;delete(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-        'json' =&gt; [
-            'key' =&gt; 'architecto',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/translation/architecto/key'
-payload = {
-    "key": "architecto"
-}
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('DELETE', url, headers=headers, json=payload)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-DELETEapi-admin-translation--lang--key">
-</span>
-<span id="execution-results-DELETEapi-admin-translation--lang--key" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-DELETEapi-admin-translation--lang--key"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-DELETEapi-admin-translation--lang--key"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-DELETEapi-admin-translation--lang--key" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-DELETEapi-admin-translation--lang--key">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-DELETEapi-admin-translation--lang--key" data-method="DELETE"
-      data-path="api/admin/translation/{lang}/key"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-admin-translation--lang--key', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-DELETEapi-admin-translation--lang--key"
-                    onclick="tryItOut('DELETEapi-admin-translation--lang--key');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-DELETEapi-admin-translation--lang--key"
-                    onclick="cancelTryOut('DELETEapi-admin-translation--lang--key');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-DELETEapi-admin-translation--lang--key"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-red">DELETE</small>
-            <b><code>api/admin/translation/{lang}/key</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-admin-translation--lang--key"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="DELETEapi-admin-translation--lang--key"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="DELETEapi-admin-translation--lang--key"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
-                    <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>lang</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="lang"                data-endpoint="DELETEapi-admin-translation--lang--key"
-               value="architecto"
-               data-component="url">
-    <br>
-<p>Example: <code>architecto</code></p>
-            </div>
-                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>key</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="key"                data-endpoint="DELETEapi-admin-translation--lang--key"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Example: <code>architecto</code></p>
-        </div>
-        </form>
-
-                    <h2 id="endpoints-POSTapi-admin-translation--lang--auto-translate">Auto translate using AI</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-POSTapi-admin-translation--lang--auto-translate">
+<span id="example-requests-POSTapi-admin-languages--lang--auto-translate">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://aitradepulse.com/api/admin/translation/architecto/auto-translate" \
+    "https://aitradepulse.com/api/admin/languages/architecto/auto-translate" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -36193,7 +38941,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/architecto/auto-translate"
+    "https://aitradepulse.com/api/admin/languages/architecto/auto-translate"
 );
 
 const headers = {
@@ -36215,7 +38963,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/architecto/auto-translate';
+$url = 'https://aitradepulse.com/api/admin/languages/architecto/auto-translate';
 $response = $client-&gt;post(
     $url,
     [
@@ -36237,7 +38985,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/admin/translation/architecto/auto-translate'
+url = 'https://aitradepulse.com/api/admin/languages/architecto/auto-translate'
 payload = {
     "target_language": "architecto"
 }
@@ -36252,45 +39000,45 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-POSTapi-admin-translation--lang--auto-translate">
+<span id="example-responses-POSTapi-admin-languages--lang--auto-translate">
 </span>
-<span id="execution-results-POSTapi-admin-translation--lang--auto-translate" hidden>
+<span id="execution-results-POSTapi-admin-languages--lang--auto-translate" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-admin-translation--lang--auto-translate"></span>:
+                id="execution-response-status-POSTapi-admin-languages--lang--auto-translate"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-admin-translation--lang--auto-translate"
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-languages--lang--auto-translate"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-admin-translation--lang--auto-translate" hidden>
+<span id="execution-error-POSTapi-admin-languages--lang--auto-translate" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-admin-translation--lang--auto-translate">
+    <pre><code id="execution-error-message-POSTapi-admin-languages--lang--auto-translate">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-admin-translation--lang--auto-translate" data-method="POST"
-      data-path="api/admin/translation/{lang}/auto-translate"
+<form id="form-POSTapi-admin-languages--lang--auto-translate" data-method="POST"
+      data-path="api/admin/languages/{lang}/auto-translate"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-translation--lang--auto-translate', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-languages--lang--auto-translate', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-admin-translation--lang--auto-translate"
-                    onclick="tryItOut('POSTapi-admin-translation--lang--auto-translate');">Try it out ⚡
+                    id="btn-tryout-POSTapi-admin-languages--lang--auto-translate"
+                    onclick="tryItOut('POSTapi-admin-languages--lang--auto-translate');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-admin-translation--lang--auto-translate"
-                    onclick="cancelTryOut('POSTapi-admin-translation--lang--auto-translate');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-admin-languages--lang--auto-translate"
+                    onclick="cancelTryOut('POSTapi-admin-languages--lang--auto-translate');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-admin-translation--lang--auto-translate"
+                    id="btn-executetryout-POSTapi-admin-languages--lang--auto-translate"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -36298,7 +39046,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/admin/translation/{lang}/auto-translate</code></b>
+            <b><code>api/admin/languages/{lang}/auto-translate</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -36307,7 +39055,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -36319,7 +39067,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value="application/json"
                data-component="header">
     <br>
@@ -36331,7 +39079,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="Accept"                data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value="application/json"
                data-component="header">
     <br>
@@ -36344,7 +39092,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="lang"                data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="lang"                data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value="architecto"
                data-component="url">
     <br>
@@ -36357,7 +39105,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="target_language"                data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="target_language"                data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value="architecto"
                data-component="body">
     <br>
@@ -36369,7 +39117,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="keys"                data-endpoint="POSTapi-admin-translation--lang--auto-translate"
+                              name="keys"                data-endpoint="POSTapi-admin-languages--lang--auto-translate"
                value=""
                data-component="body">
     <br>
@@ -36377,7 +39125,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-GETapi-admin-translation-settings">Get translation settings</h2>
+                    <h2 id="endpoints-GETapi-admin-languages-settings">Get translation settings</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -36385,13 +39133,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 
 
-<span id="example-requests-GETapi-admin-translation-settings">
+<span id="example-requests-GETapi-admin-languages-settings">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/admin/translation/settings" \
+    --get "https://aitradepulse.com/api/admin/languages/settings" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -36399,7 +39147,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/settings"
+    "https://aitradepulse.com/api/admin/languages/settings"
 );
 
 const headers = {
@@ -36416,7 +39164,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/settings';
+$url = 'https://aitradepulse.com/api/admin/languages/settings';
 $response = $client-&gt;get(
     $url,
     [
@@ -36435,7 +39183,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/admin/translation/settings'
+url = 'https://aitradepulse.com/api/admin/languages/settings'
 headers = {
   'Authorization': 'Bearer Bearer {TOKEN}',
   'Content-Type': 'application/json',
@@ -36447,7 +39195,7 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-GETapi-admin-translation-settings">
+<span id="example-responses-GETapi-admin-languages-settings">
             <blockquote>
             <p>Example response (404):</p>
         </blockquote>
@@ -36461,47 +39209,47 @@ access-control-allow-origin: *
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;The route api/admin/translation/settings could not be found.&quot;
+    &quot;message&quot;: &quot;The route api/admin/languages/settings could not be found.&quot;
 }</code>
  </pre>
     </span>
-<span id="execution-results-GETapi-admin-translation-settings" hidden>
+<span id="execution-results-GETapi-admin-languages-settings" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-GETapi-admin-translation-settings"></span>:
+                id="execution-response-status-GETapi-admin-languages-settings"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-admin-translation-settings"
+    <pre class="json"><code id="execution-response-content-GETapi-admin-languages-settings"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-GETapi-admin-translation-settings" hidden>
+<span id="execution-error-GETapi-admin-languages-settings" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-admin-translation-settings">
+    <pre><code id="execution-error-message-GETapi-admin-languages-settings">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-GETapi-admin-translation-settings" data-method="GET"
-      data-path="api/admin/translation/settings"
+<form id="form-GETapi-admin-languages-settings" data-method="GET"
+      data-path="api/admin/languages/settings"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-translation-settings', this);">
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-languages-settings', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-admin-translation-settings"
-                    onclick="tryItOut('GETapi-admin-translation-settings');">Try it out ⚡
+                    id="btn-tryout-GETapi-admin-languages-settings"
+                    onclick="tryItOut('GETapi-admin-languages-settings');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-admin-translation-settings"
-                    onclick="cancelTryOut('GETapi-admin-translation-settings');" hidden>Cancel 🛑
+                    id="btn-canceltryout-GETapi-admin-languages-settings"
+                    onclick="cancelTryOut('GETapi-admin-languages-settings');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-admin-translation-settings"
+                    id="btn-executetryout-GETapi-admin-languages-settings"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -36509,7 +39257,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-green">GET</small>
-            <b><code>api/admin/translation/settings</code></b>
+            <b><code>api/admin/languages/settings</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -36518,7 +39266,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-translation-settings"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-languages-settings"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -36530,7 +39278,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-admin-translation-settings"
+                              name="Content-Type"                data-endpoint="GETapi-admin-languages-settings"
                value="application/json"
                data-component="header">
     <br>
@@ -36542,7 +39290,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-admin-translation-settings"
+                              name="Accept"                data-endpoint="GETapi-admin-languages-settings"
                value="application/json"
                data-component="header">
     <br>
@@ -36550,7 +39298,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-PUTapi-admin-translation-settings">Update translation settings</h2>
+                    <h2 id="endpoints-PUTapi-admin-languages-settings">Update translation settings</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -36558,13 +39306,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 
 
-<span id="example-requests-PUTapi-admin-translation-settings">
+<span id="example-requests-PUTapi-admin-languages-settings">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "https://aitradepulse.com/api/admin/translation/settings" \
+    "https://aitradepulse.com/api/admin/languages/settings" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -36579,7 +39327,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/settings"
+    "https://aitradepulse.com/api/admin/languages/settings"
 );
 
 const headers = {
@@ -36604,7 +39352,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/settings';
+$url = 'https://aitradepulse.com/api/admin/languages/settings';
 $response = $client-&gt;put(
     $url,
     [
@@ -36629,7 +39377,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/admin/translation/settings'
+url = 'https://aitradepulse.com/api/admin/languages/settings'
 payload = {
     "provider": "architecto",
     "api_key": "architecto",
@@ -36647,45 +39395,45 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-PUTapi-admin-translation-settings">
+<span id="example-responses-PUTapi-admin-languages-settings">
 </span>
-<span id="execution-results-PUTapi-admin-translation-settings" hidden>
+<span id="execution-results-PUTapi-admin-languages-settings" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-PUTapi-admin-translation-settings"></span>:
+                id="execution-response-status-PUTapi-admin-languages-settings"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-PUTapi-admin-translation-settings"
+    <pre class="json"><code id="execution-response-content-PUTapi-admin-languages-settings"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-PUTapi-admin-translation-settings" hidden>
+<span id="execution-error-PUTapi-admin-languages-settings" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-PUTapi-admin-translation-settings">
+    <pre><code id="execution-error-message-PUTapi-admin-languages-settings">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-PUTapi-admin-translation-settings" data-method="PUT"
-      data-path="api/admin/translation/settings"
+<form id="form-PUTapi-admin-languages-settings" data-method="PUT"
+      data-path="api/admin/languages/settings"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('PUTapi-admin-translation-settings', this);">
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-admin-languages-settings', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-PUTapi-admin-translation-settings"
-                    onclick="tryItOut('PUTapi-admin-translation-settings');">Try it out ⚡
+                    id="btn-tryout-PUTapi-admin-languages-settings"
+                    onclick="tryItOut('PUTapi-admin-languages-settings');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-PUTapi-admin-translation-settings"
-                    onclick="cancelTryOut('PUTapi-admin-translation-settings');" hidden>Cancel 🛑
+                    id="btn-canceltryout-PUTapi-admin-languages-settings"
+                    onclick="cancelTryOut('PUTapi-admin-languages-settings');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-PUTapi-admin-translation-settings"
+                    id="btn-executetryout-PUTapi-admin-languages-settings"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -36693,7 +39441,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-darkblue">PUT</small>
-            <b><code>api/admin/translation/settings</code></b>
+            <b><code>api/admin/languages/settings</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -36702,7 +39450,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-admin-translation-settings"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-admin-languages-settings"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -36714,7 +39462,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="PUTapi-admin-translation-settings"
+                              name="Content-Type"                data-endpoint="PUTapi-admin-languages-settings"
                value="application/json"
                data-component="header">
     <br>
@@ -36726,7 +39474,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="PUTapi-admin-translation-settings"
+                              name="Accept"                data-endpoint="PUTapi-admin-languages-settings"
                value="application/json"
                data-component="header">
     <br>
@@ -36739,7 +39487,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="provider"                data-endpoint="PUTapi-admin-translation-settings"
+                              name="provider"                data-endpoint="PUTapi-admin-languages-settings"
                value="architecto"
                data-component="body">
     <br>
@@ -36751,7 +39499,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="api_key"                data-endpoint="PUTapi-admin-translation-settings"
+                              name="api_key"                data-endpoint="PUTapi-admin-languages-settings"
                value="architecto"
                data-component="body">
     <br>
@@ -36763,7 +39511,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="api_url"                data-endpoint="PUTapi-admin-translation-settings"
+                              name="api_url"                data-endpoint="PUTapi-admin-languages-settings"
                value="http://bailey.com/"
                data-component="body">
     <br>
@@ -36774,17 +39522,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <small>boolean</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
-                <label data-endpoint="PUTapi-admin-translation-settings" style="display: none">
+                <label data-endpoint="PUTapi-admin-languages-settings" style="display: none">
             <input type="radio" name="enabled"
                    value="true"
-                   data-endpoint="PUTapi-admin-translation-settings"
+                   data-endpoint="PUTapi-admin-languages-settings"
                    data-component="body"             >
             <code>true</code>
         </label>
-        <label data-endpoint="PUTapi-admin-translation-settings" style="display: none">
+        <label data-endpoint="PUTapi-admin-languages-settings" style="display: none">
             <input type="radio" name="enabled"
                    value="false"
-                   data-endpoint="PUTapi-admin-translation-settings"
+                   data-endpoint="PUTapi-admin-languages-settings"
                    data-component="body"             >
             <code>false</code>
         </label>
@@ -36793,7 +39541,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="endpoints-POSTapi-admin-translation-test">Test translation API</h2>
+                    <h2 id="endpoints-POSTapi-admin-languages-test">Test translation API</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -36801,13 +39549,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 
 
-<span id="example-requests-POSTapi-admin-translation-test">
+<span id="example-requests-POSTapi-admin-languages-test">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://aitradepulse.com/api/admin/translation/test" \
+    "https://aitradepulse.com/api/admin/languages/test" \
     --header "Authorization: Bearer Bearer {TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -36820,7 +39568,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/translation/test"
+    "https://aitradepulse.com/api/admin/languages/test"
 );
 
 const headers = {
@@ -36843,7 +39591,7 @@ fetch(url, {
 
 <div class="php-example">
     <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/translation/test';
+$url = 'https://aitradepulse.com/api/admin/languages/test';
 $response = $client-&gt;post(
     $url,
     [
@@ -36866,7 +39614,7 @@ print_r(json_decode((string) $body));</code></pre></div>
     <pre><code class="language-python">import requests
 import json
 
-url = 'https://aitradepulse.com/api/admin/translation/test'
+url = 'https://aitradepulse.com/api/admin/languages/test'
 payload = {
     "text": "architecto",
     "target_language": "architecto"
@@ -36882,45 +39630,45 @@ response.json()</code></pre></div>
 
 </span>
 
-<span id="example-responses-POSTapi-admin-translation-test">
+<span id="example-responses-POSTapi-admin-languages-test">
 </span>
-<span id="execution-results-POSTapi-admin-translation-test" hidden>
+<span id="execution-results-POSTapi-admin-languages-test" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-POSTapi-admin-translation-test"></span>:
+                id="execution-response-status-POSTapi-admin-languages-test"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-admin-translation-test"
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-languages-test"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-POSTapi-admin-translation-test" hidden>
+<span id="execution-error-POSTapi-admin-languages-test" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-admin-translation-test">
+    <pre><code id="execution-error-message-POSTapi-admin-languages-test">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-POSTapi-admin-translation-test" data-method="POST"
-      data-path="api/admin/translation/test"
+<form id="form-POSTapi-admin-languages-test" data-method="POST"
+      data-path="api/admin/languages/test"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-translation-test', this);">
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-languages-test', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-admin-translation-test"
-                    onclick="tryItOut('POSTapi-admin-translation-test');">Try it out ⚡
+                    id="btn-tryout-POSTapi-admin-languages-test"
+                    onclick="tryItOut('POSTapi-admin-languages-test');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-admin-translation-test"
-                    onclick="cancelTryOut('POSTapi-admin-translation-test');" hidden>Cancel 🛑
+                    id="btn-canceltryout-POSTapi-admin-languages-test"
+                    onclick="cancelTryOut('POSTapi-admin-languages-test');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-admin-translation-test"
+                    id="btn-executetryout-POSTapi-admin-languages-test"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
@@ -36928,7 +39676,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </h3>
             <p>
             <small class="badge badge-black">POST</small>
-            <b><code>api/admin/translation/test</code></b>
+            <b><code>api/admin/languages/test</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
@@ -36937,7 +39685,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-translation-test"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-languages-test"
                value="Bearer Bearer {TOKEN}"
                data-component="header">
     <br>
@@ -36949,7 +39697,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-admin-translation-test"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-languages-test"
                value="application/json"
                data-component="header">
     <br>
@@ -36961,7 +39709,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-admin-translation-test"
+                              name="Accept"                data-endpoint="POSTapi-admin-languages-test"
                value="application/json"
                data-component="header">
     <br>
@@ -36974,7 +39722,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="text"                data-endpoint="POSTapi-admin-translation-test"
+                              name="text"                data-endpoint="POSTapi-admin-languages-test"
                value="architecto"
                data-component="body">
     <br>
@@ -36986,13 +39734,513 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="target_language"                data-endpoint="POSTapi-admin-translation-test"
+                              name="target_language"                data-endpoint="POSTapi-admin-languages-test"
                value="architecto"
                data-component="body">
     <br>
 <p>Example: <code>architecto</code></p>
         </div>
         </form>
+
+                    <h2 id="endpoints-GETapi-admin-themes">List all themes</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-admin-themes">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/admin/themes" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/themes"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/themes';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/themes'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-admin-themes">
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The route api/admin/themes could not be found.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-admin-themes" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-admin-themes"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-admin-themes"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-admin-themes" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-admin-themes">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-admin-themes" data-method="GET"
+      data-path="api/admin/themes"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-themes', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-admin-themes"
+                    onclick="tryItOut('GETapi-admin-themes');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-admin-themes"
+                    onclick="cancelTryOut('GETapi-admin-themes');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-admin-themes"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/admin/themes</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-themes"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-admin-themes"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-admin-themes"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-POSTapi-admin-themes-upload">Upload theme</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-admin-themes-upload">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://aitradepulse.com/api/admin/themes/upload" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/themes/upload"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/themes/upload';
+$response = $client-&gt;post(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/themes/upload'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('POST', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-admin-themes-upload">
+</span>
+<span id="execution-results-POSTapi-admin-themes-upload" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-admin-themes-upload"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-admin-themes-upload"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-admin-themes-upload" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-admin-themes-upload">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-admin-themes-upload" data-method="POST"
+      data-path="api/admin/themes/upload"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-themes-upload', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-admin-themes-upload"
+                    onclick="tryItOut('POSTapi-admin-themes-upload');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-admin-themes-upload"
+                    onclick="cancelTryOut('POSTapi-admin-themes-upload');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-admin-themes-upload"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/admin/themes/upload</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-themes-upload"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-admin-themes-upload"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-admin-themes-upload"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="endpoints-DELETEapi-admin-themes--theme-">Delete theme</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-admin-themes--theme-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "https://aitradepulse.com/api/admin/themes/architecto" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/admin/themes/architecto"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/admin/themes/architecto';
+$response = $client-&gt;delete(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/admin/themes/architecto'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('DELETE', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-admin-themes--theme-">
+</span>
+<span id="execution-results-DELETEapi-admin-themes--theme-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-admin-themes--theme-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-admin-themes--theme-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-admin-themes--theme-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-admin-themes--theme-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-admin-themes--theme-" data-method="DELETE"
+      data-path="api/admin/themes/{theme}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-admin-themes--theme-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-admin-themes--theme-"
+                    onclick="tryItOut('DELETEapi-admin-themes--theme-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-admin-themes--theme-"
+                    onclick="cancelTryOut('DELETEapi-admin-themes--theme-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-admin-themes--theme-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/admin/themes/{theme}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-admin-themes--theme-"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-admin-themes--theme-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-admin-themes--theme-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>theme</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="theme"                data-endpoint="DELETEapi-admin-themes--theme-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The theme. Example: <code>architecto</code></p>
+            </div>
+                    </form>
 
                     <h2 id="endpoints-GETapi-admin-system-status">Get system status</h2>
 
@@ -39208,179 +42456,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="endpoints-GETapi-admin-themes">List all themes</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-GETapi-admin-themes">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/admin/themes" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/themes"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/themes';
-$response = $client-&gt;get(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/themes'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('GET', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-admin-themes">
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">cache-control: no-cache, private
-content-type: application/json
-access-control-allow-origin: *
- </code></pre></details>         <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;The route api/admin/themes could not be found.&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-admin-themes" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-admin-themes"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-admin-themes"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-admin-themes" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-admin-themes">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-admin-themes" data-method="GET"
-      data-path="api/admin/themes"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-admin-themes', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-admin-themes"
-                    onclick="tryItOut('GETapi-admin-themes');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-admin-themes"
-                    onclick="cancelTryOut('GETapi-admin-themes');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-admin-themes"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/admin/themes</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-admin-themes"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-admin-themes"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-admin-themes"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
                     <h2 id="endpoints-PUTapi-admin-themes--name-">Update theme</h2>
 
 <p>
@@ -39891,163 +42966,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="endpoints-POSTapi-admin-themes-upload">Upload theme</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-POSTapi-admin-themes-upload">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request POST \
-    "https://aitradepulse.com/api/admin/themes/upload" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/themes/upload"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "POST",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/themes/upload';
-$response = $client-&gt;post(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/themes/upload'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('POST', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-POSTapi-admin-themes-upload">
-</span>
-<span id="execution-results-POSTapi-admin-themes-upload" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-POSTapi-admin-themes-upload"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-admin-themes-upload"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-POSTapi-admin-themes-upload" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-admin-themes-upload">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-POSTapi-admin-themes-upload" data-method="POST"
-      data-path="api/admin/themes/upload"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-admin-themes-upload', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-admin-themes-upload"
-                    onclick="tryItOut('POSTapi-admin-themes-upload');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-admin-themes-upload"
-                    onclick="cancelTryOut('POSTapi-admin-themes-upload');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-admin-themes-upload"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-black">POST</small>
-            <b><code>api/admin/themes/upload</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-admin-themes-upload"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-admin-themes-upload"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-admin-themes-upload"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
                     <h2 id="endpoints-GETapi-admin-themes-template-download">Download theme template</h2>
 
 <p>
@@ -40220,176 +43138,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
-
-                    <h2 id="endpoints-DELETEapi-admin-themes--theme-">Delete theme</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-DELETEapi-admin-themes--theme-">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request DELETE \
-    "https://aitradepulse.com/api/admin/themes/architecto" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/admin/themes/architecto"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "DELETE",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/admin/themes/architecto';
-$response = $client-&gt;delete(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/admin/themes/architecto'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('DELETE', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-DELETEapi-admin-themes--theme-">
-</span>
-<span id="execution-results-DELETEapi-admin-themes--theme-" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-DELETEapi-admin-themes--theme-"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-DELETEapi-admin-themes--theme-"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-DELETEapi-admin-themes--theme-" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-DELETEapi-admin-themes--theme-">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-DELETEapi-admin-themes--theme-" data-method="DELETE"
-      data-path="api/admin/themes/{theme}"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-admin-themes--theme-', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-DELETEapi-admin-themes--theme-"
-                    onclick="tryItOut('DELETEapi-admin-themes--theme-');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-DELETEapi-admin-themes--theme-"
-                    onclick="cancelTryOut('DELETEapi-admin-themes--theme-');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-DELETEapi-admin-themes--theme-"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-red">DELETE</small>
-            <b><code>api/admin/themes/{theme}</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-admin-themes--theme-"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="DELETEapi-admin-themes--theme-"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="DELETEapi-admin-themes--theme-"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
-                    <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>theme</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="theme"                data-endpoint="DELETEapi-admin-themes--theme-"
-               value="architecto"
-               data-component="url">
-    <br>
-<p>The theme. Example: <code>architecto</code></p>
-            </div>
-                    </form>
 
                     <h2 id="endpoints-POSTapi-admin-themes-deactivate-all">Deactivate all themes</h2>
 
@@ -44297,7 +47045,180 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     <p>Reference data endpoints (currency pairs, timeframes, markets)</p>
 
-                                <h2 id="reference-data-GETapi-currency-pairs">List Currency Pairs</h2>
+                                <h2 id="reference-data-GETapi-markets">List Markets</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get all active markets</p>
+
+<span id="example-requests-GETapi-markets">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://aitradepulse.com/api/markets" \
+    --header "Authorization: Bearer Bearer {TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://aitradepulse.com/api/markets"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+
+<div class="php-example">
+    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
+$url = 'https://aitradepulse.com/api/markets';
+$response = $client-&gt;get(
+    $url,
+    [
+        'headers' =&gt; [
+            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
+            'Content-Type' =&gt; 'application/json',
+            'Accept' =&gt; 'application/json',
+        ],
+    ]
+);
+$body = $response-&gt;getBody();
+print_r(json_decode((string) $body));</code></pre></div>
+
+
+<div class="python-example">
+    <pre><code class="language-python">import requests
+import json
+
+url = 'https://aitradepulse.com/api/markets'
+headers = {
+  'Authorization': 'Bearer Bearer {TOKEN}',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+response = requests.request('GET', url, headers=headers)
+response.json()</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-markets">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Forex&quot;,
+            &quot;status&quot;: 1
+        }
+    ]
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-markets" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-markets"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-markets"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-markets" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-markets">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-markets" data-method="GET"
+      data-path="api/markets"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-markets', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-markets"
+                    onclick="tryItOut('GETapi-markets');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-markets"
+                    onclick="cancelTryOut('GETapi-markets');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-markets"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/markets</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-markets"
+               value="Bearer Bearer {TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-markets"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-markets"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="reference-data-GETapi-currency-pairs">List Currency Pairs</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -44636,179 +47557,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Accept"                data-endpoint="GETapi-timeframes"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
-                    <h2 id="reference-data-GETapi-markets">List Markets</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-<p>Get all active markets</p>
-
-<span id="example-requests-GETapi-markets">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "https://aitradepulse.com/api/markets" \
-    --header "Authorization: Bearer Bearer {TOKEN}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://aitradepulse.com/api/markets"
-);
-
-const headers = {
-    "Authorization": "Bearer Bearer {TOKEN}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-
-<div class="php-example">
-    <pre><code class="language-php">$client = new \GuzzleHttp\Client();
-$url = 'https://aitradepulse.com/api/markets';
-$response = $client-&gt;get(
-    $url,
-    [
-        'headers' =&gt; [
-            'Authorization' =&gt; 'Bearer Bearer {TOKEN}',
-            'Content-Type' =&gt; 'application/json',
-            'Accept' =&gt; 'application/json',
-        ],
-    ]
-);
-$body = $response-&gt;getBody();
-print_r(json_decode((string) $body));</code></pre></div>
-
-
-<div class="python-example">
-    <pre><code class="language-python">import requests
-import json
-
-url = 'https://aitradepulse.com/api/markets'
-headers = {
-  'Authorization': 'Bearer Bearer {TOKEN}',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json'
-}
-
-response = requests.request('GET', url, headers=headers)
-response.json()</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-markets">
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: true,
-    &quot;data&quot;: [
-        {
-            &quot;id&quot;: 1,
-            &quot;name&quot;: &quot;Forex&quot;,
-            &quot;status&quot;: 1
-        }
-    ]
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-markets" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-markets"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-markets"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-markets" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-markets">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-markets" data-method="GET"
-      data-path="api/markets"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-markets', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-markets"
-                    onclick="tryItOut('GETapi-markets');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-markets"
-                    onclick="cancelTryOut('GETapi-markets');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-markets"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/markets</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-markets"
-               value="Bearer Bearer {TOKEN}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer Bearer {TOKEN}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-markets"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-markets"
                value="application/json"
                data-component="header">
     <br>

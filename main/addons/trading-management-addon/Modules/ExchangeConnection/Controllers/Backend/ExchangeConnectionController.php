@@ -356,71 +356,150 @@ class ExchangeConnectionController extends Controller
      */
     public function testDataFetch(Request $request)
     {
-        $validated = $request->validate([
-            'connection_id' => 'required|exists:execution_connections,id',
-            'symbol' => 'required|string',
-            'timeframe' => 'required|string',
-            'limit' => 'nullable|integer|min:1|max:1000',
-        ]);
-
-        $connection = ExchangeConnection::findOrFail($validated['connection_id']);
-        
         try {
+            $validated = $request->validate([
+                'connection_id' => 'required|exists:execution_connections,id',
+                'symbol' => 'required|string',
+                'timeframe' => 'required|string',
+                'limit' => 'nullable|integer|min:1|max:1000',
+            ]);
+
+            $connection = ExchangeConnection::findOrFail($validated['connection_id']);
+            
+            // Check if connection has valid credentials
+            try {
+                $credentials = $connection->credentials;
+                if (empty($credentials)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Connection credentials are missing or invalid. Please update the connection credentials.',
+                    ], 400);
+                }
+            } catch (\Exception $credEx) {
+                Log::error('Failed to decrypt credentials in testDataFetch', [
+                    'connection_id' => $connection->id,
+                    'error' => $credEx->getMessage()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to decrypt connection credentials. Please re-enter the credentials.',
+                ], 400);
+            }
+            
             // Get appropriate adapter based on connection type and provider
-            // This automatically selects:
-            // - CcxtAdapter for crypto exchanges
-            // - MetaApiAdapter for MT4/MT5 with provider='metaapi'
-            // - MtapiGrpcAdapter/MtapiAdapter for other MT providers
-            $adapter = $this->getAdapter($connection);
+            try {
+                $adapter = $this->getAdapter($connection);
+            } catch (\Throwable $adapterEx) {
+                Log::error('Failed to create adapter in testDataFetch', [
+                    'connection_id' => $connection->id,
+                    'connection_type' => $connection->connection_type ?? 'unknown',
+                    'provider' => $connection->provider ?? 'unknown',
+                    'error' => $adapterEx->getMessage(),
+                    'file' => $adapterEx->getFile(),
+                    'line' => $adapterEx->getLine(),
+                    'trace' => $adapterEx->getTraceAsString()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to initialize adapter: ' . $adapterEx->getMessage(),
+                ], 400);
+            }
             
             // Ensure adapter is connected (if required)
-            if (method_exists($adapter, 'connect') && !$adapter->isConnected()) {
-                $adapter->connect($connection->credentials);
+            try {
+                if (method_exists($adapter, 'connect') && method_exists($adapter, 'isConnected') && !$adapter->isConnected()) {
+                    $adapter->connect($connection->credentials);
+                }
+            } catch (\Exception $connectEx) {
+                Log::warning('Adapter connection failed in testDataFetch', [
+                    'connection_id' => $connection->id,
+                    'error' => $connectEx->getMessage()
+                ]);
+                // Continue anyway - some adapters don't need explicit connection
             }
             
             // Use fetchOHLCV (interface method) - all adapters should implement this
-            if (method_exists($adapter, 'fetchOHLCV')) {
-                $data = $adapter->fetchOHLCV(
-                    $validated['symbol'],
-                    $validated['timeframe'],
-                    $validated['limit'] ?? 100
-                );
-            } elseif (method_exists($adapter, 'fetchCandles')) {
-                // Fallback to fetchCandles for backward compatibility
-                $result = $adapter->fetchCandles(
-                    $validated['symbol'],
-                    $validated['timeframe'],
-                    $validated['limit'] ?? 100
-                );
-                if (isset($result['success']) && $result['success']) {
-                    $data = $result['data'] ?? [];
+            $data = null;
+            try {
+                if (method_exists($adapter, 'fetchOHLCV')) {
+                    $data = $adapter->fetchOHLCV(
+                        $validated['symbol'],
+                        $validated['timeframe'],
+                        $validated['limit'] ?? 100
+                    );
+                } elseif (method_exists($adapter, 'fetchCandles')) {
+                    // Fallback to fetchCandles for backward compatibility
+                    $result = $adapter->fetchCandles(
+                        $validated['symbol'],
+                        $validated['timeframe'],
+                        $validated['limit'] ?? 100
+                    );
+                    if (isset($result['success']) && $result['success']) {
+                        $data = $result['data'] ?? [];
+                    } else {
+                        throw new \Exception($result['message'] ?? 'Failed to fetch data');
+                    }
                 } else {
-                    throw new \Exception($result['message'] ?? 'Failed to fetch data');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Data fetching not supported for this connection type',
+                    ], 400);
                 }
-            } else {
+            } catch (\Throwable $fetchEx) {
+                Log::error('Data fetch failed in testDataFetch', [
+                    'connection_id' => $connection->id,
+                    'symbol' => $validated['symbol'],
+                    'timeframe' => $validated['timeframe'],
+                    'error' => $fetchEx->getMessage(),
+                    'file' => $fetchEx->getFile(),
+                    'line' => $fetchEx->getLine(),
+                    'trace' => $fetchEx->getTraceAsString()
+                ]);
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data fetching not supported for this connection type',
+                    'message' => 'Failed to fetch data: ' . $fetchEx->getMessage(),
                 ], 400);
             }
 
-            $connection->update([
-                'last_data_fetch_at' => now(),
-                'status' => 'active',
-                'is_active' => true,
-            ]);
+            // Update connection status on success
+            try {
+                $connection->update([
+                    'last_data_fetch_at' => now(),
+                    'status' => 'active',
+                    'is_active' => true,
+                ]);
+            } catch (\Exception $updateEx) {
+                // Log but don't fail the request
+                Log::warning('Failed to update connection status', [
+                    'connection_id' => $connection->id,
+                    'error' => $updateEx->getMessage()
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data fetched successfully',
                 'data' => $data,
-                'count' => count($data),
+                'count' => is_array($data) ? count($data) : 0,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Unexpected error in testDataFetch', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -479,24 +558,43 @@ class ExchangeConnectionController extends Controller
      */
     protected function getAdapter(ExchangeConnection $connection)
     {
+        // Get connection type and provider with fallbacks
+        $connectionType = $connection->connection_type ?? $connection->type ?? null;
+        $provider = $connection->provider ?? $connection->exchange_name ?? null;
+        $credentials = $connection->credentials ?? [];
+        
+        // Determine if crypto exchange (check connection_type first, then legacy type field)
+        $isCrypto = false;
+        if ($connectionType === 'CRYPTO_EXCHANGE' || $connectionType === 'crypto') {
+            $isCrypto = true;
+        } elseif (!$connectionType && $provider) {
+            // Fallback: check provider name for known crypto exchanges
+            $cryptoExchanges = ['binance', 'coinbase', 'coinbasepro', 'kraken', 'bitfinex', 'okx', 'bybit', 'huobi', 'kucoin', 'gate', 'mexc'];
+            if (in_array(strtolower($provider), $cryptoExchanges)) {
+                $isCrypto = true;
+            }
+        }
+        
         // Crypto exchanges always use CCXT adapter
-        if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+        if ($isCrypto) {
+            if (!$provider) {
+                throw new \Exception('Provider/exchange name is required for crypto exchange connections');
+            }
             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
-                $connection->credentials,
-                $connection->provider
+                $provider,
+                $credentials
             );
         }
         
         // For FX brokers (MT4/MT5), select adapter based on provider
-        if ($connection->provider === 'metaapi') {
+        if ($provider === 'metaapi') {
             // MetaAPI.cloud adapter for MT4/MT5 connections
             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter(
-                $connection->credentials
+                $credentials
             );
-        } elseif ($connection->provider === 'mtapi_grpc' || 
-                  (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
+        } elseif ($provider === 'mtapi_grpc' || 
+                  (is_array($credentials) && isset($credentials['provider']) && $credentials['provider'] === 'mtapi_grpc')) {
             // MTAPI gRPC adapter
-            $credentials = $connection->credentials;
             $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
             
             if (!empty($globalSettings['base_url'])) {
@@ -510,7 +608,7 @@ class ExchangeConnectionController extends Controller
         } else {
             // Default: MTAPI REST adapter
             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter(
-                $connection->credentials
+                $credentials
             );
         }
     }
@@ -1464,6 +1562,26 @@ class ExchangeConnectionController extends Controller
                 ], 400);
             }
 
+            // Validate credentials before proceeding
+            $credentials = $exchangeConnection->credentials;
+            if (empty($credentials['api_token'])) {
+                // Try to get from global settings
+                $globalSettings = GlobalConfigurationService::get('metaapi_global_settings', []);
+                if (empty($globalSettings['api_token'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'API token is not configured. Please edit this connection and enter your MetaApi API token, or configure it in Global Settings.',
+                    ], 400);
+                }
+            }
+            
+            if (empty($credentials['account_id'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account ID is missing. Please edit this connection and enter your MetaApi Account ID.',
+                ], 400);
+            }
+
             $adapter = $this->getAdapter($exchangeConnection);
             
             if (method_exists($adapter, 'fetchPositions')) {
@@ -1482,6 +1600,11 @@ class ExchangeConnectionController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
+            Log::error('Failed to test position stream', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to test position stream: ' . $e->getMessage(),
@@ -1499,6 +1622,25 @@ class ExchangeConnectionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Order streaming is only available for MetaApi connections',
+                ], 400);
+            }
+
+            // Validate credentials before proceeding
+            $credentials = $exchangeConnection->credentials;
+            if (empty($credentials['api_token'])) {
+                $globalSettings = GlobalConfigurationService::get('metaapi_global_settings', []);
+                if (empty($globalSettings['api_token'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'API token is not configured. Please edit this connection and enter your MetaApi API token, or configure it in Global Settings.',
+                    ], 400);
+                }
+            }
+            
+            if (empty($credentials['account_id'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account ID is missing. Please edit this connection and enter your MetaApi Account ID.',
                 ], 400);
             }
 
@@ -1520,6 +1662,11 @@ class ExchangeConnectionController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
+            Log::error('Failed to test order stream', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to test order stream: ' . $e->getMessage(),
@@ -1574,88 +1721,115 @@ class ExchangeConnectionController extends Controller
      */
     public function streamMarketData(ExchangeConnection $exchangeConnection, Request $request)
     {
-        if ($exchangeConnection->provider !== 'metaapi') {
-            return response('Market data streaming only available for MetaApi connections', 400);
-        }
-
-        $adapter = $this->getAdapter($exchangeConnection);
-        $defaultSymbol = $this->getDefaultSymbol($exchangeConnection, $adapter);
-        $symbol = $request->input('symbol', $defaultSymbol);
-        $timeframe = $request->input('timeframe', 'H1');
-
-        // Disable output buffering
-        if (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        // Set headers for SSE
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-
-        set_time_limit(0);
-        ignore_user_abort(false);
-
-        // Send initial connection message
-        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Market data stream connected', 'symbol' => $symbol, 'timeframe' => $timeframe]) . "\n\n";
-        flush();
-
-        $updateCount = 0;
-        $lastData = null;
-
         try {
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response('Market data streaming only available for MetaApi connections', 400);
+            }
+
             $adapter = $this->getAdapter($exchangeConnection);
+            $defaultSymbol = $this->getDefaultSymbol($exchangeConnection, $adapter);
+            $symbol = $request->input('symbol', $defaultSymbol);
+            $timeframe = $request->input('timeframe', 'H1');
 
-            while (true) {
-                if (connection_aborted()) {
-                    break;
-                }
+            // Disable output buffering
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
 
-                // Send keepalive every 30 seconds
-                if ($updateCount % 10 == 0 && $updateCount > 0) {
-                    echo ": keepalive\n\n";
-                    flush();
-                }
+            // Use Laravel response for SSE
+            $response = response()->stream(function () use ($adapter, $symbol, $timeframe) {
+                // Send initial connection message
+                echo "data: " . json_encode(['type' => 'connected', 'message' => 'Market data stream connected', 'symbol' => $symbol, 'timeframe' => $timeframe]) . "\n\n";
+                flush();
+
+                $updateCount = 0;
+                $lastData = null;
 
                 try {
-                    if (method_exists($adapter, 'fetchOHLCV')) {
-                        $data = $adapter->fetchOHLCV($symbol, $timeframe, 5); // Get last 5 candles
-                        
-                        // Only send if data changed
-                        if ($data !== $lastData) {
+                    while (true) {
+                        if (connection_aborted()) {
+                            break;
+                        }
+
+                        // Send keepalive every 30 seconds
+                        if ($updateCount % 10 == 0 && $updateCount > 0) {
+                            echo ": keepalive\n\n";
+                            flush();
+                        }
+
+                        try {
+                            if (method_exists($adapter, 'fetchOHLCV')) {
+                                $data = $adapter->fetchOHLCV($symbol, $timeframe, 5); // Get last 5 candles
+                                
+                                // Always send on first iteration or if data changed
+                                if ($updateCount === 0 || json_encode($data) !== json_encode($lastData)) {
+                                    $dataCount = is_array($data) ? count($data) : 0;
+                                    
+                                    echo "data: " . json_encode([
+                                        'type' => $dataCount === 0 ? 'empty' : 'update',
+                                        'symbol' => $symbol,
+                                        'timeframe' => $timeframe,
+                                        'data' => $data,
+                                        'count' => $dataCount,
+                                        'message' => $dataCount === 0 
+                                            ? 'No market data available for this symbol/timeframe' 
+                                            : "Fetched {$dataCount} candle(s)",
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                    $lastData = $data;
+                                }
+                            } else {
+                                // Send error if method doesn't exist
+                                if ($updateCount === 0) {
+                                    echo "data: " . json_encode([
+                                        'type' => 'error',
+                                        'message' => 'fetchOHLCV method not available for this adapter',
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                }
+                            }
+                        } catch (\Throwable $e) {
                             echo "data: " . json_encode([
-                                'type' => 'update',
-                                'symbol' => $symbol,
-                                'timeframe' => $timeframe,
-                                'data' => $data,
-                                'count' => count($data),
+                                'type' => 'error',
+                                'message' => $e->getMessage(),
                                 'timestamp' => now()->toIso8601String(),
                             ]) . "\n\n";
                             flush();
-                            $lastData = $data;
                         }
+
+                        $updateCount++;
+                        sleep(3); // Update every 3 seconds
                     }
                 } catch (\Exception $e) {
-                    echo "data: " . json_encode([
-                        'type' => 'error',
-                        'message' => $e->getMessage(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]) . "\n\n";
+                    echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
                     flush();
                 }
+            }, 200, [
+                'Content-Type' => 'text/event-stream',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'Connection' => 'keep-alive',
+                'X-Accel-Buffering' => 'no',
+            ]);
 
-                $updateCount++;
-                sleep(3); // Update every 3 seconds
-            }
+            set_time_limit(0);
+            ignore_user_abort(false);
+
+            return $response;
         } catch (\Exception $e) {
-            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
-            flush();
+            Log::error('Stream market data error', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to stream market data: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response('', 200);
     }
 
     /**
@@ -1663,79 +1837,107 @@ class ExchangeConnectionController extends Controller
      */
     public function streamPositions(ExchangeConnection $exchangeConnection)
     {
-        if ($exchangeConnection->provider !== 'metaapi') {
-            return response('Position streaming only available for MetaApi connections', 400);
-        }
-
-        // Disable output buffering
-        if (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        // Set headers for SSE
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-
-        set_time_limit(0);
-        ignore_user_abort(false);
-
-        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Positions stream connected']) . "\n\n";
-        flush();
-
-        $updateCount = 0;
-        $lastData = null;
-
         try {
-            $adapter = $this->getAdapter($exchangeConnection);
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response('Position streaming only available for MetaApi connections', 400);
+            }
 
-            while (true) {
-                if (connection_aborted()) {
-                    break;
+            $response = response()->stream(function () use ($exchangeConnection) {
+                // Disable output buffering
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
                 }
 
-                if ($updateCount % 10 == 0 && $updateCount > 0) {
-                    echo ": keepalive\n\n";
-                    flush();
-                }
+                echo "data: " . json_encode(['type' => 'connected', 'message' => 'Positions stream connected']) . "\n\n";
+                flush();
+
+                $updateCount = 0;
+                $lastData = null;
 
                 try {
-                    if (method_exists($adapter, 'fetchPositions')) {
-                        $data = $adapter->fetchPositions();
-                        
-                        // Only send if data changed
-                        if (json_encode($data) !== json_encode($lastData)) {
+                    $adapter = $this->getAdapter($exchangeConnection);
+
+                    while (true) {
+                        if (connection_aborted()) {
+                            break;
+                        }
+
+                        if ($updateCount % 10 == 0 && $updateCount > 0) {
+                            echo ": keepalive\n\n";
+                            flush();
+                        }
+
+                        try {
+                            if (method_exists($adapter, 'fetchPositions')) {
+                                $data = $adapter->fetchPositions();
+                                
+                                // Always send update (even if empty) on first iteration or if data changed
+                                if ($updateCount === 0 || json_encode($data) !== json_encode($lastData)) {
+                                    $positionCount = is_array($data) ? count($data) : 0;
+                                    
+                                    echo "data: " . json_encode([
+                                        'type' => $positionCount === 0 ? 'empty' : 'update',
+                                        'positions' => $data,
+                                        'count' => $positionCount,
+                                        'message' => $positionCount === 0 
+                                            ? 'No pending positions found. This shows open positions only.' 
+                                            : "Found {$positionCount} pending position(s)",
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                    $lastData = $data;
+                                }
+                            } else {
+                                // Send error if method doesn't exist
+                                if ($updateCount === 0) {
+                                    echo "data: " . json_encode([
+                                        'type' => 'error',
+                                        'message' => 'fetchPositions method not available for this adapter',
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                }
+                            }
+                        } catch (\Throwable $e) {
                             echo "data: " . json_encode([
-                                'type' => 'update',
-                                'positions' => $data,
-                                'count' => is_array($data) ? count($data) : 0,
+                                'type' => 'error',
+                                'message' => $e->getMessage(),
                                 'timestamp' => now()->toIso8601String(),
                             ]) . "\n\n";
                             flush();
-                            $lastData = $data;
                         }
+
+                        $updateCount++;
+                        sleep(3); // Update every 3 seconds
                     }
                 } catch (\Exception $e) {
-                    echo "data: " . json_encode([
-                        'type' => 'error',
-                        'message' => $e->getMessage(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]) . "\n\n";
+                    echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
                     flush();
                 }
+            }, 200, [
+                'Content-Type' => 'text/event-stream',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'Connection' => 'keep-alive',
+                'X-Accel-Buffering' => 'no',
+            ]);
 
-                $updateCount++;
-                sleep(3); // Update every 3 seconds
-            }
+            set_time_limit(0);
+            ignore_user_abort(false);
+
+            return $response;
         } catch (\Exception $e) {
-            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
-            flush();
+            Log::error('Stream positions error', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to stream positions: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response('', 200);
     }
 
     /**
@@ -1743,79 +1945,138 @@ class ExchangeConnectionController extends Controller
      */
     public function streamOrders(ExchangeConnection $exchangeConnection)
     {
-        if ($exchangeConnection->provider !== 'metaapi') {
-            return response('Order streaming only available for MetaApi connections', 400);
-        }
-
-        // Disable output buffering
-        if (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        // Set headers for SSE
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-
-        set_time_limit(0);
-        ignore_user_abort(false);
-
-        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Orders stream connected']) . "\n\n";
-        flush();
-
-        $updateCount = 0;
-        $lastData = null;
-
         try {
-            $adapter = $this->getAdapter($exchangeConnection);
+            if ($exchangeConnection->provider !== 'metaapi') {
+                return response('Order streaming only available for MetaApi connections', 400);
+            }
 
-            while (true) {
-                if (connection_aborted()) {
-                    break;
+            $response = response()->stream(function () use ($exchangeConnection) {
+                // Disable output buffering
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
                 }
 
-                if ($updateCount % 10 == 0 && $updateCount > 0) {
-                    echo ": keepalive\n\n";
-                    flush();
-                }
+                echo "data: " . json_encode(['type' => 'connected', 'message' => 'Orders stream connected']) . "\n\n";
+                flush();
+
+                $updateCount = 0;
+                $lastData = null;
 
                 try {
-                    if (method_exists($adapter, 'fetchOrders')) {
-                        $data = $adapter->fetchOrders();
-                        
-                        // Only send if data changed
-                        if (json_encode($data) !== json_encode($lastData)) {
+                    $adapter = $this->getAdapter($exchangeConnection);
+
+                    while (true) {
+                        if (connection_aborted()) {
+                            break;
+                        }
+
+                        if ($updateCount % 10 == 0 && $updateCount > 0) {
+                            echo ": keepalive\n\n";
+                            flush();
+                        }
+
+                        try {
+                            // Use fetchOrderHistory for order history stream (not pending orders)
+                            if (method_exists($adapter, 'fetchOrderHistory')) {
+                                $data = $adapter->fetchOrderHistory(100); // Get last 100 orders
+                                
+                                // Always send update (even if empty) on first iteration or if data changed
+                                if ($updateCount === 0 || json_encode($data) !== json_encode($lastData)) {
+                                    $orderCount = is_array($data) ? count($data) : 0;
+                                    
+                                    echo "data: " . json_encode([
+                                        'type' => $orderCount === 0 ? 'empty' : 'update',
+                                        'orders' => $data,
+                                        'count' => $orderCount,
+                                        'message' => $orderCount === 0 
+                                            ? 'No order history found. This shows filled, cancelled, and expired orders.' 
+                                            : "Found {$orderCount} order(s) in history",
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                    $lastData = $data;
+                                }
+                            } elseif (method_exists($adapter, 'fetchOrders')) {
+                                // Fallback to fetchOrders if fetchOrderHistory doesn't exist
+                                $data = $adapter->fetchOrders();
+                                
+                                // Always send update (even if empty) on first iteration or if data changed
+                                if ($updateCount === 0 || json_encode($data) !== json_encode($lastData)) {
+                                    $orderCount = is_array($data) ? count($data) : 0;
+                                    
+                                    echo "data: " . json_encode([
+                                        'type' => $orderCount === 0 ? 'empty' : 'update',
+                                        'orders' => $data,
+                                        'count' => $orderCount,
+                                        'message' => $orderCount === 0 
+                                            ? 'No orders found.' 
+                                            : "Found {$orderCount} order(s)",
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                    $lastData = $data;
+                                }
+                            } else {
+                                // Send error if method doesn't exist
+                                if ($updateCount === 0) {
+                                    echo "data: " . json_encode([
+                                        'type' => 'error',
+                                        'message' => 'fetchOrderHistory or fetchOrders method not available for this adapter',
+                                        'timestamp' => now()->toIso8601String(),
+                                    ]) . "\n\n";
+                                    flush();
+                                }
+                            }
+                        } catch (\Throwable $e) {
                             echo "data: " . json_encode([
-                                'type' => 'update',
-                                'orders' => $data,
-                                'count' => is_array($data) ? count($data) : 0,
+                                'type' => 'error',
+                                'message' => $e->getMessage(),
+                                'file' => $e->getFile(),
+                                'line' => $e->getLine(),
                                 'timestamp' => now()->toIso8601String(),
                             ]) . "\n\n";
                             flush();
-                            $lastData = $data;
+                            
+                            // Log error for debugging
+                            Log::error('Stream orders: Error fetching orders', [
+                                'connection_id' => $exchangeConnection->id,
+                                'error' => $e->getMessage(),
+                                'file' => $e->getFile(),
+                                'line' => $e->getLine(),
+                            ]);
                         }
+
+                        $updateCount++;
+                        sleep(3); // Update every 3 seconds
                     }
                 } catch (\Exception $e) {
-                    echo "data: " . json_encode([
-                        'type' => 'error',
-                        'message' => $e->getMessage(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]) . "\n\n";
+                    echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
                     flush();
                 }
+            }, 200, [
+                'Content-Type' => 'text/event-stream',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'Connection' => 'keep-alive',
+                'X-Accel-Buffering' => 'no',
+            ]);
 
-                $updateCount++;
-                sleep(3); // Update every 3 seconds
-            }
+            set_time_limit(0);
+            ignore_user_abort(false);
+
+            return $response;
         } catch (\Exception $e) {
-            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
-            flush();
+            Log::error('Stream orders error', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to stream orders: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response('', 200);
     }
 
     /**
@@ -1823,77 +2084,99 @@ class ExchangeConnectionController extends Controller
      */
     public function streamBalance(ExchangeConnection $exchangeConnection)
     {
-        // Disable output buffering
-        if (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        // Set headers for SSE
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-
-        set_time_limit(0);
-        ignore_user_abort(false);
-
-        echo "data: " . json_encode(['type' => 'connected', 'message' => 'Balance stream connected']) . "\n\n";
-        flush();
-
-        $updateCount = 0;
-        $lastData = null;
-
         try {
-            $adapter = $this->getAdapter($exchangeConnection);
-
-            while (true) {
-                if (connection_aborted()) {
-                    break;
+            $response = response()->stream(function () use ($exchangeConnection) {
+                // Disable output buffering
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
                 }
 
-                if ($updateCount % 10 == 0 && $updateCount > 0) {
-                    echo ": keepalive\n\n";
-                    flush();
-                }
+                echo "data: " . json_encode(['type' => 'connected', 'message' => 'Balance stream connected']) . "\n\n";
+                flush();
+
+                $updateCount = 0;
+                $lastData = null;
 
                 try {
-                    $data = null;
-                    if (method_exists($adapter, 'fetchBalance')) {
-                        $data = $adapter->fetchBalance();
-                    } elseif (method_exists($adapter, 'getAccountInfo')) {
-                        $data = $adapter->getAccountInfo();
-                    }
-                    
-                    // Only send if data changed
-                    if ($data && json_encode($data) !== json_encode($lastData)) {
-                        echo "data: " . json_encode([
-                            'type' => 'update',
-                            'balance' => $data,
-                            'timestamp' => now()->toIso8601String(),
-                        ]) . "\n\n";
-                        flush();
-                        $lastData = $data;
+                    $adapter = $this->getAdapter($exchangeConnection);
+
+                    while (true) {
+                        if (connection_aborted()) {
+                            break;
+                        }
+
+                        if ($updateCount % 10 == 0 && $updateCount > 0) {
+                            echo ": keepalive\n\n";
+                            flush();
+                        }
+
+                        try {
+                            $data = null;
+                            if (method_exists($adapter, 'fetchBalance')) {
+                                $data = $adapter->fetchBalance();
+                            } elseif (method_exists($adapter, 'getAccountInfo')) {
+                                $data = $adapter->getAccountInfo();
+                            }
+                            
+                            // Always send on first iteration or if data changed
+                            if ($data && ($updateCount === 0 || json_encode($data) !== json_encode($lastData))) {
+                                echo "data: " . json_encode([
+                                    'type' => 'update',
+                                    'balance' => $data,
+                                    'message' => 'Balance updated',
+                                    'timestamp' => now()->toIso8601String(),
+                                ]) . "\n\n";
+                                flush();
+                                $lastData = $data;
+                            } elseif (!$data && $updateCount === 0) {
+                                // Send error if no data on first iteration
+                                echo "data: " . json_encode([
+                                    'type' => 'error',
+                                    'message' => 'Unable to fetch balance data',
+                                    'timestamp' => now()->toIso8601String(),
+                                ]) . "\n\n";
+                                flush();
+                            }
+                        } catch (\Throwable $e) {
+                            echo "data: " . json_encode([
+                                'type' => 'error',
+                                'message' => $e->getMessage(),
+                                'timestamp' => now()->toIso8601String(),
+                            ]) . "\n\n";
+                            flush();
+                        }
+
+                        $updateCount++;
+                        sleep(3); // Update every 3 seconds
                     }
                 } catch (\Exception $e) {
-                    echo "data: " . json_encode([
-                        'type' => 'error',
-                        'message' => $e->getMessage(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]) . "\n\n";
+                    echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
                     flush();
                 }
+            }, 200, [
+                'Content-Type' => 'text/event-stream',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'Connection' => 'keep-alive',
+                'X-Accel-Buffering' => 'no',
+            ]);
 
-                $updateCount++;
-                sleep(3); // Update every 3 seconds
-            }
+            set_time_limit(0);
+            ignore_user_abort(false);
+
+            return $response;
         } catch (\Exception $e) {
-            echo "data: " . json_encode(['type' => 'error', 'message' => $e->getMessage()]) . "\n\n";
-            flush();
+            Log::error('Stream balance error', [
+                'connection_id' => $exchangeConnection->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to stream balance: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response('', 200);
     }
 }
 

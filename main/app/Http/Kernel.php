@@ -27,7 +27,7 @@ class Kernel extends HttpKernel
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
-        \Fruitcake\Cors\HandleCors::class,
+        \Illuminate\Http\Middleware\HandleCors::class, // Laravel 9+ built-in CORS
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -50,12 +50,16 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\LogRequests::class,
             \App\Http\Middleware\OptimizeFrontendMiddleware::class,
+            \App\Http\Middleware\QueueMonitoringMiddleware::class,
+            \App\Http\Middleware\ResponsiveDesignMiddleware::class,
+            \App\Http\Middleware\RealTimeFeedbackMiddleware::class,
         ],
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\ApiVersionMiddleware::class,
         ],
     ];
 
@@ -87,5 +91,11 @@ class Kernel extends HttpKernel
         '2fa' => LoginSecurityMiddleware::class,
         'kyc' => KycMiddleware::class,
         'check_onboarding' => CheckOnboarding::class,
+        'cache.response' => \App\Http\Middleware\CacheResponseMiddleware::class,
+        'query.monitor' => \App\Http\Middleware\QueryMonitoringMiddleware::class,
+        'queue.monitor' => \App\Http\Middleware\QueueMonitoringMiddleware::class,
+        'api.version' => \App\Http\Middleware\ApiVersionMiddleware::class,
+        'responsive.design' => \App\Http\Middleware\ResponsiveDesignMiddleware::class,
+        'realtime.feedback' => \App\Http\Middleware\RealTimeFeedbackMiddleware::class,
     ];
 }

@@ -31,15 +31,30 @@ class MenuConfigService
                     ],
                 ],
             ],
-            'trading' => [
-                'label' => __('TRADING'),
+            'trading_console' => [
+                'label' => __('TRADING CONSOLE'),
                 'icon' => 'fas fa-chart-line',
-                'items' => $this->getTradingMenuItems(),
+                'items' => $this->getTradingConsoleMenuItems(),
+            ],
+            'market_analysis' => [
+                'label' => __('MARKET & ANALYSIS'),
+                'icon' => 'fas fa-brain',
+                'items' => $this->getMarketAnalysisMenuItems(),
+            ],
+            'marketplace' => [
+                'label' => __('MARKETPLACE'),
+                'icon' => 'fas fa-store',
+                'items' => $this->getMarketplaceMenuItems(),
             ],
             'account' => [
                 'label' => __('ACCOUNT'),
                 'icon' => 'fas fa-user-circle',
                 'items' => $this->getAccountMenuItems(),
+            ],
+            'support' => [
+                'label' => __('SUPPORT'),
+                'icon' => 'fas fa-life-ring',
+                'items' => $this->getSupportMenuItems(),
             ],
         ];
     }
@@ -72,6 +87,16 @@ class MenuConfigService
                 $menu = $this->injectAddonMenus($menu, $user);
                 
                 // Filter out Trading Configuration menu if it exists (safety check)
+                if (isset($menu['trading_console']['items'])) {
+                    $menu['trading_console']['items'] = array_filter($menu['trading_console']['items'], function($item) {
+                        $route = $item['route'] ?? '';
+                        return $route !== 'user.trading.configuration.index';
+                    });
+                    // Re-index array
+                    $menu['trading_console']['items'] = array_values($menu['trading_console']['items']);
+                }
+                
+                // Also handle legacy 'trading' key if it exists
                 if (isset($menu['trading']['items'])) {
                     $menu['trading']['items'] = array_filter($menu['trading']['items'], function($item) {
                         $route = $item['route'] ?? '';
@@ -86,8 +111,174 @@ class MenuConfigService
     }
 
     /**
-     * Get trading menu items
+     * Get trading console menu items (new design)
      * 
+     * @return array
+     */
+    public function getTradingConsoleMenuItems(): array
+    {
+        $items = [];
+
+        // My Bots
+        if (Route::has('user.trading.operations.index')) {
+            $items[] = [
+                'route' => 'user.trading.operations.index',
+                'label' => __('My Bots'),
+                'icon' => 'fas fa-robot',
+                'tooltip' => __('Manage all trading bots'),
+            ];
+        }
+
+        // Manual Trading (placeholder route - to be implemented)
+        // Will be enabled when manual trading feature is implemented
+        if (Route::has('user.manual-trading.index')) {
+            $items[] = [
+                'route' => 'user.manual-trading.index',
+                'label' => __('Manual Trading'),
+                'icon' => 'fas fa-hand-pointer',
+                'tooltip' => __('Execute manual trades'),
+            ];
+        }
+
+        // Multi-Channel Signal
+        if (Route::has('user.trading.multi-channel-signal.index')) {
+            $items[] = [
+                'route' => 'user.trading.multi-channel-signal.index',
+                'label' => __('Signal Center'),
+                'icon' => 'fas fa-broadcast-tower',
+                'tooltip' => __('Signal monitoring and history'),
+            ];
+        }
+
+        // Risk Management
+        if (Route::has('user.trading.configurations.index')) {
+            $items[] = [
+                'route' => 'user.trading.configurations.index',
+                'label' => __('Risk Management'),
+                'icon' => 'fas fa-shield-alt',
+                'tooltip' => __('Risk parameters and monitoring'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get market & analysis menu items (new design)
+     * 
+     * @return array
+     */
+    public function getMarketAnalysisMenuItems(): array
+    {
+        $items = [];
+
+        // AI Market Insights (placeholder - to be implemented)
+        if (Route::has('user.ai.market-insights')) {
+            $items[] = [
+                'route' => 'user.ai.market-insights',
+                'label' => __('AI Market Insights'),
+                'icon' => 'fas fa-brain',
+                'tooltip' => __('AI analysis and market confirmation'),
+            ];
+        }
+
+        // Performance Analytics
+        if (Route::has('user.trading.execution-log.index')) {
+            $items[] = [
+                'route' => 'user.trading.execution-log.index',
+                'label' => __('Performance Analytics'),
+                'icon' => 'fas fa-chart-bar',
+                'tooltip' => __('Detailed performance reports'),
+            ];
+        }
+
+        // Backtesting
+        if (Route::has('user.trading.backtesting.index')) {
+            $items[] = [
+                'route' => 'user.trading.backtesting.index',
+                'label' => __('Backtesting Center'),
+                'icon' => 'fas fa-history',
+                'tooltip' => __('Strategy backtesting'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get marketplace menu items (new design)
+     * 
+     * @return array
+     */
+    public function getMarketplaceMenuItems(): array
+    {
+        $items = [];
+
+        // Preset Marketplace
+        if (Route::has('user.trading.marketplaces.index')) {
+            $items[] = [
+                'route' => 'user.trading.marketplaces.index',
+                'label' => __('Preset Marketplace'),
+                'icon' => 'fas fa-store',
+                'tooltip' => __('Trading preset templates'),
+                'type' => 'marketplace',
+                'categories' => [
+                    'presets' => __('Trading Presets'),
+                    'strategies' => __('Strategies'),
+                    'ai-profiles' => __('AI Profiles'),
+                    'bots' => __('Bots'),
+                ],
+            ];
+        }
+
+        // Bot Marketplace (future feature)
+        if (Route::has('user.bot-marketplace.index')) {
+            $items[] = [
+                'route' => 'user.bot-marketplace.index',
+                'label' => __('Bot Marketplace'),
+                'icon' => 'fas fa-shopping-cart',
+                'tooltip' => __('Pre-built bots'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get support menu items (new design)
+     * 
+     * @return array
+     */
+    public function getSupportMenuItems(): array
+    {
+        $items = [];
+
+        // Help Docs (placeholder - to be implemented)
+        if (Route::has('user.help.docs')) {
+            $items[] = [
+                'route' => 'user.help.docs',
+                'label' => __('Help Docs'),
+                'icon' => 'fas fa-book',
+                'tooltip' => __('User guides'),
+            ];
+        }
+
+        // Support Tickets
+        if (Route::has('user.ticket.index')) {
+            $items[] = [
+                'route' => 'user.ticket.index',
+                'label' => __('Support Tickets'),
+                'icon' => 'fas fa-ticket-alt',
+                'tooltip' => __('Technical support'),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get trading menu items (legacy method - kept for backward compatibility)
+     * @deprecated Use getTradingConsoleMenuItems() instead
      * @return array
      */
     public function getTradingMenuItems(): array
@@ -267,9 +458,11 @@ class MenuConfigService
         // Always show home and account menus
         // Trading menu visibility based on onboarding progress
         
-        // Hide trading menu if user has no active plan
+        // Hide trading_console menu if user has no active plan (renamed from 'trading')
         if (!$onboardingService->hasActivePlan($user)) {
-            unset($menu['trading']);
+            unset($menu['trading_console']);
+            unset($menu['market_analysis']);
+            unset($menu['marketplace']);
             return $menu;
         }
 

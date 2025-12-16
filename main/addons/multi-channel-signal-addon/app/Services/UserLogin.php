@@ -3,7 +3,6 @@
 namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Illuminate\Support\Facades\Auth;
 use Stevebauman\Location\Facades\Location;
 use Sinergi\BrowserDetector\Browser;

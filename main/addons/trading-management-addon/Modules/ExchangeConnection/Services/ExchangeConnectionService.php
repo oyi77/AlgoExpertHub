@@ -25,6 +25,9 @@ class ExchangeConnectionService
     public function testConnection(ExchangeConnection $connection): array
     {
         try {
+            // Check memory before adapter creation
+            $memoryBefore = memory_get_usage(true);
+            
             $adapter = $this->getAdapter($connection);
             
             if (!$adapter) {
@@ -48,14 +51,29 @@ class ExchangeConnectionService
                 $connection->markAsError($result['message']);
             }
 
+            // Free memory after test
+            if (function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
+
             return $result;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Connection test failed', [
                 'connection_id' => $connection->id,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
-            $connection->markAsError($e->getMessage());
+            try {
+                $connection->markAsError($e->getMessage());
+            } catch (\Throwable $updateEx) {
+                // If update fails, log but don't throw
+                Log::warning('Failed to update connection error status', [
+                    'connection_id' => $connection->id,
+                    'error' => $updateEx->getMessage(),
+                ]);
+            }
 
             return [
                 'success' => false,
@@ -128,7 +146,7 @@ class ExchangeConnectionService
      * @param ExchangeConnection $connection
      * @return mixed|null
      */
-    protected function getAdapter(ExchangeConnection $connection)
+    public function getAdapter(ExchangeConnection $connection)
     {
         $connectionType = $connection->connection_type ?? null;
         $provider = $connection->provider ?? $connection->exchange_name ?? null;
@@ -153,8 +171,8 @@ class ExchangeConnectionService
         // Crypto exchanges always use CCXT adapter
         if ($isCrypto) {
             return new CcxtAdapter(
-                $connection->credentials ?? [],
-                $provider ?? 'binance'
+                $provider ?? 'binance',
+                $connection->credentials ?? []
             );
         }
         

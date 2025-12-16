@@ -1,5 +1,8 @@
 <?php
+require_once 'lib/auth.php';
 require_once 'lib/functions.php';
+
+requireAuth();
 
 ?>
 

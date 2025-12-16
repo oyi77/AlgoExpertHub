@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -40,6 +41,8 @@ class ThemeManager
                 $isActive = $this->isActiveTheme($themeName);
                 $metadata = $this->getThemeMetadata($themeName);
                 
+                $parent = $this->getThemeParent($themeName);
+                
                 return [
                     'name' => $themeName,
                     'display_name' => $metadata['display_name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
@@ -50,6 +53,8 @@ class ThemeManager
                     'author' => $metadata['author'] ?? null,
                     'description' => $metadata['description'] ?? null,
                     'is_builtin' => in_array($themeName, ['default', 'light', 'blue', 'materialize', 'dark', 'premium']),
+                    'parent' => $parent,
+                    'inheritance_chain' => $this->getThemeInheritanceChain($themeName),
                 ];
             })
             ->filter(function ($theme) {
@@ -301,6 +306,9 @@ class ThemeManager
 BLADE;
                 File::put($viewsDestination . '/layout/master.blade.php', $masterContent);
             }
+
+            // Clear cache for new theme
+            $this->clearThemeCache($themeName);
 
             return [
                 'name' => $themeName,
@@ -673,34 +681,151 @@ README;
      */
     public function getThemeMetadata(string $themeName): array
     {
-        $metadata = [];
-        
-        // Check in assets directory
-        $manifestPath = $this->themesPath . '/' . $themeName . '/theme.json';
-        if (!File::exists($manifestPath)) {
-            // Check in views directory
-            $manifestPath = $this->viewsPath . '/' . $themeName . '/theme.json';
-        }
-        
-        if (File::exists($manifestPath)) {
-            try {
-                $manifest = json_decode(File::get($manifestPath), true);
-                if (is_array($manifest)) {
-                    $metadata = [
-                        'name' => $manifest['name'] ?? $themeName,
-                        'display_name' => $manifest['display_name'] ?? $manifest['name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
-                        'version' => $manifest['version'] ?? null,
-                        'author' => $manifest['author'] ?? null,
-                        'description' => $manifest['description'] ?? null,
-                        'screenshot' => $manifest['screenshot'] ?? null,
-                    ];
-                }
-            } catch (\Exception $e) {
-                // Invalid JSON, return empty metadata
+        // Cache theme metadata
+        return Cache::remember("theme.metadata.{$themeName}", 3600, function () use ($themeName) {
+            $metadata = [];
+            
+            // Check in assets directory
+            $manifestPath = $this->themesPath . '/' . $themeName . '/theme.json';
+            if (!File::exists($manifestPath)) {
+                // Check in views directory
+                $manifestPath = $this->viewsPath . '/' . $themeName . '/theme.json';
             }
+            
+            if (File::exists($manifestPath)) {
+                try {
+                    $manifest = json_decode(File::get($manifestPath), true);
+                    if (is_array($manifest)) {
+                        $metadata = [
+                            'name' => $manifest['name'] ?? $themeName,
+                            'display_name' => $manifest['display_name'] ?? $manifest['name'] ?? Str::title(str_replace(['-', '_'], ' ', $themeName)),
+                            'version' => $manifest['version'] ?? null,
+                            'author' => $manifest['author'] ?? null,
+                            'description' => $manifest['description'] ?? null,
+                            'screenshot' => $manifest['screenshot'] ?? null,
+                            'parent' => $manifest['parent'] ?? null,
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Invalid JSON, return empty metadata
+                }
+            }
+            
+            return $metadata;
+        });
+    }
+
+    /**
+     * Get parent theme name for a given theme
+     * 
+     * @param string $themeName
+     * @return string|null
+     */
+    public function getThemeParent(string $themeName): ?string
+    {
+        // Default theme has no parent
+        if ($themeName === 'default') {
+            return null;
         }
+
+        // Cache parent theme lookup
+        return Cache::remember("theme.parent.{$themeName}", 3600, function () use ($themeName) {
+            $metadata = $this->getThemeMetadata($themeName);
+            $parent = $metadata['parent'] ?? null;
+
+            // Validate parent exists
+            if ($parent && $this->themeExists($parent)) {
+                return $parent;
+            }
+
+            return null;
+        });
+    }
+
+    /**
+     * Get full inheritance chain for a theme (theme → parent → ... → default)
+     * 
+     * @param string $themeName
+     * @return array
+     */
+    public function getThemeInheritanceChain(string $themeName): array
+    {
+        // Cache inheritance chain
+        return Cache::remember("theme.chain.{$themeName}", 3600, function () use ($themeName) {
+            $chain = [];
+            $visited = [];
+            $current = $themeName;
+
+            // Prevent infinite loops
+            while ($current && !in_array($current, $visited)) {
+                $visited[] = $current;
+                $chain[] = $current;
+
+                // Stop at default theme
+                if ($current === 'default') {
+                    break;
+                }
+
+                // Get parent directly from metadata to avoid cache recursion
+                $manifestPath = $this->themesPath . '/' . $current . '/theme.json';
+                if (!File::exists($manifestPath)) {
+                    $manifestPath = $this->viewsPath . '/' . $current . '/theme.json';
+                }
+                
+                $parent = null;
+                if (File::exists($manifestPath)) {
+                    try {
+                        $manifest = json_decode(File::get($manifestPath), true);
+                        if (is_array($manifest)) {
+                            $parent = $manifest['parent'] ?? null;
+                        }
+                    } catch (\Exception $e) {
+                        // Invalid JSON
+                    }
+                }
+
+                if ($parent && $this->themeExists($parent)) {
+                    $current = $parent;
+                } else {
+                    // If no parent, fallback to default
+                    if ($current !== 'default') {
+                        $chain[] = 'default';
+                    }
+                    break;
+                }
+            }
+
+            return $chain;
+        });
+    }
+
+    /**
+     * Validate inheritance chain to prevent circular dependencies
+     * 
+     * @param string $themeName
+     * @param string|null $proposedParent
+     * @return bool
+     */
+    public function validateInheritanceChain(string $themeName, ?string $proposedParent = null): bool
+    {
+        if (!$proposedParent) {
+            return true;
+        }
+
+        // A theme cannot be its own parent
+        if ($themeName === $proposedParent) {
+            return false;
+        }
+
+        // Check if proposed parent would create a cycle
+        $parentChain = $this->getThemeInheritanceChain($proposedParent);
         
-        return $metadata;
+        // If the theme name appears in the parent's chain, it would create a cycle
+        if (in_array($themeName, $parentChain)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -739,6 +864,29 @@ README;
     }
 
     /**
+     * Clear theme cache for a specific theme or all themes
+     * 
+     * @param string|null $themeName If null, clears all theme caches
+     * @return void
+     */
+    public function clearThemeCache(?string $themeName = null): void
+    {
+        if ($themeName) {
+            Cache::forget("theme.metadata.{$themeName}");
+            Cache::forget("theme.parent.{$themeName}");
+            Cache::forget("theme.chain.{$themeName}");
+        } else {
+            // Clear all theme-related cache
+            $themes = $this->list();
+            foreach ($themes as $theme) {
+                Cache::forget("theme.metadata.{$theme['name']}");
+                Cache::forget("theme.parent.{$theme['name']}");
+                Cache::forget("theme.chain.{$theme['name']}");
+            }
+        }
+    }
+
+    /**
      * Delete a theme
      */
     public function delete(string $themeName): array
@@ -768,6 +916,9 @@ README;
             if (File::isDirectory($viewsPath)) {
                 File::deleteDirectory($viewsPath);
             }
+
+            // Clear cache for deleted theme
+            $this->clearThemeCache($themeName);
 
             return [
                 'name' => $themeName,

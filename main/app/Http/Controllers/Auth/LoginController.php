@@ -20,9 +20,9 @@ class LoginController extends Controller
     {
         $data['title'] = 'Login Page';
 
-        $data['content'] = Helper::builder('auth');
+        $data['content'] = Helper::builder('auth') ?? (object)['content' => (object)['title' => 'Welcome Back', 'image_one' => null]];
 
-        return view(Helper::theme() . 'auth.login')->with($data);
+        return view(Helper::themeView('auth.login'))->with($data);
     }
 
     public function login(UserLoginRequest $request)

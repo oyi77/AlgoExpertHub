@@ -1,9 +1,9 @@
-@extends(Config::theme() . 'layout.master')
+@extends(Config::themeView('layout.master'))
 
 @section('content')
-    @if ($page->widgets)
-        @foreach ($page->widgets as $section)
             <?= Section::render($section->sections) ?>
         @endforeach
+        @endif
+        @endif
     @endif
 @endsection

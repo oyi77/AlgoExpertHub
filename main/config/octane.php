@@ -66,6 +66,7 @@ return [
         WorkerStarting::class => [
             EnsureUploadedFilesAreValid::class,
             EnsureUploadedFilesCanBeMoved::class,
+            \App\Listeners\SuppressSwooleWarnings::class . '@handleWorkerStarting',
         ],
 
         RequestReceived::class => [
@@ -84,11 +85,11 @@ return [
 
         TaskReceived::class => [
             ...Octane::prepareApplicationForNextOperation(),
-            //
+            \App\Listeners\SuppressSwooleWarnings::class . '@handleTaskReceived',
         ],
 
         TaskTerminated::class => [
-            //
+            \App\Listeners\SuppressSwooleWarnings::class . '@handleTaskTerminated',
         ],
 
         TickReceived::class => [

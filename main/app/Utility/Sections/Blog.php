@@ -28,8 +28,12 @@ class Blog
         'blue' => [
             "title" =>  "Text",
             "color_text_for_title" => "Text"
+        ],
+        'trading-landing' => [
+            "section_header" => "Text",
+            "title" =>  "Text",
+            "color_text_for_title" => "Text"
         ]
-
     ];
 
     public $classes = [
@@ -44,6 +48,11 @@ class Blog
             "color_text_for_title" => "col-md-6"
         ],
         'blue' => [
+            "title" =>  "col-md-6",
+            "color_text_for_title" => "col-md-6"
+        ],
+        'trading-landing' => [
+            "section_header" => "col-md-12",
             "title" =>  "col-md-6",
             "color_text_for_title" => "col-md-6"
         ]
@@ -63,6 +72,11 @@ class Blog
         'blue' => [
             "title" =>  "required",
             "color_text_for_title" => "required"
+        ],
+        'trading-landing' => [
+            "section_header" => "nullable",
+            "title" =>  "required",
+            "color_text_for_title" => "required"
         ]
     ];
 
@@ -80,6 +94,12 @@ class Blog
             "image_one" => "Upload",
         ],
         'blue' => [
+            "blog_title" => "Text",
+            "short_description" => "Textarea",
+            "description" => "Summernote",
+            "image_one" => "Upload",
+        ],
+        'trading-landing' => [
             "blog_title" => "Text",
             "short_description" => "Textarea",
             "description" => "Summernote",
@@ -105,6 +125,12 @@ class Blog
             "short_description" => "col-md-12",
             "description" => "col-md-12",
             "image_one" => "col-md-3",
+        ],
+        'trading-landing' => [
+            "blog_title" => "col-md-12",
+            "short_description" => "col-md-12",
+            "description" => "col-md-12",
+            "image_one" => "col-md-3",
         ]
     ];
 
@@ -122,6 +148,12 @@ class Blog
             "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
         ],
         'blue' => [
+            "blog_title" => "required",
+            "short_description" => "required",
+            "description" => "required",
+            "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+        ],
+        'trading-landing' => [
             "blog_title" => "required",
             "short_description" => "required",
             "description" => "required",

@@ -1397,37 +1397,48 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      plans:
+      description:
         custom: []
-        name: plans
-        description: ''
-        required: true
-        example: architecto
+        name: description
+        description: 'Signal description'
+        required: false
+        example: 'Eius et animi quos velit et.'
         type: string
         enumValues: []
         exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      currency_pair_id:
+        custom: []
+        name: currency_pair_id
+        description: 'Currency pair ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      currency_pair:
+      time_frame_id:
         custom: []
-        name: currency_pair
-        description: 'The <code>id</code> of an existing record in the currency_pairs table.'
+        name: time_frame_id
+        description: 'Timeframe ID.'
         required: true
-        example: architecto
-        type: string
+        example: 1
+        type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      time_frame:
+      market_id:
         custom: []
-        name: time_frame
-        description: 'The <code>id</code> of an existing record in the time_frames table.'
+        name: market_id
+        description: 'Market ID.'
         required: true
-        example: architecto
-        type: string
+        example: 1
+        type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
       open_price:
@@ -1463,17 +1474,6 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      image:
-        custom: []
-        name: image
-        description: 'Must be an image.'
-        required: false
-        example: null
-        type: file
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
       direction:
         custom: []
         name: direction
@@ -1485,59 +1485,27 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      market:
+      image:
         custom: []
-        name: market
-        description: 'The <code>id</code> of an existing record in the markets table.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      description:
-        custom: []
-        name: description
-        description: 'Signal description'
+        name: image
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
         required: false
-        example: 'Eius et animi quos velit et.'
-        type: string
+        example: null
+        type: file
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      currency_pair_id:
+      plans:
         custom: []
-        name: currency_pair_id
-        description: 'Currency pair ID.'
-        required: true
-        example: 1
-        type: integer
+        name: plans
+        description: 'The <code>id</code> of an existing record in the plans table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      time_frame_id:
-        custom: []
-        name: time_frame_id
-        description: 'Timeframe ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      market_id:
-        custom: []
-        name: market_id
-        description: 'Market ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
       plan_ids:
@@ -1555,18 +1523,16 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       title: 'EUR/USD Buy Signal'
-      plans: architecto
-      currency_pair: architecto
-      time_frame: architecto
-      open_price: '1.1000'
-      sl: '1.0950'
-      tp: '1.1100'
-      direction: buy
-      market: architecto
       description: 'Eius et animi quos velit et.'
       currency_pair_id: 1
       time_frame_id: 1
       market_id: 1
+      open_price: '1.1000'
+      sl: '1.0950'
+      tp: '1.1100'
+      direction: buy
+      plans:
+        - 16
       plan_ids:
         - 1
         - 2
@@ -1688,42 +1654,53 @@ endpoints:
         custom: []
         name: title
         description: 'Must not be greater than 255 characters.'
-        required: true
+        required: false
         example: b
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      plans:
+      description:
         custom: []
-        name: plans
+        name: description
         description: ''
-        required: true
-        example: architecto
+        required: false
+        example: 'Eius et animi quos velit et.'
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      currency_pair:
+      currency_pair_id:
         custom: []
-        name: currency_pair
+        name: currency_pair_id
         description: 'The <code>id</code> of an existing record in the currency_pairs table.'
-        required: true
-        example: architecto
-        type: string
+        required: false
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      time_frame:
+      time_frame_id:
         custom: []
-        name: time_frame
+        name: time_frame_id
         description: 'The <code>id</code> of an existing record in the time_frames table.'
-        required: true
-        example: architecto
-        type: string
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      market_id:
+        custom: []
+        name: market_id
+        description: 'The <code>id</code> of an existing record in the markets table.'
+        required: false
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -1731,9 +1708,9 @@ endpoints:
       open_price:
         custom: []
         name: open_price
-        description: ''
-        required: true
-        example: 4326.41688
+        description: 'Must be at least 0.'
+        required: false
+        example: 39
         type: number
         enumValues: []
         exampleWasSpecified: false
@@ -1742,9 +1719,9 @@ endpoints:
       sl:
         custom: []
         name: sl
-        description: ''
-        required: true
-        example: 4326.41688
+        description: 'Must be at least 0.'
+        required: false
+        example: 84
         type: number
         enumValues: []
         exampleWasSpecified: false
@@ -1753,18 +1730,33 @@ endpoints:
       tp:
         custom: []
         name: tp
-        description: ''
-        required: true
-        example: 4326.41688
+        description: 'Must be at least 0.'
+        required: false
+        example: 12
         type: number
         enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      direction:
+        custom: []
+        name: direction
+        description: ''
+        required: false
+        example: buy
+        type: string
+        enumValues:
+          - buy
+          - sell
+          - long
+          - short
         exampleWasSpecified: false
         nullable: false
         deprecated: false
       image:
         custom: []
         name: image
-        description: 'Must be an image.'
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
         required: false
         example: null
         type: file
@@ -1772,40 +1764,30 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      direction:
+      plans:
         custom: []
-        name: direction
-        description: ''
-        required: true
-        example: sell
-        type: string
-        enumValues:
-          - buy
-          - sell
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      market:
-        custom: []
-        name: market
-        description: 'The <code>id</code> of an existing record in the markets table.'
-        required: true
-        example: architecto
-        type: string
+        name: plans
+        description: 'The <code>id</code> of an existing record in the plans table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
       title: b
-      plans: architecto
-      currency_pair: architecto
-      time_frame: architecto
-      open_price: 4326.41688
-      sl: 4326.41688
-      tp: 4326.41688
-      direction: sell
-      market: architecto
+      description: 'Eius et animi quos velit et.'
+      currency_pair_id: 16
+      time_frame_id: 16
+      market_id: 16
+      open_price: 39
+      sl: 84
+      tp: 12
+      direction: buy
+      plans:
+        - 16
     fileParameters:
       image: null
     responses:

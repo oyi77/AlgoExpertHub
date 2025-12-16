@@ -80,7 +80,7 @@
         {
             "key": "execution",
             "name": "Trade Execution",
-            "description": "Execute trades on exchanges/brokers via CCXT and mtapi.io",
+            "description": "Execute trades on exchanges/brokers via CCXT, mtapi.io, and metaapi.cloud",
             "targets": [
                 "admin_ui",
                 "user_ui",

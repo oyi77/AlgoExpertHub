@@ -360,14 +360,14 @@ class PositionControlService
     {
         if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
             return new CcxtAdapter(
-                $connection->credentials,
-                $connection->provider
+                $connection->provider,
+                $connection->credentials ?? []
             );
         } elseif ($connection->provider === 'metaapi') {
             return new MetaApiAdapter($connection->credentials);
         }
 
         // Default adapter
-        return new CcxtAdapter($connection->credentials, $connection->provider);
+        return new CcxtAdapter($connection->provider, $connection->credentials ?? []);
     }
 }

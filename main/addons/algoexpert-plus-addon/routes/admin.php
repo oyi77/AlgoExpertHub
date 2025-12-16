@@ -19,10 +19,20 @@ Route::prefix('algoexpert-plus')->name('algoexpert-plus.')->group(function () {
     // Backup routes
     Route::prefix('backup')->name('backup.')->group(function () {
         Route::get('/', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'index'])->name('index');
+        
+        // Spatie backup routes (full system backups)
         Route::post('/run', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'run'])->name('run');
         Route::post('/clean', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'clean'])->name('clean');
         Route::get('/download', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'download'])->name('download');
         Route::delete('/delete', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'delete'])->name('delete');
+        
+        // SQL database backup routes
+        Route::post('/sql/create', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'createSqlBackup'])->name('sql.create');
+        Route::post('/sql/load', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'loadSqlBackup'])->name('sql.load');
+        Route::delete('/sql/delete', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'deleteSqlBackup'])->name('sql.delete');
+        Route::get('/sql/download', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'downloadSqlBackup'])->name('sql.download');
+        Route::post('/sql/save-factory', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'saveAsFactoryState'])->name('sql.save-factory');
+        Route::post('/sql/load-factory', [\Addons\AlgoExpertPlus\App\Http\Controllers\Backend\BackupController::class, 'loadFactoryState'])->name('sql.load-factory');
     });
     
     // Other routes

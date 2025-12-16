@@ -2,6 +2,66 @@
 
 @section('element')
     @push('uses_apexchart')@endpush
+    @push('external-script')
+    <!-- ApexCharts Library - Load with fallback -->
+    <script>
+        (function() {
+            // Prevent multiple loads
+            if (window.__apexchartsBackendLoading) {
+                return;
+            }
+            window.__apexchartsBackendLoading = true;
+            
+            // Check if already loaded
+            if (typeof ApexCharts !== 'undefined') {
+                window.__apexchartsBackendLoaded = true;
+                window.dispatchEvent(new Event('apexcharts-loaded'));
+                return;
+            }
+            
+            var scripts = [
+                '{{ Config::jsLib('backend', 'apex-chart.min.js') }}',
+                'https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.44.0/apexcharts.min.js',
+                'https://unpkg.com/apexcharts@3.44.0/dist/apexcharts.min.js'
+            ];
+            
+            function loadScript(index) {
+                if (index >= scripts.length) {
+                    console.error('ApexCharts: All sources failed to load');
+                    window.__apexchartsBackendLoading = false;
+                    return;
+                }
+                
+                var script = document.createElement('script');
+                script.src = scripts[index];
+                script.async = false;
+                script.defer = false;
+                
+                script.onload = function() {
+                    // Wait a bit for ApexCharts to initialize
+                    setTimeout(function() {
+                        if (typeof ApexCharts !== 'undefined') {
+                            window.__apexchartsBackendLoaded = true;
+                            window.__apexchartsBackendLoading = false;
+                            window.dispatchEvent(new Event('apexcharts-loaded'));
+                        } else {
+                            loadScript(index + 1);
+                        }
+                    }, 100);
+                };
+                
+                script.onerror = function() {
+                    loadScript(index + 1);
+                };
+                
+                document.head.appendChild(script);
+            }
+            
+            loadScript(0);
+        })();
+    </script>
+    @endpush
     @push('uses_datatable')@endpush
     <div class="row">
         <div class="col-xxl-9">
@@ -312,7 +372,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -446,7 +505,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -491,7 +549,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -530,7 +587,6 @@
     <script>
         'use strict'
 
-
         @if (now()->diffInMinutes(\Carbon\Carbon::parse(Config::config()->cron_run_time)) > 25)
 
             $(function() {
@@ -551,6 +607,24 @@
                 this.select();
             });
         @endif
+
+        // Wait for ApexCharts to load before creating charts
+        function waitForApexCharts(callback, maxAttempts = 50, attempt = 0) {
+            if (typeof ApexCharts !== 'undefined' || (window.__apexchartsBackendLoaded === true)) {
+                callback();
+            } else if (attempt < maxAttempts) {
+                // Listen for apexcharts-loaded event
+                var eventHandler = function() {
+                    window.removeEventListener('apexcharts-loaded', eventHandler);
+                    callback();
+                };
+                window.addEventListener('apexcharts-loaded', eventHandler, { once: true });
+                
+                setTimeout(() => waitForApexCharts(callback, maxAttempts, attempt + 1), 100);
+            } else {
+                console.error('ApexCharts failed to load after ' + maxAttempts + ' attempts');
+            }
+        }
 
         // User Statistics
 
@@ -639,11 +713,25 @@
             }]
         };
 
-        var chart2 = new ApexCharts(document.querySelector("#chart2"), user);
-        chart2.render();
-        
-        var chart5 = new ApexCharts(document.querySelector("#chart5"), user);
-        chart5.render();
+        // Store chart instances to prevent duplicates
+        window.__adminDashboardCharts = window.__adminDashboardCharts || {};
+
+        // Initialize charts after ApexCharts is loaded
+        waitForApexCharts(function() {
+            // Only render chart2 if it doesn't exist and element is visible
+            var chart2Element = document.querySelector("#chart2");
+            if (chart2Element && !window.__adminDashboardCharts.chart2) {
+                window.__adminDashboardCharts.chart2 = new ApexCharts(chart2Element, user);
+                window.__adminDashboardCharts.chart2.render();
+            }
+            
+            // Only render chart5 if it doesn't exist and element is visible
+            var chart5Element = document.querySelector("#chart5");
+            if (chart5Element && !window.__adminDashboardCharts.chart5) {
+                window.__adminDashboardCharts.chart5 = new ApexCharts(chart5Element, user);
+                window.__adminDashboardCharts.chart5.render();
+            }
+        });
 
 
 
@@ -797,7 +885,13 @@
         };
 
 
-        var chart = new ApexCharts(document.querySelector("#profit-chart"), payment);
-        chart.render();
+        // Initialize profit chart after ApexCharts is loaded
+        waitForApexCharts(function() {
+            var profitChartElement = document.querySelector("#profit-chart");
+            if (profitChartElement && !window.__adminDashboardCharts.profitChart) {
+                window.__adminDashboardCharts.profitChart = new ApexCharts(profitChartElement, payment);
+                window.__adminDashboardCharts.profitChart.render();
+            }
+        });
     </script>
 @endpush

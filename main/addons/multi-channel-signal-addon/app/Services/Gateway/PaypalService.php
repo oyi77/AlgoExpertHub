@@ -4,8 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services\Gateway;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;

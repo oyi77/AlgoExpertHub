@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'auth.master')
+@extends(Config::themeView('auth.master'))
 
 @section('content')
     <form class="sp_account_form mt-4" action="" method="POST">

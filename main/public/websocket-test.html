@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Soketi</title>
+    <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.connected { background: #d4edda; color: #155724; }
+        .status.disconnected { background: #f8d7da; color: #721c24; }
+        .status.connecting { background: #fff3cd; color: #856404; }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 5px 0;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+        .log-entry.success { border-left-color: #28a745; }
+        .log-entry.error { border-left-color: #dc3545; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 WebSocket Test - Soketi + Laravel</h1>
+        
+        <div id="status" class="status connecting">
+            ⏳ Connecting to WebSocket server...
+        </div>
+
+        <div>
+            <button onclick="testBroadcast()">📡 Test Broadcast</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <h3>Event Log:</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        function updateStatus(state, message) {
+            status.className = `status ${state}`;
+            status.textContent = message;
+        }
+
+        function clearLog() {
+            log.innerHTML = '';
+            addLog('Log cleared', 'info');
+        }
+
+        // Initialize Pusher
+        addLog('Initializing Pusher client...', 'info');
+        
+        const pusher = new Pusher('local', {
+            wsHost: window.location.hostname,
+            wsPort: 6001,
+            wssPort: 6001,
+            forceTLS: false,
+            disableStats: true,
+            enabledTransports: ['ws', 'wss'],
+            cluster: 'mt1'
+        });
+
+        // Connection state changes
+        pusher.connection.bind('connecting', () => {
+            updateStatus('connecting', '⏳ Connecting to WebSocket server...');
+            addLog('Connecting to Soketi...', 'info');
+        });
+
+        pusher.connection.bind('connected', () => {
+            updateStatus('connected', '✅ Connected to WebSocket server!');
+            addLog('✅ Successfully connected to Soketi!', 'success');
+        });
+
+        pusher.connection.bind('disconnected', () => {
+            updateStatus('disconnected', '❌ Disconnected from WebSocket server');
+            addLog('❌ Disconnected from Soketi', 'error');
+        });
+
+        pusher.connection.bind('error', (err) => {
+            updateStatus('disconnected', '❌ Connection error');
+            addLog(`❌ Error: ${JSON.stringify(err)}`, 'error');
+        });
+
+        // Subscribe to bot channel
+        const botId = 1; // Test bot ID
+        const channel = pusher.subscribe(`private-admin.trading-bot.${botId}`);
+
+        channel.bind('pusher:subscription_succeeded', () => {
+            addLog(`✅ Subscribed to channel: private-admin.trading-bot.${botId}`, 'success');
+        });
+
+        channel.bind('pusher:subscription_error', (err) => {
+            addLog(`❌ Subscription error: ${JSON.stringify(err)}`, 'error');
+        });
+
+        // Listen for events
+        channel.bind('bot.status.changed', (data) => {
+            addLog(`📡 Bot Status Changed: ${JSON.stringify(data)}`, 'success');
+            console.log('Bot Status Changed:', data);
+        });
+
+        channel.bind('position.updated', (data) => {
+            addLog(`📊 Position Updated: ${data.positions.length} positions`, 'success');
+            console.log('Position Updated:', data);
+        });
+
+        channel.bind('market.data.updated', (data) => {
+            addLog(`💹 Market Data Updated: ${data.symbol}`, 'success');
+            console.log('Market Data Updated:', data);
+        });
+
+        channel.bind('order.executed', (data) => {
+            addLog(`✅ Order Executed: ${JSON.stringify(data.order)}`, 'success');
+            console.log('Order Executed:', data);
+        });
+
+        function testBroadcast() {
+            addLog('🧪 Sending test broadcast request to Laravel...', 'info');
+            
+            fetch('/admin/trading-management/trading-bots/1/test-broadcast', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                addLog(`✅ Test broadcast sent: ${JSON.stringify(data)}`, 'success');
+            })
+            .catch(error => {
+                addLog(`❌ Failed to send test broadcast: ${error.message}`, 'error');
+            });
+        }
+
+        addLog('WebSocket test page loaded', 'info');
+        addLog(`Connecting to: ws://${window.location.hostname}:6001`, 'info');
+    </script>
+</body>
+</html>
+

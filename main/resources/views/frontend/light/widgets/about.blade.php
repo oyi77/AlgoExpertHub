@@ -10,10 +10,14 @@
                 </h2>
                 <p class="fs-lg mt-3"><?= Config::trans($content->description) ?></p>
                 <ul class="sp_check_list mt-4">
-                    @if ($content)
-                        @foreach (optional($content)->repeater as $repeater)
-                            <li>{{ Config::trans($repeater->repeater)}}</li>
-                        @endforeach
+                    @if ($content && isset($content->repeater))
+                        @if (is_array($content->repeater))
+                            @foreach ($content->repeater as $repeater)
+                                <li>{{ Config::trans($repeater->repeater ?? '') }}</li>
+                            @endforeach
+                        @elseif (is_string($content->repeater) && !empty($content->repeater))
+                            <li>{{ Config::trans($content->repeater) }}</li>
+                        @endif
                     @endif
                 </ul>
                 <a href="{{ optional($content)->button_link ?? '' }}" class="btn sp_theme_btn mt-4">{{ Config::trans($content->button_text) }}</a>

@@ -31,8 +31,12 @@ class Testimonial
             "title" =>  "Text", 
             "color_text_for_title" => "Text",
             "image_two" => "Upload"
+        ],
+        'trading-landing' => [
+            "section_header" => "Text",
+            "title" =>  "Text",
+            "color_text_for_title" => "Text"
         ]
-
     ];
 
     public $classes = [
@@ -51,6 +55,11 @@ class Testimonial
             "title" =>  "col-md-6",
             "color_text_for_title" => "col-md-6",
             "image_two" => "col-md-3"
+        ],
+        'trading-landing' => [
+            "section_header" => "col-md-12",
+            "title" =>  "col-md-6",
+            "color_text_for_title" => "col-md-6"
         ]
     ];
 
@@ -70,6 +79,11 @@ class Testimonial
             "title" =>  "required",
             "color_text_for_title" => "required",
             "image_two" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+        ],
+        'trading-landing' => [
+            "section_header" => "nullable",
+            "title" =>  "required",
+            "color_text_for_title" => "required"
         ]
     ];
 
@@ -87,6 +101,12 @@ class Testimonial
             "image_one" => "Upload"
         ],
         'blue' => [
+            "client_name" => "Text",
+            "designation" => "Text",
+            "description" => "Textarea",
+            "image_one" => "Upload"
+        ],
+        'trading-landing' => [
             "client_name" => "Text",
             "designation" => "Text",
             "description" => "Textarea",
@@ -112,6 +132,12 @@ class Testimonial
             "designation" => "col-md-6",
             "description" => "col-md-12",
             "image_one" => "col-md-3"
+        ],
+        'trading-landing' => [
+            "client_name" => "col-md-6",
+            "designation" => "col-md-6",
+            "description" => "col-md-12",
+            "image_one" => "col-md-3"
         ]
     ];
 
@@ -129,6 +155,12 @@ class Testimonial
             "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
         ],
         'blue' => [
+            "client_name" => "required",
+            "designation" => "required",
+            "description" => "required",
+            "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+        ],
+        'trading-landing' => [
             "client_name" => "required",
             "designation" => "required",
             "description" => "required",

@@ -1,0 +1,242 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "transforms": ["middle-out"],
+  "agent": {
+    "backend-engineer": {
+      "description": "Backend engineer specializing in Laravel, APIs, and system architecture",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.2,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "php artisan migrate*": "ask",
+          "composer install": "allow",
+          "composer update": "ask",
+          "php artisan test": "allow",
+          "php artisan queue:*": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "frontend-engineer": {
+      "description": "Frontend engineer specializing in modern web interfaces and user experience",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.3,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "npm install": "allow",
+          "npm run *": "allow",
+          "yarn *": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "trading-analyst": {
+      "description": "Trading systems analyst specializing in algorithmic trading and market analysis",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "python *": "allow",
+          "pip install *": "ask",
+          "*": "allow"
+        }
+      }
+    },
+    "ai-specialist": {
+      "description": "AI/ML specialist focusing on trading signal analysis and market prediction",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.2,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "python *": "allow",
+          "pip install *": "ask",
+          "jupyter *": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "devops-engineer": {
+      "description": "DevOps engineer managing infrastructure, deployment, and system reliability",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "docker *": "allow",
+          "kubectl *": "ask",
+          "terraform *": "ask",
+          "git *": "allow",
+          "systemctl *": "ask",
+          "*": "allow"
+        }
+      }
+    },
+    "qa-engineer": {
+      "description": "QA engineer ensuring quality, testing, and reliability of trading systems",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "php artisan test": "allow",
+          "npm test": "allow",
+          "pytest *": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "risk-manager": {
+      "description": "Risk management specialist focusing on trading risk controls and compliance",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": false,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "data-engineer": {
+      "description": "Data engineer managing data pipelines, storage, and real-time processing",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "python *": "allow",
+          "pip install *": "ask",
+          "*": "allow"
+        }
+      }
+    },
+    "security-specialist": {
+      "description": "Security specialist ensuring platform security and data protection",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true,
+        "glob": true,
+        "grep": true
+      },
+      "permission": {
+        "bash": {
+          "nmap *": "ask",
+          "openssl *": "allow",
+          "gpg *": "allow",
+          "*": "allow"
+        }
+      }
+    },
+    "product-manager": {
+      "description": "Product manager coordinating features, requirements, and team collaboration",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.3,
+      "tools": {
+        "write": true,
+        "edit": false,
+        "bash": false,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    },
+    "ui-ux-designer": {
+      "description": "UI/UX designer creating intuitive interfaces for trading platform",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.4,
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": false,
+        "read": true,
+        "glob": true,
+        "grep": true
+      }
+    }
+  },
+  "tools": {
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "read": true,
+    "glob": true,
+    "grep": true,
+    "webfetch": true,
+    "websearch": true,
+    "codesearch": true
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "webfetch": "allow"
+  }
+}

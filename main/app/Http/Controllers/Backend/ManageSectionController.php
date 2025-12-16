@@ -9,6 +9,7 @@ use App\Http\Requests\SectionElementUpdateRequest;
 use App\Http\Requests\SectionRequest;
 use App\Models\Content;
 use App\Models\GeneralSetting;
+use App\Models\GlobalConfiguration;
 use App\Models\Language;
 use App\Models\SectionData;
 use App\Services\SectionManagerService;
@@ -30,8 +31,8 @@ class ManageSectionController extends Controller
 
     public function section(Request $request)
     {
-
-        $data['sections'] = Config::sections();
+        // Get sections in saved order or default order
+        $data['sections'] = $this->getSectionsInOrder();
         $data['elements'] = Content::where('theme', Helper::config()->theme)->where('type', 'iteratable')->where('name', $request->name)->get();
     
         $elementBuilder = FormBuilder::classMap($request->name);
@@ -46,6 +47,65 @@ class ManageSectionController extends Controller
 
       
         return view('backend.frontend.index')->with($data);
+    }
+
+    /**
+     * Get sections in saved order or default order
+     */
+    protected function getSectionsInOrder()
+    {
+        $defaultSections = Config::sections();
+        $savedOrder = GlobalConfiguration::getValue('sections_order', null);
+        
+        if ($savedOrder && is_array($savedOrder)) {
+            // Merge saved order with default sections (in case new sections were added)
+            $ordered = [];
+            foreach ($savedOrder as $section) {
+                if (in_array($section, $defaultSections)) {
+                    $ordered[] = $section;
+                }
+            }
+            // Add any new sections that weren't in saved order
+            foreach ($defaultSections as $section) {
+                if (!in_array($section, $ordered)) {
+                    $ordered[] = $section;
+                }
+            }
+            return $ordered;
+        }
+        
+        return $defaultSections;
+    }
+
+    /**
+     * Reorder sections
+     */
+    public function reorderSections(Request $request)
+    {
+        $request->validate([
+            'sections' => 'required|array',
+            'sections.*' => 'string'
+        ]);
+
+        $sections = $request->input('sections');
+        
+        // Validate all sections exist in default sections
+        $defaultSections = Config::sections();
+        foreach ($sections as $section) {
+            if (!in_array($section, $defaultSections)) {
+                return response()->json([
+                    'type' => 'error',
+                    'message' => "Invalid section: {$section}"
+                ], 400);
+            }
+        }
+
+        GlobalConfiguration::setValue('sections_order', $sections, 'Admin section management order');
+
+        return response()->json([
+            'type' => 'success',
+            'message' => 'Sections reordered successfully'
+        ]);
     }
 
     public function sectionContentUpdate(SectionRequest $request)

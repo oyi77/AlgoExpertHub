@@ -39,3 +39,7 @@ MadelineProto.log
 .ea-php-cli.cache
 CLAUDE.md
 AGENTS.md
+/sdks/
+# Ignore asset contents but allow symlink
+/asset/*
+!/asset/.gitkeep

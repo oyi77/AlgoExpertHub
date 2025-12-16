@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * TradingBotMonitoringService
@@ -216,50 +217,177 @@ class TradingBotMonitoringService
     }
 
     /**
-     * Get open positions for a bot
+     * Get open positions for a bot (cached for 10 seconds)
      * 
      * @param TradingBot $bot
+     * @param bool $skipExchangeFetch Skip fetching from exchange (for faster page load, AJAX will fetch later)
      * @return array
      */
-    public function getOpenPositions(TradingBot $bot): array
+    public function getOpenPositions(TradingBot $bot, bool $skipExchangeFetch = false): array
     {
-        // Check if trading_bot_positions table exists
-        if (!Schema::hasTable('trading_bot_positions')) {
-            return [];
+        // Cache key: positions are cached for 10 seconds to avoid repeated DB/API calls
+        $cacheKey = "trading_bot_positions_{$bot->id}";
+        $cacheTtl = 10; // seconds
+        
+        // Try cache first (only for skipExchangeFetch mode which is used by AJAX)
+        if ($skipExchangeFetch) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
+                Log::debug('Returning cached positions', [
+                    'bot_id' => $bot->id,
+                    'positions_count' => count($cached)
+                ]);
+                return $cached;
+            }
         }
-
+        
         try {
-            $positions = TradingBotPosition::where('bot_id', $bot->id)
-                ->where('status', 'open')
-                ->with('executionPosition', 'signal')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // First try to get positions from trading_bot_positions table
+            if (Schema::hasTable('trading_bot_positions')) {
+                $positions = TradingBotPosition::where('bot_id', $bot->id)
+                    ->where('status', 'open')
+                    ->with('executionPosition', 'signal')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
 
-            return $positions->map(function ($position) {
-                $pnl = $position->profit_loss ?? 0;
-                $pnlPercent = $position->getProfitLossPercentage();
+                if ($positions->isNotEmpty()) {
+                    $result = $positions->map(function ($position) {
+                        $pnl = $position->profit_loss ?? 0;
+                        $pnlPercent = $position->getProfitLossPercentage();
 
-                return [
-                    'id' => $position->id,
-                    'symbol' => $position->symbol,
-                    'direction' => $position->direction,
-                    'entry_price' => $position->entry_price,
-                    'current_price' => $position->current_price,
-                    'stop_loss' => $position->stop_loss,
-                    'take_profit' => $position->take_profit,
-                    'quantity' => $position->quantity,
-                    'profit_loss' => $pnl,
-                    'profit_loss_percent' => $pnlPercent,
-                    'status' => $position->status,
-                    'opened_at' => $position->opened_at?->toIso8601String(),
-                    'signal_id' => $position->signal_id,
-                    'signal_title' => $position->signal?->title,
-                ];
-            })->toArray();
+                        return [
+                            'id' => $position->id,
+                            'symbol' => $position->symbol,
+                            'direction' => $position->direction,
+                            'entry_price' => $position->entry_price,
+                            'current_price' => $position->current_price,
+                            'stop_loss' => $position->stop_loss,
+                            'take_profit' => $position->take_profit,
+                            'quantity' => $position->quantity,
+                            'profit_loss' => $pnl,
+                            'profit_loss_percent' => $pnlPercent,
+                            'status' => $position->status,
+                            'opened_at' => $position->opened_at?->toIso8601String(),
+                            'signal_id' => $position->signal_id,
+                            'signal_title' => $position->signal?->title,
+                        ];
+                    })->toArray();
+                    
+                    // Cache the result for 10 seconds
+                    Cache::put($cacheKey, $result, $cacheTtl);
+                    return $result;
+                }
+            }
+            
+            // Skip exchange fetch if requested (for faster page load - AJAX will fetch later)
+            if ($skipExchangeFetch) {
+                Log::debug('Skipping exchange position fetch (skipExchangeFetch=true)', [
+                    'bot_id' => $bot->id
+                ]);
+                // Cache empty result to prevent repeated DB queries
+                Cache::put($cacheKey, [], $cacheTtl);
+                return [];
+            }
+            
+            // Fallback: Fetch positions directly from exchange connection
+            if ($bot->exchange_connection_id && $bot->exchangeConnection) {
+                Log::info('Fetching positions from exchange connection', [
+                    'bot_id' => $bot->id,
+                    'connection_id' => $bot->exchange_connection_id
+                ]);
+                
+                try {
+                    // Increase memory limit temporarily for this operation
+                    $oldMemoryLimit = ini_get('memory_limit');
+                    ini_set('memory_limit', '512M');
+                    
+                    // Set a shorter timeout for this request to prevent page hang
+                    $oldTimeLimit = ini_get('max_execution_time');
+                    set_time_limit(15); // 15 seconds max for exchange fetch
+                    
+                    // Use the ExchangeConnectionService to get adapter
+                    $connectionService = app(\Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService::class);
+                    $adapter = $connectionService->getAdapter($bot->exchangeConnection);
+                    
+                    if ($adapter && method_exists($adapter, 'fetchPositions')) {
+                        $exchangePositions = $adapter->fetchPositions();
+                        
+                        // Restore limits
+                        ini_set('memory_limit', $oldMemoryLimit);
+                        set_time_limit($oldTimeLimit ?: 30);
+                        
+                        if (!empty($exchangePositions)) {
+                            Log::info('Successfully fetched positions from exchange', [
+                                'bot_id' => $bot->id,
+                                'positions_count' => count($exchangePositions)
+                            ]);
+                            
+                            return collect($exchangePositions)->map(function ($position) {
+                                // Normalize exchange position format (MetaAPI format)
+                                return [
+                                    'id' => $position['id'] ?? $position['positionId'] ?? uniqid(),
+                                    'symbol' => $position['symbol'] ?? 'N/A',
+                                    'direction' => $position['side'] ?? $position['direction'] ?? $position['type'] ?? 'buy',
+                                    'entry_price' => $position['entryPrice'] ?? $position['openPrice'] ?? $position['entry_price'] ?? 0,
+                                    'current_price' => $position['currentPrice'] ?? $position['markPrice'] ?? $position['current_price'] ?? $position['entryPrice'] ?? $position['openPrice'] ?? 0,
+                                    'stop_loss' => $position['stopLoss'] ?? $position['stop_loss'] ?? null,
+                                    'take_profit' => $position['takeProfit'] ?? $position['take_profit'] ?? null,
+                                    'quantity' => $position['volume'] ?? $position['contracts'] ?? $position['quantity'] ?? $position['amount'] ?? 0,
+                                    'profit_loss' => $position['profit'] ?? $position['unrealizedPnl'] ?? $position['profit_loss'] ?? 0,
+                                    'profit_loss_percent' => $position['percentage'] ?? $position['profit_loss_percent'] ?? 0,
+                                    'status' => 'open',
+                                    'opened_at' => $position['time'] ?? $position['timestamp'] ?? $position['opened_at'] ?? now()->toIso8601String(),
+                                    'signal_id' => null,
+                                    'signal_title' => null,
+                                ];
+                            })->toArray();
+                        } else {
+                            Log::info('Exchange returned empty positions', [
+                                'bot_id' => $bot->id
+                            ]);
+                        }
+                    } else {
+                        // Restore limits
+                        ini_set('memory_limit', $oldMemoryLimit);
+                        set_time_limit($oldTimeLimit ?: 30);
+                        
+                        Log::warning('Adapter does not support fetchPositions', [
+                            'bot_id' => $bot->id,
+                            'adapter_class' => $adapter ? get_class($adapter) : 'null'
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    // Restore limits on error
+                    if (isset($oldMemoryLimit)) {
+                        ini_set('memory_limit', $oldMemoryLimit);
+                    }
+                    if (isset($oldTimeLimit)) {
+                        set_time_limit($oldTimeLimit ?: 30);
+                    }
+                    
+                    // Check if it's a memory error
+                    if (strpos($e->getMessage(), 'memory') !== false || strpos($e->getMessage(), 'Allowed memory size') !== false) {
+                        Log::error('Memory exhausted while fetching positions from exchange', [
+                            'bot_id' => $bot->id,
+                            'error' => 'Memory limit exceeded - positions cannot be fetched from exchange',
+                            'suggestion' => 'Increase PHP memory_limit or use trading_bot_positions table'
+                        ]);
+                    } else {
+                        Log::error('Failed to fetch positions from exchange', [
+                            'bot_id' => $bot->id,
+                            'error' => $e->getMessage(),
+                            'trace' => substr($e->getTraceAsString(), 0, 500) // Limit trace to prevent memory issues
+                        ]);
+                    }
+                }
+            }
+            
+            return [];
         } catch (\Exception $e) {
             Log::warning('Failed to get open positions', [
                 'bot_id' => $bot->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
@@ -269,29 +397,28 @@ class TradingBotMonitoringService
      * Calculate position statistics for a bot
      * 
      * @param TradingBot $bot
+     * @param bool $skipExchangeFetch Skip fetching from exchange (for faster page load)
      * @return array
      */
-    public function calculatePositionStats(TradingBot $bot): array
+    public function calculatePositionStats(TradingBot $bot, bool $skipExchangeFetch = false): array
     {
-        // Check if trading_bot_positions table exists
-        if (!Schema::hasTable('trading_bot_positions')) {
-            return [
-                'total_open' => 0,
-                'total_unrealized_pnl' => 0,
-                'positions_at_risk' => 0,
-                'positions_near_tp' => 0,
-                'closed_last_30d' => 0,
-                'win_rate' => 0,
-                'total_realized_pnl' => 0,
-                'avg_hold_time_seconds' => null,
-            ];
+        // Cache key for stats
+        $cacheKey = "trading_bot_stats_{$bot->id}";
+        $cacheTtl = 10; // seconds
+        
+        // Try cache first for faster response
+        if ($skipExchangeFetch) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
         }
-
+        
         try {
-            $openPositions = TradingBotPosition::where('bot_id', $bot->id)
-                ->where('status', 'open')
-                ->get();
-
+            // Get open positions (will use fallback to exchange if needed)
+            $openPositionsArray = $this->getOpenPositions($bot, $skipExchangeFetch);
+            $openPositions = collect($openPositionsArray);
+            
             $totalUnrealizedPnL = $openPositions->sum('profit_loss') ?? 0;
             
             // Count positions at risk (near SL - within 1% of entry)
@@ -299,43 +426,56 @@ class TradingBotMonitoringService
             $nearTP = 0;
             
             foreach ($openPositions as $position) {
-                if ($position->current_price && $position->entry_price && $position->stop_loss) {
-                    $distanceToSL = abs($position->current_price - $position->stop_loss) / $position->entry_price * 100;
+                // Handle both object and array formats
+                $currentPrice = is_array($position) ? ($position['current_price'] ?? null) : ($position->current_price ?? null);
+                $entryPrice = is_array($position) ? ($position['entry_price'] ?? null) : ($position->entry_price ?? null);
+                $stopLoss = is_array($position) ? ($position['stop_loss'] ?? null) : ($position->stop_loss ?? null);
+                $takeProfit = is_array($position) ? ($position['take_profit'] ?? null) : ($position->take_profit ?? null);
+                
+                if ($currentPrice && $entryPrice && $stopLoss) {
+                    $distanceToSL = abs($currentPrice - $stopLoss) / $entryPrice * 100;
                     if ($distanceToSL < 1) {
                         $atRisk++;
                     }
                 }
                 
-                if ($position->current_price && $position->entry_price && $position->take_profit) {
-                    $distanceToTP = abs($position->current_price - $position->take_profit) / $position->entry_price * 100;
+                if ($currentPrice && $entryPrice && $takeProfit) {
+                    $distanceToTP = abs($currentPrice - $takeProfit) / $entryPrice * 100;
                     if ($distanceToTP < 1) {
                         $nearTP++;
                     }
                 }
             }
 
-            // Get closed positions stats (last 30 days)
-            $closedPositions = TradingBotPosition::where('bot_id', $bot->id)
-                ->where('status', 'closed')
-                ->where('closed_at', '>=', now()->subDays(30))
-                ->get();
-
-            $winCount = $closedPositions->filter(fn($p) => ($p->profit_loss ?? 0) > 0)->count();
-            $winRate = $closedPositions->count() > 0 ? ($winCount / $closedPositions->count()) * 100 : 0;
-            $totalRealizedPnL = $closedPositions->sum('profit_loss') ?? 0;
-            
+            // Get closed positions stats (last 30 days) - only from trading_bot_positions table
+            $closedPositions = collect();
+            $winCount = 0;
+            $winRate = 0;
+            $totalRealizedPnL = 0;
             $avgHoldTime = null;
-            if ($closedPositions->count() > 0) {
-                $totalSeconds = $closedPositions->sum(function ($p) {
-                    if ($p->opened_at && $p->closed_at) {
-                        return $p->opened_at->diffInSeconds($p->closed_at);
-                    }
-                    return 0;
-                });
-                $avgHoldTime = $totalSeconds / $closedPositions->count();
+            
+            if (Schema::hasTable('trading_bot_positions')) {
+                $closedPositions = TradingBotPosition::where('bot_id', $bot->id)
+                    ->where('status', 'closed')
+                    ->where('closed_at', '>=', now()->subDays(30))
+                    ->get();
+
+                $winCount = $closedPositions->filter(fn($p) => ($p->profit_loss ?? 0) > 0)->count();
+                $winRate = $closedPositions->count() > 0 ? ($winCount / $closedPositions->count()) * 100 : 0;
+                $totalRealizedPnL = $closedPositions->sum('profit_loss') ?? 0;
+                
+                if ($closedPositions->count() > 0) {
+                    $totalSeconds = $closedPositions->sum(function ($p) {
+                        if ($p->opened_at && $p->closed_at) {
+                            return $p->opened_at->diffInSeconds($p->closed_at);
+                        }
+                        return 0;
+                    });
+                    $avgHoldTime = $totalSeconds / $closedPositions->count();
+                }
             }
 
-            return [
+            $stats = [
                 'total_open' => $openPositions->count(),
                 'total_unrealized_pnl' => $totalUnrealizedPnL,
                 'positions_at_risk' => $atRisk,
@@ -345,6 +485,10 @@ class TradingBotMonitoringService
                 'total_realized_pnl' => $totalRealizedPnL,
                 'avg_hold_time_seconds' => $avgHoldTime,
             ];
+            
+            // Cache the stats for 10 seconds
+            Cache::put($cacheKey, $stats, $cacheTtl);
+            return $stats;
         } catch (\Exception $e) {
             Log::warning('Failed to calculate position stats', [
                 'bot_id' => $bot->id,
@@ -503,6 +647,64 @@ class TradingBotMonitoringService
         }
 
         return $count;
+    }
+
+    /**
+     * Invalidate position cache for a bot
+     * Call this when positions are modified (opened, closed, updated)
+     * 
+     * @param int $botId
+     * @return void
+     */
+    public function invalidatePositionCache(int $botId): void
+    {
+        Cache::forget("trading_bot_positions_{$botId}");
+        Cache::forget("trading_bot_stats_{$botId}");
+        
+        Log::debug('Position cache invalidated', ['bot_id' => $botId]);
+    }
+
+    /**
+     * Broadcast position update via WebSocket (if configured)
+     * 
+     * To enable real-time updates:
+     * 1. Set BROADCAST_DRIVER=pusher (or redis) in .env
+     * 2. Configure Pusher/Soketi credentials
+     * 3. Install Laravel Echo on frontend
+     * 
+     * @param TradingBot $bot
+     * @return void
+     */
+    public function broadcastPositionUpdate(TradingBot $bot): void
+    {
+        // Skip if broadcasting is disabled
+        if (config('broadcasting.default') === 'null') {
+            return;
+        }
+        
+        try {
+            // Get fresh positions and stats
+            $positions = $this->getOpenPositions($bot, true);
+            $stats = $this->calculatePositionStats($bot, true);
+            
+            // Broadcast the update
+            event(new \Addons\TradingManagement\Modules\TradingBot\Events\PositionUpdated(
+                $bot->id,
+                $bot->user_id,
+                $positions,
+                $stats
+            ));
+            
+            Log::debug('Position update broadcast', [
+                'bot_id' => $bot->id,
+                'positions_count' => count($positions)
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to broadcast position update', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }
 

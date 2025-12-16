@@ -15,8 +15,9 @@ class AddUniqueConstraintsToPreventDuplicateSections extends Migration
     public function up()
     {
         // Clean up duplicate contents first
+        // Keep the newest record (MAX id) and delete older duplicates
         $duplicates = DB::table('contents')
-            ->select('type', 'name', 'theme', 'language_id', DB::raw('MIN(id) as min_id'))
+            ->select('type', 'name', 'theme', 'language_id', DB::raw('MAX(id) as max_id'))
             ->groupBy('type', 'name', 'theme', 'language_id')
             ->havingRaw('COUNT(*) > 1')
             ->get();
@@ -27,7 +28,7 @@ class AddUniqueConstraintsToPreventDuplicateSections extends Migration
                 ->where('name', $duplicate->name)
                 ->where('theme', $duplicate->theme)
                 ->where('language_id', $duplicate->language_id)
-                ->where('id', '!=', $duplicate->min_id)
+                ->where('id', '!=', $duplicate->max_id)
                 ->delete();
         }
 
@@ -40,8 +41,9 @@ class AddUniqueConstraintsToPreventDuplicateSections extends Migration
         }
 
         // Clean up duplicate page_sections first
+        // Keep the newest record (MAX id) and delete older duplicates
         $pageSectionDuplicates = DB::table('page_sections')
-            ->select('page_id', 'sections', DB::raw('MIN(id) as min_id'))
+            ->select('page_id', 'sections', DB::raw('MAX(id) as max_id'))
             ->groupBy('page_id', 'sections')
             ->havingRaw('COUNT(*) > 1')
             ->get();
@@ -50,7 +52,7 @@ class AddUniqueConstraintsToPreventDuplicateSections extends Migration
             DB::table('page_sections')
                 ->where('page_id', $duplicate->page_id)
                 ->where('sections', $duplicate->sections)
-                ->where('id', '!=', $duplicate->min_id)
+                ->where('id', '!=', $duplicate->max_id)
                 ->delete();
         }
 

@@ -57,6 +57,11 @@ class TradingBotWorkerService
                 escapeshellarg($logPath)
             );
             
+            // Ensure dataConnection relationship is loaded before worker starts
+            if ($bot->trading_mode === 'MARKET_STREAM_BASED' && !$bot->relationLoaded('dataConnection')) {
+                $bot->load('dataConnection');
+            }
+            
             Log::info('Executing worker start command', [
                 'bot_id' => $bot->id,
                 'command' => $commandString,

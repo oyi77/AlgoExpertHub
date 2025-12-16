@@ -56,7 +56,7 @@ class FetchMarketDataJob implements ShouldQueue
             }
 
             // Fetch candles
-            $candles = $adapter->fetchCandles($this->symbol, $this->timeframe, $this->limit);
+            $candles = $adapter->fetchOHLCV($this->symbol, $this->timeframe, $this->limit);
 
             // Disconnect
             $adapter->disconnect();

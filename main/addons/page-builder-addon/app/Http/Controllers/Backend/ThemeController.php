@@ -56,7 +56,11 @@ class ThemeController extends Controller
         $data['title'] = 'Edit Theme Template';
         $data['theme'] = $themeName;
         $data['templatePath'] = $templatePath;
+        // Store both raw content and converted content for editor
         $data['content'] = $result['data']['content'];
+        $converted = $this->themeTemplateService->convertToPageBuilder($result['data']['content']);
+        $data['editorContent'] = $converted['html'];
+        $data['bladePlaceholders'] = $converted['placeholders'];
 
         return view('page-builder-addon::backend.page-builder.themes.edit', $data);
     }
@@ -190,13 +194,26 @@ class ThemeController extends Controller
     public function updateTemplate(Request $request, $themeName)
     {
         // Handle JSON requests (from editor)
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->expectsJson()) {
             $templatePath = $request->input('template_path');
             $html = $request->input('html');
             $css = $request->input('css');
             
+            // Load original template to preserve Blade structure
+            $originalResult = $this->themeTemplateService->loadThemeTemplate($themeName, $templatePath);
+            $originalContent = $originalResult['type'] === 'success' ? $originalResult['data']['content'] : null;
+            
+            // Get placeholders from request (if provided)
+            $placeholders = $request->input('placeholders', []);
+            
+            // Combine HTML and CSS
+            $pageBuilderContent = $html;
+            if ($css) {
+                $pageBuilderContent .= "\n<style>\n" . $css . "\n</style>";
+            }
+            
             // Convert pagebuilder HTML/CSS back to Blade format
-            $bladeContent = $this->themeTemplateService->convertFromPageBuilder($html);
+            $bladeContent = $this->themeTemplateService->convertFromPageBuilder($pageBuilderContent, $originalContent, $placeholders);
             
             $result = $this->themeTemplateService->saveThemeTemplate($themeName, $templatePath, $bladeContent);
             

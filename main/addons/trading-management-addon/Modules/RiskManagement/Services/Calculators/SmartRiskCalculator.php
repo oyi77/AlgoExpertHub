@@ -131,19 +131,57 @@ class SmartRiskCalculator implements RiskCalculatorInterface
      */
     protected function getProviderScore(Signal $signal): float
     {
-        // Check if signal has channel source (auto-created from channel)
+        $score = 50.0;
+        $components = 0;
+
+        // 1. Check AI Confidence (Priority)
+        if ($signal->aiDecision) {
+            $aiScore = (float) $signal->aiDecision->confidence;
+            if ($aiScore > 0) {
+                $score += $aiScore;
+                $components++;
+            }
+        }
+
+        // 2. Check Signal Provider History
         if ($signal->auto_created && $signal->channel_source_id) {
-            // Query SRM metrics for this provider
             $metrics = \DB::table('srm_signal_provider_metrics')
                 ->where('provider_id', $signal->channel_source_id)
                 ->where('symbol', $signal->pair->name ?? '')
                 ->first();
 
-            return $metrics ? (float) $metrics->performance_score : 50.0; // Default 50
+            if ($metrics) {
+                $score += (float) $metrics->performance_score;
+                $components++;
+            }
         }
 
-        // Manual signals default to high score
-        return 80.0;
+        // 3. Fallback for manual signals
+        if ($components === 0 && !$signal->auto_created) {
+            return 80.0; // Trust manual signals by default
+        }
+
+        // Calculate average if multiple components
+        if ($components > 0) {
+            // If we started with base 50, subtract it before averaging if we added components
+            // Actually simpler:
+            $totalScore = 0;
+            $count = 0;
+            
+            if ($signal->aiDecision) {
+                $totalScore += $signal->aiDecision->confidence;
+                $count++;
+            }
+            
+            if ($signal->auto_created && $signal->channel_source_id && isset($metrics)) {
+                $totalScore += $metrics->performance_score;
+                $count++;
+            }
+            
+            return $count > 0 ? $totalScore / $count : 50.0;
+        }
+
+        return 50.0;
     }
 
     /**

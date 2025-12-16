@@ -9,7 +9,11 @@ class PageSection extends Model
 {
     use HasFactory;
 
-    protected $casts = ['sections' => 'array'];
+    protected $table = 'page_sections';
+
+    // Note: sections is stored as JSON string in DB (e.g., "banner")
+    // We don't cast to array because the value is a single string, not an array
+    // protected $casts = ['sections' => 'array'];
 
     /**
      * Boot the model

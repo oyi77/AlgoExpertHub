@@ -1,23 +1,23 @@
-name: 'Admin Management'
+name: 'Multi-Channel Signals'
 description: |-
 
-  Endpoints for managing system settings, themes, and frontend content.
+  Endpoints for managing channel sources and message patterns.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/admin/management/pages
+    uri: api/user/channel-sources
     metadata:
       custom: []
-      groupName: 'Admin Management'
+      groupName: 'Multi-Channel Signals'
       groupDescription: |-
 
-        Endpoints for managing system settings, themes, and frontend content.
+        Endpoints for managing channel sources and message patterns.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Pages'
-      description: 'Retrieve all frontend pages.'
+      title: 'List Channel Sources'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -34,14 +34,16 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
+        status: 404
         content: |-
           {
-            "success": true,
-            "data": [...]
+              "message": "The route api/user/channel-sources could not be found."
           }
-        headers: []
-        description: ''
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
     responseFields: []
     auth:
       - headers
@@ -54,17 +56,17 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/admin/management/pages
+    uri: api/user/channel-sources
     metadata:
       custom: []
-      groupName: 'Admin Management'
+      groupName: 'Multi-Channel Signals'
       groupDescription: |-
 
-        Endpoints for managing system settings, themes, and frontend content.
+        Endpoints for managing channel sources and message patterns.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create Page'
-      description: 'Create a new frontend page.'
+      title: 'Create Channel Source'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -79,88 +81,46 @@ endpoints:
       name:
         custom: []
         name: name
-        description: 'Page name.'
+        description: ''
         required: true
-        example: 'About Us'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      slug:
-        custom: []
-        name: slug
-        description: 'Page slug.'
-        required: true
-        example: about-us
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      content:
-        custom: []
-        name: content
-        description: 'Page content.'
-        required: false
         example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Page status.'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      is_dropdown:
+      type:
         custom: []
-        name: is_dropdown
+        name: type
         description: ''
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
+        required: true
+        example: WEBHOOK
+        type: string
+        enumValues:
+          - TELEGRAM
+          - DISCORD
+          - SLACK
+          - WEBHOOK
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      order:
+      credentials:
         custom: []
-        name: order
+        name: credentials
         description: ''
-        required: false
-        example: 16
-        type: integer
+        required: true
+        example: []
+        type: object
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'About Us'
-      slug: about-us
-      content: architecto
-      status: true
-      is_dropdown: true
-      order: 16
+      name: architecto
+      type: WEBHOOK
+      credentials: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 201
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -173,17 +133,17 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/admin/management/pages/{id}'
+    uri: 'api/user/channel-sources/{id}'
     metadata:
       custom: []
-      groupName: 'Admin Management'
+      groupName: 'Multi-Channel Signals'
       groupDescription: |-
 
-        Endpoints for managing system settings, themes, and frontend content.
+        Endpoints for managing channel sources and message patterns.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update Page'
-      description: 'Update an existing page.'
+      title: 'Update Channel Source'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -194,103 +154,22 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'Page ID.'
+        description: 'The ID of the channel source.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Page name.'
-        required: false
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      slug:
-        custom: []
-        name: slug
-        description: ''
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      content:
-        custom: []
-        name: content
-        description: 'Page content.'
-        required: false
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Page status.'
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      is_dropdown:
-        custom: []
-        name: is_dropdown
-        description: ''
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      order:
-        custom: []
-        name: order
-        description: ''
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      name: architecto
-      content: architecto
-      status: false
-      is_dropdown: true
-      order: 16
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -303,17 +182,17 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/admin/management/pages/{id}'
+    uri: 'api/user/channel-sources/{id}'
     metadata:
       custom: []
-      groupName: 'Admin Management'
+      groupName: 'Multi-Channel Signals'
       groupDescription: |-
 
-        Endpoints for managing system settings, themes, and frontend content.
+        Endpoints for managing channel sources and message patterns.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete Page'
-      description: 'Delete a page.'
+      title: 'Delete Channel Source'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
@@ -324,351 +203,22 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'Page ID.'
+        description: 'The ID of the channel source.'
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Page deleted successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/admin/management/sections
-    metadata:
-      custom: []
-      groupName: 'Admin Management'
-      groupDescription: |-
-
-        Endpoints for managing system settings, themes, and frontend content.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Frontend Sections'
-      description: 'Retrieve all frontend content sections.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      theme:
-        custom: []
-        name: theme
-        description: 'Theme name.'
-        required: false
-        example: default
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      theme: default
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": [...]
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/admin/management/sections/{name}'
-    metadata:
-      custom: []
-      groupName: 'Admin Management'
-      groupDescription: |-
-
-        Endpoints for managing system settings, themes, and frontend content.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Section Content'
-      description: 'Retrieve content for a specific section.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Section name.'
-        required: true
-        example: banner
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      name: banner
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: 'api/admin/management/sections/{name}'
-    metadata:
-      custom: []
-      groupName: 'Admin Management'
-      groupDescription: |-
-
-        Endpoints for managing system settings, themes, and frontend content.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Update Section Content'
-      description: 'Update content for a section.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Section name.'
-        required: true
-        example: banner
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      name: banner
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      content:
-        custom: []
-        name: content
-        description: 'Section content data.'
-        required: false
-        example: []
-        type: object
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      content: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Section updated successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/admin/management/settings
-    metadata:
-      custom: []
-      groupName: 'Admin Management'
-      groupDescription: |-
-
-        Endpoints for managing system settings, themes, and frontend content.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get System Settings'
-      description: 'Retrieve current system configuration.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: api/admin/management/settings
-    metadata:
-      custom: []
-      groupName: 'Admin Management'
-      groupDescription: |-
-
-        Endpoints for managing system settings, themes, and frontend content.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Update System Settings'
-      description: 'Update system configuration.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      site_name:
-        custom: []
-        name: site_name
-        description: 'Site name.'
-        required: false
         example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      currency:
-        custom: []
-        name: currency
-        description: 'Currency code.'
-        required: false
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      theme:
-        custom: []
-        name: theme
-        description: 'Active theme.'
-        required: false
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      site_name: architecto
-      currency: architecto
-      theme: architecto
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Settings updated successfully"
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth:
       - headers

@@ -30,6 +30,22 @@ class TradeDecisionEngine
      */
     public function shouldEnterTrade(array $analysis, TradingBot $bot): array
     {
+        // Handle Test Mode - always enter trade immediately
+        if (isset($analysis['test_mode']) && $analysis['test_mode'] === true) {
+            Log::info('TradeDecisionEngine: Test mode active, entering trade immediately', [
+                'bot_id' => $bot->id,
+                'signal' => $analysis['signal'],
+            ]);
+            
+            return [
+                'should_enter' => true,
+                'direction' => $analysis['signal'] === 'buy' ? 'buy' : 'sell',
+                'confidence' => $analysis['strength'] ?? 1.0,
+                'reason' => 'Test mode: Immediate trade execution',
+                'test_mode' => true,
+            ];
+        }
+
         if (!isset($analysis['signal']) || $analysis['signal'] === 'hold') {
             return [
                 'should_enter' => false,

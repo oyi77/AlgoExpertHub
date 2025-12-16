@@ -1,6 +1,5 @@
 @extends('backend.layout.master')
 
-@section('element')
 @push('external-style')
 <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
 <style>
@@ -46,7 +45,15 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div id="pagebuilder-editor"></div>
+                    <div class="row m-0">
+                        <div class="col-md-2 p-3 border-end">
+                            <h6>{{ __('Blocks') }}</h6>
+                            <div id="blocks-container"></div>
+                        </div>
+                        <div class="col-md-10 p-0">
+                            <div id="pagebuilder-editor"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,23 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
         container: '#pagebuilder-editor',
         height: '600px',
         width: 'auto',
-        storageManager: {
-            type: 'remote',
-            autosave: true,
-            autoload: true,
-            stepsBeforeSave: 1,
-            urlStore: '{{ route("admin.page-builder.api.pages.content.save", $page->id) }}',
-            urlLoad: '{{ route("admin.page-builder.api.pages.content.get", $page->id) }}',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            params: {
-                _token: '{{ csrf_token() }}'
-            }
-        },
-        plugins: ['gjs-preset-webpage'],
+        fromElement: false,
+        storageManager: false, // Disable auto storage to prevent JSON parse errors
+        plugins: [window.grapesjsPresetWebpage],
         pluginsOpts: {
-            'gjs-preset-webpage': {
+            [window.grapesjsPresetWebpage]: {
                 modalImportTitle: 'Import Template',
                 modalImportLabel: '<div style="margin-bottom: 10px; font-size: 13px;">Paste here your HTML/CSS and click Import</div>',
                 filestackOpts: null,
@@ -109,77 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ]
         },
-        panels: {
-            defaults: [
-                {
-                    id: 'layers',
-                    el: '.panel__right',
-                    resizable: {
-                        maxDim: 350,
-                        minDim: 200,
-                        tc: 0,
-                        cl: 1,
-                        cr: 0,
-                        bc: 0,
-                        keyWidth: 'flex-basis',
-                    },
-                },
-                {
-                    id: 'panel-switcher',
-                    el: '.panel__switcher',
-                    buttons: [
-                        {
-                            id: 'show-layers',
-                            active: true,
-                            label: 'Layers',
-                            command: 'show-layers',
-                            togglable: false,
-                        },
-                        {
-                            id: 'show-style',
-                            active: true,
-                            label: 'Styles',
-                            command: 'show-styles',
-                            togglable: false,
-                        },
-                        {
-                            id: 'show-traits',
-                            active: true,
-                            label: 'Traits',
-                            command: 'show-traits',
-                            togglable: false,
-                        }
-                    ],
-                },
-                {
-                    id: 'panel-devices',
-                    el: '.panel__devices',
-                    buttons: [
-                        {
-                            id: 'device-desktop',
-                            label: 'DT',
-                            command: 'set-device-desktop',
-                            active: true,
-                            togglable: false,
-                        },
-                        {
-                            id: 'device-tablet',
-                            label: 'TB',
-                            command: 'set-device-tablet',
-                            togglable: false,
-                        },
-                        {
-                            id: 'device-mobile',
-                            label: 'MB',
-                            command: 'set-device-mobile',
-                            togglable: false,
-                        }
-                    ],
-                }
-            ]
-        },
         blockManager: {
-            appendTo: '.blocks-container',
+            appendTo: '#blocks-container',
             blocks: [
                 {
                     id: 'section',
@@ -220,11 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('savePageBuilder').addEventListener('click', function() {
         saveContent();
     });
-
-    // Auto-save on change
-    editor.on('update', function() {
-        // Auto-save is handled by storageManager
-    });
 });
 
 function loadExistingContent() {
@@ -235,9 +156,17 @@ function loadExistingContent() {
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.warn('API returned non-JSON response, using default content');
+            return null;
+        }
+        return response.json();
+    })
     .then(data => {
-        if (data.success && data.data) {
+        if (data && data.success && data.data) {
             // Load content into editor
             if (data.data.html) {
                 editor.setComponents(data.data.html);
@@ -247,14 +176,18 @@ function loadExistingContent() {
             }
         } else {
             // Set default content if no existing content
-            editor.setComponents('<div class="container"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
+            setDefaultContent();
         }
     })
     .catch(error => {
         console.error('Error loading content:', error);
         // Set default content on error
-        editor.setComponents('<div class="container"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
+        setDefaultContent();
     });
+}
+
+function setDefaultContent() {
+    editor.setComponents('<div class="container" style="padding: 50px;"><h1>Welcome to {{ $page->name }}</h1><p>Start building your page by dragging components from the left panel.</p></div>');
 }
 
 function saveContent() {

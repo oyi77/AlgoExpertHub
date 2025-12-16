@@ -6,11 +6,10 @@
 @endphp
 <!-- plan section start -->
 <section class="plan-section sp_pt_120 sp_pb_120">
-    <div class="plan-el"><img src="{{ Config::getFile('plans', $content->image_one) }}" alt="image"></div>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
-                <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
+                <div class="sp_theme_top">
                     <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans($content->title) }}</div>
                     <h2 class="sp_theme_top_title"><?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?></h2>
                 </div>
@@ -19,8 +18,8 @@
 
         <div class="row gy-4 items-wrapper justify-content-center">
             @foreach ($plans as $plan)
-                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-duration="0.3s">
-                    <div class="sp_pricing_item">
+                <div class="col-lg-4 col-md-6">
+                    <div class="sp_pricing_item card-modern h-100">
                         <div class="pricing-header">
                             <div class="left">
                                 <div class="icon">
@@ -33,7 +32,7 @@
                                 </div>
                             </div>
                             <div class="right">
-                                <h4 class="package-price">{{ Config::formatter($plan->price) }}</h3>
+                                <h4 class="package-price">{{ Config::formatter($plan->price) }}</h4>
                             </div>
                         </div>
                         <div class="pricing-body">
@@ -43,7 +42,6 @@
                                         <li>{{ __($item) }}</li>
                                     @endforeach
                                 @endif
-
                             </ul>
                         </div>
                         @auth
@@ -55,18 +53,15 @@
 
                             <div class="pricing-footer">
                                 @if ($currentplan != null && $currentplan->plan_id == $plan->id)
-                                    <button class="btn sp_theme_btn w-100" disabled>{{ __('Already in a Plan') }}
-                                    </button>
+                                    <button class="btn btn-secondary w-100" disabled>{{ __('Already in a Plan') }}</button>
                                 @else
                                     <a href="" data-id="{{ $plan->id }}"
-                                        class="btn sp_theme_btn w-100 chooseBtn">{{ __('Choose Plan') }}
-                                    </a>
+                                        class="btn btn-primary w-100 chooseBtn">{{ __('Choose Plan') }}</a>
                                 @endif
                             </div>
                         @else
                             <a href="" data-id="{{ $plan->id }}"
-                                class="btn sp_theme_btn w-100 chooseBtn">{{ __('Choose Plan') }}
-                            </a>
+                                class="btn btn-primary w-100 chooseBtn">{{ __('Choose Plan') }}</a>
                         @endauth
                     </div>
                 </div>
@@ -74,7 +69,7 @@
         </div>
 
         <div class="text-center mt-5">
-            <a href="{{route('pages','packages')}}" class="btn sp_theme_btn">{{ __('More Plans') }}</a>
+            <a href="{{route('pages','packages')}}" class="btn btn-primary btn-lg">{{ __('More Plans') }}</a>
         </div>
     </div>
 </section>

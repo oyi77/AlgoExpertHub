@@ -1,23 +1,23 @@
-name: 'Trading Bots'
+name: Trading
 description: |-
 
-  Endpoints for managing automated trading bots.
+  Endpoints for trading operations, signals, and execution management.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/user/trading-bots
+    uri: api/user/trading/signals
     metadata:
       custom: []
-      groupName: 'Trading Bots'
+      groupName: Trading
       groupDescription: |-
 
-        Endpoints for managing automated trading bots.
+        Endpoints for trading operations, signals, and execution management.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get Trading Bots'
-      description: "Retrieve user's trading bots with statistics."
+      title: 'Get Multi-Channel Signals'
+      description: 'Retrieve signals from various sources including auto-created signals.'
       authenticated: true
       deprecated: false
     headers:
@@ -27,43 +27,31 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      is_active:
+      tab:
         custom: []
-        name: is_active
-        description: 'Filter by active status.'
+        name: tab
+        description: 'Filter by tab: all-signals, signal-sources, channel-forwarding, signal-review, pattern-templates, analytics.'
         required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      is_paper_trading:
-        custom: []
-        name: is_paper_trading
-        description: 'Filter by paper trading.'
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      search:
-        custom: []
-        name: search
-        description: 'Search by name.'
-        required: false
-        example: 'My Bot'
+        example: all-signals
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      page:
+        custom: []
+        name: page
+        description: 'Page number for pagination.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanQueryParameters:
-      is_active: true
-      is_paper_trading: false
-      search: 'My Bot'
+      tab: all-signals
+      page: 1
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -75,9 +63,68 @@ endpoints:
           {
             "success": true,
             "data": {
-              "bots": [...],
-              "stats": {...}
+              "signals": [...],
+              "analytics": {...}
             }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/user/trading/executions
+    metadata:
+      custom: []
+      groupName: Trading
+      groupDescription: |-
+
+        Endpoints for trading operations, signals, and execution management.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Execution Operations'
+      description: 'Retrieve trading execution statistics, logs, and positions.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      type:
+        custom: []
+        name: type
+        description: 'Type of data: stats, executions, open-positions, closed-positions.'
+        required: false
+        example: stats
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      type: stats
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {...}
           }
         headers: []
         description: ''
@@ -93,17 +140,17 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/user/trading-bots
+    uri: api/user/trading/execute
     metadata:
       custom: []
-      groupName: 'Trading Bots'
+      groupName: Trading
       groupDescription: |-
 
-        Endpoints for managing automated trading bots.
+        Endpoints for trading operations, signals, and execution management.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create Trading Bot'
-      description: 'Create a new trading bot.'
+      title: 'Execute Manual Trade'
+      description: 'Place a manual trade order through a connected exchange/broker.'
       authenticated: true
       deprecated: false
     headers:
@@ -115,516 +162,115 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
+      connection_id:
         custom: []
-        name: name
-        description: 'Bot name.'
+        name: connection_id
+        description: 'The execution connection ID.'
         required: true
-        example: 'My Trading Bot'
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      symbol:
+        custom: []
+        name: symbol
+        description: 'Trading symbol.'
+        required: true
+        example: EURUSD
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      description:
+      direction:
         custom: []
-        name: description
-        description: 'Bot description.'
-        required: false
-        example: 'Eius et animi quos velit et.'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      exchange_connection_id:
-        custom: []
-        name: exchange_connection_id
-        description: 'Exchange connection ID.'
+        name: direction
+        description: 'Trade direction: BUY, SELL, LONG, SHORT.'
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      trading_preset_id:
-        custom: []
-        name: trading_preset_id
-        description: 'Trading preset ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      filter_strategy_id:
-        custom: []
-        name: filter_strategy_id
-        description: 'Filter strategy ID.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      ai_model_profile_id:
-        custom: []
-        name: ai_model_profile_id
-        description: 'AI model profile ID.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      expert_advisor_id:
-        custom: []
-        name: expert_advisor_id
-        description: 'Expert advisor ID.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      trading_mode:
-        custom: []
-        name: trading_mode
-        description: 'Trading mode: SIGNAL_BASED or MARKET_STREAM_BASED.'
-        required: true
-        example: SIGNAL_BASED
+        example: BUY
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      data_connection_id:
+      lot_size:
         custom: []
-        name: data_connection_id
-        description: 'Data connection ID (for MARKET_STREAM_BASED).'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      streaming_symbols:
-        custom: []
-        name: streaming_symbols
-        description: 'Symbols to stream (for MARKET_STREAM_BASED).'
-        required: false
-        example:
-          - BTCUSDT
-          - ETHUSDT
-        type: 'string[]'
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      streaming_timeframes:
-        custom: []
-        name: streaming_timeframes
-        description: 'Timeframes to stream.'
-        required: false
-        example:
-          - 1m
-          - 5m
-        type: 'string[]'
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      market_analysis_interval:
-        custom: []
-        name: market_analysis_interval
-        description: 'Market analysis interval in seconds.'
-        required: false
-        example: 60
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      position_monitoring_interval:
-        custom: []
-        name: position_monitoring_interval
-        description: 'Position monitoring interval in seconds.'
-        required: false
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      is_paper_trading:
-        custom: []
-        name: is_paper_trading
-        description: 'Paper trading mode.'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      name: 'My Trading Bot'
-      description: 'Eius et animi quos velit et.'
-      exchange_connection_id: 1
-      trading_preset_id: 1
-      filter_strategy_id: 1
-      ai_model_profile_id: 1
-      expert_advisor_id: 1
-      trading_mode: SIGNAL_BASED
-      data_connection_id: 1
-      streaming_symbols:
-        - BTCUSDT
-        - ETHUSDT
-      streaming_timeframes:
-        - 1m
-        - 5m
-      market_analysis_interval: 60
-      position_monitoring_interval: 5
-      is_paper_trading: true
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 201
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/user/trading-bots/options
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Available Options'
-      description: 'Get available connections, presets, strategies, etc. for bot creation.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {
-              "connections": [...],
-              "presets": [...],
-              "filter_strategies": [...],
-              "ai_profiles": [...],
-              "expert_advisors": [...]
-            }
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/user/trading-bots/{id}'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Trading Bot'
-      description: 'Retrieve a specific trading bot with monitoring data.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
+        name: lot_size
+        description: 'Position size.'
         required: true
-        example: 1
-        type: integer
+        example: '0.01'
+        type: numeric
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
+      order_type:
         custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: 'api/user/trading-bots/{id}'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Update Trading Bot'
-      description: 'Update a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
+        name: order_type
+        description: 'Order type: market or limit.'
         required: true
-        example: 1
-        type: integer
+        example: market
+        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      name:
+      entry_price:
         custom: []
-        name: name
-        description: 'Bot name.'
+        name: entry_price
+        description: 'Entry price (required for limit orders).'
+        required: false
+        example: '1.0850'
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      sl_price:
+        custom: []
+        name: sl_price
+        description: 'Stop loss price.'
+        required: false
+        example: '1.0800'
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      tp_price:
+        custom: []
+        name: tp_price
+        description: 'Take profit price.'
+        required: false
+        example: '1.0900'
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: 'Optional trade notes.'
         required: false
         example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      description:
-        custom: []
-        name: description
-        description: 'Bot description.'
-        required: false
-        example: 'Eius et animi quos velit et.'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
         nullable: true
-        deprecated: false
-      exchange_connection_id:
-        custom: []
-        name: exchange_connection_id
-        description: 'The <code>id</code> of an existing record in the execution_connections table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      trading_preset_id:
-        custom: []
-        name: trading_preset_id
-        description: 'The <code>id</code> of an existing record in the trading_presets table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      filter_strategy_id:
-        custom: []
-        name: filter_strategy_id
-        description: 'The <code>id</code> of an existing record in the filter_strategies table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      ai_model_profile_id:
-        custom: []
-        name: ai_model_profile_id
-        description: 'The <code>id</code> of an existing record in the ai_model_profiles table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      expert_advisor_id:
-        custom: []
-        name: expert_advisor_id
-        description: 'The <code>id</code> of an existing record in the expert_advisors table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      trading_mode:
-        custom: []
-        name: trading_mode
-        description: ''
-        required: false
-        example: MARKET_STREAM_BASED
-        type: string
-        enumValues:
-          - SIGNAL_BASED
-          - MARKET_STREAM_BASED
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      data_connection_id:
-        custom: []
-        name: data_connection_id
-        description: 'The <code>id</code> of an existing record in the execution_connections table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      streaming_symbols:
-        custom: []
-        name: streaming_symbols
-        description: ''
-        required: false
-        example: null
-        type: object
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      streaming_timeframes:
-        custom: []
-        name: streaming_timeframes
-        description: ''
-        required: false
-        example: null
-        type: object
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      market_analysis_interval:
-        custom: []
-        name: market_analysis_interval
-        description: 'Must be at least 10.'
-        required: false
-        example: 44
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      position_monitoring_interval:
-        custom: []
-        name: position_monitoring_interval
-        description: 'Must be at least 1.'
-        required: false
-        example: 40
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      is_paper_trading:
-        custom: []
-        name: is_paper_trading
-        description: ''
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: architecto
-      description: 'Eius et animi quos velit et.'
-      trading_mode: MARKET_STREAM_BASED
-      market_analysis_interval: 44
-      position_monitoring_interval: 40
-      is_paper_trading: false
+      connection_id: 1
+      symbol: EURUSD
+      direction: BUY
+      lot_size: '0.01'
+      order_type: market
+      entry_price: '1.0850'
+      sl_price: '1.0800'
+      tp_price: '1.0900'
+      notes: architecto
     fileParameters: []
     responses:
       -
@@ -633,629 +279,11 @@ endpoints:
         content: |-
           {
             "success": true,
-            "data": {...}
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/user/trading-bots/{id}'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Delete Trading Bot'
-      description: 'Delete a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot deleted successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/trading-bots/{id}/start'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Start Trading Bot'
-      description: 'Start a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot started successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/trading-bots/{id}/stop'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Stop Trading Bot'
-      description: 'Stop a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot stopped successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/trading-bots/{id}/pause'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Pause Trading Bot'
-      description: 'Pause a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot paused successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/trading-bots/{id}/resume'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Resume Trading Bot'
-      description: 'Resume a paused trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot resumed successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/user/trading-bots/{id}/restart'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Restart Trading Bot'
-      description: 'Restart a trading bot.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Trading bot restarted successfully"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/user/trading-bots/{id}/worker-status'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Bot Worker Status'
-      description: 'Get real-time worker status and metrics.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
+            "message": "Trade executed successfully",
             "data": {
-              "worker_status": {...},
-              "metrics": {...}
-            }
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/user/trading-bots/{id}/positions'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Bot Positions'
-      description: "Get bot's open positions and statistics."
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {
-              "positions": [...],
-              "stats": {...}
-            }
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/user/trading-bots/{id}/logs'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Bot Logs'
-      description: 'Get bot execution logs.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters:
-      limit:
-        custom: []
-        name: limit
-        description: 'Number of logs to retrieve.'
-        required: false
-        example: 50
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      level:
-        custom: []
-        name: level
-        description: 'Filter by log level.'
-        required: false
-        example: error
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      limit: 50
-      level: error
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": [...]
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/user/trading-bots/{id}/metrics'
-    metadata:
-      custom: []
-      groupName: 'Trading Bots'
-      groupDescription: |-
-
-        Endpoints for managing automated trading bots.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Get Bot Metrics'
-      description: 'Get bot performance metrics and queue statistics.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer Bearer {TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'Bot ID.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "data": {
-              "metrics": {...},
-              "queue_stats": {...}
+              "order_id": "12345",
+              "symbol": "EURUSD",
+              "direction": "BUY"
             }
           }
         headers: []

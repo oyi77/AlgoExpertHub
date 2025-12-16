@@ -1,19 +1,23 @@
-name: 'Reference Data'
-description: 'Reference data endpoints (currency pairs, timeframes, markets)'
+name: 'Admin - Logs & Reports'
+description: |-
+
+  Endpoints for viewing system logs and reports.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/currency-pairs
+    uri: api/admin/logs/transactions
     metadata:
       custom: []
-      groupName: 'Reference Data'
-      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      groupName: 'Admin - Logs & Reports'
+      groupDescription: |-
+
+        Endpoints for viewing system logs and reports.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Currency Pairs'
-      description: 'Get all active currency pairs'
+      title: 'Transaction Logs'
+      description: 'Get transaction logs with optional user filter.'
       authenticated: true
       deprecated: false
     headers:
@@ -22,8 +26,20 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filter by user ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      user_id: 1
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -34,13 +50,7 @@ endpoints:
         content: |-
           {
             "success": true,
-            "data": [
-              {
-                "id": 1,
-                "name": "EUR/USD",
-                "status": 1
-              }
-            ]
+            "data": [...]
           }
         headers: []
         description: ''
@@ -56,15 +66,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/timeframes
+    uri: api/admin/logs/payments
     metadata:
       custom: []
-      groupName: 'Reference Data'
-      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      groupName: 'Admin - Logs & Reports'
+      groupDescription: |-
+
+        Endpoints for viewing system logs and reports.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Timeframes'
-      description: 'Get all active timeframes'
+      title: 'Payment Reports'
+      description: 'Get payment reports.'
       authenticated: true
       deprecated: false
     headers:
@@ -73,8 +85,32 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filter by user ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Filter by status.'
+        required: false
+        example: approved
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      user_id: 1
+      status: approved
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -85,13 +121,7 @@ endpoints:
         content: |-
           {
             "success": true,
-            "data": [
-              {
-                "id": 1,
-                "name": "1H",
-                "status": 1
-              }
-            ]
+            "data": [...]
           }
         headers: []
         description: ''
@@ -107,15 +137,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/markets
+    uri: api/admin/logs/withdrawals
     metadata:
       custom: []
-      groupName: 'Reference Data'
-      groupDescription: 'Reference data endpoints (currency pairs, timeframes, markets)'
+      groupName: 'Admin - Logs & Reports'
+      groupDescription: |-
+
+        Endpoints for viewing system logs and reports.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List Markets'
-      description: 'Get all active markets'
+      title: 'Withdraw Reports'
+      description: 'Get withdrawal reports.'
       authenticated: true
       deprecated: false
     headers:
@@ -124,8 +156,32 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
+    queryParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filter by user ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Filter by status: 0=pending, 1=approved, 2=rejected.'
+        required: false
+        example: 0
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      user_id: 1
+      status: 0
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -136,13 +192,125 @@ endpoints:
         content: |-
           {
             "success": true,
-            "data": [
-              {
-                "id": 1,
-                "name": "Forex",
-                "status": 1
-              }
-            ]
+            "data": [...]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/logs/commissions
+    metadata:
+      custom: []
+      groupName: 'Admin - Logs & Reports'
+      groupDescription: |-
+
+        Endpoints for viewing system logs and reports.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Commission Logs'
+      description: 'Get commission/referral logs.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filter by user ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      user_id: 1
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [...]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/logs/trades
+    metadata:
+      custom: []
+      groupName: 'Admin - Logs & Reports'
+      groupDescription: |-
+
+        Endpoints for viewing system logs and reports.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Trade Logs'
+      description: 'Get trading activity logs.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filter by user ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      user_id: 1
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": [...]
           }
         headers: []
         description: ''

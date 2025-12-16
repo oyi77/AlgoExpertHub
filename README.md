@@ -1,5 +1,7 @@
 # AlgoExpertHub Trading Signal Platform
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/oyi77/AlgoExpertHub)
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -12,9 +14,10 @@
 8. [Addon System](#addon-system)
 9. [Documentation Wiki](#documentation-wiki)
 10. [Installation](#installation)
-11. [Configuration](#configuration)
-12. [Development Guide](#development-guide)
-13. [API Documentation](#api-documentation)
+11. [Docker Deployment](#docker-deployment)
+12. [Configuration](#configuration)
+13. [Development Guide](#development-guide)
+14. [API Documentation](#api-documentation)
 
 ---
 
@@ -386,6 +389,85 @@ Add to crontab:
 
 ---
 
+## Docker Deployment
+
+### 🐳 Containerized Deployment (Recommended)
+
+For production deployments, we provide a **complete Docker setup** with automated deployment scripts and CI/CD integration.
+
+#### Quick Start with Docker
+
+```bash
+# 1. Copy environment template
+cp docker/.env.docker .env
+
+# 2. Generate APP_KEY
+docker run --rm -v $(pwd)/main:/app composer/composer:latest \
+  php artisan key:generate --show
+
+# 3. Update .env with generated key
+
+# 4. Build and start
+docker-compose build
+docker-compose up -d
+
+# 5. Run migrations
+docker-compose exec app php artisan migrate --force
+
+# 6. Access application
+open http://localhost:8000
+```
+
+#### Services Included
+
+- **Laravel Octane (Swoole)** - High-performance application server
+- **Laravel Horizon** - Queue management dashboard
+- **Queue Workers** - 4 parallel background job processors
+- **Scheduler** - Automated task scheduling
+- **MySQL 8.0** - Primary database
+- **Redis 7** - Cache and queue backend
+- **Soketi** - WebSocket server for real-time features
+- **Nginx** (optional) - Reverse proxy for production
+
+#### Deployment Methods
+
+1. **Automated Script** - One-command deployment with SSH
+   ```bash
+   ./scripts/deployment/deploy.sh production
+   ```
+
+2. **CI/CD Pipeline** - Auto-deploy on git push (GitHub Actions)
+   ```bash
+   git push origin main  # Auto-deploys to production
+   ```
+
+3. **1Panel Quick Deploy** - Interactive deployment from 1Panel terminal
+   ```bash
+   ./scripts/deployment/deploy-1panel.sh
+   ```
+
+4. **Manual Docker Compose** - Traditional approach
+   ```bash
+   docker-compose up -d
+   ```
+
+#### Complete Documentation
+
+📚 **[Complete Docker & Deployment Guide](./docs/docker-deployment/DOCKER_DEPLOYMENT_GUIDE.md)**
+
+This comprehensive guide covers everything you need:
+- Quick start (5 minutes)
+- Detailed setup instructions
+- Service architecture and configuration
+- All 4 deployment methods (Script, CI/CD, 1Panel, Manual)
+- CI/CD integration with GitHub Actions
+- 1Panel integration options
+- Common commands and operations
+- Comprehensive troubleshooting
+- Production deployment checklist
+
+---
+
 ## Configuration
 
 ### Payment Gateways
@@ -528,6 +610,18 @@ dispatch(new YourJob($data));
 
 ## Documentation Wiki
 
+### 📚 Comprehensive Auto-Generated Wiki
+
+**[Complete Technical Documentation](/.qoder/repowiki/en/content/)** - Comprehensive auto-generated documentation with 70+ detailed guides covering the entire codebase.
+
+#### Key Wiki Sections:
+
+- 🏗️ **[Architecture Overview](/.qoder/repowiki/en/content/Architecture%20Overview/Architecture%20Overview.md)** - System architecture, core components, data flow, and integration patterns
+- ⚙️ **[Core Modules](/.qoder/repowiki/en/content/Core%20Modules/Core%20Modules.md)** - Trading Management, Multi-Channel Signal Processing, AI Integration
+- 🔌 **[API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md)** - Complete REST API, WebSocket, and Webhook documentation
+- 🛠️ **[Configuration](/.qoder/repowiki/en/content/Configuration/Configuration.md)** - Environment, database, service integration, and system settings
+- 🧩 **[Addon Development](/.qoder/repowiki/en/content/Addon%20Development.md)** - Guidelines for creating and managing addons
+
 ### AI-Powered Documentation
 
 📚 **[DeepWiki Documentation](https://deepwiki.com/oyi77/AlgoExpertHub)** - Interactive AI-powered documentation with visual diagrams, code analysis, and context-aware Q&A for this repository.
@@ -608,11 +702,27 @@ For feature specifications, see `specs/` directory.
 
 ## API Documentation
 
-### Authentication
+### 📖 Complete API Reference
+
+For comprehensive API documentation including all endpoints, authentication, webhooks, and real-time communication, see:
+
+**[Complete API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md)** - Full REST API, WebSocket, and Webhook documentation
+
+#### Quick Links:
+- [Authentication](/.qoder/repowiki/en/content/API%20Reference/Authentication.md) - OAuth, Sanctum, and API tokens
+- [User Management](/.qoder/repowiki/en/content/API%20Reference/User%20Management.md) - User profile and account operations
+- [Trading Operations](/.qoder/repowiki/en/content/API%20Reference/Trading%20Operations.md) - Trading bots, positions, and execution
+- [Signal Processing](/.qoder/repowiki/en/content/API%20Reference/Signal%20Processing.md) - Signal management and distribution
+- [Webhooks](/.qoder/repowiki/en/content/API%20Reference/Webhooks.md) - Telegram and API webhook endpoints
+- [Real-time Communication](/.qoder/repowiki/en/content/API%20Reference/Real-time%20Communication.md) - WebSocket and SSE
+
+### Quick Start Example
+
+#### Authentication
 
 All API requests require authentication via Laravel Sanctum.
 
-#### Login
+**Login:**
 
 ```http
 POST /api/login
@@ -636,7 +746,7 @@ Response:
 }
 ```
 
-#### Authenticated Requests
+**Authenticated Requests:**
 
 Include token in header:
 
@@ -644,34 +754,16 @@ Include token in header:
 Authorization: Bearer 1|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### Endpoints
-
-#### Get Signals
+### Example Endpoints
 
 ```http
 GET /api/signals
-Authorization: Bearer {token}
-```
-
-#### Get User Subscriptions
-
-```http
 GET /api/subscriptions
-Authorization: Bearer {token}
-```
-
-#### Create Deposit
-
-```http
 POST /api/deposits
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-    "amount": 100.00,
-    "gateway_id": 1
-}
+GET /api/user/trading-bots
 ```
+
+See the [Complete API Reference](/.qoder/repowiki/en/content/API%20Reference/API%20Reference.md) for all available endpoints.
 
 ---
 

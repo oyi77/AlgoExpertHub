@@ -27,6 +27,11 @@ class HowWorks
         'blue' => [
             "title" =>  "Text",
             "color_text_for_title" => "Text",
+        ],
+        'trading-landing' => [
+            "section_header" => "Text",
+            "title" =>  "Text",
+            "color_text_for_title" => "Text"
         ]
     ];
 
@@ -42,6 +47,11 @@ class HowWorks
             "color_text_for_title" => "col-md-6"
         ],
         'blue' => [
+            "title" =>  "col-md-6",
+            "color_text_for_title" => "col-md-6"
+        ],
+        'trading-landing' => [
+            "section_header" => "col-md-12",
             "title" =>  "col-md-6",
             "color_text_for_title" => "col-md-6"
         ]
@@ -61,6 +71,11 @@ class HowWorks
         'blue' => [
             "title" =>  "required",
             "color_text_for_title" => "required"
+        ],
+        'trading-landing' => [
+            "section_header" => "nullable",
+            "title" =>  "required",
+            "color_text_for_title" => "required"
         ]
     ];
 
@@ -77,6 +92,11 @@ class HowWorks
         'blue' => [
             "title" => "Text",
             "description" => "Textarea"
+        ],
+        'trading-landing' => [
+            "title" => "Text",
+            "description" => "Textarea",
+            "icon" => "Icon"
         ]
     ];
 
@@ -93,6 +113,11 @@ class HowWorks
         'blue' => [
             "title" => "col-md-12",
             "description" => "col-md-12"
+        ],
+        'trading-landing' => [
+            "title" => "col-md-12",
+            "description" => "col-md-12",
+            "icon" => "col-md-12"
         ]
     ];
 
@@ -109,6 +134,11 @@ class HowWorks
         'blue' => [
             "title" => "required",
             "description" => "required"
+        ],
+        'trading-landing' => [
+            "title" => "required",
+            "description" => "required",
+            "icon" => "nullable"
         ]
     ];
 }

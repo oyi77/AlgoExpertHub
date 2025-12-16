@@ -4,7 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services\Gateway;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 

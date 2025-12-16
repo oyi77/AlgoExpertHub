@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Helpers\Helper\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -25,7 +26,7 @@ class HelpController extends Controller
             'wallet' => __('Wallet & Payments'),
         ];
         
-        return view(\App\Helpers\Helper\Helper::theme() . 'user.help.index')->with($data);
+        return view(\App\Helpers\Helper\Helper::themeView('user.help.index'))->with($data);
     }
     
     /**
@@ -36,7 +37,7 @@ class HelpController extends Controller
         $data['title'] = __('Help: :topic', ['topic' => ucfirst($topic)]);
         $data['topic'] = $topic;
         
-        return view(\App\Helpers\Helper\Helper::theme() . 'user.help.topic')->with($data);
+        return view(\App\Helpers\Helper\Helper::themeView('user.help.topic'))->with($data);
     }
 }
 

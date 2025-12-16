@@ -32,6 +32,18 @@ class BackupService
                 'success' => true,
                 'message' => 'Backup started successfully',
             ];
+        } catch (\Spatie\Backup\Exceptions\NotificationCouldNotBeSent $e) {
+            // Notification errors are non-critical - backup still succeeds
+            // This happens when notifications array is empty in config
+            Log::info('Backup completed successfully but notification failed (non-critical)', [
+                'error' => $e->getMessage(),
+                'note' => 'Notifications are disabled in backup config'
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Backup completed successfully (notifications disabled)',
+            ];
         } catch (\Throwable $e) {
             Log::error('Backup failed', [
                 'error' => $e->getMessage(),

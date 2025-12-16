@@ -10,11 +10,16 @@
                 <div class="card-body p-3">
                     <div class="section-list">
                         <div class="nav flex-column nav-pills d-nav-pills" id="v-pills-tab" role="tablist"
-                            aria-orientation="vertical">
+                            aria-orientation="vertical" data-sortable-sections>
                             @foreach ($sections as $key)
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <a class="nav-link flex-grow-1 {{ request()->name == $key ? 'active' : '' }}"
-                                        href="{{ route('admin.frontend.section.manage', ['name' => $key]) }}">{{ str_replace('_', ' ', ucwords($key)) }}</a>
+                                <div class="d-flex align-items-center justify-content-between mb-1 section-item" data-section="{{ $key }}">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <span class="drag-handle mr-2" style="cursor: move; color: #6c757d; user-select: none;" title="{{ __('Drag to reorder') }}">
+                                            <i class="fas fa-grip-vertical"></i>
+                                        </span>
+                                        <a class="nav-link flex-grow-1 {{ request()->name == $key ? 'active' : '' }}"
+                                            href="{{ route('admin.frontend.section.manage', ['name' => $key]) }}">{{ str_replace('_', ' ', ucwords($key)) }}</a>
+                                    </div>
                                     @php
                                         $pageBuilderEnabled = \App\Support\AddonRegistry::active('page-builder-addon') 
                                             && \App\Support\AddonRegistry::moduleEnabled('page-builder-addon', 'admin_ui');
@@ -155,10 +160,6 @@
 
 @endsection
 
-@push('external-script')
-    <script src="{{ Config::jsLib('backend', 'repeater.js') }}"></script>
-@endpush
-
 @push('style')
     <style>
         td img {
@@ -174,15 +175,67 @@
 
         .appear [class*="col-"] {
             margin-bottom: 20px;
-        } 
+        }
+
+        .section-item {
+            transition: background-color 0.2s;
+        }
+
+        .section-item:hover {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .section-item.sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .section-item.sortable-drag {
+            opacity: 0.8;
+        }
+
+        .drag-handle:hover {
+            color: #495057 !important;
+        }
     </style>
 @endpush
 
 
 @push('script')
     <script>
-        $(function() {
-            'use strict'
+        // Wait for jQuery and then load repeater.js
+        (function() {
+            function loadRepeaterAndInit() {
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                    setTimeout(loadRepeaterAndInit, 50);
+                    return;
+                }
+                
+                // Load repeater.js dynamically after jQuery is ready
+                if (typeof $.fn.repeater === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = '{{ Config::jsLib('backend', 'repeater.js') }}';
+                    script.onload = function() {
+                        initRepeater();
+                    };
+                    script.onerror = function() {
+                        console.error('Failed to load repeater.js');
+                        setTimeout(initRepeater, 500);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    initRepeater();
+                }
+            }
+            
+            function initRepeater() {
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined' || typeof $.fn.repeater === 'undefined') {
+                    setTimeout(initRepeater, 50);
+                    return;
+                }
+                
+                $(function() {
+                    'use strict'
 
             $('.repeater').repeater({
                 initEmpty: false,
@@ -268,8 +321,77 @@
                 modal.modal('show')
             })
 
+            // Initialize section reordering
+            initSectionReorder();
 
+                });
+            }
 
-        })
+            function initSectionReorder() {
+                if (typeof Sortable === 'undefined') {
+                    // Load Sortable.js if not available
+                    var script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
+                    script.onload = function() {
+                        setupSortable();
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    setupSortable();
+                }
+            }
+
+            function setupSortable() {
+                var sortableContainer = document.querySelector('[data-sortable-sections]');
+                if (!sortableContainer) return;
+
+                var sortable = new Sortable(sortableContainer, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag',
+                    onEnd: function(evt) {
+                        var sections = [];
+                        sortableContainer.querySelectorAll('.section-item').forEach(function(item) {
+                            sections.push(item.getAttribute('data-section'));
+                        });
+
+                        // Save order via AJAX
+                        $.ajax({
+                            url: '{{ route("admin.frontend.sections.reorder") }}',
+                            method: 'POST',
+                            data: {
+                                sections: sections,
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.type === 'success') {
+                                    // Show success notification if toastr is available
+                                    if (typeof toastr !== 'undefined') {
+                                        toastr.success(response.message || 'Sections reordered successfully');
+                                    }
+                                }
+                            },
+                            error: function(xhr) {
+                                console.error('Failed to save section order');
+                                // Show error notification if toastr is available
+                                if (typeof toastr !== 'undefined') {
+                                    toastr.error('Failed to save section order. Please try again.');
+                                }
+                                // Revert on error
+                                location.reload();
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Start loading process
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadRepeaterAndInit);
+            } else {
+                loadRepeaterAndInit();
+            }
+        })();
     </script>
 @endpush

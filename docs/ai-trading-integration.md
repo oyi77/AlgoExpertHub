@@ -1,5 +1,19 @@
 # AI Trading Integration - Workflow Documentation
 
+> [!TIP]
+> **📚 Detailed Documentation Available**
+> 
+> For comprehensive auto-generated documentation on the AI Integration System, see:
+> 
+> **[AI Integration System](../.qoder/repowiki/en/content/Core%20Modules/AI%20Integration%20System/AI%20Integration%20System.md)** - Complete AI integration documentation
+>
+> Related sections:
+> - [AI Connection Management](../.qoder/repowiki/en/content/Core%20Modules/AI%20Integration%20System/AI%20Connection%20Management.md) - Centralized AI connection management
+> - [AI Provider Integration](../.qoder/repowiki/en/content/Core%20Modules/AI%20Integration%20System/AI%20Provider%20Integration.md) - OpenAI, Gemini, OpenRouter integration
+> - [Usage Analytics and Monitoring](../.qoder/repowiki/en/content/Core%20Modules/AI%20Integration%20System/Usage%20Analytics%20and%20Monitoring.md) - AI usage tracking
+
+---
+
 ## Overview
 The platform integrates AI models (OpenAI, Google Gemini, OpenRouter) for signal parsing, market analysis, and trading decision support. This document explains how AI is used throughout the trading flow.
 

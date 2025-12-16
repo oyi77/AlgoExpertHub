@@ -27,7 +27,7 @@ class OnboardingController extends Controller
         $data['progress'] = $this->onboardingService->getProgress($user);
         $data['steps'] = $this->onboardingService->getSteps($user);
 
-        return view(Helper::theme() . 'user.onboarding.welcome')->with($data);
+        return view(Helper::themeView('user.onboarding.welcome'))->with($data);
     }
 
     /**
@@ -70,7 +70,7 @@ class OnboardingController extends Controller
         $data['currentStepIndex'] = array_search($step, array_keys($steps));
         $data['totalSteps'] = count($steps);
 
-        return view(Helper::theme() . 'user.onboarding.step')->with($data);
+        return view(Helper::themeView('user.onboarding.step'))->with($data);
     }
 
     /**
@@ -120,7 +120,7 @@ class OnboardingController extends Controller
         $data['title'] = __('Onboarding Complete');
         $data['steps'] = $this->onboardingService->getSteps($user);
 
-        return view(Helper::theme() . 'user.onboarding.complete')->with($data);
+        return view(Helper::themeView('user.onboarding.complete'))->with($data);
     }
 
     /**

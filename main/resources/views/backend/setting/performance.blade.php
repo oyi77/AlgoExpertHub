@@ -396,172 +396,33 @@
         <div class="row mb-4">
             <div class="col-md-12">
                 <h5 class="mb-3"><i class="las la-database"></i> {{ __('Database Management') }}</h5>
-                <div class="alert alert-warning">
-                    <i class="las la-exclamation-triangle"></i> <strong>{{ __('Warning:') }}</strong>
-                    {{ __('Database operations can take time and may affect site availability. Use with caution in production.') }}
+                <div class="alert alert-info">
+                    <i class="las la-info-circle"></i> <strong>{{ __('Note:') }}</strong>
+                    {{ __('Backup and restore functionality has been moved to') }} 
+                    <a href="{{ route('admin.algoexpert-plus.backup.index') }}" class="alert-link">{{ __('Backup Dashboard') }}</a>.
                 </div>
 
-                <!-- Database Backups List -->
-                <div class="card border border-primary mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0"><i class="las la-save"></i> {{ __('Database Backups') }}</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>{{ __('Backup Name') }}</th>
-                                        <th>{{ __('Size') }}</th>
-                                        <th>{{ __('Created At') }}</th>
-                                        <th class="text-right">{{ __('Actions') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($backups ?? [] as $backup)
-                                        <tr class="{{ $backup['is_factory'] ? 'table-success' : '' }}">
-                                            <td>
-                                                {{ $backup['filename'] }}
-                                                @if($backup['is_factory'])
-                                                    <span class="badge badge-success ml-2">{{ __('Factory Default') }}</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $backup['size_human'] }}</td>
-                                            <td>{{ $backup['created_at'] }}</td>
-                                            <td class="text-right">
-                                                <div class="btn-group btn-group-sm">
-                                                    <!-- Load Backup -->
-                                                    <form action="{{ route('admin.general.backup-load') }}" method="POST" class="d-inline load-backup-form" data-name="{{ $backup['filename'] }}">
-                                                        @csrf
-                                                        <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
-                                                        <button type="submit" class="btn btn-primary btn-sm" title="{{ __('Load this backup') }}">
-                                                            <i class="las la-upload"></i> {{ __('Load') }}
-                                                        </button>
-                                                    </form>
-
-                                                    @if(!$backup['is_factory'])
-                                                        <!-- Save as Factory -->
-                                                        <form action="{{ route('admin.general.backup-save-factory') }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
-                                                            <button type="submit" class="btn btn-warning btn-sm" title="{{ __('Set as factory default') }}">
-                                                                <i class="las la-star"></i> {{ __('Set Default') }}
-                                                            </button>
-                                                        </form>
-
-                                                        <!-- Delete Backup -->
-                                                        <form action="{{ route('admin.general.backup-delete') }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <input type="hidden" name="backup_file" value="{{ $backup['filename'] }}">
-                                                            <button type="submit" class="btn btn-danger btn-sm" title="{{ __('Delete backup') }}">
-                                                                <i class="las la-trash"></i> {{ __('Delete') }}
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">
-                                                <i class="las la-info-circle"></i> {{ __('No backups found. Create your first backup below.') }}
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Create New Backup -->
-                        <div class="border-top pt-3 mt-3">
-                            <form action="{{ route('admin.general.backup-create') }}" method="POST" class="form-inline">
-                                @csrf
-                                <div class="form-group mr-2">
-                                    <input type="text" name="backup_name" class="form-control" placeholder="{{ __('Backup name (optional)') }}" value="backup_{{ date('Y-m-d_H-i-s') }}">
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="las la-save"></i> {{ __('Create New Backup') }}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <div class="card border border-info">
+                        <div class="card border border-success">
                             <div class="card-body">
-                                <h6 class="card-title text-info">
-                                    <i class="las la-sync-alt"></i> {{ __('Re-seed / Restore State') }}
+                                <h6 class="card-title text-success">
+                                    <i class="las la-seedling"></i> {{ __('Safe Re-seed (Add Data)') }}
                                 </h6>
                                 <p class="card-text text-muted small">
-                                    {{ __('Restore database from factory state or a backup. Choose your source below.') }}
+                                    {{ __('Adds demo data WITHOUT deleting existing data. Safe to run multiple times.') }}
                                 </p>
-                                
-                                <!-- Factory State Option -->
-                                <div class="mb-3">
-                                    <strong class="d-block mb-2">{{ __('Option 1: Factory State (Seeders)') }}</strong>
-                                    <ul class="small text-muted mb-2">
-                                        <li>✅ {{ __('Fresh install with demo data') }}</li>
-                                        <li>✅ {{ __('Uses DatabaseSeeder (:count seeders)', ['count' => $seederCount ?? 0]) }}</li>
-                                        <li>⚠️ {{ __('Wipes ALL data, re-migrates, seeds') }}</li>
-                                    </ul>
-                                    <form action="{{ route('admin.general.backup-load-factory') }}" method="POST" class="factory-restore-form">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-info">
-                                            <i class="las la-industry"></i> {{ __('Restore Factory State') }}
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <div class="dropdown-divider"></div>
-
-                                <!-- Backup State Option -->
-                                <div>
-                                    <strong class="d-block mb-2">{{ __('Option 2: Load Backup State') }}</strong>
-                                    <ul class="small text-muted mb-2">
-                                        <li>✅ {{ __('Restore from specific backup') }}</li>
-                                        <li>✅ {{ __('Preserves exact state at backup time') }}</li>
-                                        <li>⚠️ {{ __('Wipes current data') }}</li>
-                                    </ul>
-                                    @if(count($backups ?? []) > 0)
-                                        <form action="{{ route('admin.general.backup-load') }}" method="POST" class="backup-restore-form">
-                                            @csrf
-                                            <div class="form-group">
-                                                <select name="backup_file" class="form-control form-control-sm" required>
-                                                    <option value="">{{ __('Select backup...') }}</option>
-                                                    @foreach($backups ?? [] as $backup)
-                                                        <option value="{{ $backup['filename'] }}">
-                                                            {{ $backup['filename'] }} ({{ $backup['size_human'] }}) - {{ $backup['created_at'] }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-sm btn-primary">
-                                                <i class="las la-upload"></i> {{ __('Load Selected Backup') }}
-                                            </button>
-                                        </form>
-                                    @else
-                                        <p class="text-muted small">{{ __('No backups available. Create one first.') }}</p>
-                                    @endif
-                                </div>
-
-                                <div class="dropdown-divider"></div>
-
-                                <!-- Safe Reseed (Add Data Only) -->
-                                <div>
-                                    <strong class="d-block mb-2">{{ __('Option 3: Safe Re-seed (Add Data)') }}</strong>
-                                    <ul class="small text-muted mb-2">
-                                        <li>✅ {{ __('Adds demo data WITHOUT deleting') }}</li>
-                                        <li>✅ {{ __('Idempotent (safe to run multiple times)') }}</li>
-                                        <li>✅ {{ __('No data loss') }}</li>
-                                    </ul>
-                                    <form action="{{ route('admin.general.reseed-database') }}" method="POST" class="reseed-form">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            <i class="las la-seedling"></i> {{ __('Add Demo Data (Safe)') }}
-                                        </button>
-                                    </form>
-                                </div>
+                                <ul class="small text-muted mb-3">
+                                    <li>✅ {{ __('Adds demo data WITHOUT deleting') }}</li>
+                                    <li>✅ {{ __('Idempotent (safe to run multiple times)') }}</li>
+                                    <li>✅ {{ __('No data loss') }}</li>
+                                </ul>
+                                <form action="{{ route('admin.general.reseed-database') }}" method="POST" class="reseed-form">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="las la-seedling"></i> {{ __('Add Demo Data (Safe)') }}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -1003,7 +864,7 @@
             const url = form.attr('action');
             
             // Set longer timeout for long-running operations (like seeding)
-            const isLongOperation = form.hasClass('reseed-form') || form.hasClass('reset-form') || form.hasClass('factory-restore-form') || form.hasClass('backup-restore-form');
+            const isLongOperation = form.hasClass('reseed-form') || form.hasClass('reset-form');
             const timeout = isLongOperation ? 300000 : 30000; // 5 minutes for long ops, 30s for others
             
             $.ajax({
@@ -1031,7 +892,6 @@
                             return;
                         }
                         
-                        // Refresh backup list if needed
                         if (response.refresh) {
                             setTimeout(function() {
                                 location.reload();
@@ -1116,164 +976,7 @@
         });
 
         // Factory restore form (AJAX)
-        $('.factory-restore-form').off('submit').on('submit', function(e) {
-            return handleAjaxForm(e, $(this), '{{ __("⚠️ WARNING: This will WIPE current database and restore factory state. Continue?") }}');
-        });
 
-        // Backup restore form (AJAX)
-        $('.backup-restore-form').off('submit').on('submit', function(e) {
-            // CRITICAL: Prevent default FIRST
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            const form = $(this);
-            const backupName = form.find('select[name="backup_file"]').val();
-            
-            if (!backupName) {
-                alert('{{ __("Please select a backup to restore") }}');
-                return false;
-            }
-            
-            return handleAjaxForm(e, form, '{{ __("⚠️ WARNING: This will WIPE current database and restore from backup. Continue?") }}\n\n{{ __("Backup:") }} ' + backupName);
-        });
-
-        // Load backup form in table (AJAX)
-        $('.load-backup-form').off('submit').on('submit', function(e) {
-            // CRITICAL: Prevent default FIRST
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            const form = $(this);
-            const backupName = form.data('name');
-            return handleAjaxForm(e, form, '{{ __("⚠️ Restore from this backup? Current data will be WIPED.") }}\n\n{{ __("Backup:") }} ' + backupName);
-        });
-
-        // Create backup form (AJAX)
-        $('form[action*="backup-create"]').off('submit').on('submit', function(e) {
-            // CRITICAL: Prevent default FIRST
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            const form = $(this);
-            const btn = form.find('button[type="submit"]');
-            showLoadingState(btn);
-            
-            const formData = new FormData(form[0]);
-            const url = form.attr('action');
-            
-            $.ajax({
-                url: url,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    restoreButtonState(btn);
-                    if (response.success) {
-                        showNotification(true, response.message);
-                        if (response.refresh) {
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1500);
-                        }
-                    } else {
-                        showNotification(false, response.message || '{{ __("Operation failed") }}');
-                    }
-                },
-                error: function(xhr) {
-                    restoreButtonState(btn);
-                    let errorMessage = '{{ __("An error occurred") }}';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    showNotification(false, errorMessage);
-                }
-            });
-            
-            return false;
-        });
-
-        // Delete backup and set factory buttons (AJAX with inline confirm)
-        $('form[action*="backup-delete"], form[action*="backup-save-factory"]').off('submit').on('submit', function(e) {
-            // CRITICAL: Prevent default FIRST
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            const form = $(this);
-            const btn = form.find('button[type="submit"]');
-            const action = form.attr('action');
-            
-            // Get confirmation message from button onclick or default
-            let confirmMsg = btn.attr('onclick');
-            if (confirmMsg) {
-                // Extract message from onclick="return confirm('message')"
-                const match = confirmMsg.match(/confirm\(['"]([^'"]+)['"]\)/);
-                if (match) {
-                    confirmMsg = match[1];
-                } else {
-                    confirmMsg = action.includes('delete') 
-                        ? '{{ __("Delete this backup? This cannot be undone.") }}'
-                        : '{{ __("Set this backup as factory default state?") }}';
-                }
-            } else {
-                confirmMsg = action.includes('delete') 
-                    ? '{{ __("Delete this backup? This cannot be undone.") }}'
-                    : '{{ __("Set this backup as factory default state?") }}';
-            }
-            
-            // Show confirmation - this is blocking, execution stops here if cancelled
-            if (!confirm(confirmMsg)) {
-                return false;
-            }
-            
-            // Only proceed if confirmed
-            showLoadingState(btn);
-            
-            const formData = new FormData(form[0]);
-            
-            $.ajax({
-                url: action,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': form.find('input[name="_token"]').val() || $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    restoreButtonState(btn);
-                    if (response.success) {
-                        showNotification(true, response.message);
-                        if (response.refresh) {
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1500);
-                        }
-                    } else {
-                        showNotification(false, response.message || '{{ __("Operation failed") }}');
-                    }
-                },
-                error: function(xhr) {
-                    restoreButtonState(btn);
-                    let errorMessage = '{{ __("An error occurred") }}';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    showNotification(false, errorMessage);
-                }
-            });
-            
-            return false;
-        });
         
         // Real-time system monitoring using Server-Sent Events (SSE)
         let eventSource = null;

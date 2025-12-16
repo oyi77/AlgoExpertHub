@@ -33,6 +33,7 @@ use App\Http\Controllers\Backend\{
     SignalTimeFrameController,
     TicketController
 };
+use App\Http\Controllers\DocumentationController;
 
 
 
@@ -69,6 +70,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('change/password', [AdminProfileController::class, 'changePassword'])->name('change.password');
 
         Route::get('logout', [LoginController::class, 'logout'])->name('logout');
+        
+        // Documentation Routes
+        Route::prefix('wiki')->name('wiki.')->group(function () {
+            Route::get('/', [DocumentationController::class, 'index'])->name('index');
+            Route::get('/search', [DocumentationController::class, 'search'])->name('search');
+            Route::get('/docs/{file}', [DocumentationController::class, 'showDocs'])->name('docs');
+            Route::get('/{path?}', [DocumentationController::class, 'showWiki'])->name('show')->where('path', '.*');
+        });
 
 
         Route::get('language/ajax',[LanguageController::class ,'languageAjax'])->name('cms-builder');
@@ -295,10 +304,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('pages/edit/{id}', [PagesController::class, 'pageUpdate']);
             Route::get('pages/search', [PagesController::class, 'index'])->name('frontend.search');
             Route::post('pages/delete/{id}', [PagesController::class, 'pageDelete'])->name('frontend.pages.delete');
-            Route::get('page-builder/{id?}', [PagesController::class, 'pageBuilder'])->name('page-builder.index');
+            // Route::get('page-builder/{id?}', [PagesController::class, 'pageBuilder'])->name('page-builder.index'); // Disabled: Conflicts with page-builder-addon
 
             Route::get('manage/section/{name}', [ManageSectionController::class, 'section'])->name('frontend.section.manage');
             Route::post('manage/section/{name}', [ManageSectionController::class, 'sectionContentUpdate']);
+            Route::post('manage/sections/reorder', [ManageSectionController::class, 'reorderSections'])->name('frontend.sections.reorder');
             Route::get('manage/element/{name}', [ManageSectionController::class, 'sectionElement'])->name('frontend.element');
             Route::get('manage/element/{name}/search', [ManageSectionController::class, 'section'])->name('frontend.element.search');
             Route::post('manage/element/{name}', [ManageSectionController::class, 'sectionElementCreate']);
@@ -347,7 +357,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('maintanace-mode', [DashboardController::class, 'maintanance'])->name('maintanace');
 
+        // Queue Management
+        Route::middleware('permission:manage-system,admin')->prefix('queue')->name('queue.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Backend\QueueManagementController::class, 'index'])->name('index');
+            Route::get('health', [\App\Http\Controllers\Backend\QueueManagementController::class, 'health'])->name('health');
+            Route::get('metrics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'metrics'])->name('metrics');
+            Route::get('statistics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'statistics'])->name('statistics');
+            Route::post('scale', [\App\Http\Controllers\Backend\QueueManagementController::class, 'scale'])->name('scale');
+            Route::post('restart', [\App\Http\Controllers\Backend\QueueManagementController::class, 'restart'])->name('restart');
+            Route::post('clear-metrics', [\App\Http\Controllers\Backend\QueueManagementController::class, 'clearMetrics'])->name('clear-metrics');
+        });
+
         Route::get('cacheclear', [ConfigurationController::class, 'cacheClear'])->name('general.cacheclear');
+
+        // Cache Management Routes
+        Route::prefix('cache')->name('cache.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Backend\CacheManagementController::class, 'index'])->name('index');
+            Route::post('warm', [\App\Http\Controllers\Backend\CacheManagementController::class, 'warm'])->name('warm');
+            Route::post('clear-tags', [\App\Http\Controllers\Backend\CacheManagementController::class, 'clearByTags'])->name('clear-tags');
+            Route::post('clear-all', [\App\Http\Controllers\Backend\CacheManagementController::class, 'clearAll'])->name('clear-all');
+            Route::get('stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'stats'])->name('stats');
+            Route::get('query-stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'queryStats'])->name('query-stats');
+        });
     });
 });
 

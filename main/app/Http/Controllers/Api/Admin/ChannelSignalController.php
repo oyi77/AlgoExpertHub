@@ -5,17 +5,10 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend\ChannelSignalController as BackendController;
 use App\Models\Signal;
 
 class ChannelSignalController extends Controller
 {
-    protected $backendController;
-
-    public function __construct()
-    {
-        $this->backendController = new BackendController();
-    }
 
     /**
      * List channel signals (auto-created signals)
@@ -98,7 +91,7 @@ class ChannelSignalController extends Controller
             ]);
 
             // Distribute signal to users
-            \App\Services\SignalService::sent($signal->id);
+            (new \App\Services\SignalService())->sent($signal->id);
 
             return response()->json([
                 'success' => true,
@@ -152,7 +145,7 @@ class ChannelSignalController extends Controller
                     'is_published' => 1,
                     'published_date' => now()
                 ]);
-                \App\Services\SignalService::sent($signal->id);
+                (new \App\Services\SignalService())->sent($signal->id);
                 $approved++;
             } catch (\Exception $e) {
                 \Log::error('Failed to approve signal ' . $signal->id . ': ' . $e->getMessage());

@@ -28,6 +28,11 @@ class Team
         'blue' => [
             "title" =>  "Text",
             "color_text_for_title" => "Text"
+        ],
+        'trading-landing' => [
+            "section_header" => "Text",
+            "title" =>  "Text",
+            "color_text_for_title" => "Text"
         ]
     ];
 
@@ -45,6 +50,11 @@ class Team
         'blue' => [
             "title" =>  "col-md-6",
             "color_text_for_title" => "col-md-6"
+        ],
+        'trading-landing' => [
+            "section_header" => "col-md-12",
+            "title" =>  "col-md-6",
+            "color_text_for_title" => "col-md-6"
         ]
     ];
 
@@ -60,6 +70,11 @@ class Team
             "color_text_for_title" => "required"
         ],
         'blue' => [
+            "title" =>  "required",
+            "color_text_for_title" => "required"
+        ],
+        'trading-landing' => [
+            "section_header" => "nullable",
             "title" =>  "required",
             "color_text_for_title" => "required"
         ]
@@ -85,6 +100,15 @@ class Team
             "image_one" => "Upload",
         ],
         'blue' => [
+            "member_name" => "Text",
+            "designation" => "Text",
+            "facebook_url" => "Text",
+            "twitter_url" => "Text",
+            "linkedin_url" => "Text",
+            "instagram_url" => "Text",
+            "image_one" => "Upload",
+        ],
+        'trading-landing' => [
             "member_name" => "Text",
             "designation" => "Text",
             "facebook_url" => "Text",
@@ -122,6 +146,15 @@ class Team
             "linkedin_url" => "col-md-6",
             "instagram_url" => "col-md-6",
             "image_one" => "col-md-3",
+        ],
+        'trading-landing' => [
+            "member_name" => "col-md-6",
+            "designation" => "col-md-6",
+            "facebook_url" => "col-md-6",
+            "twitter_url" => "col-md-6",
+            "linkedin_url" => "col-md-6",
+            "instagram_url" => "col-md-6",
+            "image_one" => "col-md-3",
         ]
     ];
 
@@ -145,6 +178,15 @@ class Team
             "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
         ],
         'blue' => [
+            "member_name" => "required",
+            "designation" => "required",
+            "facebook_url" => "required",
+            "twitter_url" => "required",
+            "linkedin_url" => "required",
+            "instagram_url" => "required",
+            "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+        ],
+        'trading-landing' => [
             "member_name" => "required",
             "designation" => "required",
             "facebook_url" => "required",

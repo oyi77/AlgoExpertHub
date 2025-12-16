@@ -30,6 +30,7 @@ class FilterStrategy extends Model
 
     protected $fillable = [
         'name',
+        'filter_type',
         'description',
         'created_by_user_id',
         'visibility',
@@ -128,6 +129,30 @@ class FilterStrategy extends Model
         $cloned->save();
 
         return $cloned;
+    }
+
+    /**
+     * Check if this is a test filter (for testing bot functionality)
+     */
+    public function isTestFilter(): bool
+    {
+        return $this->filter_type === 'test';
+    }
+
+    /**
+     * Check if this is a technical indicator filter
+     */
+    public function isTechnicalFilter(): bool
+    {
+        return $this->filter_type === 'technical' || $this->filter_type === null;
+    }
+
+    /**
+     * Check if this filter should skip all analysis
+     */
+    public function shouldSkipAnalysis(): bool
+    {
+        return $this->filter_type === 'none' || $this->filter_type === 'test';
     }
 }
 

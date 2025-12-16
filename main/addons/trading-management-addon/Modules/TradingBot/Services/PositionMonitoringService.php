@@ -219,7 +219,7 @@ class PositionMonitoringService
         try {
             $credentials = $connection->credentials ?? [];
             $provider = $connection->provider;
-            $adapter = new CcxtAdapter($credentials, $provider);
+            $adapter = new CcxtAdapter($provider, $credentials);
             $result = $adapter->fetchCurrentPrice($symbol);
             if (!isset($result['success']) || !$result['success']) {
                 return null;

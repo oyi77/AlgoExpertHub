@@ -1,0 +1,229 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # MySQL Database
+  # ============================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: algoexpert_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_DATABASE:-algoexpert}
+      MYSQL_USER: ${DB_USERNAME:-algoexpert}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    networks:
+      - algoexpert_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Redis Cache & Queue
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: algoexpert_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-null}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - algoexpert_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Soketi WebSocket Server
+  # ============================================================================
+  soketi:
+    image: quay.io/soketi/soketi:1.4-16-debian
+    container_name: algoexpert_soketi
+    restart: unless-stopped
+    environment:
+      SOKETI_DEBUG: "${SOKETI_DEBUG:-0}"
+      SOKETI_DEFAULT_APP_ID: "${PUSHER_APP_ID:-app-id}"
+      SOKETI_DEFAULT_APP_KEY: "${PUSHER_APP_KEY:-app-key}"
+      SOKETI_DEFAULT_APP_SECRET: "${PUSHER_APP_SECRET:-app-secret}"
+      SOKETI_USER_AUTHENTICATION_TIMEOUT: 30000
+    ports:
+      - "${SOKETI_PORT:-6001}:6001"
+    networks:
+      - algoexpert_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6001"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================================
+  # Laravel Application (Octane + Horizon + Workers + Scheduler)
+  # ============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: algoexpert_app
+    restart: unless-stopped
+    environment:
+      # Application
+      APP_NAME: "${APP_NAME:-AlgoExpertHub}"
+      APP_ENV: "${APP_ENV:-production}"
+      APP_KEY: "${APP_KEY}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_URL: "${APP_URL:-http://localhost}"
+      
+      # Database
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE:-algoexpert}"
+      DB_USERNAME: "${DB_USERNAME:-algoexpert}"
+      DB_PASSWORD: "${DB_PASSWORD:-secret}"
+      
+      # Redis
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-null}"
+      REDIS_PORT: 6379
+      
+      # Cache & Queue
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      BROADCAST_DRIVER: pusher
+      
+      # Horizon
+      HORIZON_NAME: "${HORIZON_NAME:-AlgoExpert}"
+      HORIZON_PATH: "${HORIZON_PATH:-horizon}"
+      HORIZON_USE_SYSTEM_SUPERVISOR: "true"
+      
+      # Octane
+      OCTANE_SERVER: swoole
+      OCTANE_HTTPS: "${OCTANE_HTTPS:-false}"
+      
+      # Pusher/Soketi
+      PUSHER_APP_ID: "${PUSHER_APP_ID:-app-id}"
+      PUSHER_APP_KEY: "${PUSHER_APP_KEY:-app-key}"
+      PUSHER_APP_SECRET: "${PUSHER_APP_SECRET:-app-secret}"
+      PUSHER_APP_CLUSTER: "${PUSHER_APP_CLUSTER:-mt1}"
+      PUSHER_HOST: soketi
+      PUSHER_PORT: 6001
+      PUSHER_SCHEME: http
+      PUSHER_WS_HOST: "${PUSHER_WS_HOST:-localhost}"
+      
+      # Mail
+      MAIL_MAILER: "${MAIL_MAILER:-smtp}"
+      MAIL_HOST: "${MAIL_HOST:-mailhog}"
+      MAIL_PORT: "${MAIL_PORT:-1025}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-null}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-null}"
+      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION:-null}"
+      MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-noreply@algoexpert.com}"
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-AlgoExpertHub}"
+      
+      # Logging
+      LOG_CHANNEL: "${LOG_CHANNEL:-stack}"
+      LOG_LEVEL: "${LOG_LEVEL:-warning}"
+      
+      # Container flags
+      CONTAINER_ROLE: app
+      RUN_MIGRATIONS: "${RUN_MIGRATIONS:-false}"
+      RUN_SEEDERS: "${RUN_SEEDERS:-false}"
+    volumes:
+      - ./main:/var/www/html
+      - storage_data:/var/www/html/storage
+      - ./docker/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      soketi:
+        condition: service_healthy
+    networks:
+      - algoexpert_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================================
+  # Nginx Reverse Proxy (Optional - for production)
+  # ============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: algoexpert_nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./main/public:/var/www/html/public:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+      - soketi
+    networks:
+      - algoexpert_network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # ============================================================================
+  # Mailhog (Development only - for testing emails)
+  # ============================================================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: algoexpert_mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks:
+      - algoexpert_network
+    profiles:
+      - development
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  algoexpert_network:
+    driver: bridge
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  storage_data:
+    driver: local
+  nginx_logs:
+    driver: local

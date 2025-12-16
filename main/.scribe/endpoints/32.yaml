@@ -1,0 +1,168 @@
+name: 'System Configuration'
+description: |-
+
+  Endpoints for global system settings and reference data.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/config
+    metadata:
+      custom: []
+      groupName: 'System Configuration'
+      groupDescription: |-
+
+        Endpoints for global system settings and reference data.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get System Configuration'
+      description: 'Returns public system configuration including site name, logos, and feature flags.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+           "success": true,
+           "data": {
+             "app_name": "AI Trade Pulse",
+             "site_logo": "https://example.com/logo.png",
+             "currency": "USD",
+             "version": "1.0.0"
+           }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/languages
+    metadata:
+      custom: []
+      groupName: 'System Configuration'
+      groupDescription: |-
+
+        Endpoints for global system settings and reference data.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Available Languages'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+           "success": true,
+           "data": [
+             {"code": "en", "name": "English", "is_default": true},
+             {"code": "es", "name": "Spanish", "is_default": false}
+           ]
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/translations/{lang}'
+    metadata:
+      custom: []
+      groupName: 'System Configuration'
+      groupDescription: |-
+
+        Endpoints for global system settings and reference data.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Translations'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer Bearer {TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      lang:
+        custom: []
+        name: lang
+        description: "The language code (e.g., 'en')."
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      lang: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api/translations/architecto could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

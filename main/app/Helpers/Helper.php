@@ -106,7 +106,30 @@ class Helper
             return asset("asset/{$folder}/css/{$filename}");
         }
 
-        return asset("asset/{$folder}/{$template}/css/{$filename}");
+        // Check if file exists in current theme
+        $assetPath = public_path("asset/{$folder}/{$template}/css/{$filename}");
+        if (file_exists($assetPath)) {
+            return asset("asset/{$folder}/{$template}/css/{$filename}");
+        }
+
+        // Use inheritance chain to find asset in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($template);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentAssetPath = public_path("asset/{$folder}/{$parentTheme}/css/{$filename}");
+                if (file_exists($parentAssetPath)) {
+                    return asset("asset/{$folder}/{$parentTheme}/css/{$filename}");
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to default
+        }
+
+        // Final fallback to default theme
+        return asset("asset/{$folder}/default/css/{$filename}");
     }
 
     public static function jsLib($folder, $filename)
@@ -122,7 +145,30 @@ class Helper
             return asset("asset/{$folder}/js/{$filename}");
         }
 
-        return asset("asset/{$folder}/{$template}/js/{$filename}");
+        // Check if file exists in current theme
+        $assetPath = public_path("asset/{$folder}/{$template}/js/{$filename}");
+        if (file_exists($assetPath)) {
+            return asset("asset/{$folder}/{$template}/js/{$filename}");
+        }
+
+        // Use inheritance chain to find asset in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($template);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentAssetPath = public_path("asset/{$folder}/{$parentTheme}/js/{$filename}");
+                if (file_exists($parentAssetPath)) {
+                    return asset("asset/{$folder}/{$parentTheme}/js/{$filename}");
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to default
+        }
+
+        // Final fallback to default theme
+        return asset("asset/{$folder}/default/js/{$filename}");
     }
 
     public static function verificationCode($length)
@@ -274,6 +320,43 @@ class Helper
         }
     }
 
+    public static function themeView($view)
+    {
+        try {
+            $config = Configuration::first();
+            $theme = $config && $config->theme ? $config->theme : 'default';
+            
+            // If default theme, use default directly
+            if ($theme === 'default') {
+                return 'frontend.default.' . $view;
+            }
+            
+            // Check if theme-specific view exists
+            $themeView = 'frontend.' . $theme . '.' . $view;
+            if (view()->exists($themeView)) {
+                return $themeView;
+            }
+            
+            // Use inheritance chain to find view in parent themes
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($theme);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentView = 'frontend.' . $parentTheme . '.' . $view;
+                if (view()->exists($parentView)) {
+                    return $parentView;
+                }
+            }
+            
+            // Final fallback to default theme
+            return 'frontend.default.' . $view;
+        } catch (\Exception $e) {
+            // Fallback to default on error
+            return 'frontend.default.' . $view;
+        }
+    }
+
     public static function backendTheme()
     {
         try {
@@ -355,9 +438,28 @@ class Helper
             }
         }
 
-        if (file_exists(self::filePath($folder_name) . '/' . $filename) && $filename != null) {
-            $theme = $general && $general->theme ? $general->theme : 'default';
+        $theme = $general && $general->theme ? $general->theme : 'default';
+
+        // Check if file exists in current theme
+        $filePath = self::filePath($folder_name) . '/' . $filename;
+        if (file_exists($filePath) && $filename != null) {
             return asset('asset/frontend/' . $theme . '/images/' . $folder_name . '/' . $filename);
+        }
+
+        // Use inheritance chain to find file in parent themes
+        try {
+            $themeManager = app(\App\Services\ThemeManager::class);
+            $inheritanceChain = $themeManager->getThemeInheritanceChain($theme);
+            
+            // Skip first (current theme) as we already checked it
+            foreach (array_slice($inheritanceChain, 1) as $parentTheme) {
+                $parentFilePath = public_path('asset/frontend/' . $parentTheme . '/images/' . $folder_name . '/' . $filename);
+                if (file_exists($parentFilePath) && $filename != null) {
+                    return asset('asset/frontend/' . $parentTheme . '/images/' . $folder_name . '/' . $filename);
+                }
+            }
+        } catch (\Exception $e) {
+            // Fall through to placeholder
         }
 
         return asset('asset/images/placeholder.png');
@@ -756,7 +858,9 @@ class Helper
     public static function getPhpContainer(): ?string
     {
         static $cached = null;
-        if ($cached !== null) {
+        // Clear cache if we're in a new request (for testing)
+        // In production, this will cache properly
+        if ($cached !== null && !defined('TESTING_CONTAINER_DETECTION')) {
             return $cached;
         }
 
@@ -767,22 +871,89 @@ class Helper
             return $container;
         }
 
-        // Try common 1Panel PHP container patterns
-        $possibleContainers = [
-            '1Panel-php8-mrTy',
-            '1panel-php8-mrTy',
-            'php',
-            'php-fpm',
-        ];
+        // If we're running inside a container, try to detect our container name
+        // Since we can't access docker from inside, we'll try common patterns or env vars
+        if (file_exists('/.dockerenv') || file_exists('/proc/self/cgroup')) {
+            // We're inside a Docker container
+            // Try common 1Panel PHP container name patterns (since we know the pattern)
+            $possibleNames = [
+                '1Panel-php8-mrTy',
+                '1panel-php8-mrTy',
+                '1Panel-php8',
+                '1panel-php8',
+            ];
+            
+            // Try to verify by checking if we can exec into ourselves (won't work, but try anyway)
+            // Actually, since we're IN the container, we can't verify via docker exec
+            // So we'll just return the first pattern that matches common 1Panel naming
+            // Or check HOSTNAME env var which might be set
+            $hostnameEnv = getenv('HOSTNAME');
+            if ($hostnameEnv && preg_match('/^(1Panel|1panel|php)/i', $hostnameEnv)) {
+                $cached = $hostnameEnv;
+                \Log::info('Detected PHP container from HOSTNAME env', ['container' => $hostnameEnv]);
+                return $hostnameEnv;
+            }
+            
+            // For 1Panel, try the most common pattern first
+            // We'll try to use it, and the backup code will verify mysqldump exists
+            $assumedName = '1Panel-php8-mrTy'; // Most common 1Panel PHP container name
+            $cached = $assumedName;
+            \Log::info('Assuming PHP container name (running inside container, cannot access docker)', [
+                'container' => $assumedName,
+                'note' => 'Will be verified when mysqldump is checked'
+            ]);
+            return $assumedName;
+        }
 
         if (!self::checkDockerAvailable()) {
             $cached = null;
             return null;
         }
 
+        // First, try to find any container with "php" in the name (more reliable)
+        exec('docker ps --format "{{.Names}}" | grep -i php 2>&1', $phpContainers, $return);
+        \Log::info('PHP container detection - grep result', [
+            'return_code' => $return,
+            'containers' => $phpContainers,
+            'docker_available' => self::checkDockerAvailable()
+        ]);
+        
+        if ($return === 0 && !empty($phpContainers)) {
+            foreach ($phpContainers as $containerName) {
+                $containerName = trim($containerName);
+                if (!empty($containerName) && stripos($containerName, 'phpmyadmin') === false) {
+                    // Skip phpmyadmin, verify container has PHP
+                    exec("docker exec {$containerName} php --version 2>&1", $verifyOutput, $verifyReturn);
+                    \Log::info('PHP container verification', [
+                        'container' => $containerName,
+                        'verify_return' => $verifyReturn,
+                        'output' => $verifyOutput
+                    ]);
+                    if ($verifyReturn === 0) {
+                        $cached = $containerName;
+                        \Log::info('PHP container detected', ['container' => $containerName]);
+                        return $containerName;
+                    }
+                }
+            }
+        }
+
+        // Fallback: Try common 1Panel PHP container patterns
+        $possibleContainers = [
+            '1Panel-php8-mrTy',
+            '1panel-php8-mrTy',
+            '1Panel-php',
+            '1panel-php',
+            'php',
+            'php-fpm',
+        ];
+
         foreach ($possibleContainers as $containerName) {
-            $check = shell_exec("docker ps --filter name={$containerName} --format '{{.Names}}' 2>/dev/null");
-            if ($check && trim($check) === $containerName) {
+            // Try with exec (more reliable than shell_exec)
+            $execOutput = [];
+            $execReturn = 0;
+            exec("docker ps --filter name={$containerName} --format '{{.Names}}' 2>&1", $execOutput, $execReturn);
+            if ($execReturn === 0 && !empty($execOutput) && trim($execOutput[0]) === $containerName) {
                 // Verify container has PHP
                 exec("docker exec {$containerName} php --version 2>&1", $verifyOutput, $verifyReturn);
                 if ($verifyReturn === 0) {
@@ -945,7 +1116,41 @@ class Helper
      */
     public static function buildPhpCommand(string $command = '', ?string $workingDir = null): array
     {
-        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        // Detect PHP CLI binary - prefer 'php' command over PHP_BINARY
+        // PHP_BINARY might point to php-fpm (FastCGI) which can't run CLI commands
+        $phpBinary = 'php';
+        
+        // Check if PHP_BINARY is php-fpm (FastCGI) - these can't run CLI commands
+        if (defined('PHP_BINARY') && PHP_BINARY) {
+            $phpBinaryPath = PHP_BINARY;
+            // Check if it's php-fpm (FastCGI) - these can't run CLI commands
+            if (strpos($phpBinaryPath, 'php-fpm') === false && strpos($phpBinaryPath, 'fpm') === false) {
+                // PHP_BINARY is not php-fpm, use it
+                $phpBinary = $phpBinaryPath;
+            } else {
+                // PHP_BINARY is php-fpm, find actual PHP CLI using 'which php'
+                $whichPhp = shell_exec('which php 2>/dev/null');
+                if ($whichPhp && trim($whichPhp)) {
+                    $phpBinary = trim($whichPhp);
+                } else {
+                    // Fallback: try common locations
+                    $possiblePaths = ['/usr/bin/php', '/usr/local/bin/php'];
+                    foreach ($possiblePaths as $path) {
+                        if (file_exists($path) && is_executable($path)) {
+                            $phpBinary = $path;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            // PHP_BINARY not defined, use 'which php' to find it
+            $whichPhp = shell_exec('which php 2>/dev/null');
+            if ($whichPhp && trim($whichPhp)) {
+                $phpBinary = trim($whichPhp);
+            }
+        }
+        
         $mode = self::getCommandMode();
         $workingDir = $workingDir ?? base_path();
 

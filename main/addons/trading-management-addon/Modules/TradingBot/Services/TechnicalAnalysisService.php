@@ -22,42 +22,121 @@ class TechnicalAnalysisService
     public function calculateIndicators(array $ohlcv, ?FilterStrategy $filterStrategy = null): array
     {
         if (empty($ohlcv)) {
+            Log::warning('TechnicalAnalysisService: Empty OHLCV data provided', []);
             return [];
         }
 
+        $candleCount = count($ohlcv);
         $indicators = [];
+
+        // Handle Test filter type - return test indicators for immediate trade
+        if ($filterStrategy && $filterStrategy->filter_type === 'test') {
+            Log::info('TechnicalAnalysisService: Test filter detected, returning test signals', [
+                'filter_id' => $filterStrategy->id,
+                'filter_name' => $filterStrategy->name,
+            ]);
+            
+            // Return test indicators that will trigger immediate buy
+            return [
+                'TEST_MODE' => true,
+                'RSI' => 30, // Oversold condition
+                'SIGNAL' => 'BUY',
+                'STRENGTH' => 100,
+            ];
+        }
+
+        // Handle None filter type - skip all calculations
+        if ($filterStrategy && $filterStrategy->filter_type === 'none') {
+            Log::info('TechnicalAnalysisService: None filter detected, skipping calculations', [
+                'filter_id' => $filterStrategy->id,
+                'filter_name' => $filterStrategy->name,
+            ]);
+            return [];
+        }
 
         if ($filterStrategy && $filterStrategy->indicators) {
             foreach ($filterStrategy->indicators as $indicatorConfig) {
-                $indicator = $this->getIndicatorValue(
-                    $indicatorConfig['type'] ?? null,
-                    $indicatorConfig['params'] ?? [],
-                    $ohlcv
-                );
+                $indicatorType = $indicatorConfig['type'] ?? null;
+                $params = $indicatorConfig['params'] ?? [];
+                
+                // Check minimum data requirement for this indicator
+                $minRequired = $this->getMinCandlesRequired($indicatorType, $params);
+                
+                if ($candleCount < $minRequired) {
+                    Log::warning('TechnicalAnalysisService: Insufficient data for indicator', [
+                        'indicator' => $indicatorType,
+                        'candle_count' => $candleCount,
+                        'min_required' => $minRequired,
+                        'note' => 'Skipping indicator calculation',
+                    ]);
+                    continue;
+                }
+                
+                $indicator = $this->getIndicatorValue($indicatorType, $params, $ohlcv);
 
                 if ($indicator !== null) {
-                    $indicators[$indicatorConfig['type']] = $indicator;
+                    $indicators[$indicatorType] = $indicator;
+                } else {
+                    Log::debug('TechnicalAnalysisService: Indicator calculation returned null', [
+                        'indicator' => $indicatorType,
+                        'candle_count' => $candleCount,
+                    ]);
                 }
             }
         } else {
-            // If no filter strategy, calculate default indicators for basic analysis
-            // This ensures the bot can make decisions even without a filter strategy
-            Log::debug('TechnicalAnalysisService: No filter strategy, calculating default indicators', [
-                'candle_count' => count($ohlcv),
+            // NO FILTER STRATEGY: Do NOT calculate any indicators
+            // This fixes the bug where indicators were being calculated even when filter was set to "no filter"
+            Log::info('TechnicalAnalysisService: No filter strategy provided, skipping all calculations', [
+                'candle_count' => $candleCount,
+                'note' => 'Indicators will only be calculated when a filter strategy is assigned',
             ]);
             
-            // Calculate basic indicators if we have enough data
-            if (count($ohlcv) >= 20) {
-                $indicators['SMA'] = $this->calculateSMA($ohlcv, 20);
-                $indicators['EMA'] = $this->calculateEMA($ohlcv, 20);
-            }
-            
-            if (count($ohlcv) >= 15) {
-                $indicators['RSI'] = $this->calculateRSI($ohlcv, 14);
-            }
+            // Return empty array - no indicators calculated
+            return [];
+        }
+        
+        if (empty($indicators)) {
+            Log::warning('TechnicalAnalysisService: No indicators calculated', [
+                'candle_count' => $candleCount,
+                'has_filter_strategy' => !is_null($filterStrategy),
+                'note' => 'Insufficient data for any indicator calculation',
+            ]);
         }
 
         return $indicators;
+    }
+    
+    /**
+     * Get minimum candles required for indicator
+     * 
+     * @param string|null $indicatorType
+     * @param array $params
+     * @return int
+     */
+    protected function getMinCandlesRequired(?string $indicatorType, array $params): int
+    {
+        if (!$indicatorType) {
+            return 1;
+        }
+        
+        switch ($indicatorType) {
+            case 'SMA':
+            case 'EMA':
+                return $params['period'] ?? 20;
+            case 'RSI':
+                return ($params['period'] ?? 14) + 1;
+            case 'MACD':
+                $fast = $params['fast'] ?? 12;
+                $slow = $params['slow'] ?? 26;
+                $signal = $params['signal'] ?? 9;
+                return max($fast, $slow) + $signal;
+            case 'BB':
+                return $params['period'] ?? 20;
+            case 'STOCH':
+                return $params['period'] ?? 14;
+            default:
+                return 20; // Default minimum
+        }
     }
 
     /**
@@ -104,10 +183,25 @@ class TechnicalAnalysisService
      * Analyze signals from indicators
      * 
      * @param array $indicators
+     * @param array|null $ohlcv Optional OHLCV data for fallback price action signals
      * @return array ['signal' => 'buy|sell|hold', 'strength' => float, 'reason' => string]
      */
-    public function analyzeSignals(array $indicators): array
+    public function analyzeSignals(array $indicators, ?array $ohlcv = null): array
     {
+        // Handle Test Mode - return immediate buy signal
+        if (isset($indicators['TEST_MODE']) && $indicators['TEST_MODE'] === true) {
+            Log::info('TechnicalAnalysisService: Test mode active, returning immediate buy signal', [
+                'signal' => $indicators['SIGNAL'] ?? 'BUY',
+            ]);
+            
+            return [
+                'signal' => strtolower($indicators['SIGNAL'] ?? 'buy'),
+                'strength' => ($indicators['STRENGTH'] ?? 100) / 100,
+                'reason' => 'Test mode: Immediate trade for testing bot functionality',
+                'test_mode' => true,
+            ];
+        }
+
         $buySignals = 0;
         $sellSignals = 0;
         $reasons = [];
@@ -166,10 +260,78 @@ class TechnicalAnalysisService
             ];
         }
 
+        // Fallback: If no indicators but we have price data, use simple price action
+        if (empty($indicators) && !empty($ohlcv) && count($ohlcv) >= 2) {
+            return $this->generatePriceActionSignal($ohlcv);
+        }
+
         return [
             'signal' => 'hold',
             'strength' => 0,
             'reason' => 'No clear signal',
+        ];
+    }
+    
+    /**
+     * Generate simple price action signal when indicators are not available
+     * 
+     * @param array $ohlcv
+     * @return array ['signal' => 'buy|sell|hold', 'strength' => float, 'reason' => string]
+     */
+    protected function generatePriceActionSignal(array $ohlcv): array
+    {
+        if (count($ohlcv) < 2) {
+            return [
+                'signal' => 'hold',
+                'strength' => 0,
+                'reason' => 'Insufficient data for price action signal',
+            ];
+        }
+        
+        // Get last 2 candles
+        $current = end($ohlcv);
+        $previous = $ohlcv[count($ohlcv) - 2];
+        
+        $currentClose = $current['close'] ?? 0;
+        $previousClose = $previous['close'] ?? 0;
+        $currentHigh = $current['high'] ?? 0;
+        $currentLow = $current['low'] ?? 0;
+        
+        if ($currentClose <= 0 || $previousClose <= 0) {
+            return [
+                'signal' => 'hold',
+                'strength' => 0,
+                'reason' => 'Invalid price data',
+            ];
+        }
+        
+        $priceChange = (($currentClose - $previousClose) / $previousClose) * 100;
+        $priceRange = $currentHigh - $currentLow;
+        $rangePercent = $priceRange > 0 ? ($priceRange / $currentClose) * 100 : 0;
+        
+        // Simple momentum-based signal
+        // Buy if price increased and range is reasonable
+        // Sell if price decreased and range is reasonable
+        if ($priceChange > 0.1 && $rangePercent < 2) {
+            // Price increased with low volatility
+            return [
+                'signal' => 'buy',
+                'strength' => min(0.4, abs($priceChange) / 2), // Weak signal, max 0.4 strength
+                'reason' => 'Price action: upward momentum',
+            ];
+        } elseif ($priceChange < -0.1 && $rangePercent < 2) {
+            // Price decreased with low volatility
+            return [
+                'signal' => 'sell',
+                'strength' => min(0.4, abs($priceChange) / 2), // Weak signal, max 0.4 strength
+                'reason' => 'Price action: downward momentum',
+            ];
+        }
+        
+        return [
+            'signal' => 'hold',
+            'strength' => 0,
+            'reason' => 'Price action: no clear momentum',
         ];
     }
 

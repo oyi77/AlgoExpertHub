@@ -12,9 +12,13 @@
         <div class="row gy-4 align-items-center">
             @foreach ($element as $item)
             <div class="col-xxl-4 col-xl-6 col-md-6 wow fadeInUp" data-wow-duration="0.5s" data-wow-delay="0.7s">
-                <div class="sp_benefit_item">
+                <div class="sp_benefit_item card-modern mb-4">
                     <div class="sp_benefit_icon">
-                        <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="image">
+                        @if($item->content->icon)
+                            <i class="{{ $item->content->icon}}"></i>
+                        @elseif($item->content->image_one)
+                            <img src="{{ Config::getFile('benefits', $item->content->image_one) }}" alt="{{ Config::trans($item->content->title) }}" loading="lazy">
+                        @endif
                     </div>
                     <div class="sp_benefit_content">
                         <h4 class="title">{{ Config::trans($item->content->title)}}</h4>

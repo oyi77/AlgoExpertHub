@@ -10,6 +10,7 @@ $config =  [
         'OpenSSL',
         'PDO',
         'pdo_mysql',
+        'pdo_pgsql', // For PostgreSQL support
         'Tokenizer',
         'XML',
         'cURL',
@@ -23,5 +24,12 @@ $config =  [
         '../main/storage/app/',
         '../main/storage/framework/',
         '../main/storage/logs/'
+    ],
+    
+    'database_types' => [
+        'auto' => 'Auto-detect',
+        'mysql' => 'MySQL',
+        'mariadb' => 'MariaDB',
+        'postgresql' => 'PostgreSQL'
     ]
 ];

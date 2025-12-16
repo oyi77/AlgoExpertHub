@@ -129,7 +129,7 @@
 
                     @if($key === 'backup' && $module['enabled'] && ($module['status'] === true || (is_array($module['status']) && ($module['status']['available'] ?? false))))
                     <div class="mt-3">
-                        <form action="{{ route('admin.algoexpert-plus.backup.run') }}" method="GET" onsubmit="return confirm('Are you sure you want to run a backup now?');">
+                        <form action="{{ route('admin.algoexpert-plus.backup.run') }}" method="GET" class="backup-run-form" data-confirm-message="Are you sure you want to run a backup now?">
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i data-feather="download" style="width: 14px; height: 14px;"></i> Run Backup
                             </button>
@@ -616,6 +616,44 @@
             });
         });
     });
+</script>
+@endpush
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Handle backup run form with confirmation
+    $('.backup-run-form').on('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        
+        const form = $(this);
+        const message = form.data('confirm-message') || 'Are you sure?';
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: '{{ __("Confirmation") }}',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '{{ __("Confirm") }}',
+                cancelButtonText: '{{ __("Cancel") }}'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.off('submit').submit();
+                }
+            });
+        } else {
+            if (confirm(message)) {
+                form.off('submit').submit();
+            }
+        }
+        
+        return false;
+    });
+});
 </script>
 @endpush
 @endsection

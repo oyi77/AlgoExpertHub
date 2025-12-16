@@ -46,43 +46,61 @@ class FilterAnalysisJob implements ShouldQueue
         ]);
 
         try {
+            // 1. Check if this is test mode - skip all filter checks
+            if (isset($this->decision['test_mode']) && $this->decision['test_mode'] === true) {
+                Log::info('FilterAnalysisJob: Test mode detected, bypassing all filter checks', [
+                    'bot_id' => $this->bot->id,
+                    'filter_strategy_id' => $this->bot->filterStrategy->id ?? null,
+                    'note' => 'Test mode skips filter evaluation for immediate execution',
+                ]);
+                // Skip to step 3 (dispatch to risk management)
+            }
             // 1. Apply filter strategy if configured
-            if ($this->bot->filterStrategy) {
+            elseif ($this->bot->filterStrategy) {
                 Log::info('FilterAnalysisJob: Applying filter strategy', [
                     'bot_id' => $this->bot->id,
                     'filter_strategy_id' => $this->bot->filterStrategy->id,
                     'filter_strategy_name' => $this->bot->filterStrategy->name,
+                    'filter_type' => $this->bot->filterStrategy->filter_type ?? 'technical',
                 ]);
 
-                $filterResult = $this->applyFilterStrategy();
-                
-                Log::info('FilterAnalysisJob: Filter strategy result', [
-                    'bot_id' => $this->bot->id,
-                    'passed' => $filterResult['pass'],
-                    'reason' => $filterResult['reason'],
-                ]);
-                
-                if (!$filterResult['pass']) {
-                    // Check if rejection is due to missing market data (common in testing)
-                    $isDataError = strpos($filterResult['reason'] ?? '', 'Table') !== false 
-                        || strpos($filterResult['reason'] ?? '', 'market data') !== false
-                        || strpos($filterResult['reason'] ?? '', 'No market data') !== false;
-                    
-                    if ($isDataError) {
-                        Log::warning('FilterAnalysisJob: Filter strategy failed due to missing market data, allowing trade to proceed', [
-                            'bot_id' => $this->bot->id,
-                            'filter_strategy_id' => $this->bot->filterStrategy->id,
-                            'reason' => $filterResult['reason'],
-                        ]);
-                        // Continue processing (fail open for data errors)
-                    } else {
-                    Log::info('FilterAnalysisJob: Trading decision rejected by filter strategy', [
+                // Skip filter evaluation for test and none types
+                if (in_array($this->bot->filterStrategy->filter_type ?? 'technical', ['test', 'none'])) {
+                    Log::info('FilterAnalysisJob: Filter type allows bypass, skipping evaluation', [
                         'bot_id' => $this->bot->id,
-                        'filter_strategy_id' => $this->bot->filterStrategy->id,
-                        'filter_strategy_name' => $this->bot->filterStrategy->name,
+                        'filter_type' => $this->bot->filterStrategy->filter_type,
+                    ]);
+                } else {
+                    $filterResult = $this->applyFilterStrategy();
+                    
+                    Log::info('FilterAnalysisJob: Filter strategy result', [
+                        'bot_id' => $this->bot->id,
+                        'passed' => $filterResult['pass'],
                         'reason' => $filterResult['reason'],
                     ]);
-                    return; // Stop processing
+                    
+                    if (!$filterResult['pass']) {
+                        // Check if rejection is due to missing market data (common in testing)
+                        $isDataError = strpos($filterResult['reason'] ?? '', 'Table') !== false 
+                            || strpos($filterResult['reason'] ?? '', 'market data') !== false
+                            || strpos($filterResult['reason'] ?? '', 'No market data') !== false;
+                        
+                        if ($isDataError) {
+                            Log::warning('FilterAnalysisJob: Filter strategy failed due to missing market data, allowing trade to proceed', [
+                                'bot_id' => $this->bot->id,
+                                'filter_strategy_id' => $this->bot->filterStrategy->id,
+                                'reason' => $filterResult['reason'],
+                            ]);
+                            // Continue processing (fail open for data errors)
+                        } else {
+                        Log::info('FilterAnalysisJob: Trading decision rejected by filter strategy', [
+                            'bot_id' => $this->bot->id,
+                            'filter_strategy_id' => $this->bot->filterStrategy->id,
+                            'filter_strategy_name' => $this->bot->filterStrategy->name,
+                            'reason' => $filterResult['reason'],
+                        ]);
+                        return; // Stop processing
+                        }
                     }
                 }
             } else {
@@ -161,11 +179,31 @@ class FilterAnalysisJob implements ShouldQueue
     protected function applyFilterStrategy(): array
     {
         try {
+            // Check if filter type should skip evaluation
+            if (in_array($this->bot->filterStrategy->filter_type ?? 'technical', ['test', 'none'])) {
+                Log::info('FilterAnalysisJob: Filter type allows automatic pass', [
+                    'bot_id' => $this->bot->id,
+                    'filter_type' => $this->bot->filterStrategy->filter_type,
+                ]);
+                
+                return [
+                    'pass' => true,
+                    'reason' => 'Filter type ' . ($this->bot->filterStrategy->filter_type ?? 'none') . ' bypasses evaluation',
+                ];
+            }
+
             $evaluator = app(FilterStrategyEvaluator::class);
             
             // Get symbol and timeframe from market data
             $symbol = $this->marketData[0]['symbol'] ?? '';
             $timeframe = $this->marketData[0]['timeframe'] ?? '5m';
+            
+            Log::info('FilterAnalysisJob: Extracted symbol and timeframe from market data', [
+                'bot_id' => $this->bot->id,
+                'symbol' => $symbol,
+                'timeframe' => $timeframe,
+                'market_data_count' => count($this->marketData),
+            ]);
             
             // For trading bot flow, we need to evaluate filter strategy differently
             // since we don't have a Signal model. We'll evaluate based on market data directly.

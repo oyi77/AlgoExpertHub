@@ -20,16 +20,37 @@ class LayoutController extends Controller
      */
     public function index(Request $request)
     {
-        $result = $this->layoutManagerService->listLayouts([
-            'type' => $request->get('type'),
-            'active' => true,
-        ]);
+        try {
+            $result = $this->layoutManagerService->listLayouts([
+                'type' => $request->get('type'),
+                'active' => true,
+            ]);
 
-        $data['title'] = 'Manage Layouts';
-        $data['layouts'] = $result['data'] ?? [];
-        $data['type'] = $request->get('type', 'all');
+            // Ensure layouts is always a collection
+            $layouts = $result['data'] ?? collect();
+            if (!($layouts instanceof \Illuminate\Support\Collection)) {
+                $layouts = collect($layouts);
+            }
 
-        return view('page-builder-addon::backend.page-builder.layouts.index', $data);
+            $data['title'] = 'Manage Layouts';
+            $data['layouts'] = $layouts;
+            $data['type'] = $request->get('type', 'all');
+
+            return view('page-builder-addon::backend.page-builder.layouts.index', $data);
+        } catch (\Exception $e) {
+            \Log::error('LayoutController::index failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return view with empty data on error
+            $data['title'] = 'Manage Layouts';
+            $data['layouts'] = collect();
+            $data['type'] = 'all';
+            $data['error'] = 'Failed to load layouts: ' . $e->getMessage();
+
+            return view('page-builder-addon::backend.page-builder.layouts.index', $data);
+        }
     }
 
     /**

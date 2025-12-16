@@ -7,6 +7,7 @@ use Addons\TradingManagement\Modules\DataProvider\Services\SharedStreamManager;
 use Addons\TradingManagement\Modules\DataProvider\Models\MetaapiStream;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\LogRotationService;
 
 /**
  * MetaApiStreamWorker
@@ -23,6 +24,8 @@ class MetaApiStreamWorker
     protected bool $shouldExit = false;
     protected array $activeStreams = [];
     protected $writeLog;
+    protected int $healthCheckInterval = 60; // seconds
+    protected int $lastHealthCheck = 0;
 
     public function __construct(string $accountId, string $apiToken)
     {
@@ -31,12 +34,13 @@ class MetaApiStreamWorker
         $this->streamManager = app(SharedStreamManager::class);
         $this->streamingService = new MetaApiStreamingService($apiToken, $accountId);
         
-        // Setup log writer
+        // Setup log writer with rotation
         $logFile = storage_path("logs/metaapi-stream-{$accountId}.log");
-        $this->writeLog = function($message, $level = 'INFO') use ($logFile) {
+        $logRotation = app(LogRotationService::class);
+        $this->writeLog = function($message, $level = 'INFO') use ($logFile, $logRotation) {
             $timestamp = date('Y-m-d H:i:s');
             $logMessage = "[{$timestamp}] {$level}: {$message}\n";
-            file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+            $logRotation->appendWithRotation($logFile, $logMessage, FILE_APPEND | LOCK_EX, 1000);
         };
     }
 
@@ -143,6 +147,12 @@ class MetaApiStreamWorker
 
                 // 4. Update stream statuses
                 $this->updateStreamStatuses();
+                
+                // 5. Periodic health check
+                if (time() - $this->lastHealthCheck >= $this->healthCheckInterval) {
+                    $this->performHealthCheck($writeLog);
+                    $this->lastHealthCheck = time();
+                }
 
                 // Small delay to prevent CPU spinning
                 // In polling mode, use longer delay (5 seconds)
@@ -369,6 +379,47 @@ class MetaApiStreamWorker
         }
     }
 
+    /**
+     * Perform health check and log metrics
+     */
+    protected function performHealthCheck($writeLog): void
+    {
+        try {
+            $metrics = $this->streamingService->getHealthMetrics();
+            
+            $writeLog(sprintf(
+                "Health Check: mode=%s, connected=%s, success_rate=%.2f%%, polls=%d/%d, streams=%d",
+                $metrics['mode'],
+                $metrics['connected'] ? 'yes' : 'no',
+                $metrics['success_rate'],
+                $metrics['successful_polls'],
+                $metrics['successful_polls'] + $metrics['failed_polls'],
+                $metrics['subscribed_symbols_count']
+            ));
+            
+            Log::info('MetaAPI stream worker health check', [
+                'account_id' => $this->accountId,
+                'metrics' => $metrics,
+            ]);
+            
+            // Alert if success rate is low
+            if ($metrics['success_rate'] < 80 && ($metrics['successful_polls'] + $metrics['failed_polls']) > 10) {
+                $writeLog("WARNING: Low success rate detected: {$metrics['success_rate']}%", 'WARNING');
+                Log::warning('MetaAPI stream worker low success rate', [
+                    'account_id' => $this->accountId,
+                    'success_rate' => $metrics['success_rate'],
+                    'metrics' => $metrics,
+                ]);
+            }
+        } catch (\Exception $e) {
+            $writeLog("Health check failed: " . $e->getMessage(), 'ERROR');
+            Log::error('MetaAPI stream worker health check failed', [
+                'account_id' => $this->accountId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+    
     /**
      * Setup signal handlers for graceful shutdown
      */

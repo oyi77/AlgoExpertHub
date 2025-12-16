@@ -44,8 +44,16 @@ class Banner
             'button_two_text_link' => 'Text',
             "description" => "Textarea",
             'image_one' => 'Upload',
+        ],
+        'trading-landing' => [
+            'title' => 'Text',
+            'color_text_for_title' => 'Text',
+            'button_text' => 'Text',
+            'button_text_link' => 'Text',
+            "description" => "Textarea",
+            'image_one' => 'Upload',
+            'image_two' => 'Upload',
         ]
-
     ];
 
     public $classes = [
@@ -78,6 +86,15 @@ class Banner
             'button_text_link' => 'col-md-6',
             'button_two_text' => 'col-md-6',
             'button_two_text_link' => 'col-md-6'
+        ],
+        'trading-landing' => [
+            'image_one' => 'col-md-3',
+            'image_two' => 'col-md-3',
+            'title' => 'col-md-6',
+            'color_text_for_title' => 'col-md-6',
+            'description' => 'col-md-12',
+            'button_text' => 'col-md-6',
+            'button_text_link' => 'col-md-6',
         ]
 
     ];
@@ -112,6 +129,15 @@ class Banner
             'button_text_link' => 'required',
             'button_two_text' => 'required',
             'button_two_text_link' => 'required',
+        ],
+        'trading-landing' => [
+            "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+            "image_two" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
+            'title' => 'required',
+            'color_text_for_title' => 'required',
+            'description' => 'required',
+            'button_text' => 'required',
+            'button_text_link' => 'required',
         ]
 
     ];

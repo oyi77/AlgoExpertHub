@@ -1,4 +1,4 @@
-@extends(Config::theme() . 'layout.auth')
+@extends(Config::themeView('layout.auth'))
 
 @section('content')
 <div class="row justify-content-center">
@@ -25,17 +25,17 @@
                 <!-- Step Content -->
                 <div class="mb-4">
                     @if($step === 'profile')
-                        @include(Config::theme() . 'user.onboarding.partials._step_profile')
+                        @include(Config::themeView('user.onboarding.partials._step_profile')
                     @elseif($step === 'plan')
-                        @include(Config::theme() . 'user.onboarding.partials._step_plan')
+                        @include(Config::themeView('user.onboarding.partials._step_plan')
                     @elseif($step === 'signal_source')
-                        @include(Config::theme() . 'user.onboarding.partials._step_signal_source')
+                        @include(Config::themeView('user.onboarding.partials._step_signal_source')
                     @elseif($step === 'trading_connection')
-                        @include(Config::theme() . 'user.onboarding.partials._step_trading_connection')
+                        @include(Config::themeView('user.onboarding.partials._step_trading_connection')
                     @elseif($step === 'trading_preset')
-                        @include(Config::theme() . 'user.onboarding.partials._step_preset')
+                        @include(Config::themeView('user.onboarding.partials._step_preset')
                     @elseif($step === 'first_deposit')
-                        @include(Config::theme() . 'user.onboarding.partials._step_deposit')
+                        @include(Config::themeView('user.onboarding.partials._step_deposit')
                     @endif
                 </div>
 

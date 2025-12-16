@@ -29,6 +29,11 @@ class Benefits
         'blue' => [
             'title' => 'Text',
             'color_text_for_title' => 'Text',
+        ],
+        'trading-landing' => [
+            'section_header' => 'Text',
+            'title' => 'Text',
+            'color_text_for_title' => 'Text',
         ]
     ];
 
@@ -48,6 +53,11 @@ class Benefits
         'blue' => [
             'title' => 'col-md-6',
             'color_text_for_title' => 'col-md-12',
+        ],
+        'trading-landing' => [
+            'section_header' => 'col-md-12',
+            'title' => 'col-md-6',
+            'color_text_for_title' => 'col-md-6',
         ]
     ];
 
@@ -65,6 +75,11 @@ class Benefits
             'section_header' => 'required',
         ],
         'blue' => [
+            'title' => 'required',
+            'color_text_for_title' => 'required',
+        ],
+        'trading-landing' => [
+            'section_header' => 'nullable',
             'title' => 'required',
             'color_text_for_title' => 'required',
         ]
@@ -86,6 +101,11 @@ class Benefits
             'title' => 'Text',
             'description' => 'Textarea',
             'image_one' => 'Upload',
+        ],
+        'trading-landing' => [
+            'title' => 'Text',
+            'icon' => 'Icon',
+            'description' => 'Textarea',
         ]
     ];
 
@@ -105,6 +125,11 @@ class Benefits
             'image_one' => 'col-md-3',
             'title' => 'col-md-6',
             'description' => 'col-md-12'
+        ],
+        'trading-landing' => [
+            'title' => 'col-md-12',
+            'icon' => 'col-md-12',
+            'description' => 'col-md-12'
         ]
     ];
 
@@ -123,6 +148,11 @@ class Benefits
         'blue' => [
             "image_one" => 'sometimes|image|mimes:jpg,jpeg,png|max:4096',
             'title' => 'required',
+            'description' => 'required'
+        ],
+        'trading-landing' => [
+            'title' => 'required',
+            'icon' => 'nullable',
             'description' => 'required'
         ]
     ];

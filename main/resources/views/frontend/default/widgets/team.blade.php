@@ -14,7 +14,7 @@
                     <div class="sp_team_item">
                         <div class="sp_team_thumb">
                             <div class="sp_team_thumb_inner">
-                                <img src="{{ Config::getFile('team', $item->content->image_one) }}" alt="image">
+                                <img src="{{ Config::getFile('team', $item->content->image_one) }}" alt="{{ Config::trans($item->content->name ?? 'Team member') }}" loading="lazy">
                             </div>
                         </div>
                         <div class="sp_team_content">

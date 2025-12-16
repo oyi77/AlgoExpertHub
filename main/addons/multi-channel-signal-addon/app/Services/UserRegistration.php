@@ -4,7 +4,6 @@ namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use App\Helpers\Helper\Helper;
 use Addons\MultiChannelSignalAddon\App;
-use Addons\MultiChannelSignalAddon\App;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 

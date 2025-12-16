@@ -12,11 +12,21 @@ use Addons\TradingManagement\Shared\Contracts\DataProviderInterface;
  * Adapter Factory
  * 
  * Creates appropriate adapter based on connection type
+ * Caches adapter instances per connection to avoid re-initialization
  */
 class AdapterFactory
 {
     /**
+     * Cache of adapter instances (per connection ID)
+     * 
+     * @var array<int, DataProviderInterface>
+     */
+    protected array $instances = [];
+
+    /**
      * Create adapter instance for a data connection
+     * 
+     * Returns cached instance if available to avoid re-initialization
      * 
      * @param DataConnection $connection
      * @return DataProviderInterface
@@ -24,7 +34,13 @@ class AdapterFactory
      */
     public function create(DataConnection $connection): DataProviderInterface
     {
-        return match ($connection->type) {
+        // Return cached instance if available
+        if (isset($this->instances[$connection->id])) {
+            return $this->instances[$connection->id];
+        }
+
+        // Create new instance
+        $adapter = match ($connection->type) {
             'mtapi' => new MtapiAdapter($connection->credentials),
             'mtapi_grpc' => new MtapiGrpcAdapter($connection->credentials),
             'metaapi' => new MetaApiAdapter($connection->credentials),
@@ -32,6 +48,26 @@ class AdapterFactory
             'custom_api' => new \Addons\TradingManagement\Modules\DataProvider\Adapters\CustomApiAdapter($connection->credentials),
             default => throw new \Exception("Unsupported data provider type: {$connection->type}"),
         };
+
+        // Cache the instance
+        $this->instances[$connection->id] = $adapter;
+
+        return $adapter;
+    }
+
+    /**
+     * Clear cached adapter instances
+     * 
+     * @param int|null $connectionId If provided, clears only that connection's adapter
+     * @return void
+     */
+    public function clearCache(?int $connectionId = null): void
+    {
+        if ($connectionId !== null) {
+            unset($this->instances[$connectionId]);
+        } else {
+            $this->instances = [];
+        }
     }
 
     /**
