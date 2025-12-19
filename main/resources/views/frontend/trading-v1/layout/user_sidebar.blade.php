@@ -22,6 +22,20 @@
             <span>Dashboard</span>
         </a>
         
+        
+        <!-- TRADING -->
+        <div class="tv-menu-label">
+            <i class="las la-chart-line"></i>
+            <span>TRADING</span>
+        </div>
+        
+        <a href="{{ route('user.terminal.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.terminal.*') ? 'active' : '' }}">
+            <i class="las la-chart-area"></i>
+            <span>Trading Terminal</span>
+        </a>
+
+
+        
         <!-- TRADING CONSOLE -->
         @php
             $hasTradingAddon = false;
@@ -32,8 +46,8 @@
         
         @if($hasTradingAddon)
         <div class="tv-menu-label">
-            <i class="las la-chart-line"></i>
-            <span>TRADING CONSOLE</span>
+            <i class="las la-robot"></i>
+            <span>TRADING BOTS</span>
         </div>
         
         @if(Route::has('user.trading.operations.index'))
@@ -50,10 +64,10 @@
             </a>
         @endif
         
-        @if(Route::has('user.trading.configurations.index'))
-            <a href="{{ route('user.trading.configurations.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.trading.configurations.*') ? 'active' : '' }}">
-                <i class="las la-shield-alt"></i>
-                <span>Risk Management</span>
+        @if(Route::has('user.trading.configuration.index'))
+            <a href="{{ route('user.trading.configuration.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.trading.configuration.*') ? 'active' : '' }}">
+                <i class="las la-cog"></i>
+                <span>Trading Configuration</span>
             </a>
         @endif
         
@@ -84,27 +98,10 @@
         </div>
         
         @if(Route::has('user.trading.marketplaces.index'))
-            <div class="tv-sidebar-submenu">
-                <a href="javascript:void(0)" class="tv-sidebar-link tv-has-submenu {{ request()->routeIs('user.trading.marketplaces.*') ? 'active' : '' }}">
-                    <i class="las la-store"></i>
-                    <span>Preset Marketplace</span>
-                    <i class="las la-angle-down tv-submenu-arrow"></i>
-                </a>
-                <div class="tv-submenu-items">
-                    <a href="{{ route('user.trading.marketplaces.index', ['category' => 'presets']) }}" class="tv-submenu-link {{ request()->get('category') === 'presets' ? 'active' : '' }}">
-                        Trading Presets
-                    </a>
-                    <a href="{{ route('user.trading.marketplaces.index', ['category' => 'strategies']) }}" class="tv-submenu-link {{ request()->get('category') === 'strategies' ? 'active' : '' }}">
-                        Strategies
-                    </a>
-                    <a href="{{ route('user.trading.marketplaces.index', ['category' => 'ai-profiles']) }}" class="tv-submenu-link {{ request()->get('category') === 'ai-profiles' ? 'active' : '' }}">
-                        AI Profiles
-                    </a>
-                    <a href="{{ route('user.trading.marketplaces.index', ['category' => 'bots']) }}" class="tv-submenu-link {{ request()->get('category') === 'bots' ? 'active' : '' }}">
-                        Bots
-                    </a>
-                </div>
-            </div>
+            <a href="{{ route('user.trading.marketplaces.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.trading.marketplaces.*') ? 'active' : '' }}">
+                <i class="las la-store"></i>
+                <span>Marketplace</span>
+            </a>
         @endif
         @endif
         
@@ -113,13 +110,6 @@
             <i class="las la-user-circle"></i>
             <span>ACCOUNT</span>
         </div>
-        
-        @if(Route::has('user.signal.all'))
-            <a href="{{ route('user.signal.all') }}" class="tv-sidebar-link {{ request()->routeIs('user.signal.*') ? 'active' : '' }}">
-                <i class="las la-chart-line"></i>
-                <span>Signals</span>
-            </a>
-        @endif
         
         @if(Route::has('user.subscription.log'))
             <a href="{{ route('user.subscription.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.subscription.log') ? 'active' : '' }}">
@@ -195,13 +185,6 @@
             <a href="{{ route('user.invest.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.invest.log') ? 'active' : '' }}">
                 <i class="las la-chart-bar"></i>
                 <span>Investment Log</span>
-            </a>
-        @endif
-        
-        @if(Route::has('user.trade'))
-            <a href="{{ route('user.trade') }}" class="tv-sidebar-link {{ request()->routeIs('user.trade') ? 'active' : '' }}">
-                <i class="las la-chart-line"></i>
-                <span>Trade</span>
             </a>
         @endif
         

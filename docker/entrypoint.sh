@@ -51,6 +51,42 @@ echo "=========================================="
 # Navigate to application directory
 cd /var/www/html
 
+# Validate critical environment variables
+validate_env() {
+    local var_name=$1
+    local var_value=$2
+    local is_required=${3:-false}
+    
+    if [ -z "$var_value" ] && [ "$is_required" = "true" ]; then
+        echo "⚠️  WARNING: $var_name is not set (required)"
+        return 1
+    elif [ -z "$var_value" ]; then
+        echo "ℹ️  INFO: $var_name is not set (optional)"
+        return 0
+    else
+        echo "✓ $var_name is set"
+        return 0
+    fi
+}
+
+echo "Validating environment variables..."
+validate_env "APP_NAME" "$APP_NAME" false
+validate_env "APP_ENV" "$APP_ENV" false
+validate_env "DB_HOST" "$DB_HOST" true
+validate_env "DB_DATABASE" "$DB_DATABASE" true
+validate_env "DB_USERNAME" "$DB_USERNAME" true
+validate_env "DB_PASSWORD" "$DB_PASSWORD" true
+validate_env "REDIS_HOST" "$REDIS_HOST" false
+
+# Check if critical variables are missing
+if [ -z "$DB_HOST" ] || [ -z "$DB_DATABASE" ] || [ -z "$DB_USERNAME" ] || [ -z "$DB_PASSWORD" ]; then
+    echo "✗ ERROR: Critical database environment variables are missing!"
+    echo "   Required: DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD"
+    exit 1
+fi
+
+echo ""
+
 # Set proper permissions
 echo "Setting file permissions..."
 chown -R www-data:www-data /var/www/html
@@ -65,6 +101,9 @@ mkdir -p bootstrap/cache
 if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:CHANGEME" ]; then
     echo "Generating application key..."
     php artisan key:generate --force
+    echo "✓ Application key generated"
+else
+    echo "✓ Application key is set"
 fi
 
 # Cache configuration (speeds up application)

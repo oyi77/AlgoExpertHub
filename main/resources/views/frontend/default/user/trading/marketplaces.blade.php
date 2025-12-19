@@ -155,71 +155,8 @@
                         <div class="tab-pane fade {{ $activeCategory === 'filter-strategies' ? 'show active' : '' }}" 
                              id="filter-strategies" 
                              role="tabpanel"
-                             aria-labelledby="filter-strategies-tab"
-                             @if($activeCategory === 'filter-strategies')
-                             style="display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 500px !important; padding: 1.5rem !important; position: relative !important;"
-                             @endif>
-                            @php
-                                // Debug: Log items count - ONLY for filter-strategies category
-                                // This block only executes when this tab pane is rendered
-                                $itemsCount = isset($items) ? $items->count() : 0;
-                                $itemsTotal = isset($items) ? $items->total() : 0;
-                                $hasItems = isset($items) && $items->count() > 0;
-                                \Log::info('Marketplace View: Filter strategies tab pane', [
-                                    'items_set' => isset($items),
-                                    'items_count' => $itemsCount,
-                                    'items_total' => $itemsTotal,
-                                    'has_items' => $hasItems,
-                                    'active_category_from_controller' => $activeCategory ?? 'unknown',
-                                    'tab_pane_id' => 'filter-strategies',
-                                    'tab_pane_class' => $activeCategory === 'filter-strategies' ? 'show active' : '',
-                                    'items_type' => isset($items) ? get_class($items) : 'not set',
-                                    'request_category' => request()->get('category', 'not set')
-                                ]);
-                            @endphp
-                            
-                            {{-- Debug output (remove after testing) --}}
-                            @if(config('app.debug'))
-                                <div class="alert alert-info mb-3">
-                                    <strong>Debug Info:</strong><br>
-                                    Items Set: {{ isset($items) ? 'Yes' : 'No' }}<br>
-                                    Items Count: {{ $itemsCount ?? 0 }}<br>
-                                    Items Total: {{ $itemsTotal ?? 0 }}<br>
-                                    Has Items: {{ $hasItems ? 'Yes' : 'No' }}<br>
-                                    Active Category: {{ $activeCategory ?? 'unknown' }}<br>
-                                    Tab Pane Class: {{ $activeCategory === 'filter-strategies' ? 'show active' : '' }}
-                                </div>
-                            @endif
-                            
-                            {{-- Force render test to verify tab pane is visible - ALWAYS SHOW --}}
-                            <div class="alert alert-warning mb-3" id="filter-strategies-test-alert" style="display: block !important; visibility: visible !important; min-height: 80px !important; padding: 1rem !important; background-color: #ffc107 !important; border: 2px solid #ff9800 !important;">
-                                <strong style="font-size: 1.2rem;">🔍 TEST RENDER - Filter Strategies Tab Pane</strong><br>
-                                <strong>Items count:</strong> {{ isset($items) ? $items->count() : 0 }}<br>
-                                <strong>Items total:</strong> {{ isset($items) ? $items->total() : 'N/A' }}<br>
-                                <strong>Active category:</strong> {{ $activeCategory ?? 'unknown' }}<br>
-                                <small style="color: #000;">If you see this yellow box, the tab pane IS rendering!</small>
-                            </div>
-                            
-                            {{-- Debug: Show items info even if empty --}}
-                            <div class="alert alert-secondary mb-3" style="min-height: 100px !important; padding: 1rem !important;">
-                                <strong>Debug Info:</strong><br>
-                                Items isset: {{ isset($items) ? 'Yes' : 'No' }}<br>
-                                Items count: {{ isset($items) ? $items->count() : 'N/A' }}<br>
-                                Items total: {{ isset($items) ? $items->total() : 'N/A' }}<br>
-                                Items type: {{ isset($items) ? get_class($items) : 'N/A' }}<br>
-                                Condition check: {{ (isset($items) && $items->count() > 0) ? 'TRUE - Will render items' : 'FALSE - Will show empty state' }}<br>
-                                @if(isset($items) && $items->count() > 0)
-                                    <strong style="color: green;">✅ Items will be rendered below!</strong>
-                                @else
-                                    <strong style="color: red;">❌ Items will NOT be rendered (empty state will show)</strong>
-                                @endif
-                            </div>
-                            
-                            {{-- Force render at least one item to test --}}
+                             aria-labelledby="filter-strategies-tab">
                             @if(isset($items) && $items->count() > 0)
-                                <div class="alert alert-success mb-3">
-                                    <strong>✅ CONDITION PASSED:</strong> Rendering {{ $items->count() }} items...
-                                </div>
                                 <div class="row gy-3 marketplace-grid">
                                     @foreach($items as $item)
                                     <div class="col-md-4">
@@ -272,7 +209,6 @@
                                 <div class="text-center marketplace-empty-state">
                                     <i class="las la-filter la-3x text-muted mb-3"></i>
                                     <p class="text-muted">{{ __('No filter strategies available in marketplace.') }}</p>
-                                    <p class="text-muted small">Debug: items isset = {{ isset($items) ? 'Yes' : 'No' }}, count = {{ isset($items) ? $items->count() : 'N/A' }}</p>
                                 </div>
                             @endif
                         </div>

@@ -144,6 +144,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('update/{user}', [ManageUserController::class, 'userUpdate'])->name('update');
             Route::post('balance/{user}', [ManageUserController::class, 'userBalanceUpdate'])->name('balance.update');
             Route::post('mail/{user}', [ManageUserController::class, 'sendUserMail'])->name('mail');
+            Route::post('password/change/{user}', [ManageUserController::class, 'changePassword'])->name('password.change');
             Route::get('{status}', [ManageUserController::class, 'userStatusWiseFilter'])->name('filter');
             Route::get('interest/log', [ManageUserController::class, 'interestLog'])->name('interestlog');
 

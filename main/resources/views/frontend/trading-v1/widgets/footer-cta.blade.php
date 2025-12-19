@@ -99,7 +99,9 @@
                     <a href="#why-choose-us" class="tv-footer-link">Features</a>
                     <a href="#market-trends" class="tv-footer-link">Markets</a>
                     @auth
-                        <a href="{{ route('user.signal.all') }}" class="tv-footer-link">Signals</a>
+                        @if(Route::has('user.trading.multi-channel-signal.index'))
+                            <a href="{{ route('user.trading.multi-channel-signal.index') }}" class="tv-footer-link">Signal Center</a>
+                        @endif
                     @endauth
                 </div>
             </div>

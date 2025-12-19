@@ -31,16 +31,41 @@
         <!-- Password -->
         <div class="tv-form-group">
             <label for="password" class="tv-form-label">Password</label>
-            <input type="password" 
-                   id="password" 
-                   name="password" 
-                   class="tv-form-input @error('password') error @enderror" 
-                   placeholder="Enter your password"
-                   required>
+            <div style="position: relative;">
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       class="tv-form-input @error('password') error @enderror" 
+                       placeholder="Enter your password"
+                       required
+                       style="padding-right: 40px;">
+                <button type="button" 
+                        onclick="togglePasswordVisibility()" 
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; color: var(--tv-text-muted, #888); padding: 0;">
+                    <i class="fas fa-eye" id="password-eye-icon"></i>
+                </button>
+            </div>
             @error('password')
                 <span class="tv-alert tv-alert-danger" style="margin-top: 0.5rem; display: block;">{{ $message }}</span>
             @enderror
         </div>
+
+        <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('password-eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+        </script>
         
         <!-- Remember Me & Forgot Password -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">

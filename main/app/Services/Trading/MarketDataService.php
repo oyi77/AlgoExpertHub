@@ -46,6 +46,48 @@ class MarketDataService
     ];
 
     /**
+     * Indices for simulation
+     */
+    protected $indices = [
+        'US30' => ['name' => 'Dow Jones Industrial Average', 'basePrice' => 34500],
+        'US100' => ['name' => 'NASDAQ 100', 'basePrice' => 15200],
+        'US500' => ['name' => 'S&P 500', 'basePrice' => 4450],
+        'UK100' => ['name' => 'FTSE 100', 'basePrice' => 7650],
+        'GER40' => ['name' => 'DAX 40', 'basePrice' => 16200],
+        'JPN225' => ['name' => 'Nikkei 225', 'basePrice' => 33500],
+        'AUS200' => ['name' => 'ASX 200', 'basePrice' => 7200],
+        'FRA40' => ['name' => 'CAC 40', 'basePrice' => 7250],
+    ];
+
+    /**
+     * Commodities for simulation
+     */
+    protected $commodities = [
+        'XAUUSD' => ['name' => 'Gold / US Dollar', 'basePrice' => 2035.50],
+        'XAGUSD' => ['name' => 'Silver / US Dollar', 'basePrice' => 24.80],
+        'XPDUSD' => ['name' => 'Palladium / US Dollar', 'basePrice' => 1050.00],
+        'XPTUSD' => ['name' => 'Platinum / US Dollar', 'basePrice' => 950.00],
+        'WTIUSD' => ['name' => 'Crude Oil WTI', 'basePrice' => 78.50],
+        'BRENTUSD' => ['name' => 'Brent Crude Oil', 'basePrice' => 82.30],
+        'NATGAS' => ['name' => 'Natural Gas', 'basePrice' => 2.85],
+        'COPPER' => ['name' => 'Copper', 'basePrice' => 3.75],
+    ];
+
+    /**
+     * Stocks for simulation
+     */
+    protected $stocks = [
+        'AAPL' => ['name' => 'Apple Inc.', 'basePrice' => 185.50],
+        'MSFT' => ['name' => 'Microsoft Corporation', 'basePrice' => 380.25],
+        'GOOGL' => ['name' => 'Alphabet Inc.', 'basePrice' => 142.80],
+        'AMZN' => ['name' => 'Amazon.com Inc.', 'basePrice' => 148.90],
+        'TSLA' => ['name' => 'Tesla Inc.', 'basePrice' => 245.60],
+        'META' => ['name' => 'Meta Platforms Inc.', 'basePrice' => 485.30],
+        'NVDA' => ['name' => 'NVIDIA Corporation', 'basePrice' => 495.20],
+        'JPM' => ['name' => 'JPMorgan Chase & Co.', 'basePrice' => 158.40],
+    ];
+
+    /**
      * Get cryptocurrency market data
      */
     public function getCryptoData($limit = 10)
@@ -97,6 +139,42 @@ class MarketDataService
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
             return $this->getSimulatedForexData($limit);
+        });
+    }
+
+    /**
+     * Get indices market data (simulated)
+     */
+    public function getIndicesData($limit = 10)
+    {
+        $cacheKey = "market_data_indices_{$limit}";
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
+            return $this->getSimulatedIndicesData($limit);
+        });
+    }
+
+    /**
+     * Get commodities market data (simulated)
+     */
+    public function getCommoditiesData($limit = 10)
+    {
+        $cacheKey = "market_data_commodities_{$limit}";
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
+            return $this->getSimulatedCommoditiesData($limit);
+        });
+    }
+
+    /**
+     * Get stocks market data (simulated)
+     */
+    public function getStocksData($limit = 10)
+    {
+        $cacheKey = "market_data_stocks_{$limit}";
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
+            return $this->getSimulatedStocksData($limit);
         });
     }
 
@@ -373,6 +451,89 @@ class MarketDataService
     }
 
     /**
+     * Generate simulated indices data
+     */
+    protected function getSimulatedIndicesData($limit)
+    {
+        $data = [];
+        $indices = array_slice($this->indices, 0, $limit, true);
+
+        foreach ($indices as $symbol => $indexData) {
+            $changePercent = $this->generateRealisticChange(-0.5, 0.5);
+
+            $data[] = [
+                'symbol' => $symbol,
+                'name' => $indexData['name'],
+                'price' => round($indexData['basePrice'] * (1 + $changePercent / 100), 2),
+                'change_24h' => $changePercent,
+                'change_1h' => $changePercent * 0.1,
+                'change_7d' => $changePercent * 2.0,
+                'volume' => rand(1000000, 50000000),
+                'last_updated' => now()->toISOString(),
+                'source' => 'simulated'
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate simulated commodities data
+     */
+    protected function getSimulatedCommoditiesData($limit)
+    {
+        $data = [];
+        $commodities = array_slice($this->commodities, 0, $limit, true);
+
+        foreach ($commodities as $symbol => $commodityData) {
+            $changePercent = $this->generateRealisticChange(-1.0, 1.0);
+            $price = round($commodityData['basePrice'] * (1 + $changePercent / 100), 2);
+
+            $data[] = [
+                'symbol' => $symbol,
+                'name' => $commodityData['name'],
+                'price' => $price,
+                'change_24h' => $changePercent,
+                'change_1h' => $changePercent * 0.08,
+                'change_7d' => $changePercent * 1.5,
+                'volume' => rand(500000, 20000000),
+                'last_updated' => now()->toISOString(),
+                'source' => 'simulated'
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate simulated stocks data
+     */
+    protected function getSimulatedStocksData($limit)
+    {
+        $data = [];
+        $stocks = array_slice($this->stocks, 0, $limit, true);
+
+        foreach ($stocks as $symbol => $stockData) {
+            $changePercent = $this->generateRealisticChange(-2.0, 2.0);
+
+            $data[] = [
+                'symbol' => $symbol,
+                'name' => $stockData['name'],
+                'price' => round($stockData['basePrice'] * (1 + $changePercent / 100), 2),
+                'change_24h' => $changePercent,
+                'change_1h' => $changePercent * 0.15,
+                'change_7d' => $changePercent * 3.0,
+                'volume' => rand(10000000, 100000000),
+                'market_cap' => rand(100000000000, 3000000000000),
+                'last_updated' => now()->toISOString(),
+                'source' => 'simulated'
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
      * Clear all market data cache
      */
     public function clearCache()
@@ -381,6 +542,9 @@ class MarketDataService
         Cache::forget('market_data_crypto_10');
         Cache::forget('market_data_forex_5');
         Cache::forget('market_data_forex_10');
+        Cache::forget('market_data_indices_10');
+        Cache::forget('market_data_commodities_10');
+        Cache::forget('market_data_stocks_10');
         Cache::forget('market_data_landing_page');
 
         return true;

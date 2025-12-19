@@ -8,10 +8,10 @@
             <!-- Badge -->
             <div class="tv-hero-badge scroll-reveal scroll-reveal-scale">
                 <div class="tv-hero-avatars">
-                    <div class="tv-hero-avatar" style="background: linear-gradient(135deg, #1AFFD5, #0D9488);"></div>
-                    <div class="tv-hero-avatar" style="background: linear-gradient(135deg, #10B981, #059669);"></div>
-                    <div class="tv-hero-avatar" style="background: linear-gradient(135deg, #3B82F6, #2563EB);"></div>
-                    <div class="tv-hero-avatar" style="background: linear-gradient(135deg, #F59E0B, #D97706);"></div>
+                    <img src="{{ asset('asset/frontend/trading-v1/images/avatars/trader1.png') }}" alt="Trader" class="tv-hero-avatar">
+                    <img src="{{ asset('asset/frontend/trading-v1/images/avatars/trader2.png') }}" alt="Trader" class="tv-hero-avatar">
+                    <img src="{{ asset('asset/frontend/trading-v1/images/avatars/trader3.png') }}" alt="Trader" class="tv-hero-avatar">
+                    <img src="{{ asset('asset/frontend/trading-v1/images/avatars/trader4.png') }}" alt="Trader" class="tv-hero-avatar">
                 </div>
                 <span class="tv-hero-badge-text">{{ $hero->content->badge_text ?? '🚀 1M+ Active Traders' }}</span>
             </div>
@@ -42,10 +42,10 @@
         <div class="tv-partners scroll-reveal scroll-reveal-fade scroll-reveal-delay-4">
             <p class="tv-partners-label">Trusted by</p>
             <div class="tv-partners-logos">
-                <span style="font-size: 24px; opacity: 0.5; font-weight: 700;">MetaTrader</span>
-                <span style="font-size: 24px; opacity: 0.5; font-weight: 700;">TradingView</span>
-                <span style="font-size: 24px; opacity: 0.5; font-weight: 700;">Bloomberg</span>
-                <span style="font-size: 24px; opacity: 0.5; font-weight: 700;">Reuters</span>
+                <img src="{{ asset('asset/frontend/trading-v1/images/metatrader-logo.png') }}" alt="MetaTrader">
+                <img src="{{ asset('asset/frontend/trading-v1/images/tradingview-logo.png') }}" alt="TradingView">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Bloomberg_logo.svg/320px-Bloomberg_logo.svg.png" alt="Bloomberg">
+                <img src="{{ asset('asset/frontend/trading-v1/images/reuters-logo.svg') }}" alt="Reuters">
             </div>
         </div>
     </div>

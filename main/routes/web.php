@@ -185,12 +185,10 @@ Route::name('user.')->group(function () {
                 Route::prefix('execution-log')->name('execution-log.')->group(function () {
                     Route::get('/', [\App\Http\Controllers\User\Trading\ExecutionLogController::class, 'index'])->name('index');
                     Route::post('manual-trade', [\App\Http\Controllers\User\Trading\ExecutionLogController::class, 'manualTrade'])->name('manual-trade');
+                    Route::post('position/{id}/close', [\App\Http\Controllers\User\Trading\ExecutionLogController::class, 'closePosition'])->name('position.close');
                 });
 
-                // Configurations (sub menu from Trading Operations)
-                Route::prefix('configurations')->name('configurations.')->group(function () {
-                    Route::get('/', [\App\Http\Controllers\User\Trading\TradingConfigurationsController::class, 'index'])->name('index');
-                });
+
 
                 // Trading Configuration (unified page with tabs)
                 Route::prefix('configuration')->name('configuration.')->group(function () {
@@ -847,6 +845,26 @@ Route::name('user.')->group(function () {
                                 return back()->with('error', __('Failed to load create form.'));
                             }
                         })->name('create');
+
+                        Route::get('/ccxt-exchanges', function () {
+                            try {
+                                $service = new \Addons\TradingManagement\Modules\ExchangeConnection\Services\CcxtExchangeService();
+                                $exchanges = $service->getCryptoExchanges();
+                                
+                                return response()->json([
+                                    'success' => true,
+                                    'exchanges' => $exchanges,
+                                    'count' => count($exchanges)
+                                ]);
+                            } catch (\Exception $e) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Failed to load exchanges: ' . $e->getMessage(),
+                                    'exchanges' => []
+                                ], 500);
+                            }
+                        })->name('ccxt-exchanges');
+
                         
                         Route::get('/{exchangeConnection}', function ($id) {
                             try {
@@ -963,7 +981,7 @@ Route::name('user.')->group(function () {
             Route::post('plans', [PlanController::class, 'subscribe'])->name('plans.post');
 
 
-            // trade
+            // trade (legacy demo/practice mode)
 
             Route::get('trade', [CryptoTradeController::class, 'index'])->name('trade');
             Route::post('trade', [CryptoTradeController::class, 'openTrade']);
@@ -972,6 +990,15 @@ Route::name('user.')->group(function () {
             Route::get('trades', [CryptoTradeController::class, 'trades'])->name('trades');
 
             Route::get('trade-close', [CryptoTradeController::class, 'tradeClose'])->name('tradeClose');
+
+            // Trading Terminal (professional terminal with real-time data)
+            Route::prefix('terminal')->name('terminal.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\TradingTerminalController::class, 'index'])->name('index');
+                Route::post('/order', [\App\Http\Controllers\TradingTerminalController::class, 'placeOrder'])->name('order.place');
+                Route::delete('/position/{id}', [\App\Http\Controllers\TradingTerminalController::class, 'closePosition'])->name('position.close');
+                Route::get('/positions', [\App\Http\Controllers\TradingTerminalController::class, 'getPositions'])->name('positions');
+                Route::get('/market-data', [\App\Http\Controllers\TradingTerminalController::class, 'getMarketData'])->name('market-data');
+            });
 
 
 
@@ -1057,9 +1084,8 @@ Route::get('/docs.openapi', function () {
     if (!file_exists($path)) {
         abort(404);
     }
-    return response()->file($path, [
-        'Content-Type' => 'application/yaml'
-    ]);
+    return response(file_get_contents($path))
+        ->header('Content-Type', 'application/yaml');
 })->name('scribe.openapi');
 
 Route::get('/docs.postman', function () {

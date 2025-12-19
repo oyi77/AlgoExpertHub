@@ -1,0 +1,2133 @@
+/* Trading Terminal Styles */
+.tv-trading-terminal {
+    width: 100%;
+    min-height: calc(100vh - 200px);
+}
+
+.tv-terminal-content {
+    position: relative;
+    height: calc(100vh - 200px);
+    min-height: 600px;
+    width: 100%;
+}
+
+.tv-layout-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Floating Settings Button */
+.tv-settings-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(26, 255, 213, 0.2);
+    border: 2px solid rgba(26, 255, 213, 0.4);
+    color: #1AFFD5;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 0;
+    line-height: 1;
+}
+
+.tv-settings-btn i {
+    font-size: 20px !important;
+    line-height: 1;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-family: 'Line Awesome Free', 'Line Awesome Brands', sans-serif;
+    font-weight: 900;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.tv-settings-btn:hover {
+    background: rgba(26, 255, 213, 0.3);
+    border-color: #1AFFD5;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(26, 255, 213, 0.4);
+}
+
+/* Settings Popup */
+.tv-settings-popup {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 320px;
+    background: #1e222d;
+    border: 1px solid rgba(26, 255, 213, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: none;
+    overflow: hidden;
+}
+
+.tv-settings-popup.active {
+    display: block;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tv-settings-header {
+    padding: 16px 20px;
+    background: rgba(26, 255, 213, 0.1);
+    border-bottom: 1px solid rgba(26, 255, 213, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tv-settings-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1AFFD5;
+}
+
+.tv-settings-close {
+    background: transparent;
+    border: none;
+    color: #848e9c;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.tv-settings-close:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.tv-settings-body {
+    padding: 20px;
+}
+
+.tv-settings-section {
+    margin-bottom: 20px;
+}
+
+.tv-settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.tv-settings-section label {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #d1d4dc;
+}
+
+.tv-layout-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.tv-layout-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: rgba(26, 255, 213, 0.1);
+    border: 1px solid rgba(26, 255, 213, 0.3);
+    color: #1AFFD5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tv-layout-btn:hover {
+    background: rgba(26, 255, 213, 0.2);
+    border-color: rgba(26, 255, 213, 0.5);
+}
+
+.tv-layout-btn.active {
+    background: rgba(26, 255, 213, 0.3);
+    border-color: #1AFFD5;
+    color: #fff;
+}
+
+/* Sidebar Collapsed State & Toggle*/
+/* See main.css for .tv-sidebar.collapsed and .tv-desktop-sidebar-toggle */
+
+.tv-left-controls {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex: 1;
+}
+
+/* Symbol Selector */
+.tv-symbol-selector {
+    position: relative;
+}
+
+.tv-symbol-selector-btn {
+    padding: 0.75rem 1.5rem;
+    background: rgba(26, 255, 213, 0.1);
+    border: 1px solid rgba(26, 255, 213, 0.2);
+    border-radius: 8px;
+    color: #1AFFD5;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tv-symbol-selector-btn:hover {
+    background: rgba(26, 255, 213, 0.15);
+    border-color: #1AFFD5;
+}
+
+.tv-symbol-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 400px;
+    max-width: 90vw;
+    background: rgba(10, 14, 26, 0.98);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.tv-symbol-dropdown.active {
+    display: block;
+}
+
+.tv-symbol-search {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 0.95em;
+    box-sizing: border-box;
+}
+
+.tv-symbol-search::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.tv-symbol-search:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tv-symbol-categories {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tv-symbol-categories::-webkit-scrollbar {
+    display: none;
+}
+
+.tv-category-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.tv-category-label {
+    font-size: inherit;
+    line-height: 1;
+}
+
+.tv-category-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tv-category-btn.active {
+    background: rgba(26, 255, 213, 0.2);
+    border-color: #1AFFD5;
+    color: #1AFFD5;
+}
+
+.tv-symbol-list {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.tv-symbol-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tv-symbol-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tv-symbol-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.tv-symbol-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.tv-symbol-item {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 1rem;
+}
+
+.tv-symbol-item:hover {
+    background: rgba(26, 255, 213, 0.08);
+}
+
+.tv-symbol-item.active {
+    background: rgba(26, 255, 213, 0.15);
+}
+
+.tv-symbol-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.tv-symbol-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.tv-symbol-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.tv-symbol-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tv-symbol-name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95em;
+}
+
+.tv-symbol-leverage {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+}
+
+.tv-symbol-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tv-symbol-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.tv-symbol-price {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.9em;
+}
+
+.tv-symbol-change {
+    font-size: 0.8em;
+    font-weight: 500;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+}
+
+.tv-symbol-change.positive {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.tv-symbol-change.negative {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.tv-symbol-volume {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.tv-symbol-favorite {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tv-symbol-favorite:hover {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.tv-symbol-favorite.active {
+    color: #fbbf24;
+}
+
+.tv-symbol-loading,
+.tv-symbol-error,
+.tv-symbol-empty {
+    padding: 2rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9em;
+}
+
+.tv-symbol-loading i {
+    font-size: 1.5em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Price Display */
+.tv-price-display {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.tv-price {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #1AFFD5;
+}
+
+.tv-change {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.tv-change.positive {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.tv-change.negative {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.tv-symbol-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tv-symbol-info h3 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #fff;
+}
+
+.tv-price {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #1AFFD5;
+}
+
+.tv-change {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.tv-change.positive {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.tv-change.negative {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+/* Mode Toggle */
+.tv-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 30px;
+}
+
+.tv-mode-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.95rem;
+}
+
+.tv-mode-btn i {
+    font-size: 1.3em;
+}
+
+.tv-mode-label {
+    font-size: 0.9em;
+}
+
+.tv-mode-badge {
+    font-size: 0.7em;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.tv-mode-btn.active {
+    background: linear-gradient(135deg, #1AFFD5 0%, #0D9488 100%);
+    color: #0a0e1a;
+    box-shadow: 0 4px 15px rgba(26, 255, 213, 0.3);
+}
+
+.tv-mode-btn.active .tv-mode-badge {
+    opacity: 0.8;
+}
+
+/* Notice Banner */
+.tv-notice {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tv-notice-warning {
+    background: rgba(251, 146, 60, 0.1);
+    border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.tv-notice i {
+    font-size: 1.5em;
+    color: #fb923c;
+}
+
+.tv-notice-content {
+    flex: 1;
+}
+
+.tv-notice-content strong {
+    display: block;
+    color: #fb923c;
+    margin-bottom: 0.25rem;
+}
+
+.tv-notice-content p {
+    margin: 0;
+    color: #9ca3af;
+    font-size: 0.9em;
+}
+
+.tv-notice-action {
+    padding: 0.5rem 1rem;
+    background: rgba(251, 146, 60, 0.2);
+    border: 1px solid #fb923c;
+    color: #fb923c;
+    border-radius: 4px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.tv-notice-action:hover {
+    background: #fb923c;
+    color: #0a0e1a;
+}
+
+/* Mode Indicator in Order Panel */
+.tv-order-mode-indicator {
+    padding: 0.5rem 0.75rem;
+    background: rgba(26, 255, 213, 0.05);
+    border-left: 3px solid #1AFFD5;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1AFFD5;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tv-order-mode-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1AFFD5;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.tv-order-mode-indicator i {
+    font-size: 1.2em;
+}
+
+/* Chart Loading State */
+.tv-chart-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #9ca3af;
+}
+
+.tv-chart-loading i {
+    font-size: 3em;
+    margin-bottom: 1rem;
+    color: #1AFFD5;
+}
+
+.tv-chart-loading p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+/* Chart Title */
+.tv-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.tv-chart-title i {
+    color: #1AFFD5;
+}
+
+/* Orderbook Header */
+.tv-orderbook-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0.5rem 0.5rem;
+    font-weight: 600;
+    font-size: 0.85em;
+    color: #9ca3af;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0.5rem;
+}
+
+/* Order Summary */
+.tv-order-summary {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.tv-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.tv-summary-row span:first-child {
+    color: #9ca3af;
+}
+
+.tv-summary-row span:last-child {
+    color: #1AFFD5;
+    font-weight: 600;
+}
+
+/* Tab Counter */
+.tv-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: rgba(26, 255, 213, 0.2);
+    border-radius: 10px;
+    font-size: 0.75em;
+    font-weight: 700;
+    margin-left: 0.5rem;
+}
+
+.tv-tab.active .tv-tab-count {
+    background: #1AFFD5;
+    color: #0a0e1a;
+}
+
+/* Empty State Improvements */
+.tv-empty-state i {
+    font-size: 2.5em;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.tv-empty-state p {
+    margin: 0;
+    font-size: 1em;
+}
+
+.tv-symbol-info {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tv-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tv-card-header h4 {
+    margin: 0 0 0.5rem 0;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tv-card-header h4 i {
+    color: #1AFFD5;
+}
+
+.tv-card-body {
+    padding: 1.5rem;
+}
+
+/* Terminal Grid Layout */
+/* Terminal Grid Layout: 3 Columns [Chart | Orderbook | OrderPanel] */
+.tv-terminal-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px 320px;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    height: 550px;
+    min-height: 500px;
+    max-height: calc(100vh - 300px);
+    /* Allow space for bottom section */
+}
+
+/* Sidebar Collapsed - Reset Main Margin */
+.tv-sidebar.collapsed~.tv-main {
+    margin-left: 0 !important;
+}
+
+/* Sidebar Collapsed Adjustment */
+.tv-sidebar.collapsed {
+    transform: translateX(-100%);
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden;
+}
+
+/* Column 1: Chart */
+.tv-grid-center {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Column 2: Orderbook & Depth */
+.tv-grid-middle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Column 3: Order Panel */
+.tv-grid-right {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Ensure chart takes full height */
+.tv-chart-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tv-chart-container {
+    flex: 1;
+    height: 100% !important;
+}
+
+/* Orderbook Panel - Compact */
+.tv-orderbook-panel {
+    flex: 1;
+    /* Allow it to grow and fill available space */
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tv-orderbook-content {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tv-orderbook-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+/* Depth Chart - Compact */
+.tv-depth-chart-panel {
+    flex: 1;
+    /* Allow it to grow */
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 200px;
+}
+
+/* Order Panel - Full Height */
+.tv-order-panel {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tv-order-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.tv-chart-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tv-chart-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tv-timeframe-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tv-tf-btn {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.tv-tf-btn:hover {
+    border-color: #1AFFD5;
+    color: #1AFFD5;
+}
+
+.tv-tf-btn.active {
+    background: #1AFFD5;
+    border-color: #1AFFD5;
+    color: #0a0e1a;
+}
+
+
+
+/* Quick Trade Overlay */
+.tv-quick-trade-overlay {
+    position: absolute;
+    top: 60px;
+    /* Below toolbar */
+    left: 20px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tv-quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    min-width: 120px;
+    transition: transform 0.1s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tv-quick-btn:active {
+    transform: scale(0.98);
+}
+
+.tv-quick-btn.buy {
+    background: #22c55e;
+}
+
+.tv-quick-btn.buy:hover {
+    background: #16a34a;
+}
+
+.tv-quick-btn.sell {
+    background: #ef4444;
+}
+
+.tv-quick-btn.sell:hover {
+    background: #dc2626;
+}
+
+/* =========================================
+   Terminal Grid Layout (Desktop) - DISABLED (Using 3-column layout above)
+   ========================================= */
+/* .tv-terminal-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: 600px auto;
+    gap: 4px;
+    min-height: calc(100vh - 80px);
+    overflow: visible;
+} */
+
+
+.tv-grid-center {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    /* Prevent grid blowout */
+}
+
+.tv-grid-right {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: #0e1217;
+}
+
+.tv-chart-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tv-bottom-section {
+    grid-column: 1 / 3;
+    /* Full width bottom */
+    background: #1e222d;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #2a2e39;
+    min-height: 250px;
+    max-height: 400px;
+    /* Flexible height for bottom panel */
+}
+
+/* Orderbook Panel */
+.tv-orderbook-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #131722;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 300px;
+    /* Reduced min-height */
+    height: 100%;
+    border-radius: 4px;
+}
+
+.tv-panel-header {
+    flex: 0 0 auto;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #d1d4dc;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tv-panel-tabs {
+    display: flex;
+    width: 100%;
+    gap: 0;
+}
+
+.tv-panel-tab {
+    flex: 1;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.tv-panel-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.tv-panel-tab.active {
+    color: #1AFFD5;
+    border-bottom-color: #1AFFD5;
+    background: rgba(26, 255, 213, 0.05);
+    font-weight: 600;
+}
+
+.tv-panel-tab span:first-child {
+    font-weight: inherit;
+}
+
+.tv-panel-tab .tv-text-muted {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.tv-panel-content {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.tv-tab-content {
+    height: 100%;
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    padding: 10px;
+    height: 100%;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    flex: 1;
+}
+
+.tv-tab-content.active {
+    display: flex;
+}
+
+#depthChart,
+#depthChart_interact {
+    background: transparent;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 200px;
+    min-width: 0;
+    flex: 1;
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+}
+
+/* Combined Orderbook & Depth Panel */
+.tv-orderbook-depth-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #131722;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    border-radius: 4px;
+    border-bottom: 1px solid #2a2e39;
+    background: #1e222d;
+}
+
+.tv-orderbook-content {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    font-size: 12px;
+}
+
+.tv-orderbook-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    color: #848e9c;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.tv-orderbook-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Custom Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #363a45 #131722;
+}
+
+.tv-orderbook-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tv-orderbook-scroll::-webkit-scrollbar-track {
+    background: #131722;
+}
+
+.tv-orderbook-scroll::-webkit-scrollbar-thumb {
+    background: #363a45;
+    border-radius: 2px;
+}
+
+.tv-orderbook-asks {
+    display: flex;
+    flex-direction: column-reverse;
+    /* Asks go up from middle */
+    padding-bottom: 4px;
+}
+
+.tv-orderbook-bids {
+    display: flex;
+    flex-direction: column;
+    padding-top: 4px;
+}
+
+.tv-current-price {
+    padding: 8px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    color: #d1d4dc;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tv-current-price.up {
+    color: #22c55e;
+}
+
+.tv-current-price.down {
+    color: #ef4444;
+}
+
+/* Orderbook Row */
+.tv-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 12px;
+    cursor: pointer;
+    position: relative;
+    min-height: 22px;
+    align-items: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    transition: background-color 0.1s ease;
+}
+
+.tv-row:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    /* Force hover color on top of depth bar */
+}
+
+/* Text spans above the depth bar */
+.tv-row span {
+    z-index: 2;
+    position: relative;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Price & Amount Styling */
+.tv-ask-price {
+    color: #f6465d;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 500;
+}
+
+.tv-bid-price {
+    color: #0ecb81;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 500;
+}
+
+.tv-amount {
+    color: #d1d4dc;
+    text-align: right;
+    opacity: 0.9;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* =========================================
+   Mobile Logic
+   ========================================= */
+@media (max-width: 768px) {
+    .tv-terminal-grid {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    .tv-grid-center {
+        height: 400px;
+        min-height: 400px;
+        /* Fixed chart height */
+        margin-bottom: 0.5rem;
+    }
+
+    .tv-chart-container {
+        height: 100% !important;
+        width: 100% !important;
+        overflow: hidden;
+    }
+
+    /* Ensure TradingView widget respects container */
+    #tradingview_chart {
+        height: 100% !important;
+    }
+
+    .tv-bottom-section {
+        height: auto;
+        max-height: 60vh;
+        overflow-y: auto;
+        margin-bottom: 80px;
+        /* Space for floating buttons */
+    }
+
+    .tv-tab-content {
+        overflow-x: auto;
+    }
+
+    .tv-table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Hide Desktop Sidebar in Mobile via Utility Classes (d-none) */
+
+    /* Mobile Bottom Navbar - Floating Sticky */
+    .tv-mobile-bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: #1e222d;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 12px;
+        border-top: 1px solid #2a2e39;
+        z-index: 9999;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .tv-mobile-btn {
+        flex: 1;
+        height: 44px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 15px;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+    }
+
+    .tv-mobile-btn:active {
+        transform: scale(0.98);
+    }
+
+    .tv-mobile-btn.buy {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    }
+
+    .tv-mobile-btn.sell {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Mobile Orderbook Section */
+    .tv-grid-right {
+        display: block !important;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .tv-orderbook-panel {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Mobile Modal */
+.tv-mobile-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: none;
+    align-items: flex-end;
+    /* Bottom sheet style */
+}
+
+.tv-mobile-modal.active {
+    display: flex;
+}
+
+.tv-mobile-modal-content {
+    width: 100%;
+    background: #1e222d;
+    border-radius: 12px 12px 0 0;
+    padding: 16px;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.tv-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.tv-close-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+}
+
+.tv-text-success {
+    color: #22c55e;
+}
+
+.tv-quick-btn .label {
+    font-size: 11px;
+    opacity: 0.9;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tv-quick-btn .price {
+    font-size: 14px;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+}
+
+/* Sidebar */
+.tv-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tv-orderbook,
+.tv-order-panel {
+    background: #131722;
+    border-radius: 4px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tv-section-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.1em;
+    color: #fff;
+}
+
+/* Orderbook */
+.tv-orderbook-content {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+}
+
+.tv-orderbook-asks,
+.tv-orderbook-bids {
+    flex: 1;
+    /* Allow them to fill available space */
+    overflow-y: auto;
+}
+
+.tv-orderbook-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px 8px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.tv-orderbook-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tv-orderbook-row.ask {
+    color: #ef4444;
+}
+
+.tv-orderbook-row.bid {
+    color: #22c55e;
+}
+
+.tv-orderbook-spread {
+    padding: 0.5rem;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
+}
+
+.tv-spread-label {
+    color: #9ca3af;
+    font-size: 0.8em;
+    margin-right: 0.5rem;
+}
+
+.tv-loading {
+    text-align: center;
+    padding: 1rem;
+    color: #9ca3af;
+}
+
+/* Order Panel */
+.tv-order-header {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #2a2e39;
+}
+
+.tv-order-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tv-order-tab {
+    flex: 1;
+    padding: 0.75rem;
+    background: transparent;
+    border: none;
+    color: #848e9c;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+}
+
+.tv-order-tab:hover {
+    color: #d1d4dc;
+}
+
+.tv-order-tab.active {
+    background: transparent;
+    border-bottom-color: #F0B90B;
+    color: #F0B90B;
+}
+
+.tv-form-group {
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.tv-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #848e9c;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tv-avail-balance {
+    color: #d1d4dc;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.tv-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Professional Input Styles */
+.tv-input-group {
+    position: relative;
+    background: #0a0e1a;
+    /* Darker background */
+    border: 1px solid #2a2e39;
+    /* Subtle border */
+    border-radius: 4px;
+    transition: border-color 0.2s;
+}
+
+.tv-input-group:focus-within {
+    border-color: #F0B90B;
+    /* Binance Yellow or Brand Color */
+}
+
+.tv-input {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.tv-input:focus {
+    outline: none;
+}
+
+.tv-input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #848e9c;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Header Ticker Polish */
+#currentPrice {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.tv-change {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.tv-change.positive {
+    color: #22c55e;
+}
+
+.tv-change.negative {
+    color: #ef4444;
+}
+
+/* Buttons */
+.tv-btn {
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 13px;
+    transition: all 0.2s;
+    padding: 0.75rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.tv-btn:hover {
+    filter: brightness(1.1);
+}
+
+.tv-order-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.tv-order-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.tv-btn-buy {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+}
+
+.tv-btn-buy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.tv-btn-sell {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.tv-btn-sell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Bottom Panel */
+.tv-bottom-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tv-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tv-tab {
+    padding: 1rem 2rem;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tv-tab.active {
+    color: #1AFFD5;
+    border-bottom-color: #1AFFD5;
+}
+
+.tv-tab-content {
+    display: none;
+    padding: 1.5rem;
+}
+
+.tv-tab-content.active {
+    display: block;
+}
+
+.tv-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tv-table th {
+    text-align: left;
+    padding: 1rem;
+    color: #9ca3af;
+    font-weight: 600;
+    font-size: 0.9em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tv-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.tv-empty-state {
+    text-align: center;
+    color: #9ca3af;
+    padding: 3rem !important;
+}
+
+.tv-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.tv-badge-success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.tv-badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.tv-text-danger {
+    color: #ef4444;
+}
+
+.tv-text-muted {
+    color: #9ca3af;
+}
+
+.tv-btn-close-position {
+    padding: 4px 12px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85em;
+}
+
+.tv-btn-close-position:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .tv-terminal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tv-sidebar {
+        flex-direction: row;
+    }
+
+    .tv-orderbook,
+    .tv-order-panel {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .tv-terminal-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tv-mode-toggle {
+        width: 100%;
+    }
+
+    .tv-mode-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .tv-sidebar {
+        flex-direction: column;
+    }
+
+    .tv-chart-container {
+        height: 300px;
+    }
+
+    .tv-order-buttons {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* BBO Buttons */
+.tv-bbo-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tv-bbo-btn {
+    padding: 0.5rem;
+    background: rgba(26, 255, 213, 0.1);
+    border: 1px solid rgba(26, 255, 213, 0.2);
+    border-radius: 4px;
+    color: #1AFFD5;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.tv-bbo-btn:hover {
+    background: rgba(26, 255, 213, 0.2);
+    border-color: #1AFFD5;
+    transform: translateY(-1px);
+}
+
+.tv-bbo-btn:active {
+    transform: translateY(0);
+}
+
+/* Quick Amount Buttons */
+.tv-amount-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tv-amount-btn {
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #d1d4dc;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tv-amount-btn:hover {
+    background: rgba(26, 255, 213, 0.1);
+    border-color: #1AFFD5;
+    color: #1AFFD5;
+}
+
+.tv-amount-btn:active,
+.tv-amount-btn.active {
+    background: #1AFFD5;
+    border-color: #1AFFD5;
+    color: #0a0e1a;
+}
+
+/* Order Total (readonly) */
+#orderTotal {
+    background: rgba(26, 255, 213, 0.05);
+    color: #1AFFD5;
+    font-weight: 600;
+    cursor: not-allowed;
+}
+
+/* Depth Chart Panel Header */
+.tv-depth-chart-panel .tv-panel-header.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85em;
+}
+
+#depthChart {
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* Bottom Section Fixes */
+.tv-bottom-section {
+    margin-top: 8rem;
+    min-height: 180px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tv-tabs-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: rgba(26, 255, 213, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tv-tab-content {
+    min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Depth tab content should take full height and not scroll */
+.tv-tab-content#depthTab,
+.tv-tab-content#depthTab_interact {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 200px;
+    min-width: 0;
+    max-height: none !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+    padding: 0 !important;
+}
+
+.tv-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Interact.js Layout Styles */
+.tv-interact-layout {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.tv-interact-panel {
+    position: absolute;
+    background: #1e222d;
+    border: 1px solid rgba(26, 255, 213, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    min-height: 150px;
+}
+
+.tv-interact-panel-header {
+    padding: 8px 12px;
+    background: rgba(26, 255, 213, 0.1);
+    border-bottom: 1px solid rgba(26, 255, 213, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1AFFD5;
+}
+
+.tv-interact-panel-header span {
+    flex: 1;
+}
+
+.tv-interact-close {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.tv-interact-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.tv-interact-panel-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Ensure interact component containers fill their parent */
+#orderbookDepthComponent_interact,
+#orderPanelComponent_interact {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Default positions for Interact.js panels */
+.tv-interact-chart {
+    left: 0;
+    top: 0;
+    width: 60%;
+    height: 100%;
+}
+
+.tv-interact-orderbook {
+    left: 60%;
+    top: 0;
+    width: 20%;
+    height: 50%;
+}
+
+.tv-interact-order {
+    left: 60%;
+    top: 50%;
+    width: 20%;
+    height: 50%;
+}

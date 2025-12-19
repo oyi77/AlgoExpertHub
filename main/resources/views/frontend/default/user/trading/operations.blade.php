@@ -23,16 +23,7 @@
             <div class="sp_site_card">
                 <div class="card-header p-3 border-bottom">
                     <ul class="nav nav-pills" id="operationsTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link {{ $activeTab === 'connections' ? 'active' : '' }}" 
-                               id="connections-tab" 
-                               data-bs-toggle="tab" 
-                               href="#connections" 
-                               role="tab"
-                               onclick="switchTab('connections')">
-                                <i class="las la-exchange-alt me-1"></i> {{ __('Connections') }}
-                            </a>
-                        </li>
+
                         <li class="nav-item" role="presentation">
                             <a class="nav-link {{ $activeTab === 'trading-bots' ? 'active' : '' }}" 
                                id="trading-bots-tab" 
@@ -47,102 +38,7 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="tab-content" id="operationsTabContent">
-                        <!-- Connections Tab -->
-                        <div class="tab-pane fade {{ $activeTab === 'connections' ? 'show active' : '' }}" 
-                             id="connections" 
-                             role="tabpanel">
-                            @if(isset($connections) && $connections->count() > 0)
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0">{{ __('My Execution Connections') }}</h5>
-                                    @php
-                                        $createRoute = null;
-                                        if (Route::has('user.exchange-connections.create')) {
-                                            $createRoute = route('user.exchange-connections.create');
-                                        } elseif (Route::has('user.execution-connections.create')) {
-                                            $createRoute = route('user.execution-connections.create');
-                                        }
-                                    @endphp
-                                    @if($createRoute)
-                                        <a href="{{ $createRoute }}" class="btn sp_theme_btn">
-                                            <i class="las la-plus"></i> {{ __('Create Connection') }}
-                                        </a>
-                                    @endif
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ __('Name') }}</th>
-                                                <th>{{ __('Exchange') }}</th>
-                                                <th>{{ __('Type') }}</th>
-                                                <th>{{ __('Status') }}</th>
-                                                <th class="text-end">{{ __('Actions') }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($connections as $conn)
-                                            <tr>
-                                                <td><strong>{{ $conn->name }}</strong></td>
-                                                <td>{{ $conn->exchange_name ?? 'N/A' }}</td>
-                                                <td><span class="badge bg-info">{{ ucfirst($conn->exchange_type ?? 'N/A') }}</span></td>
-                                                <td>
-                                                    @if($conn->is_active)
-                                                        <span class="badge bg-success">{{ __('Active') }}</span>
-                                                    @else
-                                                        <span class="badge bg-secondary">{{ __('Inactive') }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end">
-                                                    @php
-                                                        $showRoute = null;
-                                                        if (Route::has('user.exchange-connections.show')) {
-                                                            $showRoute = route('user.exchange-connections.show', $conn->id);
-                                                        } elseif (Route::has('user.execution-connections.show')) {
-                                                            $showRoute = route('user.execution-connections.show', $conn->id);
-                                                        } elseif (Route::has('admin.exchange-connections.show')) {
-                                                            // Fallback to admin route if user route doesn't exist
-                                                            $showRoute = route('admin.exchange-connections.show', $conn->id);
-                                                        }
-                                                    @endphp
-                                                    @if($showRoute)
-                                                        <a href="{{ $showRoute }}" class="btn btn-xs btn-outline-info">
-                                                            <i class="las la-eye"></i> {{ __('View') }}
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted small">{{ __('View not available') }}</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                                @if ($connections->hasPages())
-                                    <div class="mt-3">
-                                        {{ $connections->links() }}
-                                    </div>
-                                @endif
-                            @else
-                                <div class="text-center py-5">
-                                    <i class="las la-exchange-alt la-3x text-muted mb-3"></i>
-                                    <p class="text-muted">{{ __('No execution connections found.') }}</p>
-                                    @php
-                                        $createRoute = null;
-                                        if (Route::has('user.exchange-connections.create')) {
-                                            $createRoute = route('user.exchange-connections.create');
-                                        } elseif (Route::has('user.execution-connections.create')) {
-                                            $createRoute = route('user.execution-connections.create');
-                                        }
-                                    @endphp
-                                    @if($createRoute)
-                                        <a href="{{ $createRoute }}" class="btn sp_theme_btn mt-2">
-                                            <i class="las la-plus"></i> {{ __('Create First Connection') }}
-                                        </a>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-
+                        
                         <!-- Trading Bots Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'trading-bots' ? 'show active' : '' }}" 
                              id="trading-bots" 

@@ -259,4 +259,15 @@ class ManageUserController extends Controller
 
         return redirect()->route('admin.user.index')->with('success', 'Successfully Send Mail');
     }
+    public function changePassword(Request $request, User $user)
+    {
+        $request->validate([
+            'password' => 'required|min:6|confirmed'
+        ]);
+
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return back()->with('success', 'User Password Changed Successfully');
+    }
 }
