@@ -55,46 +55,16 @@ class MarketplacesController extends Controller
 
             // Filter Strategies category
             if ($data['activeCategory'] === 'filter-strategies') {
-                \Log::info('Marketplace Controller: Processing filter-strategies category', [
-                    'request_category' => $request->get('category'),
-                    'activeCategory' => $data['activeCategory'],
-                    'class_exists' => class_exists(\Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::class)
-                ]);
-                
                 if (class_exists(\Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::class)) {
                     try {
                         // Query all public marketplace strategies (admin-owned: created_by_user_id is NULL)
+                        // Note: Model uses SoftDeletes, so withTrashed() is not needed for active items
                         $query = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::query()
                             ->whereNull('created_by_user_id')
                             ->where('visibility', 'PUBLIC_MARKETPLACE')
                             ->where('enabled', true);
                         
-                        // Debug: Check total count
-                        $totalCount = $query->count();
-                        $allPublic = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::where('visibility', 'PUBLIC_MARKETPLACE')->count();
-                        $allEnabled = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::where('enabled', true)->count();
-                        $allNullCreated = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::whereNull('created_by_user_id')->count();
-                        
-                        \Log::info('Marketplace: Filter strategies query debug', [
-                            'category' => 'filter-strategies',
-                            'total_matching' => $totalCount,
-                            'all_public' => $allPublic,
-                            'all_enabled' => $allEnabled,
-                            'all_null_created' => $allNullCreated,
-                            'query_sql' => $query->toSql(),
-                            'bindings' => $query->getBindings()
-                        ]);
-                        
                         $data['items'] = $query->latest()->paginate(20, ['*'], 'strategies_page');
-                        
-                        \Log::info('Marketplace: Filter strategies paginated result', [
-                            'category' => 'filter-strategies',
-                            'total' => $data['items']->total(),
-                            'count' => $data['items']->count(),
-                            'current_page' => $data['items']->currentPage(),
-                            'names' => $data['items']->pluck('name')->toArray(),
-                            'ids' => $data['items']->pluck('id')->toArray()
-                        ]);
                     } catch (\Exception $e) {
                         \Log::error('Marketplace: Error loading filter strategies', [
                             'error' => $e->getMessage(),
@@ -102,14 +72,7 @@ class MarketplacesController extends Controller
                         ]);
                         $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                     }
-                } else {
-                    \Log::warning('Marketplace: FilterStrategy model class not found');
                 }
-            } else {
-                \Log::info('Marketplace Controller: NOT processing filter-strategies', [
-                    'request_category' => $request->get('category'),
-                    'activeCategory' => $data['activeCategory']
-                ]);
             }
 
             // AI Model Profiles category

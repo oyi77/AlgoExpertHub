@@ -25,6 +25,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    labels:
+      - "com.algoexpert.service=mysql"
+      - "com.algoexpert.description=MySQL Database"
 
   # ============================================================================
   # Redis Cache & Queue
@@ -41,10 +49,15 @@ services:
     networks:
       - algoexpert_network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "sh", "-c", "if [ \"${REDIS_PASSWORD:-null}\" != \"null\" ]; then redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG; else redis-cli ping | grep PONG; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
 
   # ============================================================================
   # Soketi WebSocket Server
@@ -68,6 +81,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - "com.algoexpert.service=soketi"
+      - "com.algoexpert.description=WebSocket Server"
 
   # ============================================================================
   # Laravel Application (Octane + Horizon + Workers + Scheduler)
@@ -76,6 +97,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.1}
+        NODE_VERSION: ${NODE_VERSION:-18}
     container_name: algoexpert_app
     restart: unless-stopped
     environment:
@@ -143,6 +167,33 @@ services:
       CONTAINER_ROLE: app
       RUN_MIGRATIONS: "${RUN_MIGRATIONS:-false}"
       RUN_SEEDERS: "${RUN_SEEDERS:-false}"
+      
+      # Addon: Telegram Bot
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      
+      # Addon: OpenAI Integration
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-3.5-turbo}"
+      
+      # Addon: Trading Bot Signal (Firebase)
+      FIREBASE_PROJECT_ID: "${FIREBASE_PROJECT_ID:-}"
+      FIREBASE_CREDENTIALS_PATH: "${FIREBASE_CREDENTIALS_PATH:-storage/app/firebase-credentials.json}"
+      FIREBASE_CREDENTIALS_JSON: "${FIREBASE_CREDENTIALS_JSON:-}"
+      
+      # Addon: Trading Management (MTAPI)
+      MTAPI_API_KEY: "${MTAPI_API_KEY:-}"
+      MTAPI_ACCOUNT_ID: "${MTAPI_ACCOUNT_ID:-}"
+      MTAPI_BASE_URL: "${MTAPI_BASE_URL:-https://api.mtapi.io}"
+      
+      # Addon: OpenRouter Integration
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      
+      # Payment Gateways (common variables)
+      STRIPE_KEY: "${STRIPE_KEY:-}"
+      STRIPE_SECRET: "${STRIPE_SECRET:-}"
+      PAYPAL_CLIENT_ID: "${PAYPAL_CLIENT_ID:-}"
+      PAYPAL_CLIENT_SECRET: "${PAYPAL_CLIENT_SECRET:-}"
+      PAYPAL_MODE: "${PAYPAL_MODE:-sandbox}"
     volumes:
       - ./main:/var/www/html
       - storage_data:/var/www/html/storage
@@ -164,6 +215,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: '1.0'
+    labels:
+      - "com.algoexpert.service=app"
+      - "com.algoexpert.description=Laravel Application"
 
   # ============================================================================
   # Nginx Reverse Proxy (Optional - for production)
@@ -190,6 +249,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - "com.algoexpert.service=nginx"
+      - "com.algoexpert.description=Nginx Reverse Proxy"
     profiles:
       - production
 
@@ -205,6 +272,14 @@ services:
       - "${MAILHOG_UI_PORT:-8025}:8025"
     networks:
       - algoexpert_network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - "com.algoexpert.service=mailhog"
+      - "com.algoexpert.description=Mail Testing Server"
     profiles:
       - development
 

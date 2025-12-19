@@ -19,7 +19,7 @@ class UserLogin
             return ['type' => 'error', 'message' => 'No user found associated with this email'];
         }
 
-        if (Auth::attempt($request->except('g-recaptcha-response', '_token'))) {
+        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
 
             $ip = request()->ip();
             $currentUserInfo = Location::get($ip);

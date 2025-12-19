@@ -15,39 +15,12 @@ class TradingOperationsController extends Controller
     public function index(Request $request)
     {
         $data['title'] = __('Trading Operations');
-        $data['activeTab'] = $request->get('tab', 'connections');
+        $data['activeTab'] = $request->get('tab', 'trading-bots');
         
         // Check if addon is enabled
         $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon');
 
         if ($data['tradingManagementEnabled']) {
-            // Connections tab
-            if ($data['activeTab'] === 'connections') {
-                // Try ExchangeConnection first (new unified model), fallback to ExecutionConnection
-                $connectionModel = null;
-                if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
-                    $connectionModel = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class;
-                } elseif (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
-                    $connectionModel = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class;
-                }
-                
-                if ($connectionModel) {
-                    try {
-                        $data['connections'] = $connectionModel::where('user_id', Auth::id())
-                            ->where('is_admin_owned', false)
-                            ->with(['preset', 'user'])
-                            ->latest()
-                            ->paginate(20, ['*'], 'connections_page');
-                    } catch (\Exception $e) {
-                        \Log::error('TradingOperations: Error loading connections', [
-                            'error' => $e->getMessage(),
-                            'trace' => $e->getTraceAsString()
-                        ]);
-                        $data['connections'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
-                    }
-                }
-            }
-
             // Trading Bots tab
             if ($data['activeTab'] === 'trading-bots') {
                 if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {

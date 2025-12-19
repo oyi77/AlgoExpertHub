@@ -1,0 +1,98 @@
+/* Golden Layout Custom Theme - Match Trading Terminal Design */
+
+/* Override default dark theme colors */
+.lm_root {
+    background: transparent !important;
+}
+
+.lm_header {
+    background: rgba(26, 255, 213, 0.05) !important;
+    border-bottom: 1px solid rgba(26, 255, 213, 0.2) !important;
+    height: 32px !important;
+}
+
+.lm_tab {
+    background: transparent !important;
+    color: #9ca3af !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.lm_tab.lm_active {
+    background: rgba(26, 255, 213, 0.15) !important;
+    color: #1AFFD5 !important;
+    border-radius: 6px 6px 0 0 !important;
+}
+
+.lm_tab:hover {
+    background: rgba(26, 255, 213, 0.1) !important;
+    color: #1AFFD5 !important;
+}
+
+.lm_content {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-radius: 0 0 8px 8px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.lm_content > * {
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.lm_splitter {
+    background: rgba(26, 255, 213, 0.1) !important;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+.lm_splitter:hover {
+    opacity: 1;
+    background: rgba(26, 255, 213, 0.3) !important;
+}
+
+.lm_close_tab {
+    color: #ef4444 !important;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.lm_close_tab:hover {
+    opacity: 1;
+}
+
+/* Dragging states */
+.lm_dragProxy {
+    border: 2px solid #1AFFD5 !important;
+    background: rgba(26, 255, 213, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(26, 255, 213, 0.3) !important;
+}
+
+.lm_dropTargetIndicator {
+    background: rgba(26, 255, 213, 0.3) !important;
+    border: 2px dashed #1AFFD5 !important;
+}
+
+/* Maximized state */
+.lm_maximised {
+    border: 1px solid rgba(26, 255, 213, 0.3) !important;
+}
+
+/* Stack (tabbed container) */
+.lm_stack {
+    background: transparent !important;
+}
+
+/* Popout windows */
+.lm_popin {
+    background: rgba(26, 255, 213, 0.1) !important;
+    color: #1AFFD5 !important;
+}
+
+.lm_popin:hover {
+    background: rgba(26, 255, 213, 0.2) !important;
+}

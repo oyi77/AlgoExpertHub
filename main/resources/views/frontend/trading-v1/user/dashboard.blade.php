@@ -44,11 +44,15 @@
     </div>
     
     <!-- Recent Signals -->
-    @if(Route::has('user.signal.all'))
+    @if(Route::has('user.trading.multi-channel-signal.index') || Route::has('user.signal.all'))
         <div class="tv-card">
             <div class="tv-card-header">
                 <h3 class="tv-card-title">Recent Signals</h3>
-                <a href="{{ route('user.signal.all') }}" class="tv-btn tv-btn-outline">View All</a>
+                @if(Route::has('user.trading.multi-channel-signal.index'))
+                    <a href="{{ route('user.trading.multi-channel-signal.index') }}" class="tv-btn tv-btn-outline">View All</a>
+                @elseif(Route::has('user.signal.all'))
+                    <a href="{{ route('user.signal.all') }}" class="tv-btn tv-btn-outline">View All</a>
+                @endif
             </div>
             <div class="tv-card-body">
                 @php

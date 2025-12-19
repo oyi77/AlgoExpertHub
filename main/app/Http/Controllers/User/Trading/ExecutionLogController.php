@@ -186,432 +186,117 @@ class ExecutionLogController extends Controller
             }
         }
         
-        return $userConnectionIds;
+            return $userConnectionIds;
+    }
+
+    /**
+     * Close an execution position
+     */
+    public function closePosition(Request $request, $id)
+    {
+        try {
+            $ExecutionPosition = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class;
+            
+            if (!class_exists($ExecutionPosition)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Position monitoring module not available'
+                ], 503);
+            }
+
+            // Get user's connection IDs
+            $userConnectionIds = $this->getUserConnectionIds();
+            
+            // Find position that belongs to user
+            $position = $ExecutionPosition::whereIn('connection_id', $userConnectionIds)
+                ->where('id', $id)
+                ->where('status', 'open')
+                ->firstOrFail();
+
+            // Get connection
+            $connection = $position->connection;
+            if (!$connection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection not found for this position'
+                ], 404);
+            }
+
+            // Get adapter
+            $adapter = $this->getAdapter($connection);
+            if (!$adapter) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to get adapter for connection'
+                ], 400);
+            }
+
+            // Close position on exchange
+            $closeResult = null;
+            if (method_exists($adapter, 'closePosition')) {
+                try {
+                    $closeResult = $adapter->closePosition($position->order_id);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to close position on exchange', [
+                        'position_id' => $position->id,
+                        'error' => $e->getMessage()
+                    ]);
+                    // Continue to close locally even if exchange close fails
+                }
+            }
+
+            // Update position status
+            $position->update([
+                'status' => 'closed',
+                'closed_at' => now(),
+                'closed_reason' => 'manual_close',
+            ]);
+
+            // Update PnL if method exists
+            if (method_exists($position, 'updatePnL')) {
+                $position->updatePnL($position->current_price);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Position closed successfully',
+                'data' => [
+                    'position_id' => $position->id,
+                    'pnl' => $position->pnl ?? 0,
+                    'closed_at' => $position->closed_at,
+                ]
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Position not found or already closed'
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('ExecutionLog: Close position error', [
+                'position_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to close position: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Manual trade execution (same as admin)
      */
-    public function manualTrade(Request $request)
+    /**
+     * Manual trade execution (same as admin)
+     */
+    public function manualTrade(\App\Http\Requests\Trading\ManualTradeRequest $request, \App\Actions\Trading\ExecuteManualTradeAction $action)
     {
-        $validated = $request->validate([
-            'connection_id' => 'required|exists:execution_connections,id',
-            'symbol' => 'required|string',
-            'direction' => 'required|in:BUY,SELL,LONG,SHORT',
-            'lot_size' => 'required|numeric|min:0.01',
-            'order_type' => 'required|in:market,limit',
-            'entry_price' => 'nullable|numeric',
-            'sl_price' => 'nullable|numeric',
-            'tp_price' => 'nullable|numeric',
-            'notes' => 'nullable|string',
-        ]);
-
         try {
-            // Verify connection belongs to user
-            $connection = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('id', $validated['connection_id'])
-                ->where('user_id', Auth::id())
-                ->where('is_admin_owned', false)
-                ->firstOrFail();
-            
-            // Check if connection can execute trades (same as admin)
-            if (method_exists($connection, 'canExecuteTrades')) {
-                if (!$connection->canExecuteTrades()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Connection is not active or trade execution is not enabled'
-                    ], 400);
-                }
-            } else {
-                // Fallback for legacy ExecutionConnection
-                if (!$connection->is_active) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Connection is not active'
-                    ], 400);
-                }
-            }
-
-            // Use the same logic as admin TradingOperationsController::manualTrade()
-            // Map direction: BUY/LONG -> buy, SELL/SHORT -> sell
-            $direction = strtolower($validated['direction']);
-            if (in_array($direction, ['long', 'short'])) {
-                $direction = $direction === 'long' ? 'buy' : 'sell';
-            }
-
-            // Validate limit order requirements
-            $orderType = $validated['order_type'] ?? 'market';
-            if ($orderType === 'limit' && empty($validated['entry_price'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Entry price is required for limit orders'
-                ], 400);
-            }
-
-            // Create execution log
-            $ExecutionLog = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::class;
-            
-            // Check if signal_id column allows null (for manual trades)
-            $logData = [
-                'connection_id' => $connection->id,
-                'symbol' => $validated['symbol'],
-                'direction' => $direction,
-                'quantity' => $validated['lot_size'],
-                'entry_price' => $validated['entry_price'],
-                'sl_price' => $validated['sl_price'],
-                'tp_price' => $validated['tp_price'],
-                'execution_type' => $orderType,
-                'status' => 'pending', // Use lowercase as per enum definition
-            ];
-            
-            // Check if signal_id column allows null
-            try {
-                // Get table prefix and use prefixed table name
-                $prefix = Schema::getConnection()->getTablePrefix();
-                $tableName = $prefix . 'execution_logs';
-                $columnInfo = DB::select("SHOW COLUMNS FROM `{$tableName}` WHERE Field = 'signal_id'");
-                if (!empty($columnInfo) && isset($columnInfo[0]->Null) && $columnInfo[0]->Null === 'YES') {
-                    $logData['signal_id'] = null; // Manual trade, no signal
-                } else {
-                    // Column is NOT NULL - we need migration
-                    \Log::warning('ExecutionLog: signal_id column is NOT NULL, cannot create manual trade');
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Manual trade execution requires database migration. Please run: php artisan migrate --path=addons/trading-management-addon/database/migrations/2025_12_10_100001_make_signal_id_nullable_in_execution_logs.php'
-                    ], 400);
-                }
-            } catch (\Exception $e) {
-                \Log::error('ExecutionLog: Error checking signal_id column: ' . $e->getMessage());
-                // Try to set null anyway (migration might have run but check failed)
-                $logData['signal_id'] = null;
-            }
-            
-            $log = $ExecutionLog::create($logData);
-
-            // Get adapter and execute trade (same as admin)
-            $adapter = $this->getAdapter($connection);
-
-            if (!$adapter || !method_exists($adapter, 'placeOrder')) {
-                // Update log with failure
-                $log->update([
-                    'status' => 'failed',
-                    'error_message' => 'Trade execution not supported for this connection type'
-                ]);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trade execution not supported for this connection type'
-                ], 400);
-            }
-
-            // For MetaAPI connections, check if account is connected before executing
-            if ($adapter instanceof \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter) {
-                try {
-                    // Try to get account info to verify connection
-                    if (method_exists($adapter, 'getAccountInfo')) {
-                        $accountInfo = $adapter->getAccountInfo();
-                        if (empty($accountInfo)) {
-                            throw new \Exception('MetaAPI account is not connected. Please ensure the account is deployed and connected to broker in MetaAPI dashboard.');
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // If account info check fails, log but continue (might be connection issue)
-                    \Log::warning('ExecutionLog: Could not verify MetaAPI account connection', [
-                        'connection_id' => $connection->id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
-
-            try {
-                // Log adapter type for debugging
-                $adapterClass = get_class($adapter);
-                \Log::info('ExecutionLog: Using adapter', [
-                    'adapter' => $adapterClass,
-                    'connection_id' => $connection->id,
-                    'connection_type' => $connection->connection_type ?? $connection->type ?? 'unknown',
-                    'provider' => $connection->provider ?? $connection->exchange_name ?? 'unknown',
-                    'symbol' => $validated['symbol'],
-                    'direction' => $direction,
-                    'order_type' => $orderType,
-                ]);
-
-                // Execute trade via adapter
-                $result = null;
-                $executionSuccess = false;
-                $orderId = null;
-                $positionId = null;
-                $responseData = null;
-                
-                try {
-                    $result = $adapter->placeOrder(
-                        $validated['symbol'],
-                        $direction,
-                        $validated['lot_size'],
-                        $orderType,
-                        $validated['entry_price'] ?? null,
-                        $validated['sl_price'] ?? null,
-                        $validated['tp_price'] ?? null,
-                        $validated['notes'] ?? null
-                    );
-
-                    // Log full response for debugging
-                    \Log::info('ExecutionLog: Trade execution response', [
-                        'log_id' => $log->id,
-                        'result' => $result,
-                        'has_success' => isset($result['success']),
-                        'success_value' => $result['success'] ?? null,
-                        'result_type' => gettype($result),
-                        'is_array' => is_array($result),
-                        'result_keys' => is_array($result) ? array_keys($result) : [],
-                    ]);
-
-                    // If adapter returns success=false explicitly, throw exception
-                    if (isset($result['success']) && $result['success'] === false) {
-                        throw new \Exception($result['message'] ?? 'Trade execution failed');
-                    }
-
-                    // CRITICAL: If we got here without exception, trade execution was successful
-                    // Even if result doesn't have success=true, if no exception = success
-                    // This is important because MetaAPI might return success but without explicit success flag
-                    $executionSuccess = true;
-                    $responseData = $result;
-                    
-                    \Log::info('ExecutionLog: Trade execution marked as successful', [
-                        'log_id' => $log->id,
-                        'executionSuccess' => $executionSuccess,
-                    ]);
-
-                    // Extract order ID and position ID from response
-                    // MetaAPI returns: numericTicket (order ID), or positionId, or both
-                    $orderId = $result['orderId'] 
-                        ?? $result['numericTicket'] 
-                        ?? $result['positionId'] 
-                        ?? ($result['data']['numericTicket'] ?? $result['data']['orderId'] ?? $result['data']['positionId'] ?? null);
-                    
-                    $positionId = $result['positionId'] 
-                        ?? $result['data']['positionId'] 
-                        ?? null;
-
-                    // For market orders, if we don't have positionId, try to fetch from MetaAPI
-                    if ($orderType === 'market' && !$positionId && $adapter instanceof \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter) {
-                        try {
-                            // Wait a bit for position to be created
-                            sleep(1);
-                            
-                            // Fetch positions from MetaAPI to find our new position
-                            $positions = $adapter->fetchPositions();
-                            foreach ($positions as $pos) {
-                                if ($pos['symbol'] === $validated['symbol'] && 
-                                    strtolower($pos['type'] ?? '') === strtolower($direction === 'buy' ? 'POSITION_TYPE_BUY' : 'POSITION_TYPE_SELL')) {
-                                    $positionId = $pos['id'] ?? null;
-                                    if ($positionId) {
-                                        \Log::info('ExecutionLog: Found position from MetaAPI', [
-                                            'log_id' => $log->id,
-                                            'position_id' => $positionId,
-                                            'symbol' => $validated['symbol'],
-                                        ]);
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (\Exception $e) {
-                            \Log::warning('ExecutionLog: Could not fetch positions from MetaAPI', [
-                                'log_id' => $log->id,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    }
-
-                } catch (\Exception $e) {
-                    // If exception occurs, check if trade might have succeeded anyway
-                    // Sometimes MetaAPI returns error but trade actually executed
-                    $errorMessage = $e->getMessage();
-                    
-                    // For certain errors, trade might still have executed
-                    // We'll mark as failed but allow manual review
-                    \Log::error('ExecutionLog: Trade execution exception', [
-                        'log_id' => $log->id,
-                        'error' => $errorMessage,
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                    
-                    throw $e; // Re-throw to be caught by outer catch
-                }
-
-                // CRITICAL: If execution was successful, ALWAYS update status first
-                // This ensures status is updated even if position creation fails
-                if ($executionSuccess) {
-                    // Update status FIRST - this is the most important step
-                    try {
-                        $updateData = [
-                            'status' => 'executed',
-                            'executed_at' => now(),
-                        ];
-                        
-                        if ($orderId) {
-                            $updateData['order_id'] = (string)$orderId;
-                        }
-                        
-                        if ($responseData) {
-                            $updateData['response_data'] = $responseData['data'] ?? $responseData;
-                        }
-                        
-                        $log->update($updateData);
-
-                        \Log::info('ExecutionLog: Status updated to executed', [
-                            'log_id' => $log->id,
-                            'order_id' => $orderId,
-                            'status' => 'executed',
-                        ]);
-                    } catch (\Exception $e) {
-                        // Log error but don't throw - we want to continue
-                        \Log::error('ExecutionLog: CRITICAL - Failed to update status to executed', [
-                            'log_id' => $log->id,
-                            'error' => $e->getMessage(),
-                            'trace' => $e->getTraceAsString(),
-                        ]);
-                    }
-
-                    // For market orders, always try to create position
-                    // For limit orders, only if we have positionId
-                    $shouldCreatePosition = false;
-                    if ($orderType === 'market') {
-                        $shouldCreatePosition = true;
-                    } elseif ($positionId) {
-                        $shouldCreatePosition = true;
-                    }
-
-                    if ($shouldCreatePosition) {
-                        try {
-                            $ExecutionPosition = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class;
-                            
-                            // Get actual entry price from response if available
-                            $actualEntryPrice = $result['data']['openPrice'] 
-                                ?? $result['data']['price'] 
-                                ?? $result['data']['entryPrice']
-                                ?? $result['data']['currentPrice']
-                                ?? $validated['entry_price'] 
-                                ?? 0;
-
-                            // Check if position already exists (avoid duplicates)
-                            $existingPosition = $ExecutionPosition::where('execution_log_id', $log->id)
-                                ->where('connection_id', $connection->id)
-                                ->where('symbol', $validated['symbol'])
-                                ->where('status', 'open')
-                                ->first();
-
-                            if (!$existingPosition) {
-                                // Check if signal_id column is nullable before setting it to null
-                                $positionData = [
-                                    'connection_id' => $connection->id,
-                                    'execution_log_id' => $log->id,
-                                    'order_id' => $orderId ? (string)$orderId : null,
-                                    'symbol' => $validated['symbol'],
-                                    'direction' => $direction,
-                                    'quantity' => $validated['lot_size'],
-                                    'entry_price' => $actualEntryPrice > 0 ? $actualEntryPrice : 0,
-                                    'current_price' => $actualEntryPrice > 0 ? $actualEntryPrice : 0,
-                                    'sl_price' => $validated['sl_price'],
-                                    'tp_price' => $validated['tp_price'],
-                                    'status' => 'open',
-                                ];
-                                
-                                // Only set signal_id to null if column is nullable
-                                $prefix = Schema::getConnection()->getTablePrefix();
-                                $tableName = $prefix . 'execution_positions';
-                                try {
-                                    $columnInfo = DB::select("SHOW COLUMNS FROM `{$tableName}` WHERE Field = 'signal_id'");
-                                    if (!empty($columnInfo) && isset($columnInfo[0]->Null) && $columnInfo[0]->Null === 'YES') {
-                                        $positionData['signal_id'] = null; // Manual trade, no signal
-                                    }
-                                    // If NOT NULL, skip signal_id (will use default or fail gracefully)
-                                } catch (\Exception $e) {
-                                    \Log::warning('ExecutionPosition: Could not check signal_id column nullability', [
-                                        'error' => $e->getMessage()
-                                    ]);
-                                    // Try to set null anyway (migration might have run but check failed)
-                                    $positionData['signal_id'] = null;
-                                }
-                                
-                                $ExecutionPosition::create($positionData);
-
-                                \Log::info('ExecutionLog: Position created successfully', [
-                                    'log_id' => $log->id,
-                                    'position_id' => $positionId,
-                                    'order_id' => $orderId,
-                                    'symbol' => $validated['symbol'],
-                                ]);
-                            } else {
-                                \Log::info('ExecutionLog: Position already exists', [
-                                    'log_id' => $log->id,
-                                    'existing_position_id' => $existingPosition->id,
-                                ]);
-                            }
-                        } catch (\Exception $e) {
-                            // Log but don't fail - position might be created later by monitoring job
-                            \Log::warning('ExecutionLog: Failed to create position', [
-                                'log_id' => $log->id,
-                                'error' => $e->getMessage(),
-                                'trace' => $e->getTraceAsString(),
-                            ]);
-                        }
-                    }
-                }
-
-                // Update connection last used timestamp
-                $connection->update(['last_trade_execution_at' => now()]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Trade executed successfully',
-                    'data' => [
-                        'order_id' => $orderId,
-                        'position_id' => $positionId,
-                        'symbol' => $validated['symbol'],
-                        'direction' => strtoupper($direction),
-                        'lot_size' => $validated['lot_size'],
-                        'entry_price' => $validated['entry_price'] ?? 'Market',
-                        'order_type' => $orderType,
-                        'status' => 'SUCCESS',
-                    ]
-                ]);
-
-            } catch (\Exception $e) {
-                // Update log with failure
-                $errorMessage = $e->getMessage();
-                
-                // Provide more helpful error messages for common MetaAPI errors
-                if (strpos($errorMessage, 'not connected to broker') !== false || 
-                    strpos($errorMessage, 'does not match the account region') !== false) {
-                    $errorMessage .= '. Please ensure: 1) Account is deployed in MetaAPI dashboard, 2) Account is connected to broker, 3) Correct API URL is configured for your account region. Check https://app.metaapi.cloud/api-access/api-urls for valid URLs.';
-                }
-                
-                // Check if trade might have succeeded despite exception
-                // Sometimes MetaAPI returns error but trade actually executed
-                // We'll mark as failed but log for manual review
-                $log->update([
-                    'status' => 'failed',
-                    'error_message' => $errorMessage,
-                ]);
-
-                \Log::error('ExecutionLog: Manual trade execution error', [
-                    'log_id' => $log->id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'connection_id' => $connection->id,
-                    'connection_type' => $connection->connection_type ?? $connection->type ?? 'unknown',
-                    'provider' => $connection->provider ?? $connection->exchange_name ?? 'unknown',
-                    'adapter' => $adapterClass ?? 'unknown',
-                    'symbol' => $validated['symbol'] ?? null,
-                    'direction' => $direction ?? null,
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trade execution failed: ' . $errorMessage
-                ], 400);
-            }
-
+            $result = $action->execute($request->user(), $request->validated());
+            return response()->json($result);
         } catch (\Exception $e) {
             \Log::error('ExecutionLog: Manual trade error', [
                 'error' => $e->getMessage(),

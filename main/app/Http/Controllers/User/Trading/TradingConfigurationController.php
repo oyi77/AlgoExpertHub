@@ -23,12 +23,13 @@ class TradingConfigurationController extends Controller
         if ($data['tradingManagementEnabled']) {
             try {
                 // Data Connections tab
+                // Data Connections tab
                 if ($data['activeTab'] === 'data-connections') {
                     if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
                         try {
                             $data['dataConnections'] = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('user_id', Auth::id())
                                 ->where('is_admin_owned', false)
-                                ->where('connection_type', 'DATA_ONLY')
+                                // Removed connection_type filter to show ALL connections
                                 ->with(['user', 'preset'])
                                 ->latest()
                                 ->paginate(20, ['*'], 'data_connections_page');

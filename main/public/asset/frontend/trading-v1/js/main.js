@@ -71,38 +71,80 @@
     // ========================================
     // SIDEBAR TOGGLE (USER PANEL)
     // ========================================
-    const sidebar = $('#sidebar');
-    const sidebarToggle = $('#sidebarToggle');
-    const sidebarOverlay = $('#sidebarOverlay');
+    $(document).ready(function () {
+        const sidebar = $('#sidebar');
+        const sidebarToggle = $('#sidebarToggle');
+        const sidebarOverlay = $('#sidebarOverlay');
+        const desktopSidebarToggle = $('#desktopSidebarToggle');
 
-    if (sidebarToggle.length) {
-        sidebarToggle.on('click', function () {
-            sidebar.toggleClass('show');
-            sidebarOverlay.toggleClass('show');
-        });
+        // Mobile sidebar toggle
+        if (sidebarToggle.length && sidebar.length && sidebarOverlay.length) {
+            // Toggle sidebar on button click
+            sidebarToggle.on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sidebar.toggleClass('show');
+                sidebarOverlay.toggleClass('show');
+            });
 
-        // Close sidebar button
-        $('#sidebarClose').on('click', function () {
-            sidebar.removeClass('show');
-            sidebarOverlay.removeClass('show');
-        });
+            // Close sidebar button
+            $('#sidebarClose').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sidebar.removeClass('show');
+                sidebarOverlay.removeClass('show');
+            });
 
-        // Close sidebar when clicking overlay
-        sidebarOverlay.on('click', function () {
-            sidebar.removeClass('show');
-            sidebarOverlay.removeClass('show');
-        });
+            // Close sidebar when clicking overlay
+            sidebarOverlay.on('click', function (e) {
+                e.preventDefault();
+                sidebar.removeClass('show');
+                sidebarOverlay.removeClass('show');
+            });
 
-        // Close sidebar when clicking outside on mobile
-        $(document).on('click', function (e) {
-            if ($(window).width() < 1024) {
-                if (!$(e.target).closest('.tv-sidebar, #sidebarToggle').length) {
-                    sidebar.removeClass('show');
-                    sidebarOverlay.removeClass('show');
+            // Close sidebar when clicking outside on mobile
+            $(document).on('click', function (e) {
+                if ($(window).width() < 1024) {
+                    if (!$(e.target).closest('.tv-sidebar, #sidebarToggle').length) {
+                        sidebar.removeClass('show');
+                        sidebarOverlay.removeClass('show');
+                    }
                 }
+            });
+        } else {
+            console.warn('Mobile sidebar toggle elements not found:', {
+                sidebar: sidebar.length,
+                sidebarToggle: sidebarToggle.length,
+                sidebarOverlay: sidebarOverlay.length
+            });
+        }
+
+
+        // Use event delegation for sidebar toggle to ensure it works even if DOM changes
+        $(document).on('click', '#desktopSidebarToggle', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $sidebar = $('#sidebar');
+            $sidebar.toggleClass('collapsed');
+
+            const $icon = $(this).find('i');
+            if ($icon.length) {
+                $icon.attr('class', $sidebar.hasClass('collapsed') ? 'las la-bars' : 'las la-times');
             }
+
+            // Trigger resize event after transition to update charts/layouts (Golden Layout, ECharts)
+            setTimeout(function () {
+                window.dispatchEvent(new Event('resize'));
+
+                // Explicitly update Golden Layout if it exists
+                if (window.goldenLayoutInstance && typeof window.goldenLayoutInstance.updateSize === 'function') {
+                    window.goldenLayoutInstance.updateSize();
+                }
+            }, 300); // 300ms matches CSS transition duration
         });
-    }
+
+    });
 
     // ========================================
     // SIDEBAR SUBMENU TOGGLE

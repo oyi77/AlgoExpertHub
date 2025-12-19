@@ -73,6 +73,9 @@ Route::get('/market-data/realtime', function () {
     ]);
 });
 
+// Trading Terminal - Public endpoints
+Route::get('/trading-terminal/trading-pairs', [\App\Http\Controllers\TradingTerminalController::class, 'getTradingPairs']);
+
 // Authenticated User Routes
 Route::middleware('auth:sanctum')->group(function () {
     // Get authenticated user

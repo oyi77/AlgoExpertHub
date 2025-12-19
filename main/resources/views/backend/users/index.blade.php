@@ -59,6 +59,7 @@
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.user.details', $user) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i></a>
+                                            <button class="btn btn-sm btn-outline-primary changePassword" data-url="{{ route('admin.user.password.change', $user) }}"><i class="fa fa-key"></i></button>
                                         </td>
                                     </tr>
                                 @empty
@@ -110,6 +111,36 @@
             </form>
         </div>
     </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="changePassword">
+        <div class="modal-dialog" role="document">
+            <form action="" method="post">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ __('Change Password') }}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="">{{ __('New Password') }}</label>
+                            <input type="password" name="password" class="form-control" placeholder="New Password">
+                        </div>
+                        <div class="form-group">
+                            <label for="">{{ __('Confirm Password') }}</label>
+                            <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-sm btn-primary">{{ __('Change Password') }}</button>
+                        <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">{{ __('Close') }}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @push('script')
@@ -119,6 +150,13 @@
             $('.sendMail').on('click', function(e) {
                 e.preventDefault();
                 const modal = $('#mail');
+                modal.modal('show');
+            })
+
+            $('.changePassword').on('click', function(e) {
+                e.preventDefault();
+                const modal = $('#changePassword');
+                modal.find('form').attr('action', $(this).data('url'));
                 modal.modal('show');
             })
         })

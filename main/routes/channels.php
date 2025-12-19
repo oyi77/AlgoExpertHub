@@ -52,3 +52,8 @@ Broadcast::channel('user.{userId}.trading-bot.{botId}', function ($user, $userId
 Broadcast::channel('user.{userId}.market', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+// User positions channel for trading terminal
+Broadcast::channel('user.{userId}.positions', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

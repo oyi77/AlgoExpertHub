@@ -60,6 +60,17 @@ class Handler extends ExceptionHandler
         
         // Log all exceptions with full context
         // Also write to PHP error_log as backup
+        $userId = 'guest';
+        $adminId = null;
+        try {
+            if (app()->bound('auth')) {
+                $userId = auth()->id() ?? 'guest';
+                $adminId = auth()->guard('admin')->id() ?? null;
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
         $errorDetails = [
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
@@ -69,8 +80,8 @@ class Handler extends ExceptionHandler
             'class' => get_class($e),
             'request_url' => request()->fullUrl() ?? 'N/A',
             'request_method' => request()->method() ?? 'N/A',
-            'user_id' => auth()->id() ?? 'guest',
-            'admin_id' => auth()->guard('admin')->id() ?? null,
+            'user_id' => $userId,
+            'admin_id' => $adminId,
         ];
         
         // Write to PHP error_log as backup (works even if Laravel logging fails)

@@ -1,6 +1,10 @@
 # Multi-stage Dockerfile for AlgoExpertHub Trading Platform
 # Optimized for Laravel 10.x with Octane (Swoole), Horizon, and Queue Workers
 
+# Build arguments
+ARG PHP_VERSION=8.1
+ARG NODE_VERSION=18
+
 # ============================================================================
 # Stage 1: Composer Dependencies
 # ============================================================================
@@ -8,7 +12,7 @@ FROM composer:2 AS composer-dependencies
 
 WORKDIR /app
 
-# Copy composer files
+# Copy composer files (optimize layer caching)
 COPY main/composer.json main/composer.lock ./
 
 # Install dependencies (no dev dependencies for production)
@@ -22,7 +26,7 @@ RUN composer install \
 # ============================================================================
 # Stage 2: NPM Dependencies and Asset Compilation
 # ============================================================================
-FROM node:18-alpine AS node-builder
+FROM node:${NODE_VERSION}-alpine AS node-builder
 
 WORKDIR /app
 
@@ -43,7 +47,7 @@ RUN npm run production
 # ============================================================================
 # Stage 3: Production Image
 # ============================================================================
-FROM php:8.1-cli
+FROM php:${PHP_VERSION}-cli
 
 # Set working directory
 WORKDIR /var/www/html
@@ -67,11 +71,15 @@ RUN apt-get update && apt-get install -y \
     libxpm-dev \
     libssl-dev \
     libcurl4-openssl-dev \
+    libicu-dev \
+    libsodium-dev \
+    netcat-openbsd \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-configure intl \
     && docker-php-ext-install \
     pdo_mysql \
     pdo_pgsql \
@@ -82,7 +90,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     gd \
     zip \
     sockets \
-    opcache
+    opcache \
+    intl \
+    curl \
+    xml
 
 # Install Redis extension
 RUN pecl install redis \
@@ -95,6 +106,9 @@ RUN pecl install swoole \
 # Install gRPC extension (required by some trading APIs)
 RUN pecl install grpc \
     && docker-php-ext-enable grpc
+
+# Enable Sodium extension (built-in since PHP 7.2, Laravel 10+ encryption)
+RUN docker-php-ext-enable sodium
 
 # Configure PHP for production
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
@@ -110,14 +124,14 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy application files
-COPY main/ /var/www/html/
-
-# Copy vendor from composer stage
+# Copy vendor from composer stage (optimize layer caching)
 COPY --from=composer-dependencies /app/vendor /var/www/html/vendor
 
-# Copy compiled assets from node stage
+# Copy compiled assets from node stage (optimize layer caching)
 COPY --from=node-builder /app/public /var/www/html/public
+
+# Copy application files (last to maximize cache hits)
+COPY main/ /var/www/html/
 
 # Copy Docker configuration files
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf

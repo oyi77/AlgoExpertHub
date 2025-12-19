@@ -302,11 +302,12 @@
                                             <th>{{ __('Current') }}</th>
                                             <th>{{ __('Lot Size') }}</th>
                                             <th>{{ __('P&L') }}</th>
+                                            <th class="text-end">{{ __('Actions') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($openPositions as $pos)
-                                        <tr>
+                                        <tr id="position-row-{{ $pos->id }}">
                                             <td>{{ $pos->symbol ?? 'N/A' }}</td>
                                             <td>
                                                 <span class="badge {{ in_array(strtolower($pos->direction ?? ''), ['buy', 'long']) ? 'bg-success' : 'bg-danger' }}">
@@ -318,6 +319,14 @@
                                             <td>{{ $pos->quantity ?? 'N/A' }}</td>
                                             <td class="{{ ($pos->pnl ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
                                                 ${{ number_format($pos->pnl ?? 0, 2) }}
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        onclick="closePosition({{ $pos->id }})"
+                                                        id="close-btn-{{ $pos->id }}">
+                                                    <i class="las la-times"></i> {{ __('Close') }}
+                                                </button>
                                             </td>
                                         </tr>
                                         @endforeach
@@ -486,6 +495,65 @@ function executeManualTrade() {
         resultDiv.innerHTML = `<div class="alert alert-danger">
             <i class="las la-times-circle"></i> <strong>{{ __("Error") }}:</strong> ${error.message}
         </div>`;
+    });
+}
+
+// Close position function
+function closePosition(positionId) {
+    if (!confirm('{{ __("Are you sure you want to close this position?") }}')) {
+        return;
+    }
+
+    const closeBtn = document.getElementById('close-btn-' + positionId);
+    if (closeBtn) {
+        closeBtn.disabled = true;
+        closeBtn.innerHTML = '<i class="las la-spinner la-spin"></i> {{ __("Closing...") }}';
+    }
+
+    fetch('{{ route("user.trading.execution-log.index") }}/position/' + positionId + '/close', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="las la-check-circle"></i> <strong>{{ __("Position Closed Successfully!") }}</strong>
+                <p class="mb-0">{{ __("P&L") }}: $${parseFloat(data.data.pnl || 0).toFixed(2)}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.sp_site_card .card-body').insertBefore(alert, document.querySelector('.sp_site_card .card-body').firstChild);
+
+            // Remove row from table
+            const row = document.getElementById('position-row-' + positionId);
+            if (row) {
+                row.style.transition = 'opacity 0.3s';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+
+            // Reload page after 2 seconds to update stats
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alert('{{ __("Failed to close position") }}: ' + data.message);
+            if (closeBtn) {
+                closeBtn.disabled = false;
+                closeBtn.innerHTML = '<i class="las la-times"></i> {{ __("Close") }}';
+            }
+        }
+    })
+    .catch(error => {
+        alert('{{ __("Error closing position") }}: ' + error.message);
+        if (closeBtn) {
+            closeBtn.disabled = false;
+            closeBtn.innerHTML = '<i class="las la-times"></i> {{ __("Close") }}';
+        }
     });
 }
 </script>

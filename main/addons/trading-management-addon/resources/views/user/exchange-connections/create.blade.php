@@ -260,12 +260,12 @@
                         <label>{{ __('Provider/Exchange') }} <span class="text-danger">*</span></label>
                         <select name="exchange_name" id="providerSelect" class="form-control" required>
                             <option value="">{{ __('Select Provider') }}</option>
-                            <optgroup label="{{ __('Forex Brokers') }}" id="forexProviders" style="display:none;">
+                            <optgroup label="{{ __('Forex Brokers') }}" id="forexProviders">
                                 <option value="metaapi">MetaApi.cloud (MT4/MT5)</option>
                                 <option value="mtapi">mtapi.io (MT4/MT5) REST</option>
                                 <option value="mtapi_grpc">mtapi.io (MT4/MT5) gRPC</option>
                             </optgroup>
-                            <optgroup label="{{ __('Crypto Exchanges (CCXT)') }}" id="cryptoProviders" style="display:none;">
+                            <optgroup label="{{ __('Crypto Exchanges (CCXT)') }}" id="cryptoProviders">
                                 <option value="binance">Binance</option>
                                 <option value="coinbase">Coinbase</option>
                                 <option value="coinbasepro">Coinbase Pro</option>
@@ -349,80 +349,220 @@ document.addEventListener('DOMContentLoaded', function() {
     const metaapiAccountIdField = document.getElementById('metaapiAccountIdField');
     const providerHint = document.getElementById('providerHint');
 
+    // Check if elements exist
+    if (!exchangeType || !providerSelect) return;
+
+    // CCXT Exchanges Data
+    let ccxtExchanges = {};
+    let exchangesLoaded = false;
+    let isLoading = false;
+
+    // Helper to safely update Select2 or native select
+    function updateSelectValue(element, value) {
+        if (window.jQuery && $(element).hasClass('select2-hidden-accessible')) {
+            $(element).val(value).trigger('change');
+        } else {
+            element.value = value;
+            const event = new Event('change', { bubbles: true });
+            element.dispatchEvent(event);
+        }
+    }
+
+    // Helper to trigger UI update
+    function triggerChange(element) {
+        if (window.jQuery && $(element).hasClass('select2-hidden-accessible')) {
+             $(element).trigger('change');
+        } else {
+             const event = new Event('change', { bubbles: true });
+             element.dispatchEvent(event);
+        }
+    }
+
+    function loadCcxtExchanges() {
+        if (exchangesLoaded || isLoading) return Promise.resolve();
+        
+        isLoading = true;
+        
+        // Add loading indicator
+        if (cryptoProviders) {
+            cryptoProviders.innerHTML = '<option value="" disabled>Loading exchanges...</option>';
+        }
+        
+        return fetch('{{ route("user.exchange-connections.ccxt-exchanges") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.exchanges) {
+                    ccxtExchanges = data.exchanges;
+                    exchangesLoaded = true;
+                    populateCryptoProviders();
+                } else {
+                    populateDefaultCryptoProviders();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading exchanges:', error);
+                populateDefaultCryptoProviders();
+            })
+            .finally(() => {
+                isLoading = false;
+            });
+    }
+
+    function populateCryptoProviders() {
+        if (!cryptoProviders) return;
+        cryptoProviders.innerHTML = '';
+        
+        const popular = [];
+        const others = [];
+        
+        Object.values(ccxtExchanges).forEach(exchange => {
+            if (exchange.popular) popular.push(exchange);
+            else others.push(exchange);
+        });
+        
+        popular.forEach(exchange => {
+            const option = document.createElement('option');
+            option.value = exchange.id;
+            option.textContent = exchange.name;
+            cryptoProviders.appendChild(option);
+        });
+        
+        if (popular.length > 0 && others.length > 0) {
+            const separator = document.createElement('option');
+            separator.disabled = true;
+            separator.textContent = '──────────';
+            cryptoProviders.appendChild(separator);
+        }
+        
+        others.forEach(exchange => {
+            const option = document.createElement('option');
+            option.value = exchange.id;
+            option.textContent = exchange.name;
+            cryptoProviders.appendChild(option);
+        });
+    }
+
+    function populateDefaultCryptoProviders() {
+        if (!cryptoProviders) return;
+        const defaults = [
+            {id: 'binance', name: 'Binance', popular: true},
+            {id: 'coinbase', name: 'Coinbase', popular: true},
+            {id: 'kraken', name: 'Kraken', popular: true},
+            {id: 'bybit', name: 'Bybit', popular: true},
+            {id: 'kucoin', name: 'KuCoin', popular: true},
+            {id: 'okx', name: 'OKX', popular: true}
+        ];
+        
+        cryptoProviders.innerHTML = '';
+        defaults.forEach(exchange => {
+            const option = document.createElement('option');
+            option.value = exchange.id;
+            option.textContent = exchange.name;
+            cryptoProviders.appendChild(option);
+        });
+    }
+
     function updateFormBasedOnExchangeType() {
         const type = exchangeType.value;
-        providerSelect.value = '';
-        updateFormBasedOnProvider();
+        const providerForReset = providerSelect.value;
         
+        // 1. Reset provider selection to default/empty if switching types
+        // Capture if we are just initializing (maybe preserving old input) needed?
+        // simple approach: clear value.
+        updateSelectValue(providerSelect, '');
+
+        // 2. Toggle Optgroups
         if (type === 'CRYPTO_EXCHANGE') {
-            forexProviders.style.display = 'none';
-            cryptoProviders.style.display = '';
-            credentialsCard.style.display = 'block';
-            apiKeyField.style.display = 'block';
-            apiSecretField.style.display = 'block';
-            apiPassphraseField.style.display = 'block';
-            metaapiAccountIdField.style.display = 'none';
+            if (forexProviders) forexProviders.style.display = 'none';
+            if (cryptoProviders) cryptoProviders.style.display = ''; // default block/inline
+            
+            if (!exchangesLoaded) {
+                loadCcxtExchanges();
+            }
         } else if (type === 'FX_BROKER') {
-            forexProviders.style.display = '';
-            cryptoProviders.style.display = 'none';
-            credentialsCard.style.display = 'none';
+            if (forexProviders) forexProviders.style.display = '';
+            if (cryptoProviders) cryptoProviders.style.display = 'none';
         } else {
-            forexProviders.style.display = 'none';
-            cryptoProviders.style.display = 'none';
-            credentialsCard.style.display = 'none';
+            // Show nothing or all? Admin shows all. User previously showed nothing?
+            // Let's show all but nothing selected
+            if (forexProviders) forexProviders.style.display = '';
+            if (cryptoProviders) cryptoProviders.style.display = '';
         }
+
+        updateFormBasedOnProvider();
     }
 
     function updateFormBasedOnProvider() {
         const provider = providerSelect.value;
-        const exchangeType = document.getElementById('exchangeType').value;
+        const type = exchangeType.value;
         
-        if (!provider || !exchangeType) {
+        if (!type || !provider) {
             credentialsCard.style.display = 'none';
             return;
         }
-        
+
         const isMetaApi = provider === 'metaapi';
-        const isCrypto = exchangeType === 'CRYPTO_EXCHANGE';
-        const needsPassphrase = ['okx', 'kucoin', 'coinbasepro'].includes(provider);
+        const isCrypto = type === 'CRYPTO_EXCHANGE';
+        
+        // Default visibility reset
+        credentialsCard.style.display = 'block';
+        apiKeyField.style.display = 'block';
+        apiSecretField.style.display = 'block';
+        apiPassphraseField.style.display = 'none';
+        metaapiAccountIdField.style.display = 'none';
         
         if (isMetaApi) {
-            credentialsCard.style.display = 'block';
             apiKeyField.style.display = 'none';
             apiSecretField.style.display = 'none';
-            apiPassphraseField.style.display = 'none';
             metaapiAccountIdField.style.display = 'block';
             providerHint.textContent = '{{ __('MetaApi.cloud - Enter your MetaApi account ID') }}';
         } else if (isCrypto) {
-            credentialsCard.style.display = 'block';
-            apiKeyField.style.display = 'block';
-            apiSecretField.style.display = 'block';
-            apiPassphraseField.style.display = needsPassphrase ? 'block' : 'none';
-            metaapiAccountIdField.style.display = 'none';
+            let needsPassphrase = false;
+            // Check passphrase requirement
+            if (ccxtExchanges[provider]) {
+                needsPassphrase = ccxtExchanges[provider].needs_passphrase;
+            } else {
+                 needsPassphrase = ['okx', 'kucoin', 'coinbasepro'].includes(provider);
+            }
+
+            apiPassphraseField.style.display = 'block';
+            if (document.getElementById('apiPassphraseInput')) {
+                document.getElementById('apiPassphraseInput').style.display = 'block';
+            }
+
             if (needsPassphrase) {
                 document.getElementById('apiPassphraseOptional').innerHTML = '<span class="text-danger">*</span>';
+            } else {
+                document.getElementById('apiPassphraseOptional').innerHTML = '<span class="text-muted">({{ __('Optional') }})</span>';
             }
+            
             providerHint.textContent = '{{ __('Enter your API credentials from the exchange') }}';
         } else {
-            // Other forex providers (mtapi)
-            credentialsCard.style.display = 'block';
-            apiKeyField.style.display = 'block';
-            apiSecretField.style.display = 'block';
-            apiPassphraseField.style.display = 'none';
-            metaapiAccountIdField.style.display = 'none';
+            // MTApi or others
             providerHint.textContent = '{{ __('Enter your mtapi.io API credentials') }}';
         }
     }
 
-    exchangeType.addEventListener('change', updateFormBasedOnExchangeType);
-    providerSelect.addEventListener('change', updateFormBasedOnProvider);
+    // Event Listeners
+    if (window.jQuery) {
+        $(exchangeType).on('change', updateFormBasedOnExchangeType);
+        $(providerSelect).on('change', updateFormBasedOnProvider);
+    } else {
+        exchangeType.addEventListener('change', updateFormBasedOnExchangeType);
+        providerSelect.addEventListener('change', updateFormBasedOnProvider);
+    }
 
-    // Form validation
+    // Initialize
+    // If there's an old value (validation error), we might want to check it.
+    // However, the cleanest start is to run logic based on current select values.
+    updateFormBasedOnExchangeType();
+    
+    // Validation
     document.querySelector('form').addEventListener('submit', function(e) {
-        const exchangeType = document.getElementById('exchangeType').value;
         const provider = providerSelect.value;
         const isMetaApi = provider === 'metaapi';
-        
+        const type = exchangeType.value;
+
         if (isMetaApi) {
             const accountId = document.getElementById('metaapiAccountId').value;
             if (!accountId || accountId.trim() === '') {
@@ -430,27 +570,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('{{ __('Please enter a MetaAPI Account ID.') }}');
                 return false;
             }
-        } else {
-            const apiKey = document.getElementById('apiKeyInput').value;
-            const apiSecret = document.getElementById('apiSecretInput').value;
-            
-            if (!apiKey || !apiSecret) {
+        } else if (type || provider) { // Only validate if we have a type
+             const apiKey = document.getElementById('apiKeyInput').value;
+             const apiSecret = document.getElementById('apiSecretInput').value;
+             
+             // Simplistic validation - refine as needed
+             if ((!apiKey || !apiSecret) && !isMetaApi) {
                 e.preventDefault();
                 alert('{{ __('Please fill in all required API credentials.') }}');
                 return false;
-            }
-            
-            // Check passphrase if required
-            if (['okx', 'kucoin', 'coinbasepro'].includes(provider)) {
-                const passphrase = document.getElementById('apiPassphraseInput').value;
-                if (!passphrase) {
-                    e.preventDefault();
-                    alert('{{ __('API Passphrase is required for this exchange.') }}');
-                    return false;
-                }
-            }
+             }
         }
-        
         return true;
     });
 });

@@ -17,8 +17,8 @@
             <div class="tv-navbar-menu" id="navMenu">
                 <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
                 @auth
-                    @if(Route::has('user.signal.all'))
-                        <a href="{{ route('user.signal.all') }}">Signals</a>
+                    @if(Route::has('user.trading.multi-channel-signal.index'))
+                        <a href="{{ route('user.trading.multi-channel-signal.index') }}">Signal Center</a>
                     @endif
                     @if(Route::has('user.plans'))
                         <a href="{{ route('user.plans') }}">Plans</a>

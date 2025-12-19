@@ -30,7 +30,7 @@
                                onclick="switchTab('data-connections')"
                                href="#data-connections" 
                                role="tab">
-                                <i class="las la-plug me-1"></i> {{ __('Data Connections') }}
+                                <i class="las la-plug me-1"></i> {{ __('Connections') }}
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -77,15 +77,23 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="tab-content" id="configurationTabContent">
-                        <!-- Data Connections Tab -->
+                        <!-- Connections Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'data-connections' ? 'show active' : '' }}" 
                              id="data-connections" 
                              role="tabpanel">
                             @if(isset($dataConnections) && $dataConnections->count() > 0)
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0">{{ __('My Data Connections') }}</h5>
-                                    @if(Route::has('user.exchange-connections.create'))
-                                        <a href="{{ route('user.exchange-connections.create') }}" class="btn sp_theme_btn">
+                                    <h5 class="mb-0">{{ __('My Connections') }}</h5>
+                                    @php
+                                        $createRoute = null;
+                                        if (Route::has('user.exchange-connections.create')) {
+                                            $createRoute = route('user.exchange-connections.create');
+                                        } elseif (Route::has('user.execution-connections.create')) {
+                                            $createRoute = route('user.execution-connections.create');
+                                        }
+                                    @endphp
+                                    @if($createRoute)
+                                        <a href="{{ $createRoute }}" class="btn sp_theme_btn">
                                             <i class="las la-plus"></i> {{ __('Create Connection') }}
                                         </a>
                                     @endif
@@ -105,8 +113,16 @@
                                             @foreach($dataConnections as $conn)
                                             <tr>
                                                 <td><strong>{{ $conn->name }}</strong></td>
-                                                <td>{{ $conn->provider ?? 'N/A' }}</td>
-                                                <td><span class="badge bg-info">{{ __('Data Only') }}</span></td>
+                                                <td>{{ $conn->provider ?? $conn->exchange_name ?? 'N/A' }}</td>
+                                                <td>
+                                                    @if(isset($conn->connection_type))
+                                                        <span class="badge bg-info">{{ str_replace('_', ' ', $conn->connection_type) }}</span>
+                                                    @elseif(isset($conn->exchange_type))
+                                                         <span class="badge bg-info">{{ $conn->exchange_type }}</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ __('Unknown') }}</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     @if($conn->is_active)
                                                         <span class="badge bg-success">{{ __('Active') }}</span>
@@ -115,10 +131,20 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('user.trading-management.config.exchange-connections.show', $conn->id) ?? '#' }}" 
+                                                    @php
+                                                        $showRoute = null;
+                                                        if (Route::has('user.exchange-connections.show')) {
+                                                            $showRoute = route('user.exchange-connections.show', $conn->id);
+                                                        } elseif (Route::has('user.execution-connections.show')) {
+                                                            $showRoute = route('user.execution-connections.show', $conn->id);
+                                                        }
+                                                    @endphp
+                                                    @if($showRoute)
+                                                    <a href="{{ $showRoute }}" 
                                                        class="btn btn-xs btn-outline-info">
                                                         <i class="las la-eye"></i> {{ __('View') }}
                                                     </a>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -133,7 +159,7 @@
                             @else
                                 <div class="text-center py-5">
                                     <i class="las la-plug la-3x text-muted mb-3"></i>
-                                    <p class="text-muted">{{ __('No data connections found.') }}</p>
+                                    <p class="text-muted">{{ __('No connections found.') }}</p>
                                     @if(Route::has('user.exchange-connections.create'))
                                         <a href="{{ route('user.exchange-connections.create') }}" class="btn sp_theme_btn mt-2">
                                             <i class="las la-plus"></i> {{ __('Create First Connection') }}
