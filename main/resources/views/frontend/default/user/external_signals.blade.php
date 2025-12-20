@@ -104,7 +104,7 @@
         @endif
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         // Handle tab switching (Bootstrap 4)
         $(document).ready(function() {

@@ -704,20 +704,23 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'
         
         // Load MetaApi Stats content when tab is clicked
-        $('#metaapi-stats-tab').on('shown.bs.tab', function() {
+        // Load MetaApi Stats content when tab is clicked
+        const loadMetaApiStats = function() {
             const contentDiv = $('#metaapi-stats-content');
             
-            // Only load if not already loaded
+            // Only load if showing the spinner (meaning not loaded yet)
+            // or explicitly requested via refresh (not implemented here but good practice)
             if (contentDiv.find('.spinner-border').length > 0) {
                 $.ajax({
                     url: '{{ route("admin.trading-management.config.metaapi-stats.index") }}',
                     method: 'GET',
+                    timeout: 20000, // 20 seconds timeout
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'text/html'
@@ -726,16 +729,36 @@
                         contentDiv.html(html);
                     },
                     error: function(xhr, status, error) {
+                        let errorMsg = 'Unknown error';
+                        if (status === 'timeout') {
+                            errorMsg = 'Request timed out. The MetaApi service might be slow or unreachable.';
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (error) {
+                            errorMsg = error;
+                        }
+                        
                         contentDiv.html(`
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle"></i> 
-                                <strong>Error loading statistics:</strong> ${error || 'Unknown error'}
+                                <strong>Error loading statistics:</strong> ${errorMsg}
+                                <br><br>
+                                <button class="btn btn-sm btn-outline-danger" onclick="location.reload()">
+                                    <i class="fas fa-sync"></i> Retry
+                                </button>
                             </div>
                         `);
                     }
                 });
             }
-        });
+        };
+
+        $('#metaapi-stats-tab').on('shown.bs.tab', loadMetaApiStats);
+        
+        // Check if tab is already active on page load (e.g. via hash)
+        if ($('#metaapi-stats-tab').hasClass('active') || window.location.hash === '#tab-metaapi-stats') {
+            loadMetaApiStats();
+        }
         
         // Test Demo Connection
         $('#testDemoConnection').on('click', function() {

@@ -27,8 +27,11 @@
             <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="alert-link">Browse Templates →</a>
         </div>
 
-        {{-- Demo Mode Badge --}}
-        <div class="alert alert-warning mb-4">
+        {{-- Demo Mode Badge (conditional) --}}
+        @php
+            $isPaperTradingDefault = old('is_paper_trading', isset($bot) && $bot ? $bot->is_paper_trading : true);
+        @endphp
+        <div class="alert alert-warning mb-4" id="demo-mode-alert" style="display: {{ $isPaperTradingDefault ? 'block' : 'none' }};">
             <i class="fa fa-exclamation-triangle"></i> <strong>Demo Mode:</strong> This bot will run in paper trading mode. No real money will be used.
         </div>
 
@@ -41,7 +44,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     // Form validation
     document.getElementById('bot-form').addEventListener('submit', function(e) {
@@ -52,6 +55,32 @@
             e.preventDefault();
             alert('Please select an exchange connection and trading preset.');
             return false;
+        }
+    });
+
+    // Toggle demo mode alert based on checkbox state
+    function toggleDemoModeAlert() {
+        const checkbox = document.getElementById('is_paper_trading');
+        const alert = document.getElementById('demo-mode-alert');
+        
+        if (checkbox && alert) {
+            if (checkbox.checked) {
+                alert.style.display = 'block';
+            } else {
+                alert.style.display = 'none';
+            }
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('is_paper_trading');
+        if (checkbox) {
+            // Set initial state
+            toggleDemoModeAlert();
+            
+            // Listen for changes
+            checkbox.addEventListener('change', toggleDemoModeAlert);
         }
     });
 </script>

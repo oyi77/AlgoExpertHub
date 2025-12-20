@@ -146,7 +146,7 @@
     </div>
 
     @if ($analytics && !empty($dailyStats))
-        @push('script')
+        @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             const ctx = document.getElementById('dailyChart').getContext('2d');

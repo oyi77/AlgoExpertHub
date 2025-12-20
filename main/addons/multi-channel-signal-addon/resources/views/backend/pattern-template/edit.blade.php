@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         const templates = {
             regex: {

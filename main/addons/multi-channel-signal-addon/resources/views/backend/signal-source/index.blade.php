@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         document.querySelectorAll('.test-connection-btn').forEach(btn => {
             btn.addEventListener('click', function() {

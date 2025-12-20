@@ -145,6 +145,20 @@
                                                         <i class="las la-eye"></i> {{ __('View') }}
                                                     </a>
                                                     @endif
+                                                    @php
+                                                        $editRoute = null;
+                                                        if (Route::has('user.exchange-connections.edit')) {
+                                                            $editRoute = route('user.exchange-connections.edit', $conn->id);
+                                                        } elseif (Route::has('user.execution-connections.edit')) {
+                                                            $editRoute = route('user.execution-connections.edit', $conn->id);
+                                                        }
+                                                    @endphp
+                                                    @if($editRoute)
+                                                    <a href="{{ $editRoute }}" 
+                                                       class="btn btn-xs btn-outline-primary">
+                                                        <i class="las la-edit"></i> {{ __('Edit') }}
+                                                    </a>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -469,13 +483,16 @@
     @endif
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'
         
         // Function to switch tabs and update URL
         function switchTab(tabName) {
+            if (typeof window.showLoading === 'function') {
+                window.showLoading();
+            }
             const url = new URL(window.location);
             url.searchParams.set('tab', tabName);
             window.location.href = url.toString();

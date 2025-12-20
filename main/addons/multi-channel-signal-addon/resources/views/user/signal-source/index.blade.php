@@ -5,11 +5,8 @@
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h4 class="mb-0">{{ __('My Signal Sources') }}</h4>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('user.signal-sources.create', ['type' => 'telegram']) }}" class="btn sp_theme_btn">
+                <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn sp_theme_btn">
                     <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram') }}
-                </a>
-                <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn btn-outline-primary">
-                    <i class="las la-mobile me-1"></i> {{ __('Add Telegram MTProto') }}
                 </a>
                 <a href="{{ route('user.signal-sources.create', ['type' => 'api']) }}" class="btn btn-outline-secondary">
                     <i class="las la-code-branch me-1"></i> {{ __('Add API') }}
@@ -204,7 +201,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         document.querySelectorAll('.test-connection-btn').forEach(btn => {
             btn.addEventListener('click', function() {

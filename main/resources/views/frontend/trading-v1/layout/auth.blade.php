@@ -112,6 +112,33 @@
     @endif
     
     @stack('styles')
+    <style>
+        #loading-overlay {
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+        #loading-overlay .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(26, 255, 213, 0.1);
+            border-top: 4px solid var(--tv-primary, #1AFFD5);
+            border-radius: 50%;
+            animation: tv-spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            box-shadow: 0 0 20px rgba(26, 255, 213, 0.2);
+        }
+        @keyframes tv-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: var(--tv-primary, #1AFFD5);
+            font-family: var(--tv-font-body, 'Inter', sans-serif);
+            margin-top: 15px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+    </style>
 </head>
 <body>
     <!-- Mobile Top Bar -->
@@ -212,6 +239,64 @@
     @endif
     
     @stack('scripts')
+    <script>
+        $(document).ready(function() {
+            // Intercept internal link clicks to show loading
+            $('a').on('click', function(e) {
+                const href = $(this).attr('href');
+                const target = $(this).attr('target');
+                
+                // Only show for internal links, not # or javascript:, and not new tabs
+                if (href && 
+                    href !== '#' && 
+                    !href.startsWith('javascript:') && 
+                    !href.startsWith('mailto:') && 
+                    !href.startsWith('tel:') &&
+                    (!target || target === '_self') &&
+                    (href.startsWith('/') || href.includes(window.location.hostname))) {
+                    
+                    if (typeof window.showLoading === 'function') {
+                        window.showLoading();
+                        // Add a small timeout to allow the browser to render the loading overlay 
+                        // before starting the heavy navigation process
+                    }
+                }
+            });
+
+            // Re-define showLoading to be more beautiful and include text
+            window.showLoading = function() {
+                if (!$('#loading-overlay').length) {
+                    $('body').append(`
+                        <div id="loading-overlay" style="
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: rgba(18, 18, 18, 0.85);
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 10000;
+                            opacity: 0;
+                        ">
+                            <div class="spinner"></div>
+                            <div class="loading-text">{{ __('Loading...') }}</div>
+                        </div>
+                    `);
+                    setTimeout(() => $('#loading-overlay').css('opacity', '1'), 10);
+                }
+            };
+        });
+
+        // Hide loading when page is fully loaded or from cache (back button)
+        $(window).on('pageshow load', function() {
+            if (typeof window.hideLoading === 'function') {
+                window.hideLoading();
+            }
+        });
+    </script>
 </body>
 </html>
 

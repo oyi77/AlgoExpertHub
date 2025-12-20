@@ -234,7 +234,7 @@
     <script src="{{ Config::jsLib('frontend', 'lib/apex.min.js') }}"></script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
     $(function() {
         'use strict'

@@ -309,7 +309,7 @@
     </script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
     $(function() {
         'use strict'

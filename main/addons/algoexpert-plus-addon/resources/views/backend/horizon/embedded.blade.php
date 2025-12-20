@@ -589,7 +589,7 @@
 </style>
 @endpush
 
-@push('script')
+@push('scripts')
 <script>
     function refreshHorizon() {
         var iframe = document.getElementById('horizon-iframe');

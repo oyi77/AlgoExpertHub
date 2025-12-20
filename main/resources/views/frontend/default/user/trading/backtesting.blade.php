@@ -61,75 +61,293 @@
                         <div class="tab-pane fade {{ $activeTab === 'create' ? 'show active' : '' }}" 
                              id="create" 
                              role="tabpanel">
-                            <div class="alert alert-info">
-                                <i class="las la-info-circle"></i>
-                                {{ __('Backtesting feature is coming soon. You will be able to test your trading strategies on historical market data.') }}
-                            </div>
-                            @if(isset($presets) && $presets->count() > 0)
-                                <div class="sp_site_card">
-                                    <h5 class="mb-3">{{ __('Available Presets for Testing') }}</h5>
-                                    <div class="row gy-3">
-                                        @foreach($presets as $preset)
-                                        <div class="col-md-4">
-                                            <div class="card border">
-                                                <div class="card-body">
-                                                    <h6>{{ $preset->name }}</h6>
-                                                    <p class="text-muted small mb-2">{{ Str::limit($preset->description ?? 'No description', 100) }}</p>
-                                                    <button class="btn btn-sm btn-outline-primary w-100" disabled>
-                                                        <i class="las la-flask"></i> {{ __('Test Strategy') }}
-                                                    </button>
+                            <form id="createBacktestForm" action="{{ route('user.trading.backtesting.store') }}" method="POST">
+                                @csrf
+                                
+                                <div class="row gy-4">
+                                    <!-- Basic Information -->
+                                    <div class="col-12">
+                                        <h5 class="mb-3"><i class="las la-info-circle"></i> {{ __('Basic Information') }}</h5>
+                                        <div class="row gy-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="name">{{ __('Backtest Name') }} <span class="text-danger">*</span></label>
+                                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', '') }}" required placeholder="{{ __('My Strategy Test') }}">
+                                                    @error('name')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="preset_id">{{ __('Trading Preset') }} <span class="text-danger">*</span></label>
+                                                    <select name="preset_id" id="preset_id" class="form-control @error('preset_id') is-invalid @enderror" required>
+                                                        <option value="">{{ __('Select Preset') }}</option>
+                                                        @if(isset($presets) && $presets->count() > 0)
+                                                            @foreach($presets as $preset)
+                                                                <option value="{{ $preset->id }}" {{ old('preset_id') == $preset->id ? 'selected' : '' }}>
+                                                                    {{ $preset->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        @endif
+                                                    </select>
+                                                    @error('preset_id')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                    <small class="text-muted">{{ __('Select a risk management preset for position sizing') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-group">
+                                                    <label for="description">{{ __('Description') }} <span class="text-muted">({{ __('Optional') }})</span></label>
+                                                    <textarea name="description" id="description" class="form-control" rows="2" placeholder="{{ __('Optional description for this backtest') }}">{{ old('description', '') }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
-                                        @endforeach
+                                    </div>
+
+                                    <!-- Market Data Configuration -->
+                                    <div class="col-12">
+                                        <h5 class="mb-3"><i class="las la-chart-line"></i> {{ __('Market Data') }}</h5>
+                                        <div class="row gy-3">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="symbol">{{ __('Trading Pair') }} <span class="text-danger">*</span></label>
+                                                    <input type="text" name="symbol" id="symbol" class="form-control @error('symbol') is-invalid @enderror" value="{{ old('symbol', 'BTC/USDT') }}" required placeholder="BTC/USDT">
+                                                    @error('symbol')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                    <small class="text-muted">{{ __('Format: BTC/USDT, ETH/USDT, etc.') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="timeframe">{{ __('Timeframe') }} <span class="text-danger">*</span></label>
+                                                    <select name="timeframe" id="timeframe" class="form-control @error('timeframe') is-invalid @enderror" required>
+                                                        <option value="1m" {{ old('timeframe') == '1m' ? 'selected' : '' }}>1 Minute</option>
+                                                        <option value="5m" {{ old('timeframe') == '5m' ? 'selected' : '' }}>5 Minutes</option>
+                                                        <option value="15m" {{ old('timeframe') == '15m' ? 'selected' : '' }}>15 Minutes</option>
+                                                        <option value="1h" {{ old('timeframe') == '1h' ? 'selected' : 'selected' }}>1 Hour</option>
+                                                        <option value="4h" {{ old('timeframe') == '4h' ? 'selected' : '' }}>4 Hours</option>
+                                                        <option value="1d" {{ old('timeframe') == '1d' ? 'selected' : '' }}>1 Day</option>
+                                                    </select>
+                                                    @error('timeframe')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="initial_balance">{{ __('Initial Balance') }} <span class="text-danger">*</span></label>
+                                                    <input type="number" name="initial_balance" id="initial_balance" class="form-control @error('initial_balance') is-invalid @enderror" value="{{ old('initial_balance', 10000) }}" required min="100" step="0.01">
+                                                    @error('initial_balance')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                    <small class="text-muted">{{ __('Starting capital for backtest') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="start_date">{{ __('Start Date') }} <span class="text-danger">*</span></label>
+                                                    <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') is-invalid @enderror" value="{{ old('start_date', date('Y-m-d', strtotime('-30 days'))) }}" required max="{{ date('Y-m-d') }}">
+                                                    @error('start_date')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="end_date">{{ __('End Date') }} <span class="text-danger">*</span></label>
+                                                    <input type="date" name="end_date" id="end_date" class="form-control @error('end_date') is-invalid @enderror" value="{{ old('end_date', date('Y-m-d')) }}" required max="{{ date('Y-m-d') }}">
+                                                    @error('end_date')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Strategy Components (Optional) -->
+                                    <div class="col-12">
+                                        <h5 class="mb-3"><i class="las la-cog"></i> {{ __('Strategy Components') }} <span class="text-muted small">({{ __('Optional') }})</span></h5>
+                                        <div class="row gy-3">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="filter_strategy_id">{{ __('Filter Strategy') }}</label>
+                                                    <select name="filter_strategy_id" id="filter_strategy_id" class="form-control">
+                                                        <option value="">{{ __('None - Use all signals') }}</option>
+                                                        @php
+                                                            $filterStrategies = [];
+                                                            if (class_exists(\Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::class)) {
+                                                                try {
+                                                                    $filterStrategies = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::where(function($query) {
+                                                                        $query->where('created_by_user_id', auth()->id())
+                                                                              ->orWhereNull('created_by_user_id');
+                                                                    })->get();
+                                                                } catch (\Exception $e) {
+                                                                    $filterStrategies = collect([]);
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        @foreach($filterStrategies as $strategy)
+                                                            <option value="{{ $strategy->id }}" {{ old('filter_strategy_id') == $strategy->id ? 'selected' : '' }}>
+                                                                {{ $strategy->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="text-muted">{{ __('Apply technical indicator filters to signals') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="ai_model_profile_id">{{ __('AI Model Profile') }}</label>
+                                                    <select name="ai_model_profile_id" id="ai_model_profile_id" class="form-control">
+                                                        <option value="">{{ __('None - No AI confirmation') }}</option>
+                                                        @php
+                                                            $aiProfiles = [];
+                                                            if (class_exists(\Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::class)) {
+                                                                try {
+                                                                    $aiProfiles = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::where(function($query) {
+                                                                        $query->where('created_by_user_id', auth()->id())
+                                                                              ->orWhereNull('created_by_user_id');
+                                                                    })->get();
+                                                                } catch (\Exception $e) {
+                                                                    $aiProfiles = collect([]);
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        @foreach($aiProfiles as $profile)
+                                                            <option value="{{ $profile->id }}" {{ old('ai_model_profile_id') == $profile->id ? 'selected' : '' }}>
+                                                                {{ $profile->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="text-muted">{{ __('Use AI to confirm signals before execution') }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-muted">
+                                                    <i class="las la-info-circle"></i> 
+                                                    {{ __('Backtest will run in the background. You can check results in the Results tab.') }}
+                                                </small>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="las la-play"></i> {{ __('Start Backtest') }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            @endif
+                            </form>
                         </div>
 
                         <!-- Results Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'results' ? 'show active' : '' }}" 
                              id="results" 
                              role="tabpanel">
-                            @if(isset($results) && $results->count() > 0)
+                            @php
+                                $backtests = collect([]);
+                                if (class_exists(\Addons\TradingManagement\Modules\Backtesting\Models\Backtest::class)) {
+                                    try {
+                                        $backtests = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('user_id', auth()->id())
+                                            ->with('result', 'preset')
+                                            ->orderBy('created_at', 'desc')
+                                            ->paginate(20);
+                                    } catch (\Exception $e) {
+                                        \Log::error('Backtesting: Error loading backtests', ['error' => $e->getMessage()]);
+                                    }
+                                }
+                            @endphp
+                            
+                            @if($backtests->count() > 0)
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th>{{ __('Test Name') }}</th>
-                                                <th>{{ __('Strategy') }}</th>
+                                                <th>{{ __('Name') }}</th>
+                                                <th>{{ __('Symbol') }}</th>
+                                                <th>{{ __('Timeframe') }}</th>
                                                 <th>{{ __('Period') }}</th>
+                                                <th>{{ __('Status') }}</th>
                                                 <th>{{ __('Win Rate') }}</th>
-                                                <th>{{ __('Total P&L') }}</th>
+                                                <th>{{ __('Return') }}</th>
                                                 <th>{{ __('Created') }}</th>
                                                 <th class="text-end">{{ __('Actions') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($results as $result)
+                                            @foreach($backtests as $backtest)
                                             <tr>
-                                                <td><strong>{{ $result->name ?? 'N/A' }}</strong></td>
-                                                <td>{{ $result->strategy ?? 'N/A' }}</td>
-                                                <td>{{ $result->period ?? 'N/A' }}</td>
-                                                <td>{{ number_format($result->win_rate ?? 0, 2) }}%</td>
-                                                <td class="{{ ($result->total_pnl ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                                    {{ number_format($result->total_pnl ?? 0, 2) }}
+                                                <td><strong>{{ $backtest->name }}</strong></td>
+                                                <td>{{ $backtest->symbol }}</td>
+                                                <td>{{ strtoupper($backtest->timeframe) }}</td>
+                                                <td>
+                                                    {{ $backtest->start_date->format('M d, Y') }} - 
+                                                    {{ $backtest->end_date->format('M d, Y') }}
                                                 </td>
-                                                <td>{{ $result->created_at ? $result->created_at->diffForHumans() : 'N/A' }}</td>
+                                                <td>
+                                                    @if($backtest->status === 'completed')
+                                                        <span class="badge bg-success">{{ __('Completed') }}</span>
+                                                    @elseif($backtest->status === 'running')
+                                                        <span class="badge bg-info">
+                                                            {{ __('Running') }} ({{ $backtest->progress_percent }}%)
+                                                        </span>
+                                                    @elseif($backtest->status === 'failed')
+                                                        <span class="badge bg-danger">{{ __('Failed') }}</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ __('Pending') }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($backtest->result)
+                                                        {{ number_format($backtest->result->win_rate, 2) }}%
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($backtest->result)
+                                                        <span class="{{ $backtest->result->return_percent >= 0 ? 'text-success' : 'text-danger' }}">
+                                                            {{ $backtest->result->return_percent >= 0 ? '+' : '' }}{{ number_format($backtest->result->return_percent, 2) }}%
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $backtest->created_at->diffForHumans() }}</td>
                                                 <td class="text-end">
-                                                    <a href="#" class="btn btn-xs btn-outline-info">
-                                                        <i class="las la-eye"></i> {{ __('View') }}
-                                                    </a>
+                                                    @if($backtest->status === 'completed' && $backtest->result)
+                                                        <a href="{{ route('user.trading.backtesting.show', $backtest->id) }}" class="btn btn-sm btn-outline-info">
+                                                            <i class="las la-eye"></i> {{ __('View') }}
+                                                        </a>
+                                                    @elseif($backtest->status === 'failed')
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="{{ $backtest->error_message ?? 'Unknown error' }}">
+                                                            <i class="las la-exclamation-triangle"></i> {{ __('Error') }}
+                                                        </button>
+                                                    @else
+                                                        <span class="text-muted">{{ __('In Progress') }}</span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
+                                    
+                                    @if(method_exists($backtests, 'links'))
+                                        <div class="mt-3">
+                                            {{ $backtests->links() }}
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="text-center py-5">
                                     <i class="las la-list la-3x text-muted mb-3"></i>
-                                    <p class="text-muted">{{ __('No backtest results found.') }}</p>
+                                    <p class="text-muted">{{ __('No backtest results found. Create your first backtest in the "Create Backtest" tab.') }}</p>
                                 </div>
                             @endif
                         </div>
@@ -183,7 +401,7 @@
     @endif
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'

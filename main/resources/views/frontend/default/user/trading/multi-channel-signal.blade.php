@@ -92,6 +92,12 @@
                         <div class="tab-pane fade {{ $activeTab === 'all-signals' ? 'show active' : '' }}" 
                              id="all-signals" 
                              role="tabpanel">
+                            <div class="mb-3">
+                                <p class="text-muted small">
+                                    <i class="las la-info-circle"></i> 
+                                    {{ __('This tab shows all auto-created signals from your connected signal sources. Signals are created as drafts and require admin review before publishing.') }}
+                                </p>
+                            </div>
                             @if(isset($signals))
                                 <div class="row gy-4">
                                     @forelse ($signals as $signal)
@@ -187,10 +193,13 @@
                             @else
                                 <div class="text-center py-5">
                                     <i class="las la-plug la-3x text-muted mb-3"></i>
-                                    <p class="text-muted">{{ __('No signal sources found.') }}</p>
-                                    <a href="{{ route('user.signal-sources.create') }}" class="btn sp_theme_btn mt-2">
-                                        {{ __('Create First Source') }}
-                                    </a>
+                                    <h5 class="mb-2">{{ __('No Signal Sources Yet') }}</h5>
+                                    <p class="text-muted mb-4">{{ __('Get started by adding your first signal source. Choose from Telegram Bot or Telegram MTProto.') }}</p>
+                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                        <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn btn-primary">
+                                            <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram') }}
+                                        </a>
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -221,6 +230,12 @@
                         <div class="tab-pane fade {{ $activeTab === 'signal-review' ? 'show active' : '' }}" 
                              id="signal-review" 
                              role="tabpanel">
+                            <div class="mb-3">
+                                <p class="text-muted small">
+                                    <i class="las la-info-circle"></i> 
+                                    {{ __('This tab shows draft signals that were auto-created from your signal sources. These signals require admin review before they can be published. Click "Review" to edit and publish a signal.') }}
+                                </p>
+                            </div>
                             @if(isset($reviewSignals) && $reviewSignals->count() > 0)
                                 <div class="row gy-4">
                                     @foreach ($reviewSignals as $signal)
@@ -274,9 +289,11 @@
                             @if(isset($patterns) && $patterns->count() > 0)
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="mb-0">{{ __('My Pattern Templates') }}</h5>
-                                    <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn" target="_blank">
-                                        <i class="las la-plus"></i> {{ __('Create Pattern') }}
-                                    </a>
+                                    @if(Route::has('admin.pattern-templates.create'))
+                                        <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn" target="_blank">
+                                            <i class="las la-plus"></i> {{ __('Create Pattern') }}
+                                        </a>
+                                    @endif
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -297,11 +314,13 @@
                                                 <td><code class="small">{{ Str::limit($pattern->pattern, 50) }}</code></td>
                                                 <td>{{ $pattern->created_at->diffForHumans() }}</td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('admin.pattern-templates.edit', $pattern->id) }}" 
-                                                       class="btn btn-xs btn-outline-primary" 
-                                                       target="_blank">
-                                                        <i class="las la-edit"></i> {{ __('Edit') }}
-                                                    </a>
+                                                    @if(Route::has('admin.pattern-templates.edit'))
+                                                        <a href="{{ route('admin.pattern-templates.edit', $pattern->id) }}" 
+                                                           class="btn btn-xs btn-outline-primary" 
+                                                           target="_blank">
+                                                            <i class="las la-edit"></i> {{ __('Edit') }}
+                                                        </a>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -317,9 +336,13 @@
                                 <div class="text-center py-5">
                                     <i class="las la-code la-3x text-muted mb-3"></i>
                                     <p class="text-muted">{{ __('No pattern templates found.') }}</p>
-                                    <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn mt-2" target="_blank">
-                                        <i class="las la-plus"></i> {{ __('Create First Pattern') }}
-                                    </a>
+                                    @if(Route::has('admin.pattern-templates.create'))
+                                        <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn mt-2" target="_blank">
+                                            <i class="las la-plus"></i> {{ __('Create First Pattern') }}
+                                        </a>
+                                    @else
+                                        <p class="text-muted small mt-2">{{ __('Pattern templates are managed by administrators. Contact your admin to create pattern templates.') }}</p>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -373,7 +396,7 @@
     @endif
 </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         $(function() {
             'use strict'

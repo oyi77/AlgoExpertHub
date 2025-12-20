@@ -2117,6 +2117,8 @@ body:has(.tv-sidebar.collapsed) .tv-main,
     color: var(--tv-text-muted);
     transition: all 0.3s ease;
     cursor: pointer;
+    z-index: 10001; /* Above terminal elements */
+    position: relative;
 }
 
 .tv-desktop-sidebar-toggle:hover {

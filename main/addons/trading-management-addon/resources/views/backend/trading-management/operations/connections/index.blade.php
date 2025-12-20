@@ -119,7 +119,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 $(document).ready(function() {
     $('.test-connection').click(function() {

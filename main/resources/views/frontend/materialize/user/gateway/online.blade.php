@@ -350,7 +350,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
     <script src="https://js.stripe.com/v2/"></script>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

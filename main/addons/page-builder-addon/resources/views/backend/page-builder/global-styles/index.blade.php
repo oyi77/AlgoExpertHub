@@ -115,7 +115,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize Feather icons if available

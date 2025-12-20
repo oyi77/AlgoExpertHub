@@ -340,12 +340,26 @@
             console.log(`WebSocket: Switched to market.${newSymbol}`);
         }
 
-        // Reload data if in real mode
+        // Reload chart with new symbol
         if (currentMode === 'real') {
             const container = document.getElementById('tradingview_chart');
-            if (container) container.innerHTML = '';
-            chart = null;
-            initChart();
+            if (container) {
+                // Destroy existing chart completely
+                if (chart) {
+                    try {
+                        chart.remove();
+                    } catch (e) {
+                        console.warn('Error removing chart:', e);
+                    }
+                    chart = null;
+                }
+                // Clear container
+                container.innerHTML = '';
+                // Reinitialize with new symbol
+                setTimeout(() => {
+                    initChart();
+                }, 100);
+            }
             // Load orderbook instantly via REST, then connect WebSocket
             loadOrderbookREST();
             // Reconnect Binance WebSocket for new symbol
@@ -479,7 +493,15 @@
      * TradingView Chart Widget
      */
     function initChart() {
-        if (chart) return; // Already initialized
+        // Always recreate chart to ensure symbol updates
+        if (chart) {
+            try {
+                chart.remove();
+            } catch (e) {
+                console.warn('Error removing existing chart:', e);
+            }
+            chart = null;
+        }
 
         if (typeof TradingView === 'undefined') {
             setTimeout(initChart, 100);
@@ -495,11 +517,19 @@
         // Clear container first
         container.innerHTML = '';
 
-        // Initialize TradingView widget
+        // Determine exchange prefix based on symbol
+        let exchangePrefix = 'BINANCE';
+        if (currentSymbol.includes('USDT') || currentSymbol.includes('BTC') || currentSymbol.includes('ETH')) {
+            exchangePrefix = 'BINANCE';
+        } else if (currentSymbol.includes('EUR') || currentSymbol.includes('GBP') || currentSymbol.includes('USD')) {
+            exchangePrefix = 'FX_IDC';
+        }
+
+        // Initialize TradingView widget with current symbol
         chart = new TradingView.widget({
             "width": "100%",
             "height": 600,
-            "symbol": "BINANCE:" + currentSymbol,
+            "symbol": exchangePrefix + ":" + currentSymbol,
             "interval": "5",
             "timezone": "Etc/UTC",
             "theme": "dark",
@@ -521,6 +551,8 @@
                 "scalesProperties.textColor": "#d1d4dc"
             }
         });
+        
+        console.log('Chart initialized with symbol:', exchangePrefix + ":" + currentSymbol);
     }
 
     // No need for loadCandlestickData or updateLegend as Widget handles it
@@ -1430,15 +1462,56 @@
     }
 
     function placeOrder(direction) {
-        const amount = document.getElementById('orderAmount')?.value;
+        const amountInput = document.getElementById('orderAmount');
+        const amount = amountInput?.value;
         const slPrice = document.getElementById('stopLoss')?.value;
         const tpPrice = document.getElementById('takeProfit')?.value;
+        const errorDiv = document.getElementById('orderAmount-error');
 
-        if (!amount) {
+        // Clear previous errors
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+        if (amountInput) {
+            amountInput.classList.remove('is-invalid');
+        }
+
+        // Validate amount
+        if (!amount || parseFloat(amount) <= 0) {
+            const errorMsg = 'Amount is required and must be greater than 0. Please enter the quantity you want to trade.';
+            if (errorDiv) {
+                errorDiv.textContent = errorMsg;
+                errorDiv.style.display = 'block';
+            }
+            if (amountInput) {
+                amountInput.classList.add('is-invalid');
+                amountInput.focus();
+            }
             if (typeof toastr !== 'undefined') {
-                toastr.error('Please enter amount');
+                toastr.error('Please enter a valid amount');
             } else {
-                alert('Please enter amount');
+                alert(errorMsg);
+            }
+            return;
+        }
+
+        // Validate amount is not too large (check against available balance)
+        const availableBalance = parseFloat(document.getElementById('availableBalance')?.textContent?.replace(/[^\d.]/g, '') || '0');
+        const orderTotal = parseFloat(document.getElementById('orderTotal')?.value || '0');
+        if (orderTotal > availableBalance && currentMode === 'real') {
+            const errorMsg = `Insufficient balance. Available: ${availableBalance.toFixed(2)} USDT, Required: ${orderTotal.toFixed(2)} USDT. Please reduce the amount or deposit more funds.`;
+            if (errorDiv) {
+                errorDiv.textContent = errorMsg;
+                errorDiv.style.display = 'block';
+            }
+            if (amountInput) {
+                amountInput.classList.add('is-invalid');
+            }
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Insufficient balance');
+            } else {
+                alert(errorMsg);
             }
             return;
         }
@@ -1483,30 +1556,66 @@
             },
             body: JSON.stringify(orderData)
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to place order');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    // Clear any errors
+                    const errorDiv = document.getElementById('orderAmount-error');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                        errorDiv.textContent = '';
+                    }
+                    if (amountInput) {
+                        amountInput.classList.remove('is-invalid');
+                    }
+
                     if (typeof toastr !== 'undefined') {
-                        toastr.success(data.message);
+                        toastr.success(data.message || 'Order placed successfully');
                     } else {
-                        alert(data.message);
+                        alert(data.message || 'Order placed successfully');
                     }
                     document.getElementById('orderForm')?.reset();
                     loadPositions();
                 } else {
+                    // Display error message
+                    const errorMsg = data.message || 'Failed to place order. Please check your inputs and try again.';
+                    const errorDiv = document.getElementById('orderAmount-error');
+                    if (errorDiv) {
+                        errorDiv.textContent = errorMsg;
+                        errorDiv.style.display = 'block';
+                    }
+                    if (amountInput) {
+                        amountInput.classList.add('is-invalid');
+                    }
                     if (typeof toastr !== 'undefined') {
-                        toastr.error(data.message);
+                        toastr.error(errorMsg);
                     } else {
-                        alert(data.message);
+                        alert(errorMsg);
                     }
                 }
             })
             .catch(error => {
                 console.error('Error placing order:', error);
+                const errorMsg = error.message || 'Failed to place order. Please check your connection and try again.';
+                const errorDiv = document.getElementById('orderAmount-error');
+                if (errorDiv) {
+                    errorDiv.textContent = errorMsg;
+                    errorDiv.style.display = 'block';
+                }
+                if (amountInput) {
+                    amountInput.classList.add('is-invalid');
+                }
                 if (typeof toastr !== 'undefined') {
-                    toastr.error('Failed to place order');
+                    toastr.error(errorMsg);
                 } else {
-                    alert('Failed to place order');
+                    alert(errorMsg);
                 }
             });
     }

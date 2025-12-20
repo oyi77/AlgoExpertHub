@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
+use Addons\TradingManagement\Modules\DataProvider\Services\MetaApiProvisioningService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Admin Execution Connection Controller
@@ -53,6 +55,33 @@ class ExecutionConnectionController extends Controller
             'preset_id' => 'nullable|exists:trading_presets,id',
             'data_connection_id' => 'nullable|exists:data_connections,id',
         ]);
+
+        // Validate credentials based on provider
+        if ($validated['exchange_name'] === 'metaapi') {
+            if (empty($validated['credentials']['account_id'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['credentials.account_id' => 'MetaApi Account ID is required. Add your MT account to MetaApi first, then copy the Account ID from your MetaApi dashboard.']);
+            }
+            // Auto-fill api_token from config if not provided
+            if (empty($validated['credentials']['api_token'])) {
+                $validated['credentials']['api_token'] = config('trading-management.metaapi.api_token');
+            }
+        } elseif (in_array($validated['exchange_name'], ['mtapi', 'mtapi_grpc'])) {
+            // mtapi.io requires api_key and api_secret
+            if (empty($validated['credentials']['api_key']) || empty($validated['credentials']['api_secret'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['credentials' => 'API Key and API Secret are required for mtapi.io connections.']);
+            }
+        } elseif ($validated['type'] === 'CRYPTO_EXCHANGE') {
+            // Crypto exchanges require api_key and api_secret
+            if (empty($validated['credentials']['api_key']) || empty($validated['credentials']['api_secret'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['credentials' => 'API Key and API Secret are required for crypto exchange connections.']);
+            }
+        }
 
         $connection = ExecutionConnection::create([
             'admin_id' => auth()->guard('admin')->id(),
@@ -183,6 +212,106 @@ class ExecutionConnectionController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Connection deactivated');
+    }
+
+    /**
+     * Add MT account to MetaApi
+     */
+    public function addMetaApiAccount(Request $request)
+    {
+        $validated = $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+            'server' => 'required|string',
+            'name' => 'required|string|max:255',
+            'platform' => 'required|in:MT4,MT5,mt4,mt5',
+            'provisioning_profile_id' => 'nullable|string',
+            'account_type' => 'nullable|in:cloud-g1,cloud-g2',
+            'magic' => 'nullable|integer|min:0',
+            'manual_trades' => 'nullable|boolean',
+        ]);
+
+        try {
+            $provisioningService = new MetaApiProvisioningService();
+
+            $result = $provisioningService->addAccount([
+                'login' => $validated['login'],
+                'password' => $validated['password'],
+                'server' => $validated['server'],
+                'name' => $validated['name'],
+                'platform' => $validated['platform'],
+                'provisioningProfileId' => $validated['provisioning_profile_id'] ?? null,
+                'type' => $validated['account_type'] ?? 'cloud-g2',
+                'magic' => $validated['magic'] ?? null,
+                'manualTrades' => $validated['manual_trades'] ?? false,
+            ]);
+
+            if ($result['success']) {
+                $accountId = $result['account_id'];
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'metaapi_account_id' => $accountId,
+                    'data' => $result['data'] ?? [],
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'error_data' => $result['data'] ?? null,
+                    'status_code' => $result['status_code'] ?? 400,
+                ], $result['status_code'] ?? 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to add MetaApi account', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add account: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get MetaApi account status
+     */
+    public function getMetaApiAccountStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'account_id' => 'required|string',
+        ]);
+
+        try {
+            $provisioningService = new MetaApiProvisioningService();
+            $result = $provisioningService->getAccountStatus($validated['account_id']);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'status' => $result['status'] ?? 'unknown',
+                    'data' => $result['data'] ?? [],
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to get account status',
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to get MetaApi account status', [
+                'error' => $e->getMessage(),
+                'account_id' => $validated['account_id'],
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get account status: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
 

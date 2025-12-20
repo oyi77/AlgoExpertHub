@@ -201,7 +201,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     function escapeHtml(text) {
         const map = {

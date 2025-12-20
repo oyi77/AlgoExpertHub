@@ -555,7 +555,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 // Auto-refresh monitoring data
 (function() {

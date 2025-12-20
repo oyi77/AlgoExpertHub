@@ -62,7 +62,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     document.getElementById('theme-selector').addEventListener('change', function() {
         const theme = this.value;

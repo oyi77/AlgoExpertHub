@@ -113,6 +113,7 @@
                     </option>
                 @endforeach
             </select>
+            <small class="form-text text-muted">{{ __('Select a risk management preset that defines position sizing, stop loss, take profit, and other risk parameters for your bot.') }}</small>
             @error('trading_preset_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -141,6 +142,7 @@
                     </option>
                 @endforeach
             </select>
+            <small class="form-text text-muted">{{ __('Optional: Apply technical indicator filters (e.g., MA100, MA10, Parabolic SAR) to filter trading signals before execution.') }}</small>
             @error('filter_strategy_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -180,6 +182,7 @@
                         </option>
                     @endforeach
                 </select>
+                <small class="form-text text-muted">{{ __('Optional: Use AI market confirmation to validate signals before execution. AI analyzes market conditions and provides a safety score.') }}</small>
                 <small class="form-text text-muted mt-1">
                     @if(Route::has('user.ai-model-profiles.create'))
                         <a href="{{ route('user.ai-model-profiles.create') }}" target="_blank" class="text-primary">

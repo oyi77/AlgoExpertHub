@@ -105,7 +105,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     @if(!empty($chartData) && !empty($chartData['labels']))

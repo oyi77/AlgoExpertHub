@@ -59,7 +59,7 @@
     </style>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
         // Wait for jQuery and then load repeater.js
         (function() {

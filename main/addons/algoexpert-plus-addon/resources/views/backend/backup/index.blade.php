@@ -379,7 +379,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 // Wait for jQuery to be available
 (function() {

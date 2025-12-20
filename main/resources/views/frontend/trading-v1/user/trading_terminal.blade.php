@@ -264,10 +264,11 @@
                     </div>
                     
                     <div class="tv-form-group d-none" id="limitPriceGroup">
-                        <label>Price (USDT)</label>
+                        <label for="limitPrice">Price (USDT) <span class="text-muted">(Required for Limit Orders)</span></label>
                         <div class="tv-input-group">
-                            <input type="number" id="limitPrice" class="tv-input" step="0.01" placeholder="0.00">
+                            <input type="number" id="limitPrice" class="tv-input" step="0.01" placeholder="0.00" aria-describedby="limitPrice-help">
                         </div>
+                        <small id="limitPrice-help" class="tv-helper-text">Enter the price at which you want to execute the limit order</small>
                         <div class="tv-bbo-buttons">
                             <button type="button" class="tv-bbo-btn" data-side="bid" title="Best Bid">
                                 <i class="las la-arrow-down"></i> Bid
@@ -279,35 +280,40 @@
                     </div>
 
                     <div class="tv-form-group">
-                        <label>Amount</label>
+                        <label for="orderAmount">Amount <span class="text-danger">*</span></label>
                         <div class="tv-input-group">
-                            <input type="number" id="orderAmount" class="tv-input" step="0.0001" placeholder="0.00">
-                            <span class="tv-input-suffix">BTC</span>
+                            <input type="number" id="orderAmount" class="tv-input" step="0.0001" placeholder="0.00" required aria-describedby="orderAmount-help orderAmount-error" aria-required="true">
+                            <span class="tv-input-suffix" id="orderAmountSymbol">BTC</span>
                         </div>
+                        <small id="orderAmount-help" class="tv-helper-text">Enter the quantity you want to trade. Use percentage buttons to quickly set a portion of your available balance.</small>
+                        <div id="orderAmount-error" class="tv-error-message" role="alert" style="display:none;"></div>
                         <div class="tv-amount-buttons">
-                            <button type="button" class="tv-amount-btn" data-pct="25">25%</button>
-                            <button type="button" class="tv-amount-btn" data-pct="50">50%</button>
-                            <button type="button" class="tv-amount-btn" data-pct="75">75%</button>
-                            <button type="button" class="tv-amount-btn" data-pct="100">100%</button>
+                            <button type="button" class="tv-amount-btn" data-pct="25" title="Use 25% of available balance">25%</button>
+                            <button type="button" class="tv-amount-btn" data-pct="50" title="Use 50% of available balance">50%</button>
+                            <button type="button" class="tv-amount-btn" data-pct="75" title="Use 75% of available balance">75%</button>
+                            <button type="button" class="tv-amount-btn" data-pct="100" title="Use 100% of available balance">100%</button>
                         </div>
                     </div>
 
                     <div class="tv-form-group">
-                        <label>Total</label>
+                        <label for="orderTotal">Total (USDT)</label>
                         <div class="tv-input-group">
-                            <input type="number" id="orderTotal" class="tv-input" readonly placeholder="0.00">
+                            <input type="number" id="orderTotal" class="tv-input" readonly placeholder="0.00" aria-describedby="orderTotal-help">
                             <span class="tv-input-suffix">USDT</span>
                         </div>
+                        <small id="orderTotal-help" class="tv-helper-text">Total order value calculated automatically (Amount × Current Price)</small>
                     </div>
                     
                     <div class="tv-form-row">
                         <div class="tv-form-group">
-                            <label>TP</label>
-                            <input type="number" id="takeProfit" class="tv-input" placeholder="Take Profit">
+                            <label for="takeProfit">Take Profit (TP) <span class="text-muted">(Optional)</span></label>
+                            <input type="number" id="takeProfit" class="tv-input" step="0.01" placeholder="Take Profit" aria-describedby="takeProfit-help">
+                            <small id="takeProfit-help" class="tv-helper-text">Price at which to automatically close the position for profit</small>
                         </div>
                         <div class="tv-form-group">
-                            <label>SL</label>
-                            <input type="number" id="stopLoss" class="tv-input" placeholder="Stop Loss">
+                            <label for="stopLoss">Stop Loss (SL) <span class="text-muted">(Optional)</span></label>
+                            <input type="number" id="stopLoss" class="tv-input" step="0.01" placeholder="Stop Loss" aria-describedby="stopLoss-help">
+                            <small id="stopLoss-help" class="tv-helper-text">Price at which to automatically close the position to limit losses</small>
                         </div>
                     </div>
 

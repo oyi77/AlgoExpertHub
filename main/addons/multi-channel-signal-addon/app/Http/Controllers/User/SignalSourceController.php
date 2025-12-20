@@ -300,23 +300,49 @@ class SignalSourceController extends Controller
             $source->save();
             $source->refresh();
 
-            $result = $this->telegramMtprotoService->createChannel([
-                'user_id' => Auth::id(),
-                'name' => $source->name,
-                'api_id' => $config['api_id'],
-                'api_hash' => $config['api_hash'],
-                'phone_number' => $request->phone_number,
-            ]);
+            try {
+                $result = $this->telegramMtprotoService->createChannel([
+                    'user_id' => Auth::id(),
+                    'name' => $source->name,
+                    'api_id' => $config['api_id'] ?? null,
+                    'api_hash' => $config['api_hash'] ?? null,
+                    'phone_number' => $request->phone_number,
+                ]);
 
-            if ($result['type'] === 'code_required') {
-                $request->session()->put('phone_code_hash', $result['phone_code_hash']);
-                return redirect()->route('user.signal-sources.authenticate', [
-                    'id' => $source->id,
-                    'step' => 'code',
-                ])->with('info', $result['message']);
+                if ($result['type'] === 'code_required') {
+                    $request->session()->put('phone_code_hash', $result['phone_code_hash']);
+                    return redirect()->route('user.signal-sources.authenticate', [
+                        'id' => $source->id,
+                        'step' => 'code',
+                    ])->with('info', $result['message']);
+                }
+
+                if ($result['type'] === 'password_required') {
+                    $request->session()->put('phone_code_hash', $result['phone_code_hash'] ?? '');
+                    return redirect()->route('user.signal-sources.authenticate', [
+                        'id' => $source->id,
+                        'step' => 'password',
+                    ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+                }
+
+                return redirect()->back()->with('error', $result['message'] ?? 'Authentication failed. Please try again.');
+            } catch (\Exception $e) {
+                \Log::error('Telegram authentication error', [
+                    'user_id' => Auth::id(),
+                    'source_id' => $source->id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                $errorMessage = 'Authentication failed: ' . $e->getMessage();
+                if (strpos($e->getMessage(), 'api_id') !== false || strpos($e->getMessage(), 'api_hash') !== false) {
+                    $errorMessage = 'Invalid API credentials. Please check your API ID and API Hash in the source configuration.';
+                } elseif (strpos($e->getMessage(), 'phone') !== false) {
+                    $errorMessage = 'Invalid phone number format. Please use international format (e.g., +1234567890).';
+                }
+                
+                return redirect()->back()->with('error', $errorMessage);
             }
-
-            return redirect()->back()->with('error', $result['message']);
         }
 
         if ($request->isMethod('post') && $step === 'code') {
@@ -335,15 +361,40 @@ class SignalSourceController extends Controller
                 ])->with('error', 'Phone number not found.');
             }
 
-            $result = $this->telegramMtprotoService->completeAuth($source, $request->code, $phoneCodeHash);
+            try {
+                $result = $this->telegramMtprotoService->completeAuth($source, $request->code, $phoneCodeHash);
 
-            if ($result['type'] === 'success') {
-                $request->session()->forget('phone_code_hash');
-                return redirect()->route('user.signal-sources.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                if ($result['type'] === 'success') {
+                    $request->session()->forget('phone_code_hash');
+                    return redirect()->route('user.signal-sources.index')
+                        ->with('success', 'Telegram account authenticated successfully!');
+                }
+
+                if ($result['type'] === 'password_required') {
+                    $request->session()->put('phone_code_hash', $phoneCodeHash);
+                    return redirect()->route('user.signal-sources.authenticate', [
+                        'id' => $source->id,
+                        'step' => 'password',
+                    ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+                }
+
+                return redirect()->back()->with('error', $result['message'] ?? 'Verification failed. Please try again.');
+            } catch (\Exception $e) {
+                \Log::error('Telegram code verification error', [
+                    'user_id' => Auth::id(),
+                    'source_id' => $source->id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                $errorMessage = 'Verification failed: ' . $e->getMessage();
+                if (strpos($e->getMessage(), 'PHONE_CODE_INVALID') !== false) {
+                    $errorMessage = 'Invalid verification code. Please check and try again.';
+                } elseif (strpos($e->getMessage(), 'PHONE_CODE_EXPIRED') !== false) {
+                    $errorMessage = 'Verification code has expired. Please request a new code.';
+                }
+                
+                return redirect()->back()->with('error', $errorMessage);
             }
-
-            return redirect()->back()->with('error', $result['message']);
         }
 
         return view('multi-channel-signal-addon::user.signal-source.authenticate', $data);

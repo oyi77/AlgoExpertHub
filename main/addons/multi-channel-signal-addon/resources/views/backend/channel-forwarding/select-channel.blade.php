@@ -255,7 +255,7 @@
     </style>
     @endpush
 
-    @push('script')
+    @push('scripts')
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
         const sourceId = {{ $source->id }};

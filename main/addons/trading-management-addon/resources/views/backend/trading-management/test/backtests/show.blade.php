@@ -267,7 +267,7 @@
 </div>
 
 @if(!empty($equityCurve))
-@push('script')
+@push('scripts')
 <script src="{{ Config::jsLib('backend', 'chartjs.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -208,6 +208,12 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('connections/{connection}/deactivate', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'deactivate'])
             ->name('connections.deactivate');
         
+        // MetaApi provisioning endpoints for execution connections
+        Route::post('connections/add-metaapi-account', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'addMetaApiAccount'])
+            ->name('connections.add-metaapi-account');
+        Route::post('connections/metaapi-account-status', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'getMetaApiAccountStatus'])
+            ->name('connections.metaapi-account-status');
+        
         // Executions Log tab
         Route::get('executions', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'executions'])->name('executions');
         
