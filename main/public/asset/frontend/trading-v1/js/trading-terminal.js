@@ -99,7 +99,9 @@
     // Expose functions globally for Golden Layout re-initialization
     window.initChart = initChart;
     window.connectWebSocket = connectWebSocket;
+    // Expose functions globally for onclick handlers and external access
     window.loadOrderbookREST = loadOrderbookREST;
+    window.selectSymbol = selectSymbol;
     window.loadOrderbook = loadOrderbook;
     window.updateOrderbook = updateOrderbook;
     window.updateDepthChart = updateDepthChart;
@@ -391,6 +393,7 @@
             console.log(`WebSocket: Switched to market.${newSymbol}`);
         }
 
+        console.log('🔄 selectSymbol: Starting chart reload for', symbol);
         // Reload chart with new symbol - use onReady callback to ensure proper loading
         const container = document.getElementById('tradingview_chart');
         if (container) {
@@ -421,6 +424,7 @@
 
             // Wait for cleanup, then reinitialize
             setTimeout(() => {
+                console.log('🔄 selectSymbol: Calling initChart() for', currentSymbol);
                 container.innerHTML = '';
                 initChart();
             }, 300);
@@ -608,7 +612,7 @@
      * TradingView Chart Widget
      */
     function initChart() {
-        // Check if TradingView is loaded
+        console.log('📺 initChart: Called for symbol:', currentSymbol);
         if (typeof TradingView === 'undefined') {
             console.log('TradingView not loaded yet, retrying...');
             setTimeout(initChart, 100);
