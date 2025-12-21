@@ -19,8 +19,8 @@ Fix error 500 pada semua page dan masalah UI preset yang tidak muncul. Error kem
 JavaScript files (`.js`) di-include menggunakan `@include()` yang akan mencoba parse sebagai Blade template, menyebabkan error.
 
 **Solution:**
-- Ubah `@include('trading-preset-addon::backend.presets.js.conditional-fields')` menjadi `<script>` tag dengan `@push('script')`
-- Ubah `@include('trading-preset-addon::backend.presets.js.validation')` menjadi `<script>` tag dengan `@push('script')`
+- Ubah `@include('trading-preset-addon::backend.presets.js.conditional-fields')` menjadi `<script>` tag dengan `@push('scripts')`
+- Ubah `@include('trading-preset-addon::backend.presets.js.validation')` menjadi `<script>` tag dengan `@push('scripts')`
 - Atau rename file `.js` menjadi `.blade.php` jika ingin tetap menggunakan include
 
 **Files to Fix:**

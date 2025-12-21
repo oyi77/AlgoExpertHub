@@ -283,7 +283,7 @@
                         <label for="orderAmount">Amount <span class="text-danger">*</span></label>
                         <div class="tv-input-group">
                             <input type="number" id="orderAmount" class="tv-input" step="0.0001" placeholder="0.00" required aria-describedby="orderAmount-help orderAmount-error" aria-required="true">
-                            <span class="tv-input-suffix" id="orderAmountSymbol">BTC</span>
+                            <span class="tv-input-suffix" id="orderAmountSymbol">{{ str_replace('USDT', '', $symbol) ?: 'BTC' }}</span>
                         </div>
                         <small id="orderAmount-help" class="tv-helper-text">Enter the quantity you want to trade. Use percentage buttons to quickly set a portion of your available balance.</small>
                         <div id="orderAmount-error" class="tv-error-message" role="alert" style="display:none;"></div>
