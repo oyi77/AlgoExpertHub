@@ -45,11 +45,15 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                 Route::get('/', [\App\Http\Controllers\User\Trading\TradingConfigurationController::class, 'index'])->name('index');
             });
 
-            // Backtesting (unified page with tabs)
+            // Backtesting Center (complete CRUD + execution)
             Route::prefix('backtesting')->name('backtesting.')->group(function () {
-                Route::get('/', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'index'])->name('index');
-                Route::post('/', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'store'])->name('store');
-                Route::get('/{id}', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'show'])->name('show');
+                Route::get('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'index'])->name('index');
+                Route::get('/create', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'create'])->name('create');
+                Route::post('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'store'])->name('store');
+                Route::get('/{id}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'show'])->name('show');
+                Route::delete('/{id}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'destroy'])->name('destroy');
+                Route::post('/{id}/run', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'run'])->name('run');
+                Route::get('/{id}/status', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'status'])->name('status');
             });
 
             // Marketplaces (unified marketplace)

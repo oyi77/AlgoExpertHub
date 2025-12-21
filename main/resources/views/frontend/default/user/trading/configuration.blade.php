@@ -507,8 +507,8 @@
         if (tabParam) {
             const tabLink = $('#configurationTabs a[href="#' + tabParam + '"]');
             if (tabLink.length) {
-                const tab = new bootstrap.Tab(tabLink[0]);
-                tab.show();
+                // Use trigger click to activate tab, works with both Bootstrap and custom theme logic
+                tabLink.trigger('click');
             }
         }
         

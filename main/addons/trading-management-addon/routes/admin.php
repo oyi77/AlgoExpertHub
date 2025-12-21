@@ -429,3 +429,19 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('traders/recalculate-leaderboard', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'recalculateLeaderboard'])->name('traders.recalculate');
     });
 
+    // 9. Backtesting Center (Admin)
+    Route::prefix('backtesting')->name('backtesting.')->group(function () {
+        Route::get('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'backtests'])->name('index');
+        Route::get('/create', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'create'])->name('create');
+        Route::post('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'store'])->name('store');
+        Route::get('/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'show'])->name('show');
+        Route::delete('/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/run', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'run'])->name('run');
+        Route::get('/{id}/status', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'status'])->name('status');
+        
+        // Data management
+        Route::post('/check-data-availability', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'checkDataAvailability'])->name('check-data');
+        Route::post('/validate-date-range', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'validateDateRange'])->name('validate-range');
+        Route::post('/download-data', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'downloadData'])->name('download-data');
+    });
+
