@@ -344,127 +344,19 @@
         const activeItem = symbolList.querySelector(`[data-symbol="${symbol}"]`);
         if (activeItem) activeItem.classList.add('active');
 
-        // Unsubscribe from old market data channel
-        if (marketDataChannel && currentSymbol && window.Echo) {
-            window.Echo.leave(`market.${currentSymbol.toLowerCase()}`);
-        }
-
         // Update current symbol
         const oldSymbol = currentSymbol;
         currentSymbol = symbol;
 
-        // Save to localStorage for persistence
+        // Save to localStorage for persistence across reloads
         localStorage.setItem('tradingTerminalSymbol', symbol);
 
-        // Update URL parameter without page reload
+        console.log(`🔄 Symbol switching from ${oldSymbol} to ${symbol} - reloading page...`);
+
+        // Update URL parameter and reload page to ensure all components update correctly
         const url = new URL(window.location);
         url.searchParams.set('symbol', symbol);
-        window.history.replaceState({}, '', url);
-
-        const selectedSymbolEl = document.getElementById('selectedSymbol');
-        if (selectedSymbolEl) {
-            const pair = allTradingPairs.find(p => p.symbol === symbol);
-            selectedSymbolEl.textContent = pair ? pair.displaySymbol : symbol.replace('USDT', '/USDT');
-        }
-
-        // Update order form symbol suffix
-        const orderAmountSymbol = document.getElementById('orderAmountSymbol');
-        if (orderAmountSymbol) {
-            // Extract base symbol (e.g., BTC from BTCUSDT)
-            const baseSymbol = symbol.replace('USDT', '').replace('USD', '').replace('EUR', '').replace('GBP', '');
-            orderAmountSymbol.textContent = baseSymbol || 'BTC';
-        }
-
-        // Update orderbook header labels
-        updateOrderbookHeaders(symbol);
-
-        // Close dropdown
-        document.getElementById('symbolDropdown')?.classList.remove('active');
-
-        // Subscribe to new market data channel
-        if (window.Echo && symbol !== oldSymbol) {
-            const newSymbol = symbol.toLowerCase();
-            marketDataChannel = window.Echo.channel(`market.${newSymbol}`);
-            marketDataChannel.listen('.price.updated', (data) => {
-                if (data.price) {
-                    updatePriceFromWebSocket(data);
-                }
-            });
-            console.log(`WebSocket: Switched to market.${newSymbol}`);
-        }
-
-        console.log('🔄 selectSymbol: Starting chart reload for', symbol);
-        // Reload chart with new symbol - use onReady callback to ensure proper loading
-        const container = document.getElementById('tradingview_chart');
-        if (container) {
-            // Show loading state
-            container.innerHTML = '<div class="tv-chart-loading"><i class="las la-spinner la-spin"></i><p>Loading chart...</p></div>';
-
-            // Destroy existing chart completely with proper error handling
-            if (chart) {
-                try {
-                    // Check if chart has iframe before attempting removal
-                    if (chart._iFrame && chart._iFrame.parentNode) {
-                        chart.remove();
-                    }
-                } catch (e) {
-                    console.warn('Error removing chart:', e);
-                    // Force clear the container if remove() fails
-                    const iframes = container.querySelectorAll('iframe');
-                    iframes.forEach(iframe => {
-                        try {
-                            iframe.remove();
-                        } catch (err) {
-                            console.warn('Error removing iframe:', err);
-                        }
-                    });
-                }
-                chart = null;
-            }
-
-            // Wait for cleanup, then reinitialize
-            setTimeout(() => {
-                console.log('🔄 selectSymbol: Calling initChart() for', currentSymbol);
-                container.innerHTML = '';
-                initChart();
-            }, 300);
-        }
-
-        // Load orderbook instantly via REST, then connect WebSocket (for both modes)
-        setTimeout(() => {
-            loadOrderbookREST();
-        }, 200);
-
-        // Reconnect Binance WebSocket for new symbol
-        if (ws) {
-            ws.close();
-            ws = null;
-        }
-        setTimeout(() => {
-            connectWebSocket();
-        }, 300);
-
-        // Update price display
-        updatePrice();
-
-        // Clear and reinitialize depth chart
-        if (depthChart) {
-            try {
-                depthChart.dispose();
-            } catch (e) {
-                console.warn('Error disposing depth chart:', e);
-            }
-            depthChart = null;
-        }
-        // Reinitialize depth chart after orderbook loads
-        setTimeout(() => {
-            initDepthChart();
-        }, 800);
-
-        // Reload positions (only for real mode, but safe to call)
-        if (currentMode === 'real') {
-            loadPositions();
-        }
+        window.location.href = url.toString();
 
         // Log symbol change for debugging
         console.log(`✅ Symbol changed from ${oldSymbol} to ${symbol}`);
