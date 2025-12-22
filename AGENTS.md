@@ -74,6 +74,8 @@ npm run production                 # Optimized production build
 
 ### PHP Code Standards
 - **PSR-12** coding style
+- **Laravel 10.x** framework (upgraded from Laravel 9)
+- **PHP 8.1+** required
 - **Strict types**: Declare `declare(strict_types=1);`
 - **Type hints**: Always use parameter and return type declarations
 - **Properties**: Declare visibility and types

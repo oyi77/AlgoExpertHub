@@ -763,7 +763,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             alert(body.message || '{{ __('Connection created successfully') }}');
                         }
                         setTimeout(() => {
-                            window.location.href = body.redirect || '{{ route('user.trading.configuration.index', ['tab' => 'data-connections']) }}';
+                            // Use replace() to prevent redirect loops
+                            window.location.replace(body.redirect || '{{ route('user.trading.configuration.index', ['tab' => 'data-connections']) }}');
                         }, 1000);
                     } else {
                         // Error
@@ -771,8 +772,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         submitBtn.innerHTML = originalBtnText;
                         
                         if (body.redirect) {
-                            // Redirect for auth errors
-                            window.location.href = body.redirect;
+                            // Redirect for auth errors - use replace() to prevent loops
+                            window.location.replace(body.redirect);
                             return;
                         }
                         

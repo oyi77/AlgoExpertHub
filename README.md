@@ -56,13 +56,13 @@
 
 ### Advanced Features (Addons)
 
+- ✅ **Trading Management Addon** - Unified trading system (data, filtering, AI, risk, execution, backtesting)
 - ✅ **Multi-Channel Signal Addon** - Automatic signal ingestion from external sources
-- ✅ **Trading Execution Engine** - Automated trade execution on exchanges/brokers
-- ✅ **Trading Preset Addon** - Risk management presets and position sizing
-- ✅ **AI Trading Addon** - AI-powered market analysis and signal confirmation
-- ✅ **Filter Strategy Addon** - Technical indicator-based signal filtering
-- ✅ **Copy Trading Addon** - Social trading capabilities
+- ✅ **AI Connection Addon** - Centralized AI provider management (OpenAI, Gemini, OpenRouter)
+- ✅ **Page Builder Addon** - Drag-and-drop page builder with Laravel-Pagebuilder
+- ✅ **OpenRouter Integration Addon** - Access to 400+ AI models via OpenRouter
 - ✅ **Trading Bot Signal Addon** - Integration with external trading bots
+- ✅ **AlgoExpert Plus Addon** - Premium features and enhancements
 
 ---
 
@@ -70,8 +70,8 @@
 
 ### Backend
 
-- **Framework**: Laravel 9.x
-- **PHP**: 8.0.2+
+- **Framework**: Laravel 10.x
+- **PHP**: 8.1+
 - **Database**: MySQL 5.7+
 - **Queue**: Database (or Redis)
 - **Cache**: File (or Redis)

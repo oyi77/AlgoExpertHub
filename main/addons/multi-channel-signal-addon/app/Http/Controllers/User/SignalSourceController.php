@@ -294,107 +294,318 @@ class SignalSourceController extends Controller
         if ($request->isMethod('post') && $step === 'phone') {
             $request->validate(['phone_number' => 'required|string']);
 
+            // Get current config and update phone number
             $config = $source->config ?? [];
             $config['phone_number'] = $request->phone_number;
+            
+            // Use forceFill and save to ensure config is properly saved
             $source->forceFill(['config' => $config]);
             $source->save();
+            
+            // Refresh to get the latest data from database
             $source->refresh();
+            
+            // Log to verify phone number was saved
+            \Log::info("Phone number saved (user)", [
+                'source_id' => $source->id,
+                'phone_number' => $request->phone_number,
+                'config_after_save' => $source->config ?? [],
+                'phone_in_config' => $source->config['phone_number'] ?? 'NOT FOUND'
+            ]);
 
+            // CRITICAL: Set programmatic auth mode BEFORE initializing adapter
+            // This prevents MadelineProto from outputting web UI
+            putenv('MADELINE_PROGRAMMATIC_AUTH=1');
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $_SERVER['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            
+            // Store original POST data but DON'T clear it here - CSRF validation needs it
+            $originalPost = $_POST ?? [];
+            // Only set 'type' to prevent webEcho() from being called
+            $_POST['type'] = 'phone';
+            // DO NOT set $_POST['phone_number'] - it triggers webPhoneLogin()
+            
+            // Use output buffering to catch any output
+            ob_start();
+            ob_start();
+            ob_start();
+            
+            $authResult = null;
             try {
-                $result = $this->telegramMtprotoService->createChannel([
-                    'user_id' => Auth::id(),
-                    'name' => $source->name,
-                    'api_id' => $config['api_id'] ?? null,
-                    'api_hash' => $config['api_hash'] ?? null,
-                    'phone_number' => $request->phone_number,
+                $adapter = new \Addons\MultiChannelSignalAddon\App\Adapters\TelegramMtprotoAdapter($source);
+                $authResult = $adapter->startAuth();
+                
+                // Log the result for debugging
+                \Log::info("startAuth() result (user)", [
+                    'type' => $authResult['type'] ?? 'unknown',
+                    'message' => $authResult['message'] ?? 'no message',
+                    'has_phone_code_hash' => isset($authResult['phone_code_hash'])
                 ]);
-
-                if ($result['type'] === 'code_required') {
-                    $request->session()->put('phone_code_hash', $result['phone_code_hash']);
-                    return redirect()->route('user.signal-sources.authenticate', [
-                        'id' => $source->id,
-                        'step' => 'code',
-                    ])->with('info', $result['message']);
-                }
-
-                if ($result['type'] === 'password_required') {
-                    $request->session()->put('phone_code_hash', $result['phone_code_hash'] ?? '');
-                    return redirect()->route('user.signal-sources.authenticate', [
-                        'id' => $source->id,
-                        'step' => 'password',
-                    ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
-                }
-
-                return redirect()->back()->with('error', $result['message'] ?? 'Authentication failed. Please try again.');
             } catch (\Exception $e) {
-                \Log::error('Telegram authentication error', [
-                    'user_id' => Auth::id(),
-                    'source_id' => $source->id,
-                    'error' => $e->getMessage(),
+                // Clear buffers on exception
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                \Log::error("startAuth() exception (user)", [
+                    'message' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'phone',
+                ])->with('error', 'Authentication error: ' . $e->getMessage());
+            }
+            
+            // Get any captured output
+            $output = '';
+            while (ob_get_level() > 0) {
+                $output .= ob_get_clean();
+            }
+            
+            // Log if there was any output (might be MadelineProto web UI)
+            if (!empty($output)) {
+                \Log::warning("Output captured during startAuth() (user)", [
+                    'output_length' => strlen($output),
+                    'output_preview' => substr($output, 0, 500),
+                    'contains_html' => strpos($output, '<html') !== false,
+                    'contains_madeline' => strpos($output, 'MadelineProto') !== false
+                ]);
+            }
+            
+            // Ensure we have a valid result
+            if (!is_array($authResult) || !isset($authResult['type'])) {
+                \Log::error("Invalid startAuth() result (user)", ['result' => $authResult]);
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'phone',
+                ])->with('error', 'Invalid authentication response. Please try again.');
+            }
+
+            if ($authResult['type'] === 'code_required') {
+                $_POST = $originalPost;
                 
-                $errorMessage = 'Authentication failed: ' . $e->getMessage();
-                if (strpos($e->getMessage(), 'api_id') !== false || strpos($e->getMessage(), 'api_hash') !== false) {
+                $phoneCodeHash = $authResult['phone_code_hash'] ?? null;
+                if (!$phoneCodeHash) {
+                    \Log::error("code_required but no phone_code_hash (user)", ['result' => $authResult]);
+                    return redirect()->route('user.signal-sources.authenticate', [
+                        'id' => $source->id,
+                        'step' => 'phone',
+                    ])->with('error', 'Failed to get verification code hash. Please try again.');
+                }
+                
+                $request->session()->put('phone_code_hash', $phoneCodeHash);
+                // CRITICAL: Save session before redirect
+                $request->session()->save();
+
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'code',
+                ])->with('info', $authResult['message'] ?? 'Verification code sent. Please check your Telegram app.');
+            }
+
+            if ($authResult['type'] === 'password_required') {
+                $_POST = $originalPost;
+                
+                $phoneCodeHash = $authResult['phone_code_hash'] ?? null;
+                if ($phoneCodeHash) {
+                    $request->session()->put('phone_code_hash', $phoneCodeHash);
+                    $request->session()->save();
+                }
+                
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'password',
+                ])->with('info', $authResult['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+            }
+
+            if ($authResult['type'] === 'error') {
+                $_POST = $originalPost;
+                
+                $errorMessage = $authResult['message'] ?? 'Failed to send verification code. Please check your API credentials and phone number format.';
+                if (strpos($errorMessage, 'api_id') !== false || strpos($errorMessage, 'api_hash') !== false) {
                     $errorMessage = 'Invalid API credentials. Please check your API ID and API Hash in the source configuration.';
-                } elseif (strpos($e->getMessage(), 'phone') !== false) {
+                } elseif (strpos($errorMessage, 'phone') !== false) {
                     $errorMessage = 'Invalid phone number format. Please use international format (e.g., +1234567890).';
                 }
                 
-                return redirect()->back()->with('error', $errorMessage);
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'phone',
+                ])->with('error', $errorMessage);
             }
+
+            if ($authResult['type'] === 'success') {
+                $_POST = $originalPost;
+                return redirect()->route('user.signal-sources.index')
+                    ->with('success', 'Telegram account authenticated successfully!');
+            }
+            
+            if ($authResult['type'] === 'phone_required') {
+                $_POST = $originalPost;
+                // This shouldn't happen since we already have phone_number, but handle it anyway
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'phone',
+                ])->with('error', 'Phone number is required.');
+            }
+            
+            // Fallback for any other unexpected result type
+            \Log::warning("Unexpected startAuth() result type (user)", [
+                'type' => $authResult['type'],
+                'result' => $authResult
+            ]);
+            $_POST = $originalPost;
+            return redirect()->route('user.signal-sources.authenticate', [
+                'id' => $source->id,
+                'step' => 'phone',
+            ])->with('error', 'Unexpected authentication response. Please try again.');
         }
 
         if ($request->isMethod('post') && $step === 'code') {
+            // CRITICAL: Save session before any operations to prevent CSRF token expiration
+            $request->session()->save();
+            
             $request->validate(['code' => 'required|string']);
 
             $phoneCodeHash = $request->session()->get('phone_code_hash') ?? $request->phone_code_hash;
             if (!$phoneCodeHash) {
-                return redirect()->back()->with('error', 'Invalid session. Please start over.');
-            }
-
-            $source = $source->fresh();
-            if (empty($source->config['phone_number'] ?? null)) {
+                // Redirect to phone step instead of back
+                $request->session()->save(); // Save session before redirect
                 return redirect()->route('user.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', 'Phone number not found.');
+                ])->with('error', 'Invalid session. Please start over.');
             }
 
-            try {
-                $result = $this->telegramMtprotoService->completeAuth($source, $request->code, $phoneCodeHash);
-
-                if ($result['type'] === 'success') {
-                    $request->session()->forget('phone_code_hash');
-                    return redirect()->route('user.signal-sources.index')
-                        ->with('success', 'Telegram account authenticated successfully!');
-                }
-
-                if ($result['type'] === 'password_required') {
-                    $request->session()->put('phone_code_hash', $phoneCodeHash);
-                    return redirect()->route('user.signal-sources.authenticate', [
-                        'id' => $source->id,
-                        'step' => 'password',
-                    ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
-                }
-
-                return redirect()->back()->with('error', $result['message'] ?? 'Verification failed. Please try again.');
-            } catch (\Exception $e) {
-                \Log::error('Telegram code verification error', [
-                    'user_id' => Auth::id(),
+            // CRITICAL: Refresh channel from database to get latest config (including phone_number)
+            // The channel instance might be stale if it was loaded before phone number was saved
+            $source = $source->fresh();
+            
+            // Verify phone number exists before proceeding
+            if (empty($source->config['phone_number'] ?? null)) {
+                \Log::error("Phone number missing after refresh (user)", [
                     'source_id' => $source->id,
-                    'error' => $e->getMessage()
+                    'config' => $source->config
                 ]);
-                
-                $errorMessage = 'Verification failed: ' . $e->getMessage();
-                if (strpos($e->getMessage(), 'PHONE_CODE_INVALID') !== false) {
-                    $errorMessage = 'Invalid verification code. Please check and try again.';
-                } elseif (strpos($e->getMessage(), 'PHONE_CODE_EXPIRED') !== false) {
-                    $errorMessage = 'Verification code has expired. Please request a new code.';
-                }
-                
-                return redirect()->back()->with('error', $errorMessage);
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'phone',
+                ])->with('error', 'Phone number not found. Please re-enter your phone number.');
             }
+
+            // Prevent MadelineProto web UI
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = true;
+            // Store original POST data
+            $originalPost = $_POST ?? [];
+            
+            // Suppress any output from MadelineProto
+            ob_start();
+            ob_start();
+            $result = $this->telegramMtprotoService->completeAuth($source, $request->code, $phoneCodeHash);
+            $output = ob_get_clean();
+            ob_end_clean();
+            
+            // Log if web UI was suppressed
+            if (!empty($output) && (strpos($output, '<html') !== false || strpos($output, 'MadelineProto') !== false)) {
+                \Log::warning("MadelineProto web UI output suppressed in completeAuth (user)", ['output_length' => strlen($output)]);
+            }
+
+            if ($result['type'] === 'success') {
+                // Clear buffers before redirect
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                $_POST = $originalPost;
+                
+                $request->session()->forget('phone_code_hash');
+                // CRITICAL: Save session and regenerate CSRF token before redirect
+                $request->session()->save();
+                $request->session()->regenerateToken(); // Regenerate CSRF token
+
+                return redirect()->route('user.signal-sources.index')
+                    ->with('success', 'Telegram account authenticated successfully!');
+            }
+
+            if ($result['type'] === 'password_required') {
+                // Clear buffers before redirect
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                $_POST = $originalPost;
+                
+                $request->session()->put('phone_code_hash', $phoneCodeHash);
+                $request->session()->save();
+                
+                return redirect()->route('user.signal-sources.authenticate', [
+                    'id' => $source->id,
+                    'step' => 'password',
+                ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+            }
+
+            // Clear buffers before redirect
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            $_POST = $originalPost;
+            
+            $errorMessage = $result['message'] ?? 'Verification failed. Please try again.';
+            if (strpos($errorMessage, 'PHONE_CODE_INVALID') !== false) {
+                $errorMessage = 'Invalid verification code. Please check and try again.';
+            } elseif (strpos($errorMessage, 'PHONE_CODE_EXPIRED') !== false) {
+                $errorMessage = 'Verification code has expired. Please request a new code.';
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
+        }
+
+        // Handle password step (2FA)
+        if ($request->isMethod('post') && $step === 'password') {
+            $request->session()->save();
+            $request->validate(['password' => 'required|string']);
+
+            $source = $source->fresh();
+
+            // Set programmatic auth mode
+            putenv('MADELINE_PROGRAMMATIC_AUTH=1');
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $_SERVER['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $originalPost = $_POST ?? [];
+
+            // Suppress output
+            ob_start();
+            ob_start();
+            ob_start();
+            
+            $result = $this->telegramMtprotoService->completePasswordAuth($source, $request->password);
+            
+            $output = '';
+            while (ob_get_level() > 0) {
+                $output .= ob_get_clean();
+            }
+            
+            if (!empty($output) && (strpos($output, '<html') !== false || strpos($output, 'MadelineProto') !== false)) {
+                \Log::warning("MadelineProto HTML output captured in password auth (user)", [
+                    'output_length' => strlen($output)
+                ]);
+            }
+
+            if ($result['type'] === 'success') {
+                $_POST = $originalPost;
+                $request->session()->save();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('user.signal-sources.index')
+                    ->with('success', 'Telegram account authenticated successfully!');
+            }
+
+            $_POST = $originalPost;
+            
+            $errorMessage = $result['message'] ?? 'Password authentication failed.';
+            if (strpos($errorMessage, 'Invalid password') !== false && !empty($source->config['password_hint'] ?? '')) {
+                $errorMessage .= ' Hint: ' . $source->config['password_hint'];
+            }
+            
+            return redirect()->back()->with('error', $errorMessage)->withInput();
         }
 
         return view('multi-channel-signal-addon::user.signal-source.authenticate', $data);

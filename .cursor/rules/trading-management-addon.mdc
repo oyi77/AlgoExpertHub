@@ -1,0 +1,347 @@
+---
+description: Trading Management Addon - Unified trading system with data feeding, filtering, AI analysis, risk management, execution, and backtesting
+globs: ["main/addons/trading-management-addon/**/*"]
+alwaysApply: false
+---
+
+# Trading Management Addon Rules
+
+## Overview
+The **Trading Management Addon** is a comprehensive, unified trading system that consolidates multiple trading-related functionalities into a single, cohesive addon. It replaces the previous fragmented approach (7 separate addons) with an integrated pipeline architecture.
+
+## Addon Information
+- **Name**: `trading-management-addon`
+- **Title**: Trading Management
+- **Version**: 2.0.0
+- **Namespace**: `Addons\TradingManagement`
+- **Status**: Active
+- **Author**: AlgoExpertHub
+
+## Architecture
+
+### Unified Pipeline
+The addon implements an event-driven pipeline architecture:
+```
+Data Provider → Market Data Storage → Filter Strategy → AI Analysis → Risk Management → Execution → Position Monitoring → Backtesting
+```
+
+### Modules (13 Total)
+
+#### 1. Data Provider
+- **Key**: `data_provider`
+- **Purpose**: Data connections and market data fetching
+- **Sources**: mtapi.io (MT4/MT5), CCXT exchanges, metaapi.cloud
+- **Targets**: Admin UI, User UI, Jobs
+- **Dependencies**: None
+
+#### 2. Market Data Storage
+- **Key**: `market_data`
+- **Purpose**: Centralized market data storage, caching, and cleanup
+- **Features**: Historical data storage, real-time caching, data cleanup jobs
+- **Targets**: Admin UI, Jobs
+- **Dependencies**: `data_provider`
+
+#### 3. Filter Strategy
+- **Key**: `filter_strategy`
+- **Purpose**: Technical indicator-based signal filtering
+- **Indicators**: EMA, RSI, PSAR, custom strategies
+- **Targets**: Admin UI, User UI
+- **Dependencies**: `market_data`
+
+#### 4. AI Analysis
+- **Key**: `ai_analysis`
+- **Purpose**: AI-powered market confirmation
+- **Providers**: OpenAI, Google Gemini (via AI Connection Addon)
+- **Features**: Market analysis, signal validation, risk adjustment
+- **Targets**: Admin UI, User UI
+- **Dependencies**: `market_data`
+
+#### 5. Risk Management
+- **Key**: `risk_management`
+- **Purpose**: Manual presets and AI adaptive risk (Smart Risk)
+- **Features**: Position sizing, SL/TP, multi-TP, trailing stop, break-even
+- **Targets**: Admin UI, User UI
+- **Dependencies**: None
+
+#### 6. Execution
+- **Key**: `execution`
+- **Purpose**: Execute trades on exchanges/brokers
+- **Platforms**: CCXT exchanges, MT4/MT5 via mtapi.io and metaapi.cloud
+- **Targets**: Admin UI, User UI, Jobs, Listeners
+- **Dependencies**: `data_provider`, `risk_management`
+
+#### 7. Position Monitoring
+- **Key**: `position_monitoring`
+- **Purpose**: Track positions, SL/TP monitoring, analytics
+- **Features**: Real-time position tracking, SL/TP checks, performance analytics
+- **Targets**: Admin UI, User UI, Jobs
+- **Dependencies**: `execution`
+
+#### 8. Copy Trading
+- **Key**: `copy_trading`
+- **Purpose**: Social trading - follow other traders
+- **Features**: Trader profiles, follower management, trade replication
+- **Targets**: Admin UI, User UI, Jobs, Listeners
+- **Dependencies**: `execution`, `risk_management`
+
+#### 9. Backtesting
+- **Key**: `backtesting`
+- **Purpose**: Test strategies on historical data
+- **Features**: Historical simulation, performance metrics, optimization
+- **Targets**: Admin UI, User UI, Jobs
+- **Dependencies**: `market_data`, `filter_strategy`, `ai_analysis`, `risk_management`
+
+#### 10. Exchange Connection
+- **Key**: `exchange_connection`
+- **Purpose**: Unified exchange/broker connections
+- **Features**: Connection management, credential storage, health checks
+- **Targets**: Admin UI, User UI, Jobs
+- **Dependencies**: `data_provider`, `risk_management`
+
+#### 11. Global Settings
+- **Key**: `global_settings`
+- **Purpose**: Global MTAPI configuration
+- **Features**: Shared MTAPI settings across all connections
+- **Targets**: Admin UI
+- **Dependencies**: None
+
+#### 12. Marketplace
+- **Key**: `marketplace`
+- **Purpose**: Bot templates and trader profiles marketplace
+- **Features**: Template sharing, trader discovery, ratings
+- **Targets**: Admin UI, User UI, Jobs
+- **Dependencies**: `backtesting`, `execution`
+
+#### 13. Trading Bot
+- **Key**: `trading_bot`
+- **Purpose**: Automated trading bot management
+- **Features**: Bot creation, scheduling, monitoring, execution
+- **Targets**: Admin UI, User UI, Jobs, Listeners
+- **Dependencies**: `execution`, `filter_strategy`, `ai_analysis`, `risk_management`
+
+## Database Tables
+
+### Core Tables
+- `tm_data_connections` - Data provider connections
+- `tm_market_data` - Centralized market data storage
+- `tm_filter_strategies` - Filter strategy configurations
+- `tm_ai_configs` - AI analysis configurations
+- `tm_risk_presets` - Risk management presets
+- `tm_execution_connections` - Execution connections
+- `tm_execution_positions` - Open/closed positions
+- `tm_execution_logs` - Execution history
+- `tm_copy_traders` - Trader profiles
+- `tm_copy_followers` - Follower relationships
+- `tm_backtest_runs` - Backtesting runs
+- `tm_backtest_results` - Backtesting results
+- `tm_marketplace_templates` - Bot templates
+- `tm_trading_bots` - Trading bot configurations
+
+## Key Services
+
+### DataProviderService
+- **Location**: `Modules/DataProvider/Services/DataProviderService.php`
+- **Responsibilities**: Fetch market data from exchanges/brokers
+- **Methods**: `fetchCandles()`, `fetchTicker()`, `fetchOrderbook()`
+
+### FilterStrategyService
+- **Location**: `Modules/FilterStrategy/Services/FilterStrategyService.php`
+- **Responsibilities**: Apply technical indicators to filter signals
+- **Methods**: `applyStrategy()`, `calculateIndicators()`
+
+### AiAnalysisService
+- **Location**: `Modules/AiAnalysis/Services/AiAnalysisService.php`
+- **Responsibilities**: AI-powered market analysis
+- **Methods**: `analyzeMarket()`, `confirmSignal()`, `adjustRisk()`
+
+### RiskManagementService
+- **Location**: `Modules/RiskManagement/Services/RiskManagementService.php`
+- **Responsibilities**: Calculate position sizes, apply risk rules
+- **Methods**: `calculatePositionSize()`, `applyRiskRules()`
+
+### ExecutionService
+- **Location**: `Modules/Execution/Services/ExecutionService.php`
+- **Responsibilities**: Execute trades on exchanges/brokers
+- **Methods**: `executeSignal()`, `placeOrder()`, `closePosition()`
+
+### BacktestingService
+- **Location**: `Modules/Backtesting/Services/BacktestingService.php`
+- **Responsibilities**: Run backtests on historical data
+- **Methods**: `runBacktest()`, `calculateMetrics()`
+
+## Integration Patterns
+
+### Signal Execution Flow
+1. Signal published (core platform)
+2. `SignalObserver` detects publication
+3. Pipeline execution:
+   - Filter Strategy checks (optional)
+   - AI Analysis confirmation (optional)
+   - Risk Management calculates position size
+   - Execution places order
+   - Position Monitoring tracks position
+
+### Event-Driven Architecture
+- Uses Laravel observers and events
+- Modules communicate via events, not direct calls
+- Loose coupling between modules
+
+### Data Flow
+- Data Provider fetches data → Market Data Storage
+- Market Data Storage provides data to Filter Strategy and AI Analysis
+- Filter Strategy and AI Analysis inform Execution decisions
+- Execution creates positions → Position Monitoring tracks
+
+## Configuration
+
+### Module Enabling/Disabling
+- Each module can be enabled/disabled independently
+- Admin interface: `/admin/trading-management/settings`
+- Module dependencies enforced (cannot disable if dependent modules enabled)
+
+### Connection Management
+- Data connections: `/admin/trading-management/data-connections`
+- Execution connections: `/admin/trading-management/execution-connections`
+- Global MTAPI settings: `/admin/trading-management/global-settings`
+
+## Jobs and Scheduling
+
+### Scheduled Jobs
+- `FetchMarketDataJob` - Every 1 minute (fetch real-time data)
+- `CleanupMarketDataJob` - Daily (cleanup old data)
+- `MonitorPositionsJob` - Every 1 minute (check SL/TP)
+- `UpdateAnalyticsJob` - Daily (calculate performance metrics)
+- `SyncCopyTradesJob` - Every 1 minute (replicate trades for followers)
+
+### Event-Driven Jobs
+- `ExecuteSignalJob` - Dispatched when signal published
+- `ClosePositionJob` - Dispatched when SL/TP hit
+- `RunBacktestJob` - Dispatched when backtest started
+
+## Best Practices
+
+### Module Development
+1. Each module is self-contained in `Modules/{ModuleName}/`
+2. Follow namespace convention: `Addons\TradingManagement\Modules\{ModuleName}`
+3. Use services for business logic
+4. Use events for inter-module communication
+5. Respect module dependencies
+
+### Database Conventions
+- Prefix all tables with `tm_` (trading management)
+- Use migrations in `database/migrations/`
+- Foreign keys reference core tables and other addon tables
+
+### Service Pattern
+- All business logic in services
+- Controllers thin, only HTTP handling
+- Services return structured arrays: `['type' => 'success|error', 'message' => '...', 'data' => ...]`
+
+### Error Handling
+- Use try-catch in services
+- Log errors with context
+- Return user-friendly error messages
+- Never expose sensitive data in errors
+
+### Testing
+- Unit tests for services
+- Feature tests for workflows
+- Mock external APIs (exchanges, AI providers)
+- Test module dependencies
+
+## Migration from Old Addons
+
+### Deprecated Addons (moved to `_deprecated/`)
+- `ai-trading-addon` → Merged into `ai_analysis` module
+- `copy-trading-addon` → Merged into `copy_trading` module
+- `filter-strategy-addon` → Merged into `filter_strategy` module
+- `smart-risk-management-addon` → Merged into `risk_management` module
+- `trading-execution-engine-addon` → Merged into `execution` module
+- `trading-preset-addon` → Merged into `risk_management` module
+
+### Data Migration
+- Old tables preserved for reference
+- New tables created with `tm_` prefix
+- Migration scripts available in `database/migrations/`
+
+## Performance Optimizations
+
+### Caching
+- Market data cached in Redis (if available)
+- Filter results cached for 1 minute
+- AI analysis results cached for 5 minutes
+
+### Queue Management
+- Long operations queued (backtesting, AI analysis)
+- High-priority queue for execution
+- Low-priority queue for analytics
+
+### Database Optimization
+- Indexes on foreign keys and queried columns
+- Partitioning for large tables (market_data, execution_logs)
+- Regular cleanup of old data
+
+## Security Considerations
+
+### Credential Storage
+- Exchange API keys encrypted in database
+- Broker credentials encrypted
+- AI API keys managed via AI Connection Addon
+
+### Access Control
+- Admin-only modules: `global_settings`, `marketplace` (admin side)
+- User modules: All modules have user UI
+- Permission checks in controllers
+
+### Rate Limiting
+- API calls to exchanges rate-limited
+- AI API calls rate-limited via AI Connection Addon
+- User actions rate-limited (prevent abuse)
+
+## Monitoring and Analytics
+
+### Position Analytics
+- Win rate, profit factor, drawdown
+- Daily, weekly, monthly performance
+- Per-symbol, per-strategy analytics
+
+### System Health
+- Connection health checks
+- Job queue monitoring
+- Error rate tracking
+
+### User Analytics
+- User trading performance
+- Most profitable traders (for copy trading)
+- Popular strategies (for marketplace)
+
+## Documentation
+
+### User Documentation
+- User guide: `docs/trading-management-user-guide.md`
+- Video tutorials (planned)
+
+### Developer Documentation
+- API documentation: `docs/trading-management-api.md`
+- Module development guide: `docs/trading-management-module-development.md`
+
+### Admin Documentation
+- Admin guide: `docs/trading-management-admin-guide.md`
+- Configuration guide: `docs/trading-management-configuration.md`
+
+## Support and Troubleshooting
+
+### Common Issues
+- Connection failures: Check credentials, network, exchange status
+- Execution failures: Check balance, symbol availability, order size
+- AI analysis failures: Check AI Connection Addon, API keys, rate limits
+
+### Debugging
+- Enable debug mode in `.env`: `APP_DEBUG=true`
+- Check logs: `storage/logs/laravel.log`
+- Check job failures: `failed_jobs` table
+
+### Support Channels
+- GitHub issues (for bugs)
+- Documentation (for usage questions)
+- Admin support tickets (for platform-specific issues)

@@ -114,6 +114,12 @@
         configurable: true
     });
 
+    // Expose currentMode as getter
+    Object.defineProperty(window, 'currentMode', {
+        get: function () { return currentMode; },
+        configurable: true
+    });
+
     /**
      * Sidebar Toggle
      */
@@ -351,15 +357,47 @@
         // Save to localStorage for persistence across reloads
         localStorage.setItem('tradingTerminalSymbol', symbol);
 
-        console.log(`🔄 Symbol switching from ${oldSymbol} to ${symbol} - reloading page...`);
+        console.log(`🔄 Symbol switching from ${oldSymbol} to ${symbol} - updating all components...`);
 
-        // Update URL parameter and reload page to ensure all components update correctly
+        // Update URL parameter without reloading
         const url = new URL(window.location);
         url.searchParams.set('symbol', symbol);
-        window.location.href = url.toString();
+        window.history.pushState({}, '', url.toString());
+
+        // Update orderbook headers
+        updateOrderbookHeaders(symbol);
+
+        // Reload orderbook data
+        loadOrderbookREST();
+
+        // Reload chart with new symbol
+        if (typeof initChart === 'function') {
+            initChart();
+        }
+
+        // Update price display
+        if (typeof updatePrice === 'function') {
+            updatePrice();
+        }
+
+        // Update order form symbol display
+        const orderAmountSymbol = document.getElementById('orderAmountSymbol');
+        if (orderAmountSymbol && currentSymbol) {
+            const baseSymbol = currentSymbol.replace('USDT', '').replace('USD', '').replace('EUR', '').replace('GBP', '');
+            orderAmountSymbol.textContent = baseSymbol;
+        }
+
+        // Update mobile trade modal title if it exists
+        const mobileModalTitle = document.getElementById('mobileModalTitle');
+        if (mobileModalTitle) {
+            // Title will be updated when modal opens, but we can pre-update if needed
+        }
+
+        // Close dropdown
+        document.getElementById('symbolDropdown')?.classList.remove('active');
 
         // Log symbol change for debugging
-        console.log(`✅ Symbol changed from ${oldSymbol} to ${symbol}`);
+        console.log(`✅ Symbol changed from ${oldSymbol} to ${symbol} - all components updated`);
     }
 
     /**
@@ -453,6 +491,16 @@
 
         // Update balance display based on mode
         updateBalanceDisplay(mode);
+
+        // Update order panel mode indicator
+        const orderPanelMode = document.getElementById('orderPanelMode');
+        const orderPanelModeText = document.getElementById('orderPanelModeText');
+        if (orderPanelMode && orderPanelModeText) {
+            orderPanelMode.className = 'tv-order-mode-indicator ' + (mode === 'demo' ? 'demo' : 'real');
+            const demoText = orderPanelMode.dataset.demoText || 'Demo Mode';
+            const realText = orderPanelMode.dataset.realText || 'Real Trading';
+            orderPanelModeText.textContent = mode === 'demo' ? demoText : realText;
+        }
 
         if (mode === 'real') {
             initializeRealTrading();

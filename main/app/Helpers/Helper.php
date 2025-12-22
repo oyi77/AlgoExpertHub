@@ -275,6 +275,103 @@ class Helper
         return number_format($number, $config);
     }
 
+    /**
+     * Format signal price based on pair type and market
+     * 
+     * @param float $price The price to format
+     * @param string|null $pairName The currency pair name (e.g., "EUR/USD", "BTC/USDT", "XAU/USD")
+     * @param string|null $marketName The market name (e.g., "Forex", "Crypto", "Commodities")
+     * @return string Formatted price with appropriate decimals
+     */
+    public static function formatSignalPrice($price, $pairName = null, $marketName = null)
+    {
+        if ($price === null || $price === '') {
+            return 'N/A';
+        }
+
+        $price = (float) $price;
+        $decimals = self::getSignalPriceDecimals($pairName, $marketName);
+
+        // Format with appropriate decimals and remove trailing zeros for cleaner display
+        $formatted = number_format($price, $decimals, '.', '');
+        
+        // Remove trailing zeros but keep at least one decimal place for small numbers
+        if (strpos($formatted, '.') !== false) {
+            $formatted = rtrim(rtrim($formatted, '0'), '.');
+            // If we removed all decimals, add back one if the original had decimals
+            if (strpos($formatted, '.') === false && $decimals > 0) {
+                $formatted = number_format($price, min($decimals, 2), '.', '');
+            }
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Get appropriate decimal places for signal price based on pair and market
+     * 
+     * @param string|null $pairName The currency pair name
+     * @param string|null $marketName The market name
+     * @return int Number of decimal places (2-6)
+     */
+    public static function getSignalPriceDecimals($pairName = null, $marketName = null)
+    {
+        $pairName = $pairName ?? '';
+        $marketName = $marketName ?? '';
+        
+        // Forex pairs: 5 decimals (standard for major pairs)
+        if (stripos($marketName, 'forex') !== false || 
+            (stripos($pairName, '/') !== false && 
+             (stripos($pairName, 'USD') !== false || 
+              stripos($pairName, 'EUR') !== false || 
+              stripos($pairName, 'GBP') !== false || 
+              stripos($pairName, 'JPY') !== false || 
+              stripos($pairName, 'CHF') !== false || 
+              stripos($pairName, 'AUD') !== false || 
+              stripos($pairName, 'CAD') !== false || 
+              stripos($pairName, 'NZD') !== false))) {
+            return 5;
+        }
+
+        // Gold/XAU: 2 decimals
+        if (stripos($pairName, 'XAU') !== false || 
+            stripos($pairName, 'GOLD') !== false || 
+            stripos($marketName, 'commodit') !== false) {
+            return 2;
+        }
+
+        // Crypto major pairs (BTC, ETH): 2 decimals
+        if (stripos($pairName, 'BTC') !== false || 
+            stripos($pairName, 'ETH') !== false) {
+            // For BTC/USDT, ETH/USDT - use 2 decimals
+            if (stripos($pairName, 'USDT') !== false || stripos($pairName, 'USD') !== false) {
+                return 2;
+            }
+            // For BTC pairs with other cryptos - use 4 decimals
+            return 4;
+        }
+
+        // Crypto altcoins: 4-6 decimals based on price range
+        if (stripos($marketName, 'crypto') !== false || 
+            stripos($pairName, 'USDT') !== false || 
+            stripos($pairName, 'USDC') !== false) {
+            // If price is very small (< 0.01), use 6 decimals
+            // If price is small (< 1), use 4 decimals
+            // Otherwise use 2 decimals
+            // But we can't check price here, so default to 4 for crypto
+            return 4;
+        }
+
+        // Stocks/Indices: 2 decimals
+        if (stripos($marketName, 'stock') !== false || 
+            stripos($marketName, 'index') !== false) {
+            return 2;
+        }
+
+        // Default: 2 decimals
+        return 2;
+    }
+
     public static function languages()
     {
         return Language::latest()->get();

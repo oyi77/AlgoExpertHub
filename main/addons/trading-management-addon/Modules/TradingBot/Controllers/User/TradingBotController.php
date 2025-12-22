@@ -112,8 +112,10 @@ class TradingBotController extends Controller
     /**
      * Store a newly created trading bot
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson();
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -168,10 +170,44 @@ class TradingBotController extends Controller
         try {
             $bot = $this->botService->create($validated);
             
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Trading bot created successfully!'),
+                    'redirect' => route('user.trading-management.trading-bots.show', $bot->id)
+                ], 201);
+            }
+            
             return redirect()
                 ->route('user.trading-management.trading-bots.show', $bot->id)
                 ->with('success', 'Trading bot created successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Validation failed. Please check your input.'),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (\Exception $e) {
+            \Log::error('Failed to create trading bot', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Failed to create trading bot: :error', ['error' => $e->getMessage()])
+                ], 500);
+            }
+            
             return redirect()
                 ->back()
                 ->withInput()

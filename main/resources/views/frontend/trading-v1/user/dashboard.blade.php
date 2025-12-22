@@ -138,11 +138,9 @@
                             <tbody>
                                 @foreach($recentSignals as $signal)
                                     @php
-                                        // Format numbers based on pair type
+                                        // Get pair and market info for formatting
                                         $pairName = $signal->pair->name ?? 'N/A';
-                                        $isForex = strpos($pairName, '/') !== false && (strpos($pairName, 'USD') !== false || strpos($pairName, 'EUR') !== false || strpos($pairName, 'GBP') !== false);
-                                        $isCrypto = strpos($pairName, 'BTC') !== false || strpos($pairName, 'ETH') !== false || strpos($pairName, 'USDT') !== false;
-                                        $decimals = $isForex ? 5 : ($isCrypto ? 4 : 2);
+                                        $marketName = $signal->market->name ?? '';
                                         
                                         // Calculate R/R Ratio
                                         $rrRatio = null;
@@ -188,13 +186,13 @@
                                                 {{ strtoupper($signal->direction) }}
                                             </span>
                                         </td>
-                                        <td>{{ number_format((float)$signal->open_price, $decimals, '.', '') }}</td>
-                                        <td>{{ number_format((float)$signal->sl, $decimals, '.', '') }}</td>
-                                        <td>{{ number_format((float)$signal->tp, $decimals, '.', '') }}</td>
+                                        <td>{{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->open_price, $pairName, $marketName) }}</td>
+                                        <td>{{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->sl, $pairName, $marketName) }}</td>
+                                        <td>{{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->tp, $pairName, $marketName) }}</td>
                                         <td>
                                             @if($rrRatio !== null)
                                                 <span class="badge bg-{{ $rrRatio >= 2 ? 'success' : ($rrRatio >= 1 ? 'warning' : 'danger') }}">
-                                                    {{ number_format($rrRatio, 2) }}:1
+                                                    {{ number_format($rrRatio, 2, '.', '') }}:1
                                                 </span>
                                             @else
                                                 <span class="text-muted">-</span>

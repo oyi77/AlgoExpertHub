@@ -254,10 +254,9 @@
                                                 <h5 class="title">{{ $signal->title }}</h5>
                                                 <p class="text-muted small">{{ __('Auto-created from channel') }}: {{ $signal->channelSource->name ?? 'N/A' }}</p>
                                                 <div class="d-flex gap-2 mt-3">
-                                                    <a href="{{ route('admin.signals.edit', $signal->id) }}" 
-                                                       class="btn btn-sm btn-primary" 
-                                                       target="_blank">
-                                                        <i class="las la-edit"></i> {{ __('Review') }}
+                                                    <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 
+                                                       class="btn btn-sm btn-primary">
+                                                        <i class="las la-eye"></i> {{ __('Review') }}
                                                     </a>
                                                     <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 
                                                        class="btn btn-sm btn-outline-info">
@@ -289,11 +288,9 @@
                             @if(isset($patterns) && $patterns->count() > 0)
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="mb-0">{{ __('My Pattern Templates') }}</h5>
-                                    @if(Route::has('admin.pattern-templates.create'))
-                                        <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn" target="_blank">
-                                            <i class="las la-plus"></i> {{ __('Create Pattern') }}
-                                        </a>
-                                    @endif
+                                    <div class="alert alert-info mb-0 py-2 px-3">
+                                        <small><i class="las la-info-circle"></i> {{ __('Pattern templates are managed in the admin panel. Contact administrator to create or edit patterns.') }}</small>
+                                    </div>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -314,13 +311,7 @@
                                                 <td><code class="small">{{ Str::limit($pattern->pattern, 50) }}</code></td>
                                                 <td>{{ $pattern->created_at->diffForHumans() }}</td>
                                                 <td class="text-end">
-                                                    @if(Route::has('admin.pattern-templates.edit'))
-                                                        <a href="{{ route('admin.pattern-templates.edit', $pattern->id) }}" 
-                                                           class="btn btn-xs btn-outline-primary" 
-                                                           target="_blank">
-                                                            <i class="las la-edit"></i> {{ __('Edit') }}
-                                                        </a>
-                                                    @endif
+                                                    <span class="badge bg-secondary">{{ __('View Only') }}</span>
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -336,13 +327,10 @@
                                 <div class="text-center py-5">
                                     <i class="las la-code la-3x text-muted mb-3"></i>
                                     <p class="text-muted">{{ __('No pattern templates found.') }}</p>
-                                    @if(Route::has('admin.pattern-templates.create'))
-                                        <a href="{{ route('admin.pattern-templates.create') }}" class="btn sp_theme_btn mt-2" target="_blank">
-                                            <i class="las la-plus"></i> {{ __('Create First Pattern') }}
-                                        </a>
-                                    @else
-                                        <p class="text-muted small mt-2">{{ __('Pattern templates are managed by administrators. Contact your admin to create pattern templates.') }}</p>
-                                    @endif
+                                    <p class="text-muted small mt-2">
+                                        <i class="las la-info-circle"></i> 
+                                        {{ __('Pattern templates are managed by administrators. Contact your admin to create pattern templates.') }}
+                                    </p>
                                 </div>
                             @endif
                         </div>

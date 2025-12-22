@@ -61,9 +61,48 @@ class MultiChannelSignalController extends Controller
                                 ->with(['assignedUsers', 'assignedPlans', 'signals'])
                                 ->latest()
                                 ->paginate(20, ['*'], 'channels_page');
+                            
+                            // Calculate stats for channel forwarding
+                            $data['stats'] = [
+                                'total' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())
+                                    ->where('status', 'active')
+                                    ->count(),
+                                'by_user' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())
+                                    ->whereHas('assignedUsers', fn($q) => $q->where('users.id', Auth::id()))
+                                    ->where('status', 'active')
+                                    ->count(),
+                                'by_plan' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())
+                                    ->whereHas('assignedPlans', function ($q) {
+                                        $q->whereHas('subscriptions', function ($sq) {
+                                            $sq->where('user_id', Auth::id())
+                                                ->where('is_current', 1)
+                                                ->where(function($dateQuery) {
+                                                    $dateQuery->where('plan_expired_at', '>', now())
+                                                              ->orWhereNull('plan_expired_at');
+                                                });
+                                        });
+                                    })
+                                    ->where('status', 'active')
+                                    ->count(),
+                                'global' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())
+                                    ->where('scope', 'global')
+                                    ->where('status', 'active')
+                                    ->count(),
+                            ];
+                            
+                            // Add assignment info for each channel
+                            foreach ($data['channels'] as $channel) {
+                                $channel->assignment_info = $this->getChannelAssignmentInfo($channel);
+                            }
                         } catch (\Exception $e) {
                             \Log::error('MultiChannelSignal: Error loading channels', ['error' => $e->getMessage()]);
                             $data['channels'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                            $data['stats'] = [
+                                'total' => 0,
+                                'by_user' => 0,
+                                'by_plan' => 0,
+                                'global' => 0,
+                            ];
                         }
                     }
                 }
@@ -128,5 +167,55 @@ class MultiChannelSignalController extends Controller
         }
 
         return view(Helper::themeView('user.trading.multi-channel-signal'), $data);
+    }
+
+    /**
+     * Get assignment information for a channel (helper method).
+     */
+    protected function getChannelAssignmentInfo($channel): array
+    {
+        $info = [
+            'type' => 'none',
+            'description' => 'Not assigned',
+        ];
+
+        if ($channel->scope === 'global') {
+            $info = [
+                'type' => 'global',
+                'description' => 'Available to all users',
+            ];
+        } elseif ($channel->scope === 'user') {
+            $assignedUsers = $channel->assignedUsers()->pluck('username')->toArray();
+            $isAssignedToMe = in_array(Auth::user()->username, $assignedUsers);
+            
+            $info = [
+                'type' => 'user',
+                'description' => $isAssignedToMe 
+                    ? 'Assigned directly to you'
+                    : 'Assigned to specific users',
+                'users' => $assignedUsers,
+            ];
+        } elseif ($channel->scope === 'plan') {
+            $userPlan = Auth::user()->subscriptions()
+                ->where('is_current', 1)
+                ->where(function($q) {
+                    $q->where('plan_expired_at', '>', now())
+                      ->orWhereNull('plan_expired_at');
+                })
+                ->first();
+            
+            $assignedPlans = $channel->assignedPlans()->pluck('name')->toArray();
+            $isAssignedToMyPlan = $userPlan && in_array($userPlan->plan->name ?? '', $assignedPlans);
+            
+            $info = [
+                'type' => 'plan',
+                'description' => $isAssignedToMyPlan
+                    ? 'Assigned to your plan'
+                    : 'Assigned to specific plans',
+                'plans' => $assignedPlans,
+            ];
+        }
+
+        return $info;
     }
 }

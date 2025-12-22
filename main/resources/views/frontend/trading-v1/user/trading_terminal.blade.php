@@ -62,7 +62,8 @@
         </div>
     </div>
 
-    <!-- Exchange Connection Selector (for Real mode) -->
+    <!-- Exchange Connection Selector (for Real mode only - hidden in demo mode) -->
+    @if(!$isDemo)
     <div class="tv-connection-selector" id="connectionSelector" style="display: none;">
         @if($hasExchangeConnections && $exchangeConnections->count() > 0)
             <div class="tv-connection-selector-content">
@@ -100,6 +101,7 @@
             </div>
         @endif
     </div>
+    @endif
 
     <!-- No Connection Modal -->
     <div class="modal fade" id="noConnectionModal" tabindex="-1" role="dialog" aria-labelledby="noConnectionModalLabel" aria-hidden="true">
@@ -244,15 +246,22 @@
 
     <!-- Order Panel Component Template -->
     <template id="orderPanelComponentTemplate">
-        <div class="tv-order-panel" style="height: 100%;">
+        <div class="tv-order-panel" style="height: 100%; position: relative;">
+            <!-- Coming Soon Overlay -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 14, 26, 0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                <i class="las la-tools" style="font-size: 4rem; color: #1AFFD5; margin-bottom: 1rem;"></i>
+                <h3 style="color: #fff; margin-bottom: 0.5rem; font-weight: 600;">Coming Soon</h3>
+                <p style="color: #848e9c; margin: 0; text-align: center; max-width: 80%;">Trading functionality is currently under development</p>
+            </div>
+            
             <div class="tv-order-header">
                 <button class="tv-order-tab active" data-type="market">Market</button>
                 <button class="tv-order-tab" data-type="limit">Limit</button>
             </div>
             <div class="tv-order-content">
-                <div class="tv-order-mode-indicator {{ $isDemo ? 'demo' : 'real' }}" id="orderPanelMode">
+                <div class="tv-order-mode-indicator {{ $isDemo ? 'demo' : 'real' }}" id="orderPanelMode" data-demo-text="Demo Mode" data-real-text="Real Trading">
                     <span class="dot"></span>
-                    <span class="text">{{ $isDemo ? 'Demo Mode' : 'Real Trading' }}</span>
+                    <span class="text" id="orderPanelModeText">{{ $isDemo ? 'Demo Mode' : 'Real Trading' }}</span>
                 </div>
 
                 <form id="orderForm" class="tv-order-form">

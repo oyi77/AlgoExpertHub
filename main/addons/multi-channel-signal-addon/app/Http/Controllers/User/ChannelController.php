@@ -291,49 +291,157 @@ class ChannelController extends Controller
             $config['phone_number'] = $request->phone_number;
             
             // Use forceFill and save to ensure config is properly saved
-            // This bypasses any casting issues and ensures the mutator is called
             $channel->forceFill(['config' => $config]);
             $channel->save();
             
             // Refresh to get the latest data from database
             $channel->refresh();
-
-            $result = $this->telegramMtprotoService->createChannel([
-                'user_id' => Auth::id(),
-                'name' => $channel->name,
-                'api_id' => $config['api_id'],
-                'api_hash' => $config['api_hash'],
+            
+            // Log to verify phone number was saved
+            \Log::info("Phone number saved (user channel)", [
+                'channel_id' => $channel->id,
                 'phone_number' => $request->phone_number,
+                'config_after_save' => $channel->config ?? [],
+                'phone_in_config' => $channel->config['phone_number'] ?? 'NOT FOUND'
             ]);
 
-            if ($result['type'] === 'code_required') {
-                $request->session()->put('phone_code_hash', $result['phone_code_hash']);
+            // CRITICAL: Set programmatic auth mode BEFORE initializing adapter
+            putenv('MADELINE_PROGRAMMATIC_AUTH=1');
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $_SERVER['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            
+            // Store original POST data
+            $originalPost = $_POST ?? [];
+            $_POST['type'] = 'phone';
+            
+            // Use output buffering to catch any output
+            ob_start();
+            ob_start();
+            ob_start();
+            
+            $authResult = null;
+            try {
+                $adapter = new \Addons\MultiChannelSignalAddon\App\Adapters\TelegramMtprotoAdapter($channel);
+                $authResult = $adapter->startAuth();
+                
+                \Log::info("startAuth() result (user channel)", [
+                    'type' => $authResult['type'] ?? 'unknown',
+                    'message' => $authResult['message'] ?? 'no message',
+                    'has_phone_code_hash' => isset($authResult['phone_code_hash'])
+                ]);
+            } catch (\Exception $e) {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                \Log::error("startAuth() exception (user channel)", [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'phone',
+                ])->with('error', 'Authentication error: ' . $e->getMessage());
+            }
+            
+            // Get any captured output
+            $output = '';
+            while (ob_get_level() > 0) {
+                $output .= ob_get_clean();
+            }
+            
+            if (!empty($output)) {
+                \Log::warning("Output captured during startAuth() (user channel)", [
+                    'output_length' => strlen($output),
+                    'contains_html' => strpos($output, '<html') !== false,
+                ]);
+            }
+            
+            if (!is_array($authResult) || !isset($authResult['type'])) {
+                \Log::error("Invalid startAuth() result (user channel)", ['result' => $authResult]);
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'phone',
+                ])->with('error', 'Invalid authentication response. Please try again.');
+            }
+
+            if ($authResult['type'] === 'code_required') {
+                $_POST = $originalPost;
+                
+                $phoneCodeHash = $authResult['phone_code_hash'] ?? null;
+                if (!$phoneCodeHash) {
+                    \Log::error("code_required but no phone_code_hash (user channel)", ['result' => $authResult]);
+                    return redirect()->route('user.channels.authenticate', [
+                        'id' => $channel->id,
+                        'step' => 'phone',
+                    ])->with('error', 'Failed to get verification code hash. Please try again.');
+                }
+                
+                $request->session()->put('phone_code_hash', $phoneCodeHash);
+                $request->session()->save();
 
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'code',
-                ])->with('info', $result['message']);
+                ])->with('info', $authResult['message'] ?? 'Verification code sent. Please check your Telegram app.');
             }
 
-            return redirect()->back()->with('error', $result['message']);
+            if ($authResult['type'] === 'password_required') {
+                $_POST = $originalPost;
+                
+                $phoneCodeHash = $authResult['phone_code_hash'] ?? null;
+                if ($phoneCodeHash) {
+                    $request->session()->put('phone_code_hash', $phoneCodeHash);
+                    $request->session()->save();
+                }
+                
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'password',
+                ])->with('info', $authResult['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+            }
+
+            if ($authResult['type'] === 'error') {
+                $_POST = $originalPost;
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'phone',
+                ])->with('error', $authResult['message'] ?? 'Failed to send verification code.');
+            }
+
+            if ($authResult['type'] === 'success') {
+                $_POST = $originalPost;
+                return redirect()->route('user.channels.index')
+                    ->with('success', 'Telegram account authenticated successfully!');
+            }
+            
+            $_POST = $originalPost;
+            return redirect()->route('user.channels.authenticate', [
+                'id' => $channel->id,
+                'step' => 'phone',
+            ])->with('error', 'Unexpected authentication response. Please try again.');
         }
 
         if ($request->isMethod('post') && $step === 'code') {
+            // CRITICAL: Save session before any operations
+            $request->session()->save();
+            
             $request->validate(['code' => 'required|string']);
 
             $phoneCodeHash = $request->session()->get('phone_code_hash') ?? $request->phone_code_hash;
             if (!$phoneCodeHash) {
-                return redirect()->back()->with('error', 'Invalid session. Please start over.');
+                $request->session()->save();
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'phone',
+                ])->with('error', 'Invalid session. Please start over.');
             }
 
-            // CRITICAL: Refresh channel from database to get latest config (including phone_number)
-            // The channel instance might be stale if it was loaded before phone number was saved
-            // Use fresh() to get a completely new instance from database
+            // CRITICAL: Refresh channel from database
             $channel = $channel->fresh();
             
-            // Verify phone number exists before proceeding
+            // Verify phone number exists
             if (empty($channel->config['phone_number'] ?? null)) {
-                Log::error("Phone number missing after refresh", [
+                \Log::error("Phone number missing after refresh (user channel)", [
                     'channel_id' => $channel->id,
                     'config' => $channel->config
                 ]);
@@ -343,16 +451,106 @@ class ChannelController extends Controller
                 ])->with('error', 'Phone number not found. Please re-enter your phone number.');
             }
 
+            // Prevent MadelineProto web UI
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = true;
+            $originalPost = $_POST ?? [];
+            
+            // Suppress output
+            ob_start();
+            ob_start();
             $result = $this->telegramMtprotoService->completeAuth($channel, $request->code, $phoneCodeHash);
+            $output = ob_get_clean();
+            ob_end_clean();
+            
+            if (!empty($output) && (strpos($output, '<html') !== false || strpos($output, 'MadelineProto') !== false)) {
+                \Log::warning("MadelineProto web UI output suppressed (user channel)", ['output_length' => strlen($output)]);
+            }
 
             if ($result['type'] === 'success') {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                $_POST = $originalPost;
+                
                 $request->session()->forget('phone_code_hash');
+                $request->session()->save();
+                $request->session()->regenerateToken();
 
                 return redirect()->route('user.channels.index')
                     ->with('success', 'Telegram account authenticated successfully!');
             }
 
-            return redirect()->back()->with('error', $result['message']);
+            if ($result['type'] === 'password_required') {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+                $_POST = $originalPost;
+                
+                $request->session()->put('phone_code_hash', $phoneCodeHash);
+                $request->session()->save();
+                
+                return redirect()->route('user.channels.authenticate', [
+                    'id' => $channel->id,
+                    'step' => 'password',
+                ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+            }
+
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            $_POST = $originalPost;
+            
+            return redirect()->back()->with('error', $result['message'] ?? 'Verification failed. Please try again.');
+        }
+
+        // Handle password step (2FA)
+        if ($request->isMethod('post') && $step === 'password') {
+            $request->session()->save();
+            $request->validate(['password' => 'required|string']);
+
+            $channel = $channel->fresh();
+
+            // Set programmatic auth mode
+            putenv('MADELINE_PROGRAMMATIC_AUTH=1');
+            $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $_SERVER['MADELINE_PROGRAMMATIC_AUTH'] = '1';
+            $originalPost = $_POST ?? [];
+
+            // Suppress output
+            ob_start();
+            ob_start();
+            ob_start();
+            
+            $result = $this->telegramMtprotoService->completePasswordAuth($channel, $request->password);
+            
+            $output = '';
+            while (ob_get_level() > 0) {
+                $output .= ob_get_clean();
+            }
+            
+            if (!empty($output) && (strpos($output, '<html') !== false || strpos($output, 'MadelineProto') !== false)) {
+                \Log::warning("MadelineProto HTML output captured in password auth (user channel)", [
+                    'output_length' => strlen($output)
+                ]);
+            }
+
+            if ($result['type'] === 'success') {
+                $_POST = $originalPost;
+                $request->session()->save();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('user.channels.index')
+                    ->with('success', 'Telegram account authenticated successfully!');
+            }
+
+            $_POST = $originalPost;
+            
+            $errorMessage = $result['message'] ?? 'Password authentication failed.';
+            if (strpos($errorMessage, 'Invalid password') !== false && !empty($channel->config['password_hint'] ?? '')) {
+                $errorMessage .= ' Hint: ' . $channel->config['password_hint'];
+            }
+            
+            return redirect()->back()->with('error', $errorMessage)->withInput();
         }
 
         return view('multi-channel-signal-addon::user.channel.authenticate', $data);
