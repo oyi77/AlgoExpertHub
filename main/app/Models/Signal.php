@@ -17,6 +17,12 @@ class Signal extends Model
         'published_date' => 'datetime'
     ];
 
+    protected $fillable = [
+        'title', 'description', 'currency_pair_id', 'time_frame_id', 'market_id',
+        'open_price', 'sl', 'tp', 'direction', 'is_published', 'published_date',
+        'image', 'auto_created', 'channel_source_id', 'message_hash', 'outcome'
+    ];
+
     public function plans()
     {
         return $this->belongsToMany(Plan::class, 'plan_signals');

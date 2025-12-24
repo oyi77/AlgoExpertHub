@@ -114,12 +114,19 @@
                                             @foreach($dataConnections as $conn)
                                             <tr>
                                                 <td><strong>{{ $conn->name }}</strong></td>
-                                                <td>{{ $conn->provider ?? $conn->exchange_name ?? 'N/A' }}</td>
+                                                <td>{{ \App\Helpers\Helper\Helper::formatProviderName($conn->provider ?? $conn->exchange_name ?? 'N/A') }}</td>
                                                 <td>
-                                                    @if(isset($conn->connection_type))
-                                                        <span class="badge bg-info">{{ str_replace('_', ' ', $conn->connection_type) }}</span>
-                                                    @elseif(isset($conn->exchange_type))
-                                                         <span class="badge bg-info">{{ $conn->exchange_type }}</span>
+                                                    @php
+                                                        $connType = $conn->connection_type ?? $conn->exchange_type ?? $conn->type ?? null;
+                                                    @endphp
+                                                    @if($connType)
+                                                        @if($connType === 'CRYPTO_EXCHANGE' || $connType === 'ccxt_crypto')
+                                                            <span class="badge bg-primary">{{ __('Crypto Exchange') }}</span>
+                                                        @elseif($connType === 'FX_BROKER' || $connType === 'mtapi')
+                                                            <span class="badge bg-success">{{ __('FX Broker') }}</span>
+                                                        @else
+                                                            <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $connType)) }}</span>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-secondary">{{ __('Unknown') }}</span>
                                                     @endif

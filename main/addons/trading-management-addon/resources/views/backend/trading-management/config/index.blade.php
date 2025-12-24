@@ -126,7 +126,7 @@
                                                 {{ $connection->connection_type === 'CRYPTO_EXCHANGE' ? 'Crypto' : 'Forex' }}
                                             </span>
                                         </td>
-                                        <td>{{ strtoupper($connection->provider) }}</td>
+                                        <td>{{ \App\Helpers\Helper\Helper::formatProviderName($connection->provider) }}</td>
                                         <td>
                                             <span class="badge badge-info">{{ $connection->getPurposeLabel() }}</span>
                                             <br>

@@ -19,18 +19,33 @@
     <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h4 class="mb-0">{{ __('My Signal Sources') }}</h4>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn sp_theme_btn" title="{{ __('Telegram: Connect a Telegram to receive signals from channels/groups.') }}">
-                <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram') }}
-            </a>
-            <button type="button" class="btn btn-outline-info coming-soon-btn" data-feature="API/Webhook" title="{{ __('API/Webhook: Receive signals via HTTP POST requests to a webhook URL') }}">
-                <i class="las la-code-branch me-1"></i> {{ __('Add API') }}
-            </button>
-            <button type="button" class="btn btn-outline-info coming-soon-btn" data-feature="Web Scrape" title="{{ __('Web Scrape: Automatically scrape trading signals from websites (requires URL and CSS selectors)') }}">
-                <i class="las la-spider me-1"></i> {{ __('Add Web Scrape') }}
-            </button>
-            <button type="button" class="btn btn-outline-info coming-soon-btn" data-feature="RSS Feed" title="{{ __('RSS Feed: Receive signals from RSS feeds (requires RSS feed URL)') }}">
-                <i class="las la-rss me-1"></i> {{ __('Add RSS') }}
-            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success btn-lg dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #10b981 !important;">
+                    <i class="las la-plus me-1"></i> {{ __('Add Signal Source') }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}">
+                            <i class="lab la-telegram-plane me-2"></i> {{ __('Telegram') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'api']) }}">
+                            <i class="las la-code-branch me-2"></i> {{ __('API / Webhook') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'web_scrape']) }}">
+                            <i class="las la-spider me-2"></i> {{ __('Web Scrape') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'rss']) }}">
+                            <i class="las la-rss me-2"></i> {{ __('RSS Feed') }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 

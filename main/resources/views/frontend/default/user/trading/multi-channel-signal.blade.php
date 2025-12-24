@@ -254,12 +254,16 @@
                                                 <h5 class="title">{{ $signal->title }}</h5>
                                                 <p class="text-muted small">{{ __('Auto-created from channel') }}: {{ $signal->channelSource->name ?? 'N/A' }}</p>
                                                 <div class="d-flex gap-2 mt-3">
-                                                    <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 
-                                                       class="btn btn-sm btn-primary">
-                                                        <i class="las la-eye"></i> {{ __('Review') }}
-                                                    </a>
-                                                    <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 
-                                                       class="btn btn-sm btn-outline-info">
+                                                    @if(Route::has('user.trading.terminal.index'))
+                                                        <a href="{{ route('user.trading.terminal.index', ['pair' => $signal->pair->name ?? '', 'direction' => $signal->direction, 'entry' => $signal->open_price, 'sl' => $signal->sl, 'tp' => $signal->tp]) }}" 
+                                                           class="btn btn-sm btn-success"
+                                                           title="{{ __('Execute Trade - Open position in Trading Terminal') }}">
+                                                            <i class="las la-play"></i> {{ __('Execute') }}
+                                                        </a>
+                                                    @endif
+                                                    <a href="{{ route('user.trading.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 
+                                                       class="btn btn-sm btn-outline-info"
+                                                       title="{{ __('View Signal Details') }}">
                                                         <i class="las la-eye"></i> {{ __('View') }}
                                                     </a>
                                                 </div>

@@ -308,6 +308,71 @@ class Helper
     }
 
     /**
+     * Format signal outcome status with badge
+     * 
+     * @param string|null $outcome The outcome status
+     * @return string HTML badge for outcome status
+     */
+    public static function formatSignalOutcome($outcome = null)
+    {
+        if (empty($outcome)) {
+            return '<span class="badge bg-secondary">' . __('Open') . '</span>';
+        }
+
+        $badges = [
+            'tp_hit' => ['class' => 'bg-success', 'text' => __('TP Hit')],
+            'sl_hit' => ['class' => 'bg-danger', 'text' => __('SL Hit')],
+            'manual_close' => ['class' => 'bg-info', 'text' => __('Manual Close')],
+            'cancelled' => ['class' => 'bg-warning', 'text' => __('Cancelled')],
+            'open' => ['class' => 'bg-primary', 'text' => __('Open')],
+            'expired' => ['class' => 'bg-secondary', 'text' => __('Expired')],
+        ];
+
+        $badge = $badges[$outcome] ?? ['class' => 'bg-secondary', 'text' => ucfirst($outcome)];
+
+        return '<span class="badge ' . $badge['class'] . '">' . $badge['text'] . '</span>';
+    }
+
+    /**
+     * Format provider name with proper capitalization
+     * 
+     * @param string|null $provider The provider name (e.g., 'metaapi', 'binance', 'coinbase')
+     * @return string Formatted provider name (e.g., 'MetaApi', 'Binance', 'Coinbase')
+     */
+    public static function formatProviderName($provider = null)
+    {
+        if (empty($provider)) {
+            return 'N/A';
+        }
+
+        // Known provider name mappings
+        $providerMap = [
+            'metaapi' => 'MetaApi',
+            'metaapi.io' => 'MetaApi',
+            'binance' => 'Binance',
+            'coinbase' => 'Coinbase',
+            'kraken' => 'Kraken',
+            'bitfinex' => 'Bitfinex',
+            'okx' => 'OKX',
+            'bybit' => 'Bybit',
+            'huobi' => 'Huobi',
+            'gate.io' => 'Gate.io',
+            'kucoin' => 'KuCoin',
+            'ftx' => 'FTX',
+        ];
+
+        $lowerProvider = strtolower(trim($provider));
+        
+        // Check if we have a mapping
+        if (isset($providerMap[$lowerProvider])) {
+            return $providerMap[$lowerProvider];
+        }
+
+        // Default: Capitalize first letter of each word
+        return ucwords(str_replace(['_', '-'], ' ', $provider));
+    }
+
+    /**
      * Get appropriate decimal places for signal price based on pair and market
      * 
      * @param string|null $pairName The currency pair name

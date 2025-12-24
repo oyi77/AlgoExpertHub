@@ -143,7 +143,7 @@
                         </div>
                         <div class="mb-3">
                             <strong><i class="fa fa-server"></i> {{ __('Provider') }}:</strong> 
-                            <span class="ml-2 badge bg-info">{{ strtoupper($connection->provider ?? $connection->exchange_name ?? 'N/A') }}</span>
+                            <span class="ml-2 badge bg-info">{{ \App\Helpers\Helper\Helper::formatProviderName($connection->provider ?? $connection->exchange_name ?? 'N/A') }}</span>
                         </div>
                         <div class="mb-3">
                             <strong><i class="fa fa-bullseye"></i> {{ __('Purpose') }}:</strong> 

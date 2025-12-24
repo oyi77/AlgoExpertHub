@@ -36,6 +36,7 @@
                                     <th>{{ __('Take Profit') }}</th>
                                     <th>{{ __('Movement Direction') }}</th>
                                     <th>{{ __('Is Sent') }}</th>
+                                    <th>{{ __('Outcome') }}</th>
                                     <th>{{ __('Action') }}</th>
                                 </tr>
                             </thead>
@@ -59,15 +60,15 @@
                                         </td>
 
                                         <td>
-                                            {{ $signal->open_price }}
+                                            {{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->open_price, optional($signal->pair)->name, optional($signal->market)->name) }}
                                         </td>
 
                                         <td>
-                                            {{ $signal->sl }}
+                                            {{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->sl, optional($signal->pair)->name, optional($signal->market)->name) }}
                                         </td>
 
                                         <td>
-                                            {{ $signal->tp }}
+                                            {{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->tp, optional($signal->pair)->name, optional($signal->market)->name) }}
                                         </td>
 
                                         <td>
@@ -84,6 +85,10 @@
                                             @else
                                                 <span class="badge badge-danger">{{ __('Draft') }}</span>
                                             @endif
+                                        </td>
+
+                                        <td>
+                                            {!! \App\Helpers\Helper\Helper::formatSignalOutcome($signal->outcome) !!}
                                         </td>
 
                                         <td>

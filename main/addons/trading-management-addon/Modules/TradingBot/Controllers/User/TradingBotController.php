@@ -114,7 +114,7 @@ class TradingBotController extends Controller
      */
     public function store(Request $request)
     {
-        $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson();
+        $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
         
         $validated = $request->validate([
             'name' => 'required|string|max:255',

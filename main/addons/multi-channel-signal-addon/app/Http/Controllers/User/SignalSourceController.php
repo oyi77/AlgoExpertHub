@@ -614,19 +614,53 @@ class SignalSourceController extends Controller
     /**
      * Update source status.
      */
-    public function updateStatus(Request $request, int $id): RedirectResponse
+    public function updateStatus(Request $request, int $id)
     {
-        $source = ChannelSource::where('user_id', Auth::id())->findOrFail($id);
+        try {
+            $source = ChannelSource::where('user_id', Auth::id())->findOrFail($id);
 
-        $status = $request->input('status');
-        if (!in_array($status, ['active', 'paused'], true)) {
-            return redirect()->back()->with('error', 'Invalid status');
+            $validated = $request->validate([
+                'status' => 'required|in:active,paused'
+            ]);
+
+            $status = $validated['status'];
+            $source->update(['status' => $status]);
+
+            $message = $status === 'active' ? 'Source resumed' : 'Source paused';
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
+            
+            return redirect()->back()->with('success', $message);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Failed to update signal source status', [
+                'source_id' => $id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update status: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Failed to update status: ' . $e->getMessage());
         }
-
-        $source->update(['status' => $status]);
-
-        $message = $status === 'active' ? 'Source resumed' : 'Source paused';
-        return redirect()->back()->with('success', $message);
     }
 
     /**

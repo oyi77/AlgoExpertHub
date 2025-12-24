@@ -45,7 +45,7 @@
                         </div>
                         <div class="info-item mb-3">
                             <strong><i class="fas fa-server"></i> Provider:</strong> 
-                            <span class="ml-2 badge badge-info">{{ strtoupper($connection->provider) }}</span>
+                            <span class="ml-2 badge badge-info">{{ \App\Helpers\Helper\Helper::formatProviderName($connection->provider) }}</span>
                         </div>
                         <div class="info-item mb-3">
                             <strong><i class="fas fa-bullseye"></i> Purpose:</strong> 
