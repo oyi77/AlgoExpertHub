@@ -292,6 +292,98 @@
                                 <small class="text-muted d-block mt-2">{{ __('Test your credentials before saving to ensure they work correctly.') }}</small>
                                 <div id="testConnectionResult" class="mt-2"></div>
                             </div>
+                            
+                            <script>
+                            // Test connection functionality
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const testBtn = document.getElementById('testConnectionBtn');
+                                const testResult = document.getElementById('testConnectionResult');
+                                
+                                if (testBtn) {
+                                    testBtn.addEventListener('click', function() {
+                                        const btn = this;
+                                        const originalText = btn.innerHTML;
+                                        
+                                        // Get form values
+                                        const exchangeType = document.getElementById('exchangeType')?.value;
+                                        const exchangeName = document.getElementById('providerSelect')?.value;
+                                        const connectionType = document.getElementById('connectionType')?.value;
+                                        const apiKey = document.getElementById('apiKeyInput')?.value;
+                                        const apiSecret = document.getElementById('apiSecretInput')?.value;
+                                        const apiPassphrase = document.getElementById('apiPassphraseInput')?.value;
+                                        const metaapiAccountId = document.getElementById('metaapiAccountId')?.value;
+                                        
+                                        // Validate required fields
+                                        if (!exchangeType || !exchangeName || !connectionType) {
+                                            testResult.innerHTML = '<div class="alert alert-warning"><i class="las la-exclamation-triangle"></i> {{ __('Please select exchange type, provider, and connection type first.') }}</div>';
+                                            return;
+                                        }
+                                        
+                                        // Build credentials object
+                                        const credentials = {};
+                                        if (exchangeName === 'metaapi') {
+                                            if (!metaapiAccountId) {
+                                                testResult.innerHTML = '<div class="alert alert-warning"><i class="las la-exclamation-triangle"></i> {{ __('Please enter MetaApi Account ID.') }}</div>';
+                                                return;
+                                            }
+                                            credentials.account_id = metaapiAccountId;
+                                            credentials.api_token = document.getElementById('metaapiToken')?.value || '';
+                                        } else {
+                                            if (!apiKey || !apiSecret) {
+                                                testResult.innerHTML = '<div class="alert alert-warning"><i class="las la-exclamation-triangle"></i> {{ __('Please enter API Key and API Secret.') }}</div>';
+                                                return;
+                                            }
+                                            credentials.api_key = apiKey;
+                                            credentials.api_secret = apiSecret;
+                                            if (apiPassphrase) {
+                                                credentials.api_passphrase = apiPassphrase;
+                                            }
+                                        }
+                                        
+                                        // Disable button and show loading
+                                        btn.disabled = true;
+                                        btn.innerHTML = '<i class="las la-spinner la-spin"></i> {{ __('Testing...') }}';
+                                        testResult.innerHTML = '<div class="alert alert-info"><i class="las la-spinner la-spin"></i> {{ __('Testing connection...') }}</div>';
+                                        
+                                        // Send test request
+                                        fetch('{{ route("user.exchange-connections.test-connection") }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                                                'X-Requested-With': 'XMLHttpRequest',
+                                                'Accept': 'application/json'
+                                            },
+                                            credentials: 'same-origin',
+                                            body: JSON.stringify({
+                                                exchange_type: exchangeType,
+                                                exchange_name: exchangeName,
+                                                connection_type: connectionType,
+                                                credentials: credentials
+                                            })
+                                        })
+                                        .then(async response => {
+                                            const data = await response.json();
+                                            
+                                            if (response.ok && data.success) {
+                                                testResult.innerHTML = '<div class="alert alert-success"><i class="las la-check-circle"></i> <strong>{{ __('Success!') }}</strong> ' + (data.message || '{{ __('Connection test successful') }}') + '</div>';
+                                            } else {
+                                                testResult.innerHTML = '<div class="alert alert-danger"><i class="las la-times-circle"></i> <strong>{{ __('Failed!') }}</strong> ' + (data.message || '{{ __('Connection test failed') }}') + '</div>';
+                                            }
+                                            
+                                            btn.disabled = false;
+                                            btn.innerHTML = originalText;
+                                        })
+                                        .catch(error => {
+                                            console.error('Test connection error:', error);
+                                            testResult.innerHTML = '<div class="alert alert-danger"><i class="las la-times-circle"></i> <strong>{{ __('Error!') }}</strong> {{ __('Network error. Please check your connection and try again.') }}</div>';
+                                            btn.disabled = false;
+                                            btn.innerHTML = originalText;
+                                        });
+                                    });
+                                }
+                            });
+                            </script>
                         </div>
                     </div>
 

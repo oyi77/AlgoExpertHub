@@ -25,27 +25,28 @@ class BacktestingController extends Controller
             try {
                 // Create Backtest tab
                 if ($data['activeTab'] === 'create') {
-                    // Load available presets, strategies, etc. for backtest creation
-                    if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::class)) {
-                        try {
-                            $data['presets'] = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::where(function($query) {
-                                    $query->where('created_by_user_id', Auth::id())
-                                          ->orWhereNull('created_by_user_id');
-                                })
-                                ->get();
-                        } catch (\Exception $e) {
-                            \Log::error('Backtesting: Error loading presets', ['error' => $e->getMessage()]);
-                            $data['presets'] = collect([]);
-                        }
-                    } else {
-                        $data['presets'] = collect([]);
+                    // Load available currency pairs and timeframes
+                    try {
+                        $data['currencyPairs'] = \App\Models\CurrencyPair::where('status', 1)->get();
+                        $data['timeframes'] = \App\Models\TimeFrame::where('status', 1)->get();
+                    } catch (\Exception $e) {
+                        \Log::error('Backtesting: Error loading pairs/timeframes', ['error' => $e->getMessage()]);
+                        $data['currencyPairs'] = collect([]);
+                        $data['timeframes'] = collect([]);
                     }
                 }
 
                 // Results tab
                 if ($data['activeTab'] === 'results') {
-                    // Load backtest results (if backtesting module exists)
-                    $data['results'] = collect([]); // Placeholder
+                    // Load backtest results
+                    try {
+                        $data['backtests'] = \App\Models\Backtest::where('user_id', Auth::id())
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(20);
+                    } catch (\Exception $e) {
+                        \Log::error('Backtesting: Error loading backtests', ['error' => $e->getMessage()]);
+                        $data['backtests'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
                 }
 
                 // Performance Reports tab
@@ -68,29 +69,17 @@ class BacktestingController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'preset_id' => 'required|exists:trading_presets,id',
             'symbol' => 'required|string|max:50',
-            'timeframe' => 'required|string|in:1m,5m,15m,1h,4h,1d',
+            'timeframe' => 'required|string',
             'start_date' => 'required|date|before_or_equal:today|before:end_date',
             'end_date' => 'required|date|before_or_equal:today|after:start_date',
             'initial_balance' => 'required|numeric|min:100',
-            'description' => 'nullable|string|max:1000',
-            'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
-            'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
         ]);
 
         try {
-            if (!class_exists(\Addons\TradingManagement\Modules\Backtesting\Models\Backtest::class)) {
-                return back()->with('error', __('Backtesting module is not available.'));
-            }
-
-            $backtest = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::create([
+            $backtest = \App\Models\Backtest::create([
                 'user_id' => Auth::id(),
                 'name' => $request->name,
-                'description' => $request->description,
-                'preset_id' => $request->preset_id,
-                'filter_strategy_id' => $request->filter_strategy_id,
-                'ai_model_profile_id' => $request->ai_model_profile_id,
                 'symbol' => strtoupper($request->symbol),
                 'timeframe' => $request->timeframe,
                 'start_date' => $request->start_date,
@@ -100,20 +89,7 @@ class BacktestingController extends Controller
             ]);
 
             // Dispatch job to run backtest in background
-            if (class_exists(\Addons\TradingManagement\Modules\Backtesting\Jobs\RunBacktestJob::class)) {
-                \Addons\TradingManagement\Modules\Backtesting\Jobs\RunBacktestJob::dispatch($backtest);
-            } else {
-                // Fallback: Run synchronously if job doesn't exist
-                \Log::warning('RunBacktestJob not found, running backtest synchronously');
-                try {
-                    $engine = app(\Addons\TradingManagement\Modules\Backtesting\Services\BacktestEngine::class);
-                    $engine->run($backtest);
-                } catch (\Exception $e) {
-                    \Log::error('Backtest execution error', ['error' => $e->getMessage()]);
-                    $backtest->markAsFailed($e->getMessage());
-                    return back()->with('error', __('Backtest started but failed: ') . $e->getMessage());
-                }
-            }
+            \App\Jobs\RunBacktestJob::dispatch($backtest);
 
             return redirect()->route('user.trading.backtesting.index', ['tab' => 'results'])
                 ->with('success', __('Backtest created successfully and is running in the background.'));
@@ -132,22 +108,79 @@ class BacktestingController extends Controller
     public function show($id)
     {
         try {
-            if (!class_exists(\Addons\TradingManagement\Modules\Backtesting\Models\Backtest::class)) {
-                abort(404);
-            }
-
-            $backtest = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('user_id', Auth::id())
-                ->with('result', 'preset', 'filterStrategy', 'aiModelProfile')
+            $backtest = \App\Models\Backtest::where('user_id', Auth::id())
+                ->with('trades')
                 ->findOrFail($id);
 
             $data['title'] = __('Backtest Details') . ' - ' . $backtest->name;
             $data['backtest'] = $backtest;
+            $data['trades'] = $backtest->trades()->orderBy('entry_time', 'desc')->paginate(50);
 
             return view(Helper::themeView('user.trading.backtesting.show'), $data);
         } catch (\Exception $e) {
             \Log::error('Backtest show error', ['error' => $e->getMessage()]);
             return redirect()->route('user.trading.backtesting.index', ['tab' => 'results'])
                 ->with('error', __('Backtest not found.'));
+        }
+    }
+
+    /**
+     * Export backtest trades to CSV
+     */
+    public function export($id)
+    {
+        try {
+            $backtest = \App\Models\Backtest::where('user_id', Auth::id())
+                ->findOrFail($id);
+
+            $trades = $backtest->trades()->orderBy('entry_time', 'asc')->get();
+
+            $filename = 'backtest_' . $backtest->id . '_trades_' . date('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ];
+
+            $callback = function() use ($trades) {
+                $file = fopen('php://output', 'w');
+                
+                // Header row
+                fputcsv($file, [
+                    'Entry Time',
+                    'Exit Time',
+                    'Direction',
+                    'Entry Price',
+                    'Exit Price',
+                    'Quantity',
+                    'Profit/Loss',
+                    'Profit/Loss %',
+                    'Status'
+                ]);
+
+                // Data rows
+                foreach ($trades as $trade) {
+                    fputcsv($file, [
+                        $trade->entry_time->format('Y-m-d H:i:s'),
+                        $trade->exit_time ? $trade->exit_time->format('Y-m-d H:i:s') : '',
+                        strtoupper($trade->direction),
+                        $trade->entry_price,
+                        $trade->exit_price ?? '',
+                        $trade->quantity,
+                        $trade->profit_loss,
+                        $trade->profit_loss_percent,
+                        $trade->status,
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            \Log::error('Backtest export error', ['error' => $e->getMessage()]);
+            return redirect()->route('user.trading.backtesting.show', $id)
+                ->with('error', __('Failed to export trades.'));
         }
     }
 }

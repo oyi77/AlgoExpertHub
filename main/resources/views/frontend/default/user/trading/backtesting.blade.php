@@ -80,21 +80,21 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="preset_id">{{ __('Trading Preset') }} <span class="text-danger">*</span></label>
-                                                    <select name="preset_id" id="preset_id" class="form-control @error('preset_id') is-invalid @enderror" required>
-                                                        <option value="">{{ __('Select Preset') }}</option>
-                                                        @if(isset($presets) && $presets->count() > 0)
-                                                            @foreach($presets as $preset)
-                                                                <option value="{{ $preset->id }}" {{ old('preset_id') == $preset->id ? 'selected' : '' }}>
-                                                                    {{ $preset->name }}
+                                                    <label for="symbol">{{ __('Trading Pair') }} <span class="text-danger">*</span></label>
+                                                    <select name="symbol" id="symbol" class="form-control @error('symbol') is-invalid @enderror" required>
+                                                        <option value="">{{ __('Select Pair') }}</option>
+                                                        @if(isset($currencyPairs) && $currencyPairs->count() > 0)
+                                                            @foreach($currencyPairs as $pair)
+                                                                <option value="{{ $pair->name }}" {{ old('symbol') == $pair->name ? 'selected' : '' }}>
+                                                                    {{ $pair->name }}
                                                                 </option>
                                                             @endforeach
                                                         @endif
                                                     </select>
-                                                    @error('preset_id')
+                                                    @error('symbol')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
-                                                    <small class="text-muted">{{ __('Select a risk management preset for position sizing') }}</small>
+                                                    <small class="text-muted">{{ __('Select the trading pair to backtest') }}</small>
                                                 </div>
                                             </div>
                                             <div class="col-12">
@@ -112,24 +112,20 @@
                                         <div class="row gy-3">
                                             <div class="col-md-4">
                                                 <div class="form-group">
-                                                    <label for="symbol">{{ __('Trading Pair') }} <span class="text-danger">*</span></label>
-                                                    <input type="text" name="symbol" id="symbol" class="form-control @error('symbol') is-invalid @enderror" value="{{ old('symbol', 'BTC/USDT') }}" required placeholder="BTC/USDT">
-                                                    @error('symbol')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                    <small class="text-muted">{{ __('Format: BTC/USDT, ETH/USDT, etc.') }}</small>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group">
                                                     <label for="timeframe">{{ __('Timeframe') }} <span class="text-danger">*</span></label>
                                                     <select name="timeframe" id="timeframe" class="form-control @error('timeframe') is-invalid @enderror" required>
-                                                        <option value="1m" {{ old('timeframe') == '1m' ? 'selected' : '' }}>1 Minute</option>
-                                                        <option value="5m" {{ old('timeframe') == '5m' ? 'selected' : '' }}>5 Minutes</option>
-                                                        <option value="15m" {{ old('timeframe') == '15m' ? 'selected' : '' }}>15 Minutes</option>
-                                                        <option value="1h" {{ old('timeframe') == '1h' ? 'selected' : 'selected' }}>1 Hour</option>
-                                                        <option value="4h" {{ old('timeframe') == '4h' ? 'selected' : '' }}>4 Hours</option>
-                                                        <option value="1d" {{ old('timeframe') == '1d' ? 'selected' : '' }}>1 Day</option>
+                                                        <option value="">{{ __('Select Timeframe') }}</option>
+                                                        @if(isset($timeframes) && $timeframes->count() > 0)
+                                                            @foreach($timeframes as $tf)
+                                                                <option value="{{ $tf->name }}" {{ old('timeframe') == $tf->name ? 'selected' : '' }}>
+                                                                    {{ $tf->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        @else
+                                                            <option value="1h" {{ old('timeframe') == '1h' ? 'selected' : 'selected' }}>1 Hour</option>
+                                                            <option value="4h" {{ old('timeframe') == '4h' ? 'selected' : '' }}>4 Hours</option>
+                                                            <option value="1d" {{ old('timeframe') == '1d' ? 'selected' : '' }}>1 Day</option>
+                                                        @endif
                                                     </select>
                                                     @error('timeframe')
                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -250,21 +246,7 @@
                         <div class="tab-pane fade {{ $activeTab === 'results' ? 'show active' : '' }}" 
                              id="results" 
                              role="tabpanel">
-                            @php
-                                $backtests = collect([]);
-                                if (class_exists(\Addons\TradingManagement\Modules\Backtesting\Models\Backtest::class)) {
-                                    try {
-                                        $backtests = \Addons\TradingManagement\Modules\Backtesting\Models\Backtest::where('user_id', auth()->id())
-                                            ->with('result', 'preset')
-                                            ->orderBy('created_at', 'desc')
-                                            ->paginate(20);
-                                    } catch (\Exception $e) {
-                                        \Log::error('Backtesting: Error loading backtests', ['error' => $e->getMessage()]);
-                                    }
-                                }
-                            @endphp
-                            
-                            @if($backtests->count() > 0)
+                            @if(isset($backtests) && $backtests->count() > 0)
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
@@ -294,9 +276,7 @@
                                                     @if($backtest->status === 'completed')
                                                         <span class="badge bg-success">{{ __('Completed') }}</span>
                                                     @elseif($backtest->status === 'running')
-                                                        <span class="badge bg-info">
-                                                            {{ __('Running') }} ({{ $backtest->progress_percent }}%)
-                                                        </span>
+                                                        <span class="badge bg-info">{{ __('Running') }}</span>
                                                     @elseif($backtest->status === 'failed')
                                                         <span class="badge bg-danger">{{ __('Failed') }}</span>
                                                     @else
@@ -304,16 +284,16 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($backtest->result)
-                                                        {{ number_format($backtest->result->win_rate, 2) }}%
+                                                    @if($backtest->status === 'completed')
+                                                        {{ number_format($backtest->win_rate, 2) }}%
                                                     @else
                                                         <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($backtest->result)
-                                                        <span class="{{ $backtest->result->return_percent >= 0 ? 'text-success' : 'text-danger' }}">
-                                                            {{ $backtest->result->return_percent >= 0 ? '+' : '' }}{{ number_format($backtest->result->return_percent, 2) }}%
+                                                    @if($backtest->status === 'completed')
+                                                        <span class="{{ $backtest->total_return >= 0 ? 'text-success' : 'text-danger' }}">
+                                                            {{ $backtest->total_return >= 0 ? '+' : '' }}{{ number_format($backtest->total_return, 2) }}%
                                                         </span>
                                                     @else
                                                         <span class="text-muted">-</span>
@@ -321,7 +301,7 @@
                                                 </td>
                                                 <td>{{ $backtest->created_at->diffForHumans() }}</td>
                                                 <td class="text-end">
-                                                    @if($backtest->status === 'completed' && $backtest->result)
+                                                    @if($backtest->status === 'completed')
                                                         <a href="{{ route('user.trading.backtesting.show', $backtest->id) }}" class="btn btn-sm btn-outline-info">
                                                             <i class="las la-eye"></i> {{ __('View') }}
                                                         </a>

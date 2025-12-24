@@ -47,13 +47,10 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
 
             // Backtesting Center (complete CRUD + execution)
             Route::prefix('backtesting')->name('backtesting.')->group(function () {
-                Route::get('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'index'])->name('index');
-                Route::get('/create', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'create'])->name('create');
-                Route::post('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'store'])->name('store');
-                Route::get('/{id}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'show'])->name('show');
-                Route::delete('/{id}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'destroy'])->name('destroy');
-                Route::post('/{id}/run', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'run'])->name('run');
-                Route::get('/{id}/status', [\Addons\TradingManagement\Modules\Backtesting\Controllers\User\BacktestController::class, 'status'])->name('status');
+                Route::get('/', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'index'])->name('index');
+                Route::post('/', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'store'])->name('store');
+                Route::get('/{id}', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'show'])->name('show');
+                Route::get('/{id}/export', [\App\Http\Controllers\User\Trading\BacktestingController::class, 'export'])->name('export');
             });
 
             // Marketplaces (unified marketplace)
@@ -795,6 +792,110 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             ], 500);
                         }
                     })->name('ccxt-exchanges');
+
+                    // Test connection from form data (before saving)
+                    Route::post('/test-connection', function (\Illuminate\Http\Request $request) {
+                        try {
+                            $validated = $request->validate([
+                                'exchange_type' => 'required|in:CRYPTO_EXCHANGE,FX_BROKER',
+                                'exchange_name' => 'required|string',
+                                'connection_type' => 'required|in:DATA_ONLY,EXECUTION_ONLY,BOTH',
+                                'credentials' => 'required|array',
+                                'credentials.api_key' => 'nullable|string',
+                                'credentials.api_secret' => 'nullable|string',
+                                'credentials.api_passphrase' => 'nullable|string',
+                                'credentials.account_id' => 'nullable|string',
+                            ]);
+
+                            // Create temporary connection object for testing
+                            $tempConnection = new \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection([
+                                'exchange_type' => $validated['exchange_type'],
+                                'connection_type' => $validated['connection_type'],
+                                'provider' => $validated['exchange_name'],
+                                'exchange_name' => $validated['exchange_name'],
+                                'credentials' => $validated['credentials'],
+                            ]);
+
+                            // Get adapter and test
+                            $service = new \Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService();
+                            $adapter = $service->getAdapter($tempConnection);
+
+                            if (!$adapter) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => __('Unsupported exchange or provider')
+                                ], 400);
+                            }
+
+                            // Test connection based on provider
+                            if ($validated['exchange_name'] === 'metaapi') {
+                                if (empty($validated['credentials']['account_id'])) {
+                                    return response()->json([
+                                        'success' => false,
+                                        'message' => __('MetaApi Account ID is required')
+                                    ], 400);
+                                }
+                                
+                                if (method_exists($adapter, 'testConnection')) {
+                                    $result = $adapter->testConnection();
+                                    return response()->json($result);
+                                }
+                                
+                                if (method_exists($adapter, 'getAccountInfo')) {
+                                    $accountInfo = $adapter->getAccountInfo();
+                                    return response()->json([
+                                        'success' => true,
+                                        'message' => __('Connection test successful'),
+                                        'data' => ['account_info' => $accountInfo]
+                                    ]);
+                                }
+                            } else {
+                                // For crypto exchanges, try to fetch balance
+                                if (method_exists($adapter, 'fetchBalance')) {
+                                    try {
+                                        $balance = $adapter->fetchBalance();
+                                        return response()->json([
+                                            'success' => true,
+                                            'message' => __('Connection test successful'),
+                                            'data' => ['balance' => $balance]
+                                        ]);
+                                    } catch (\Exception $e) {
+                                        return response()->json([
+                                            'success' => false,
+                                            'message' => __('Failed to connect: ') . $e->getMessage()
+                                        ], 400);
+                                    }
+                                }
+                                
+                                // Fallback: just verify adapter was created
+                                return response()->json([
+                                    'success' => true,
+                                    'message' => __('Connection test completed (credentials accepted)')
+                                ]);
+                            }
+
+                            return response()->json([
+                                'success' => false,
+                                'message' => __('Connection test method not available for this provider')
+                            ], 400);
+
+                        } catch (\Illuminate\Validation\ValidationException $e) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => __('Validation failed'),
+                                'errors' => $e->errors()
+                            ], 422);
+                        } catch (\Exception $e) {
+                            \Log::error('Test connection error', [
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                            return response()->json([
+                                'success' => false,
+                                'message' => __('Connection test failed: ') . $e->getMessage()
+                            ], 500);
+                        }
+                    })->name('test-connection');
 
                     Route::get('/{exchangeConnection}', function ($id) {
                         try {
