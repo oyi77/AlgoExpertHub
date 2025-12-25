@@ -1352,9 +1352,25 @@ class MetaApiAdapter implements DataProviderInterface
         }
         
         // If includeHistory is true, also fetch order history
-        // Note: MetaApi might have a separate endpoint for order history
-        // For now, we only return pending orders
-        // TODO: Implement order history endpoint if available
+        if ($includeAll) {
+            try {
+                $history = $this->fetchOrderHistory();
+                $orders = array_merge($orders, $history);
+
+                Log::debug('MetaApi fetchOrders: Merged history', [
+                    'account_id' => $accountId,
+                    'pending_count' => count($orders) - count($history),
+                    'history_count' => count($history),
+                    'total_count' => count($orders),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('MetaApi fetchOrders: Failed to fetch history', [
+                    'account_id' => $accountId,
+                    'error' => $e->getMessage(),
+                ]);
+                // We don't throw here, just return what we have (pending orders)
+            }
+        }
         
         return $orders;
     }
