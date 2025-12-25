@@ -67,9 +67,10 @@ The **Trading Management Addon** is a comprehensive trading system that provides
 5. Click **Save**
 
 **Security Tips:**
-- Create API keys with **trading permissions only** (no withdrawal)
-- Enable **IP whitelist** on your exchange
-- Use **testnet** first to verify everything works
+- Use the **show/hide toggles** to verify your API keys before saving.
+- Create API keys with **trading permissions only** (no withdrawal).
+- Enable **IP whitelist** on your exchange.
+- Use **testnet** first to verify everything works.
 
 #### For MT4/MT5 Brokers
 

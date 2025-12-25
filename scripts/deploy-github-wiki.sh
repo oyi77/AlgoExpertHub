@@ -22,7 +22,7 @@ TEMP_DIR="/tmp/github-wiki-deploy"
 # Get the absolute path of the project root (parent of scripts directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SOURCE_WIKI_DIR="$PROJECT_ROOT/.qoder/repowiki/en/content"
+SOURCE_WIKI_DIR="$PROJECT_ROOT/docs/repowiki/en/content"
 SOURCE_DOCS_DIR="$PROJECT_ROOT/docs"
 
 echo -e "${BLUE}========================================${NC}"

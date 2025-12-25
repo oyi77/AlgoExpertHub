@@ -18,6 +18,7 @@ Welcome to the AlgoExpertHub documentation. This guide will help you navigate th
 - **[Trading Presets](trading-system/trading-presets.md)** - Risk management and position sizing
 - **[Copy Trading System](trading-system/copy-trading-system.md)** - Social trading implementation
 - **[Filter Strategy Guide](trading-system/filter-strategy-guide.md)** - Technical indicator filtering
+- **[Trading Bot Signal Addon](trading-system/trading-bot-signal-addon.md)** - Firebase signal integration
 - **[Trading Management](trading-system/trading-management-*.md)** - Trading addon consolidation docs
 
 ### 🔌 API & Integration
@@ -32,6 +33,7 @@ Welcome to the AlgoExpertHub documentation. This guide will help you navigate th
 
 **Location:** `development-guides/`
 
+- **[AlgoExpert++ System](development-guides/algoexpert-plus-addon.md)** - SEO, Queues, Backups, Health monitoring
 - **[Theme Development](development-guides/theme-development.md)** - Creating custom themes
 - **[Database Schema Reference](development-guides/database-schema-reference.md)** - Complete database structure
 - **[Troubleshooting Guide](development-guides/troubleshooting-guide.md)** - Common issues and solutions
