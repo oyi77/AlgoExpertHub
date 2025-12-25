@@ -905,4 +905,125 @@ class TradingBotController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * System-wide bot monitoring dashboard
+     */
+    public function monitoring(Request $request): View
+    {
+        try {
+            $allBots = TradingBot::with(['user', 'admin', 'exchangeConnection'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $healthStats = [
+                'healthy' => 0,
+                'warning' => 0,
+                'error' => 0,
+            ];
+
+            $botsWithHealth = [];
+            foreach ($allBots as $bot) {
+                $health = $this->monitoringService->checkBotHealth($bot);
+                $healthStats[$health['status']] = ($healthStats[$health['status']] ?? 0) + 1;
+                
+                $botsWithHealth[] = [
+                    'bot' => $bot,
+                    'health' => $health,
+                    'worker_status' => $this->monitoringService->getWorkerStatus($bot),
+                    'metrics' => $this->monitoringService->getBotMetrics($bot),
+                ];
+            }
+
+            return view('trading-management::backend.trading-bots.monitoring', [
+                'title' => 'Bot Monitoring Dashboard',
+                'bots' => $botsWithHealth,
+                'health_stats' => $healthStats,
+                'total_bots' => $allBots->count(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to load monitoring dashboard', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to load monitoring dashboard: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get bot health (AJAX)
+     */
+    public function health($id): JsonResponse
+    {
+        try {
+            $bot = TradingBot::findOrFail($id);
+            $health = $this->monitoringService->checkBotHealth($bot);
+
+            return response()->json([
+                'success' => true,
+                'health' => $health,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check health: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk operations
+     */
+    public function bulkAction(Request $request): JsonResponse
+    {
+        $action = $request->get('action');
+        $botIds = $request->get('bot_ids', []);
+
+        if (empty($botIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No bots selected',
+            ], 400);
+        }
+
+        $results = [];
+        foreach ($botIds as $botId) {
+            try {
+                $bot = TradingBot::findOrFail($botId);
+                
+                switch ($action) {
+                    case 'start':
+                        if (!$bot->isRunning()) {
+                            $this->botService->start($bot, null, auth()->guard('admin')->id());
+                            $this->workerService->startWorker($bot);
+                        }
+                        break;
+                    case 'stop':
+                        if ($bot->isRunning() || $bot->isPaused()) {
+                            $this->workerService->stopWorker($bot);
+                            $this->botService->stop($bot, null, auth()->guard('admin')->id());
+                        }
+                        break;
+                    case 'pause':
+                        if ($bot->isRunning()) {
+                            $this->botService->pause($bot, null, auth()->guard('admin')->id());
+                        }
+                        break;
+                }
+
+                $results[] = ['bot_id' => $botId, 'success' => true];
+            } catch (\Exception $e) {
+                $results[] = [
+                    'bot_id' => $botId,
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'results' => $results,
+        ]);
+    }
 }

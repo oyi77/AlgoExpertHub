@@ -114,7 +114,7 @@ class BacktestingController extends Controller
 
             $data['title'] = __('Backtest Details') . ' - ' . $backtest->name;
             $data['backtest'] = $backtest;
-            $data['trades'] = $backtest->trades()->orderBy('entry_time', 'desc')->paginate(50);
+            $data['trades'] = $backtest->trades()->orderBy('entry_time', 'asc')->paginate(50); // Changed to asc for equity curve calculation
 
             return view(Helper::themeView('user.trading.backtesting.show'), $data);
         } catch (\Exception $e) {
