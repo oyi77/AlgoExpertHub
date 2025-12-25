@@ -58,6 +58,7 @@ class BacktestingService
             // Initialize backtest state
             $balance = $backtest->initial_balance;
             $equity = [$balance]; // Track equity over time
+            $equityTimestamps = [Carbon::createFromTimestamp($historicalData->first()->timestamp)->toDateString()]; // Track timestamps for equity curve
             $trades = [];
             $openPositions = [];
             $peakBalance = $balance;
@@ -87,6 +88,7 @@ class BacktestingService
                     $currentEquity += $unrealizedPnL;
                 }
                 $equity[] = $currentEquity;
+                $equityTimestamps[] = $candleTime->toDateString();
 
                 // Track peak and drawdown
                 if ($currentEquity > $peakBalance) {
@@ -127,6 +129,9 @@ class BacktestingService
                 'average_loss' => $metrics['average_loss'],
                 'completed_at' => now(),
             ]);
+            
+            // Store equity curve data for chart (can be stored in a separate table or JSON field if needed)
+            // For now, it's calculated from trades in the view
 
             return [
                 'success' => true,

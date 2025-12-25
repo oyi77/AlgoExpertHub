@@ -406,6 +406,11 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'logs'])->name('logs');
         Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'metrics'])->name('metrics');
         Route::post('/{id}/test-execution', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'testExecution'])->name('test-execution');
+        
+        // Monitoring routes
+        Route::get('/monitoring', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'monitoring'])->name('monitoring');
+        Route::get('/{id}/health', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'health'])->name('health');
+        Route::post('/bulk-action', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'bulkAction'])->name('bulk-action');
     });
 
     // 7. System Health

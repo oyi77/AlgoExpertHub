@@ -81,6 +81,19 @@ Route::prefix('trading-bots')->name('trading-bots.')->group(function () {
     Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'logs'])->name('logs');
     Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'metrics'])->name('metrics');
     
+    // Analysis routes
+    Route::get('/{id}/analysis', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'analysis'])->name('analysis');
+    Route::get('/{id}/executions', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'executions'])->name('executions');
+    Route::get('/{id}/monitor', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'monitor'])->name('monitor');
+    
+    // BotAnalysisController routes
+    Route::prefix('analysis')->name('analysis.')->group(function () {
+        Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\BotAnalysisController::class, 'metrics'])->name('metrics');
+        Route::get('/{id}/chart', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\BotAnalysisController::class, 'chart'])->name('chart');
+        Route::get('/compare', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\BotAnalysisController::class, 'compare'])->name('compare');
+        Route::get('/{id}/export', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\BotAnalysisController::class, 'export'])->name('export');
+    });
+    
     // AJAX endpoint for loading symbols from exchange connection
     Route::get('/exchange-symbols', [\Addons\TradingManagement\Modules\TradingBot\Controllers\User\TradingBotController::class, 'getExchangeSymbols'])->name('exchange-symbols');
 });

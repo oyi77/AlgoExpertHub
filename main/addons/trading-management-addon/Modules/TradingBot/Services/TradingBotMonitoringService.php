@@ -4,6 +4,7 @@ namespace Addons\TradingManagement\Modules\TradingBot\Services;
 
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
+use Addons\TradingManagement\Modules\Execution\Models\ExecutionLog;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
@@ -705,6 +706,173 @@ class TradingBotMonitoringService
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Broadcast bot status change
+     * 
+     * @param TradingBot $bot
+     * @param string $oldStatus
+     * @param string $newStatus
+     * @return void
+     */
+    public function broadcastStatusChange(TradingBot $bot, string $oldStatus, string $newStatus): void
+    {
+        // Skip if broadcasting is disabled
+        if (config('broadcasting.default') === 'null') {
+            return;
+        }
+
+        try {
+            event(new \Addons\TradingManagement\Modules\TradingBot\Events\BotStatusChanged(
+                $bot,
+                $oldStatus,
+                $newStatus,
+                $bot->user_id,
+                $bot->admin_id
+            ));
+
+            Log::debug('Bot status change broadcast', [
+                'bot_id' => $bot->id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to broadcast status change', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Update position prices in real-time
+     * 
+     * @param TradingBot $bot
+     * @return void
+     */
+    public function updatePositionPrices(TradingBot $bot): void
+    {
+        try {
+            $positions = TradingBotPosition::forBot($bot->id)
+                ->where('status', 'open')
+                ->get();
+
+            foreach ($positions as $position) {
+                // Update price from exchange if available
+                if ($position->executionPosition) {
+                    $position->update([
+                        'current_price' => $position->executionPosition->current_price,
+                        'profit_loss' => $position->executionPosition->pnl ?? 0,
+                    ]);
+                }
+            }
+
+            // Broadcast update
+            $this->broadcastPositionUpdate($bot);
+        } catch (\Exception $e) {
+            Log::error('Failed to update position prices', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send execution notification
+     * 
+     * @param TradingBot $bot
+     * @param ExecutionLog $execution
+     * @return void
+     */
+    public function sendExecutionNotification(TradingBot $bot, ExecutionLog $execution): void
+    {
+        try {
+            // Skip if broadcasting is disabled
+            if (config('broadcasting.default') === 'null') {
+                return;
+            }
+
+            event(new \Addons\TradingManagement\Modules\TradingBot\Events\ExecutionCompleted(
+                $bot->id,
+                $bot->user_id,
+                $execution->id,
+                $execution->symbol,
+                $execution->direction,
+                $execution->status,
+                $execution->executed_at?->toIso8601String()
+            ));
+
+            Log::debug('Execution notification sent', [
+                'bot_id' => $bot->id,
+                'execution_id' => $execution->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send execution notification', [
+                'bot_id' => $bot->id,
+                'execution_id' => $execution->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Check bot health
+     * 
+     * @param TradingBot $bot
+     * @return array
+     */
+    public function checkBotHealth(TradingBot $bot): array
+    {
+        $health = [
+            'status' => 'healthy',
+            'issues' => [],
+            'last_check' => now()->toIso8601String(),
+        ];
+
+        // Check if worker is running (if bot is supposed to be running)
+        if ($bot->isRunning()) {
+            $isWorkerRunning = $this->workerService->isWorkerRunning($bot);
+            if (!$isWorkerRunning) {
+                $health['status'] = 'error';
+                $health['issues'][] = 'Worker process not running';
+            }
+        }
+
+        // Check exchange connection
+        if ($bot->exchangeConnection) {
+            if (!$bot->exchangeConnection->is_active) {
+                $health['status'] = 'warning';
+                $health['issues'][] = 'Exchange connection is inactive';
+            }
+        } else {
+            $health['status'] = 'error';
+            $health['issues'][] = 'No exchange connection configured';
+        }
+
+        // Check data connection (if required)
+        if ($bot->requiresDataConnection() && !$bot->dataConnection) {
+            $health['status'] = 'error';
+            $health['issues'][] = 'Data connection required but not configured';
+        }
+
+        // Check last data fetch (if configured)
+        if ($bot->last_data_fetch_at) {
+            $minutesSinceFetch = now()->diffInMinutes($bot->last_data_fetch_at);
+            if ($minutesSinceFetch > 30) {
+                $health['status'] = 'warning';
+                $health['issues'][] = "Last data fetch was {$minutesSinceFetch} minutes ago";
+            }
+        }
+
+        // Check for recent errors
+        $recentErrors = $this->getErrorCount($bot->id, 1);
+        if ($recentErrors > 5) {
+            $health['status'] = 'warning';
+            $health['issues'][] = "{$recentErrors} errors in the last hour";
+        }
+
+        return $health;
     }
 }
 
