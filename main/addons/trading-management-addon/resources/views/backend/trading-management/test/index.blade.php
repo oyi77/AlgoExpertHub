@@ -355,7 +355,7 @@
         </div>
     </div>
 </div>
-@push('script')
+@push('scripts')
 <script>
 function toggleDateMethod() {
     const method = document.getElementById('download_method').value;

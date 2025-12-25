@@ -215,7 +215,7 @@
                                                     {{ $conn->connection_type === 'CRYPTO_EXCHANGE' ? 'Crypto' : 'Forex' }}
                                                 </span>
                                                 <span class="badge badge-secondary badge-sm ml-1">
-                                                    {{ strtoupper($conn->provider) }}
+                                                    {{ \App\Helpers\Helper\Helper::formatProviderName($conn->provider) }}
                                                 </span>
                                             </div>
                                         </div>

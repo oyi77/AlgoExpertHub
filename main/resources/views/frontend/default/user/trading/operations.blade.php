@@ -96,13 +96,88 @@
                                 @endif
                             @else
                                 <div class="text-center py-5">
-                                    <i class="las la-robot la-3x text-muted mb-3"></i>
-                                    <p class="text-muted">{{ __('No trading bots found.') }}</p>
-                                    @if(Route::has('user.trading-management.trading-bots.create'))
-                                        <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn sp_theme_btn mt-2">
-                                            <i class="las la-plus"></i> {{ __('Create First Bot') }}
-                                        </a>
-                                    @endif
+                                    <div class="mb-4">
+                                        <i class="las la-robot la-4x text-primary mb-3"></i>
+                                        <h4 class="mb-2">{{ __('Get Started with Automated Trading') }}</h4>
+                                        <p class="text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
+                                            {{ __('Trading bots automate your strategy 24/7. Execute signals automatically with custom rules, monitor performance, and manage risk in real-time.') }}
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Quick Start Guide -->
+                                    <div class="row gy-3 mb-4" style="max-width: 800px; margin: 0 auto;">
+                                        <div class="col-md-4">
+                                            <div class="card border h-100">
+                                                <div class="card-body text-center">
+                                                    <div class="mb-3">
+                                                        <i class="las la-exchange-alt la-2x text-primary"></i>
+                                                    </div>
+                                                    <h6 class="mb-2">Step 1: Connect Exchange</h6>
+                                                    <p class="text-muted small mb-0">{{ __('Link your trading account') }}</p>
+                                                    @if(Route::has('user.exchange-connections.create'))
+                                                        <a href="{{ route('user.exchange-connections.create') }}" class="btn btn-sm btn-outline-primary mt-2">
+                                                            {{ __('Connect Now') }}
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border h-100">
+                                                <div class="card-body text-center">
+                                                    <div class="mb-3">
+                                                        <i class="las la-bullhorn la-2x text-info"></i>
+                                                    </div>
+                                                    <h6 class="mb-2">Step 2: Add Signal Source</h6>
+                                                    <p class="text-muted small mb-0">{{ __('Choose where signals come from') }}</p>
+                                                    @if(Route::has('user.trading.multi-channel-signal.index'))
+                                                        <a href="{{ route('user.trading.multi-channel-signal.index') }}" class="btn btn-sm btn-outline-info mt-2">
+                                                            {{ __('Add Source') }}
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card border h-100">
+                                                <div class="card-body text-center">
+                                                    <div class="mb-3">
+                                                        <i class="las la-cog la-2x text-success"></i>
+                                                    </div>
+                                                    <h6 class="mb-2">Step 3: Configure Bot</h6>
+                                                    <p class="text-muted small mb-0">{{ __('Set risk management & filters') }}</p>
+                                                    @if(Route::has('user.trading-management.trading-bots.create'))
+                                                        <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-sm btn-outline-success mt-2">
+                                                            {{ __('Create Bot') }}
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Primary CTA -->
+                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                        @if(Route::has('user.trading-management.trading-bots.create'))
+                                            <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-primary btn-lg">
+                                                <i class="las la-plus-circle"></i> {{ __('Create First Bot') }}
+                                            </a>
+                                        @endif
+                                        @if(Route::has('user.trading-management.trading-bots.marketplace'))
+                                            <a href="{{ route('user.trading-management.trading-bots.marketplace') }}" class="btn btn-outline-primary btn-lg">
+                                                <i class="las la-store"></i> {{ __('Browse Templates') }}
+                                            </a>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Help Links -->
+                                    <div class="mt-4">
+                                        <small class="text-muted">
+                                            <a href="#" class="text-decoration-none"><i class="las la-book"></i> {{ __('Learn How Bots Work') }}</a> |
+                                            <a href="#" class="text-decoration-none"><i class="las la-video"></i> {{ __('Watch Demo') }}</a> |
+                                            <a href="#" class="text-decoration-none"><i class="las la-question-circle"></i> {{ __('Get Help') }}</a>
+                                        </small>
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -114,7 +189,7 @@
     @endif
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'

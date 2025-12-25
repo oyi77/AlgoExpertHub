@@ -953,4 +953,154 @@ class TradingBotService
             return $bot->fresh();
         });
     }
+
+    /**
+     * Validate bot configuration is complete
+     * 
+     * @param TradingBot $bot
+     * @return array ['valid' => bool, 'message' => string, 'errors' => array]
+     */
+    public function validateConfiguration(TradingBot $bot): array
+    {
+        $errors = [];
+
+        // Check exchange connection
+        if (!$bot->exchange_connection_id) {
+            $errors[] = 'Exchange connection is required';
+        } elseif (!$bot->exchangeConnection) {
+            $errors[] = 'Exchange connection not found';
+        } elseif (!$bot->exchangeConnection->is_active) {
+            $errors[] = 'Exchange connection is not active';
+        }
+
+        // Check trading preset
+        if (!$bot->trading_preset_id) {
+            $errors[] = 'Trading preset is required';
+        } elseif (!$bot->tradingPreset) {
+            $errors[] = 'Trading preset not found';
+        }
+
+        // Check data connection for MARKET_STREAM_BASED mode
+        if ($bot->trading_mode === 'MARKET_STREAM_BASED') {
+            if (!$bot->data_connection_id) {
+                $errors[] = 'Data connection is required for market stream based trading';
+            } elseif (!$bot->dataConnection) {
+                $errors[] = 'Data connection not found';
+            } elseif (!$bot->dataConnection->is_active) {
+                $errors[] = 'Data connection is not active';
+            }
+
+            // Check streaming symbols
+            if (empty($bot->streaming_symbols)) {
+                $errors[] = 'Streaming symbols are required for market stream based trading';
+            }
+
+            // Check streaming timeframes
+            if (empty($bot->streaming_timeframes)) {
+                $errors[] = 'Streaming timeframes are required for market stream based trading';
+            }
+        }
+
+        // Check filter strategy (optional but recommended)
+        if ($bot->filter_strategy_id && !$bot->filterStrategy) {
+            $errors[] = 'Filter strategy not found';
+        }
+
+        // Check AI model profile (optional)
+        if ($bot->ai_model_profile_id && !$bot->aiModelProfile) {
+            $errors[] = 'AI model profile not found';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'message' => empty($errors) ? 'Configuration is valid' : implode(', ', $errors),
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Get bot analysis data
+     * 
+     * @param TradingBot $bot
+     * @param array $filters ['date_from' => string, 'date_to' => string, 'period' => string]
+     * @return array
+     */
+    public function getAnalysis(TradingBot $bot, array $filters = []): array
+    {
+        // Delegate to BotAnalysisService if available
+        if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\BotAnalysisService::class)) {
+            $analysisService = app(\Addons\TradingManagement\Modules\TradingBot\Services\BotAnalysisService::class);
+            return $analysisService->calculateMetrics($bot, $filters);
+        }
+
+        // Fallback: Basic analysis from bot statistics
+        $positions = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition::forBot($bot->id)->get();
+        $closedPositions = $positions->where('status', 'closed');
+        $openPositions = $positions->where('status', 'open');
+
+        $totalTrades = $closedPositions->count();
+        $winningTrades = $closedPositions->where('profit_loss', '>', 0)->count();
+        $losingTrades = $closedPositions->where('profit_loss', '<', 0)->count();
+        $winRate = $totalTrades > 0 ? ($winningTrades / $totalTrades) * 100 : 0;
+
+        $totalProfit = $closedPositions->sum('profit_loss');
+        $totalLoss = abs($closedPositions->where('profit_loss', '<', 0)->sum('profit_loss'));
+        $profitFactor = $totalLoss > 0 ? $totalProfit / $totalLoss : ($totalProfit > 0 ? 999 : 0);
+
+        return [
+            'metrics' => [
+                'total_trades' => $totalTrades,
+                'winning_trades' => $winningTrades,
+                'losing_trades' => $losingTrades,
+                'win_rate' => round($winRate, 2),
+                'total_profit' => round($totalProfit, 2),
+                'profit_factor' => round($profitFactor, 2),
+            ],
+            'positions' => [
+                'open' => $openPositions->count(),
+                'closed' => $closedPositions->count(),
+            ],
+        ];
+    }
+
+    /**
+     * Get execution history for bot
+     * 
+     * @param TradingBot $bot
+     * @param array $filters ['date_from' => string, 'date_to' => string, 'status' => string, 'per_page' => int]
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getExecutions(TradingBot $bot, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        // Get execution logs from ExecutionLog table via exchange connection
+        $query = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::query()
+            ->where('connection_id', $bot->exchange_connection_id)
+            ->with(['signal', 'executionConnection']);
+
+        // Apply date filters
+        if (isset($filters['date_from'])) {
+            $query->where('executed_at', '>=', $filters['date_from']);
+        }
+
+        if (isset($filters['date_to'])) {
+            $query->where('executed_at', '<=', $filters['date_to']);
+        }
+
+        // Apply status filter
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply symbol filter
+        if (isset($filters['symbol'])) {
+            $query->where('symbol', $filters['symbol']);
+        }
+
+        // Order by executed_at descending
+        $query->orderBy('executed_at', 'desc');
+
+        // Paginate
+        $perPage = $filters['per_page'] ?? 20;
+        return $query->paginate($perPage);
+    }
 }

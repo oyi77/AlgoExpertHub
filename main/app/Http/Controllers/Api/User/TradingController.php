@@ -89,15 +89,32 @@ class TradingController extends Controller
                 break;
 
             case 'analytics':
+                // Get all auto-created signals for accurate counts
+                $allAutoSignals = \App\Models\Signal::where('auto_created', 1);
+                $totalSignals = $allAutoSignals->count();
+                $publishedSignals = (clone $allAutoSignals)->where('is_published', 1)->count();
+                $draftSignals = (clone $allAutoSignals)->where('is_published', 0)->count();
+                
                 $data['analytics'] = [
-                    'total_signals' => \App\Models\Signal::where('auto_created', 1)->count(),
-                    'published_signals' => \App\Models\Signal::where('auto_created', 1)->where('is_published', 1)->count(),
-                    'draft_signals' => \App\Models\Signal::where('auto_created', 1)->where('is_published', 0)->count(),
+                    'total_signals' => $totalSignals,
+                    'published_signals' => $publishedSignals,
+                    'draft_signals' => $draftSignals,
+                    'other_signals' => $totalSignals - $publishedSignals - $draftSignals, // For debugging
                     'active_sources' => class_exists(\Addons\MultiChannelSignalAddon\App\Models\ChannelSource::class) 
-                        ? \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::where('user_id', Auth::id())
-                            ->where('is_admin_owned', false)
-                            ->where('status', 'active')
-                            ->count() 
+                        ? \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::where(function($query) {
+                            $query->where('user_id', Auth::id())
+                                  ->where('is_admin_owned', false);
+                        })
+                        ->orWhere(function($query) {
+                            // Include admin-owned sources assigned to user via plans
+                            $query->where('is_admin_owned', true)
+                                  ->where('status', 'active')
+                                  ->whereHas('assignedUsers', function($q) {
+                                      $q->where('user_id', Auth::id());
+                                  });
+                        })
+                        ->where('status', 'active')
+                        ->count() 
                         : 0,
                 ];
                 break;

@@ -68,7 +68,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         const exchanges = {
             crypto: @json($cryptoExchanges ?? []),

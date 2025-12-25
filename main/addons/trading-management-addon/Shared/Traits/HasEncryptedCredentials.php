@@ -66,6 +66,31 @@ trait HasEncryptedCredentials
             $decoded = json_decode($decrypted, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
+                // Might be double-encrypted (legacy bug) - try decrypting again
+                try {
+                    $doubleDecrypted = Crypt::decryptString($decrypted);
+                    $decoded = json_decode($doubleDecrypted, true);
+                    
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        \Log::info("Detected and fixed double-encrypted credentials", [
+                            'model' => get_class($this),
+                            'id' => $this->id ?? 'unknown',
+                        ]);
+                        
+                        // Auto-fix by re-saving with single encryption
+                        try {
+                            $this->attributes['credentials'] = Crypt::encryptString(json_encode($decoded));
+                            $this->saveQuietly();
+                        } catch (\Exception $e) {
+                            \Log::debug("Could not auto-fix double encryption", ['error' => $e->getMessage()]);
+                        }
+                        
+                        return $decoded;
+                    }
+                } catch (\Exception $e) {
+                    // Not double encrypted
+                }
+                
                 \Log::error("Failed to JSON decode credentials", [
                     'model' => get_class($this),
                     'id' => $this->id ?? 'unknown',

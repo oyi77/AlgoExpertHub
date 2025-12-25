@@ -112,8 +112,10 @@ class TradingBotController extends Controller
     /**
      * Store a newly created trading bot
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
+        $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -168,10 +170,44 @@ class TradingBotController extends Controller
         try {
             $bot = $this->botService->create($validated);
             
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Trading bot created successfully!'),
+                    'redirect' => route('user.trading-management.trading-bots.show', $bot->id)
+                ], 201);
+            }
+            
             return redirect()
                 ->route('user.trading-management.trading-bots.show', $bot->id)
                 ->with('success', 'Trading bot created successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Validation failed. Please check your input.'),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
         } catch (\Exception $e) {
+            \Log::error('Failed to create trading bot', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Failed to create trading bot: :error', ['error' => $e->getMessage()])
+                ], 500);
+            }
+            
             return redirect()
                 ->back()
                 ->withInput()
@@ -773,6 +809,172 @@ class TradingBotController extends Controller
                 'message' => 'Failed to load symbols: ' . $e->getMessage(),
                 'symbols' => []
             ], 500);
+        }
+    }
+
+    /**
+     * Show bot analysis
+     */
+    public function analysis($id, Request $request): View|JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $analysisService = app(\Addons\TradingManagement\Modules\TradingBot\Services\BotAnalysisService::class);
+            
+            $filters = [
+                'date_from' => $request->get('date_from'),
+                'date_to' => $request->get('date_to'),
+                'period' => $request->get('period', 'daily'),
+            ];
+
+            $metrics = $analysisService->calculateMetrics($bot, $filters);
+            $chartData = $analysisService->getPerformanceChart($bot, $filters['period']);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'metrics' => $metrics,
+                    'chart_data' => $chartData,
+                ]);
+            }
+
+            return view('trading-management::user.trading-bots.analysis', [
+                'title' => 'Bot Analysis - ' . $bot->name,
+                'bot' => $bot,
+                'metrics' => $metrics,
+                'chart_data' => $chartData,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get bot analysis', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load analysis: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to load analysis: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show execution history
+     */
+    public function executions($id, Request $request): View|JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $executionService = app(\Addons\TradingManagement\Modules\TradingBot\Services\ExecutionManagementService::class);
+            
+            $filters = [
+                'date_from' => $request->get('date_from'),
+                'date_to' => $request->get('date_to'),
+                'status' => $request->get('status'),
+                'symbol' => $request->get('symbol'),
+                'per_page' => $request->get('per_page', 20),
+            ];
+
+            $executions = $executionService->getExecutionHistory($bot, $filters);
+            $statistics = $executionService->getExecutionStatistics($bot);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'executions' => $executions->items(),
+                    'pagination' => [
+                        'current_page' => $executions->currentPage(),
+                        'last_page' => $executions->lastPage(),
+                        'per_page' => $executions->perPage(),
+                        'total' => $executions->total(),
+                    ],
+                    'statistics' => $statistics,
+                ]);
+            }
+
+            return view('trading-management::user.trading-bots.executions', [
+                'title' => 'Execution History - ' . $bot->name,
+                'bot' => $bot,
+                'executions' => $executions,
+                'statistics' => $statistics,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get execution history', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load executions: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to load executions: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show real-time monitoring
+     */
+    public function monitor($id): View|JsonResponse
+    {
+        $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
+
+        try {
+            $health = $this->monitoringService->checkBotHealth($bot);
+            $openPositions = $this->monitoringService->getOpenPositions($bot, true);
+            $positionStats = $this->monitoringService->calculatePositionStats($bot, true);
+            $workerStatus = $this->monitoringService->getWorkerStatus($bot);
+
+            // Get recent executions
+            $executionService = app(\Addons\TradingManagement\Modules\TradingBot\Services\ExecutionManagementService::class);
+            $recentExecutions = $executionService->getExecutionHistory($bot, [
+                'per_page' => 10,
+            ]);
+
+            $data = [
+                'status' => $bot->status,
+                'last_activity' => $bot->last_started_at?->toIso8601String(),
+                'open_positions' => count($openPositions),
+                'current_pnl' => $positionStats['total_unrealized_pnl'] ?? 0,
+                'recent_executions' => $recentExecutions->items(),
+                'health' => $health,
+                'worker_status' => $workerStatus,
+            ];
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $data,
+                ]);
+            }
+
+            return view('trading-management::user.trading-bots.monitor', [
+                'title' => 'Monitor - ' . $bot->name,
+                'bot' => $bot,
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to get monitoring data', [
+                'bot_id' => $bot->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to load monitoring data: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to load monitoring data: ' . $e->getMessage());
         }
     }
 }

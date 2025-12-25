@@ -1,0 +1,503 @@
+---
+description: AI Connection Addon - Centralized AI provider management for platform-wide AI features
+globs: ["main/addons/ai-connection-addon/**/*"]
+alwaysApply: false
+---
+
+# AI Connection Addon Rules
+
+## Overview
+The **AI Connection Addon** provides centralized AI connection management for all platform features. It manages credentials, connection rotation, rate limiting, and usage tracking for AI providers (OpenAI, Google Gemini, OpenRouter).
+
+## Addon Information
+- **Name**: `ai-connection-addon`
+- **Title**: AI Connection Manager
+- **Version**: 1.0.0
+- **Namespace**: `Addons\AiConnectionAddon`
+- **Status**: Active
+- **Author**: AlgoExpertHub
+
+## Purpose
+
+### Problem Solved
+Before this addon, each feature (Multi-Channel Signal parsing, AI Trading, etc.) managed its own AI credentials, leading to:
+- Duplicated API keys across multiple configurations
+- No centralized rate limiting
+- Difficult usage tracking
+- No connection rotation for high availability
+
+### Solution
+Centralized AI connection management with:
+- Single source of truth for AI credentials
+- Automatic connection rotation
+- Rate limiting across all platform features
+- Usage tracking and analytics
+- Health monitoring
+
+## Architecture
+
+### Modules (3 Total)
+
+#### 1. Admin UI
+- **Key**: `admin_ui`
+- **Purpose**: Admin interface for managing AI connections
+- **Features**:
+  - CRUD operations for AI connections
+  - Provider configuration (OpenAI, Gemini, OpenRouter)
+  - Usage analytics dashboard
+  - Connection health status
+- **Routes**: `/admin/ai-connections/*`
+- **Menu**: Admin sidebar → AI Connections
+
+#### 2. Public API
+- **Key**: `api`
+- **Purpose**: API for consumer addons to execute AI calls
+- **Features**:
+  - Unified interface for all AI providers
+  - Automatic connection selection (rotation, load balancing)
+  - Rate limiting enforcement
+  - Usage logging
+- **Usage**: Other addons call `AiConnectionService::execute()`
+
+#### 3. Connection Monitoring
+- **Key**: `monitoring`
+- **Purpose**: Background jobs for health checks and monitoring
+- **Features**:
+  - Health checks (test API calls)
+  - Usage tracking
+  - Rate limit monitoring
+  - Alert notifications (when connections fail)
+- **Jobs**: `CheckConnectionHealthJob`, `TrackUsageJob`
+
+## Database Tables
+
+### ai_connections
+Stores AI provider connections and credentials.
+
+**Schema**:
+- `id` (bigint, primary key)
+- `name` (string) - Connection name (e.g., "OpenAI Primary")
+- `provider` (enum: 'openai', 'gemini', 'openrouter') - AI provider
+- `api_key` (text, encrypted) - API key
+- `organization_id` (string, nullable) - OpenAI organization ID
+- `model` (string) - Default model (e.g., "gpt-4", "gemini-pro")
+- `rate_limit` (integer) - Requests per minute
+- `status` (enum: 'active', 'inactive', 'error') - Connection status
+- `health_status` (enum: 'healthy', 'degraded', 'down') - Health check status
+- `last_health_check` (timestamp) - Last health check time
+- `priority` (integer) - Connection priority (for rotation)
+- `created_at`, `updated_at`
+
+### ai_usage_logs
+Tracks AI API usage for analytics and billing.
+
+**Schema**:
+- `id` (bigint, primary key)
+- `connection_id` (foreign key to ai_connections)
+- `consumer` (string) - Consumer addon/feature (e.g., "multi-channel-signal-addon")
+- `model` (string) - Model used
+- `prompt_tokens` (integer) - Input tokens
+- `completion_tokens` (integer) - Output tokens
+- `total_tokens` (integer) - Total tokens
+- `cost` (decimal) - Estimated cost
+- `response_time` (integer) - Response time in milliseconds
+- `status` (enum: 'success', 'error') - Call status
+- `error_message` (text, nullable) - Error details
+- `created_at`
+
+## Key Services
+
+### AiConnectionService
+**Location**: `App/Services/AiConnectionService.php`
+
+**Responsibilities**:
+- Execute AI calls through managed connections
+- Connection selection (rotation, load balancing)
+- Rate limiting enforcement
+- Usage logging
+
+**Key Methods**:
+
+#### `execute(string $consumer, string $prompt, array $options = []): array`
+Execute an AI call through a managed connection.
+
+**Parameters**:
+- `$consumer` - Calling addon/feature (for tracking)
+- `$prompt` - AI prompt
+- `$options` - Optional parameters:
+  - `provider` - Preferred provider (openai, gemini, openrouter)
+  - `model` - Preferred model
+  - `temperature` - Temperature setting
+  - `max_tokens` - Max output tokens
+
+**Returns**:
+```php
+[
+    'type' => 'success|error',
+    'message' => 'Response text or error message',
+    'data' => [
+        'response' => 'AI response text',
+        'tokens' => ['prompt' => 100, 'completion' => 50, 'total' => 150],
+        'model' => 'gpt-4',
+        'provider' => 'openai'
+    ]
+]
+```
+
+**Example Usage**:
+```php
+use Addons\AiConnectionAddon\App\Services\AiConnectionService;
+
+$aiService = app(AiConnectionService::class);
+
+$result = $aiService->execute(
+    consumer: 'multi-channel-signal-addon',
+    prompt: 'Parse this trading signal: BUY EURUSD @ 1.0850',
+    options: [
+        'provider' => 'openai',
+        'model' => 'gpt-4',
+        'temperature' => 0.3
+    ]
+);
+
+if ($result['type'] === 'success') {
+    $response = $result['data']['response'];
+    // Process AI response
+}
+```
+
+#### `getConnection(string $provider = null, string $model = null): ?AiConnection`
+Get an available AI connection based on criteria.
+
+**Selection Logic**:
+1. Filter by provider (if specified)
+2. Filter by model (if specified)
+3. Filter by status (active only)
+4. Filter by health (healthy or degraded)
+5. Check rate limits
+6. Sort by priority
+7. Return highest priority available connection
+
+#### `rotateConnection(): void`
+Rotate to next available connection (for load balancing).
+
+#### `checkHealth(AiConnection $connection): bool`
+Perform health check on a connection.
+
+**Health Check**:
+- Send test prompt to AI provider
+- Verify response within timeout
+- Update `health_status` and `last_health_check`
+
+### AiProviderAdapter (Interface)
+**Location**: `App/Contracts/AiProviderAdapter.php`
+
+**Purpose**: Interface for AI provider implementations.
+
+**Methods**:
+- `execute(string $prompt, array $options): array`
+- `getModels(): array`
+- `validateCredentials(): bool`
+
+### OpenAiAdapter
+**Location**: `App/Adapters/OpenAiAdapter.php`
+
+**Implements**: `AiProviderAdapter`
+
+**Features**:
+- OpenAI API integration
+- Model support: GPT-4, GPT-3.5-turbo, etc.
+- Organization ID support
+- Streaming support (optional)
+
+### GeminiAdapter
+**Location**: `App/Adapters/GeminiAdapter.php`
+
+**Implements**: `AiProviderAdapter`
+
+**Features**:
+- Google Gemini API integration
+- Model support: gemini-pro, gemini-pro-vision
+- Safety settings configuration
+
+### OpenRouterAdapter
+**Location**: `App/Adapters/OpenRouterAdapter.php`
+
+**Implements**: `AiProviderAdapter`
+
+**Features**:
+- OpenRouter API integration
+- Access to 400+ AI models
+- Model routing and fallback
+
+## Configuration
+
+### Admin Interface
+**Location**: `/admin/ai-connections`
+
+**Features**:
+- List all AI connections
+- Create new connection
+- Edit connection (name, credentials, model, rate limit, priority)
+- Delete connection
+- Test connection (health check)
+- View usage analytics
+
+### Connection Configuration
+**Required Fields**:
+- Name (e.g., "OpenAI Primary")
+- Provider (openai, gemini, openrouter)
+- API Key (encrypted in database)
+- Model (default model for this connection)
+- Rate Limit (requests per minute)
+- Priority (1-10, higher = preferred)
+
+**Optional Fields**:
+- Organization ID (OpenAI only)
+- Custom endpoint (for self-hosted models)
+
+## Rate Limiting
+
+### Strategy
+- Per-connection rate limits (requests per minute)
+- Tracked in memory (Redis if available, otherwise cache)
+- Automatic connection rotation when limit reached
+
+### Implementation
+```php
+// Check rate limit before executing
+if ($this->isRateLimited($connection)) {
+    // Rotate to next available connection
+    $connection = $this->rotateConnection();
+}
+
+// Execute AI call
+$response = $this->executeOnConnection($connection, $prompt, $options);
+
+// Increment rate limit counter
+$this->incrementRateLimit($connection);
+```
+
+## Usage Tracking
+
+### Logged Data
+- Consumer (calling addon/feature)
+- Model used
+- Token usage (prompt, completion, total)
+- Estimated cost
+- Response time
+- Status (success/error)
+- Error message (if failed)
+
+### Analytics
+**Admin Dashboard**: `/admin/ai-connections/analytics`
+
+**Metrics**:
+- Total API calls (by consumer, by provider, by model)
+- Token usage (by consumer, by provider)
+- Estimated costs (by consumer, by provider)
+- Average response time
+- Error rate
+- Most used models
+
+## Health Monitoring
+
+### Health Check Job
+**Job**: `CheckConnectionHealthJob`
+**Schedule**: Every 5 minutes
+
+**Process**:
+1. Get all active connections
+2. For each connection:
+   - Send test prompt
+   - Verify response within timeout (10 seconds)
+   - Update `health_status`:
+     - `healthy` - Response received successfully
+     - `degraded` - Response received but slow (>5 seconds)
+     - `down` - No response or error
+3. Send alert if connection goes down
+
+### Health Status
+- **Healthy**: Connection working normally
+- **Degraded**: Connection slow but functional
+- **Down**: Connection not responding or erroring
+
+### Alerts
+- Email notification to admin when connection goes down
+- Dashboard notification
+- Automatic connection rotation to healthy connections
+
+## Integration with Consumer Addons
+
+### Multi-Channel Signal Addon
+**Use Case**: Parse incoming messages to extract trading signals
+
+**Integration**:
+```php
+use Addons\AiConnectionAddon\App\Services\AiConnectionService;
+
+$aiService = app(AiConnectionService::class);
+
+$result = $aiService->execute(
+    consumer: 'multi-channel-signal-addon',
+    prompt: "Parse this message: {$message}",
+    options: ['model' => 'gpt-4']
+);
+
+if ($result['type'] === 'success') {
+    $parsedSignal = json_decode($result['data']['response'], true);
+}
+```
+
+### Trading Management Addon (AI Analysis Module)
+**Use Case**: AI-powered market confirmation
+
+**Integration**:
+```php
+$result = $aiService->execute(
+    consumer: 'trading-management-addon-ai-analysis',
+    prompt: "Analyze market conditions for {$symbol}",
+    options: ['provider' => 'gemini', 'model' => 'gemini-pro']
+);
+```
+
+### OpenRouter Integration Addon
+**Use Case**: Access to 400+ AI models
+
+**Integration**:
+```php
+$result = $aiService->execute(
+    consumer: 'openrouter-integration-addon',
+    prompt: $userPrompt,
+    options: [
+        'provider' => 'openrouter',
+        'model' => 'anthropic/claude-3-opus'
+    ]
+);
+```
+
+## Best Practices
+
+### For Consumer Addons
+1. Always specify `consumer` parameter (for tracking)
+2. Handle errors gracefully (AI calls can fail)
+3. Use appropriate models (GPT-4 for complex tasks, GPT-3.5 for simple)
+4. Set reasonable `max_tokens` to control costs
+5. Cache AI responses when possible (avoid duplicate calls)
+
+### For Administrators
+1. Configure multiple connections for high availability
+2. Set appropriate rate limits (based on API plan)
+3. Monitor usage regularly (check analytics dashboard)
+4. Test connections after configuration changes
+5. Set priority correctly (higher priority = preferred)
+
+### Security
+1. API keys encrypted in database
+2. Never expose API keys in logs or responses
+3. Use environment variables for sensitive defaults
+4. Implement IP whitelisting (if provider supports)
+5. Rotate API keys periodically
+
+## Error Handling
+
+### Common Errors
+- **Rate Limit Exceeded**: Rotate to next connection
+- **Invalid API Key**: Mark connection as down, alert admin
+- **Model Not Available**: Fallback to default model
+- **Timeout**: Mark connection as degraded
+- **Network Error**: Retry with exponential backoff
+
+### Error Response Format
+```php
+[
+    'type' => 'error',
+    'message' => 'User-friendly error message',
+    'data' => [
+        'error_code' => 'RATE_LIMIT_EXCEEDED',
+        'provider' => 'openai',
+        'connection_id' => 123
+    ]
+]
+```
+
+## Testing
+
+### Unit Tests
+- Test connection selection logic
+- Test rate limiting
+- Test health checks
+- Test usage logging
+
+### Integration Tests
+- Test actual API calls (use test API keys)
+- Test connection rotation
+- Test error handling
+- Test consumer addon integration
+
+### Mocking
+```php
+// Mock AiConnectionService in tests
+$this->mock(AiConnectionService::class, function ($mock) {
+    $mock->shouldReceive('execute')
+        ->andReturn([
+            'type' => 'success',
+            'message' => 'Mocked response',
+            'data' => ['response' => 'Test response']
+        ]);
+});
+```
+
+## Migration Guide
+
+### From Direct AI Calls
+**Before** (direct OpenAI call):
+```php
+$client = OpenAI::client(config('services.openai.api_key'));
+$response = $client->chat()->create([
+    'model' => 'gpt-4',
+    'messages' => [['role' => 'user', 'content' => $prompt]]
+]);
+```
+
+**After** (via AI Connection Addon):
+```php
+$aiService = app(AiConnectionService::class);
+$result = $aiService->execute(
+    consumer: 'my-addon',
+    prompt: $prompt,
+    options: ['model' => 'gpt-4']
+);
+```
+
+### Benefits
+- Centralized credential management
+- Automatic rate limiting
+- Usage tracking
+- Connection rotation
+- Health monitoring
+
+## Future Enhancements
+
+### Planned Features
+- Cost budgets per consumer
+- Automatic model selection based on task complexity
+- Response caching (avoid duplicate calls)
+- Streaming support for real-time responses
+- Custom model fine-tuning management
+- A/B testing for different models
+- Webhook notifications for usage alerts
+
+## Support
+
+### Troubleshooting
+- **Connection not working**: Check API key, test connection
+- **Rate limit errors**: Increase rate limit or add more connections
+- **High costs**: Review usage analytics, optimize prompts
+- **Slow responses**: Check health status, consider degraded connections
+
+### Debugging
+- Enable debug logging: `AI_CONNECTION_DEBUG=true` in `.env`
+- Check logs: `storage/logs/laravel.log`
+- View usage logs: `/admin/ai-connections/usage-logs`
+- Test connection: `/admin/ai-connections/{id}/test`

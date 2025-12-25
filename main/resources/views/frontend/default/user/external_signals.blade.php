@@ -89,10 +89,14 @@
                                         <i class="las la-code la-3x text-muted mb-3"></i>
                                         <h5 class="mb-2">{{ __('Pattern Templates') }}</h5>
                                         <p class="text-muted mb-4">{{ __('Pattern templates are managed by administrators. Contact your admin to create or modify pattern templates for signal parsing.') }}</p>
-                                        @if(Route::has('admin.pattern-templates.index'))
+                                        @if(auth()->guard('admin')->check() && Route::has('admin.pattern-templates.index'))
                                             <a href="{{ route('admin.pattern-templates.index') }}" class="btn btn-outline-primary" target="_blank">
                                                 <i class="las la-external-link-alt me-1"></i> {{ __('View Admin Panel') }}
                                             </a>
+                                        @else
+                                            <button type="button" class="btn btn-outline-secondary" disabled title="{{ __('Pattern templates are managed by administrators only. Contact your admin to create or modify pattern templates.') }}">
+                                                <i class="las la-lock me-1"></i> {{ __('Admin Only') }}
+                                            </button>
                                         @endif
                                     </div>
                                 </div>
@@ -104,7 +108,7 @@
         @endif
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         // Handle tab switching (Bootstrap 4)
         $(document).ready(function() {

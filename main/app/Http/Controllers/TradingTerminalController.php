@@ -484,8 +484,16 @@ class TradingTerminalController extends Controller
         try {
             $category = $request->get('category', 'all'); // all, crypto, forex, indices, commodities, stocks
             
+            // Define quote currencies that should not be used as base assets
+            $quoteAssets = ['USDT', 'BUSD', 'USDC', 'DAI', 'TUSD', 'PAX', 'USDP', 'UST'];
+            
             // Get crypto pairs
             $cryptoData = $this->tradingMarketDataService->getCryptoData(50);
+            // Filter out quote assets to prevent pairs like USDT/USDT
+            $cryptoData = array_filter($cryptoData, function ($item) use ($quoteAssets) {
+                return !in_array(strtoupper($item['symbol']), $quoteAssets);
+            });
+            
             $cryptoPairs = array_map(function ($item) {
                 return [
                     'symbol' => $item['symbol'] . 'USDT',
@@ -522,6 +530,17 @@ class TradingTerminalController extends Controller
                     'icon' => null,
                 ];
             }, $forexData);
+            
+            // Filter out forex pairs where base = quote (e.g., EUR/EUR)
+            $forexPairs = array_filter($forexPairs, function ($pair) {
+                $symbol = $pair['symbol'];
+                if (strlen($symbol) === 6) {
+                    $base = substr($symbol, 0, 3);
+                    $quote = substr($symbol, 3, 3);
+                    return $base !== $quote;
+                }
+                return true;
+            });
 
             // Get indices
             $indicesData = $this->tradingMarketDataService->getIndicesData(15);
@@ -562,6 +581,16 @@ class TradingTerminalController extends Controller
                     'icon' => null,
                 ];
             }, $commoditiesData);
+            
+            // Filter out commodity pairs where base = quote (e.g., USD/USD)
+            $commoditiesPairs = array_filter($commoditiesPairs, function ($pair) {
+                $symbol = $pair['symbol'];
+                if (strlen($symbol) === 6 && strpos($symbol, 'USD') !== false) {
+                    $base = substr($symbol, 0, 3);
+                    return $base !== 'USD';
+                }
+                return true;
+            });
 
             // Get stocks
             $stocksData = $this->tradingMarketDataService->getStocksData(15);

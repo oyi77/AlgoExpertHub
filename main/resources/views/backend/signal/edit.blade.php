@@ -184,7 +184,7 @@
     <script src="{{ Config::jsLib('backend', 'nic_edit.js') }}"></script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             // Multiple TP management

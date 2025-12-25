@@ -154,7 +154,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Copy functionality

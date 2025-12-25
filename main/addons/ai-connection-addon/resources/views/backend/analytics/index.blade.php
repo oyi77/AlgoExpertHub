@@ -169,7 +169,7 @@
 @endsection
 
 
-@push('script')
+@push('scripts')
 <script src="{{ asset('asset/backend/js/apexcharts.min.js') }}"></script>
 <script>
     $(function() {

@@ -2117,6 +2117,8 @@ body:has(.tv-sidebar.collapsed) .tv-main,
     color: var(--tv-text-muted);
     transition: all 0.3s ease;
     cursor: pointer;
+    z-index: 10001; /* Above terminal elements */
+    position: relative;
 }
 
 .tv-desktop-sidebar-toggle:hover {
@@ -3743,6 +3745,54 @@ transition: var(--tv-transition);
 }
 
 /* Form Controls */
+/* Improved dropdown/select contrast and visibility */
+select.form-control,
+.form-control select,
+select.form-control:not([multiple]) {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    color: #212529 !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    opacity: 1 !important;
+}
+
+select.form-control:focus,
+.form-control select:focus {
+    background-color: #fff !important;
+    border-color: rgba(26, 255, 213, 0.5) !important;
+    box-shadow: 0 0 0 0.2rem rgba(26, 255, 213, 0.25) !important;
+}
+
+select.form-control option {
+    background-color: #fff !important;
+    color: #212529 !important;
+    padding: 0.5rem;
+}
+
+select.form-control option:hover,
+select.form-control option:checked {
+    background-color: rgba(26, 255, 213, 0.1) !important;
+}
+
+/* Dark theme adjustments for select elements */
+[data-theme="dark"] select.form-control,
+.dark select.form-control {
+    background-color: rgba(30, 30, 30, 0.95) !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] select.form-control:focus,
+.dark select.form-control:focus {
+    background-color: rgba(40, 40, 40, 0.95) !important;
+    border-color: rgba(26, 255, 213, 0.5) !important;
+}
+
+[data-theme="dark"] select.form-control option,
+.dark select.form-control option {
+    background-color: rgba(30, 30, 30, 0.95) !important;
+    color: #fff !important;
+}
+
 .form-control,
 .form-select,
 input[type="text"],
@@ -3760,6 +3810,40 @@ select {
     font-family: var(--tv-font-body);
     font-size: var(--tv-text-base);
     transition: all 0.3s ease;
+}
+
+/* Improved contrast for select dropdowns */
+select.form-control,
+select.form-select,
+select {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: var(--tv-text) !important;
+    cursor: pointer;
+}
+
+select.form-control:focus,
+select.form-select:focus,
+select:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--tv-primary) !important;
+    box-shadow: 0 0 0 3px rgba(26, 255, 213, 0.15) !important;
+}
+
+select.form-control option,
+select.form-select option,
+select option {
+    background: rgba(18, 18, 18, 0.98) !important;
+    color: var(--tv-text) !important;
+    padding: 0.5rem;
+}
+
+select.form-control option:hover,
+select.form-control option:checked,
+select.form-select option:hover,
+select.form-select option:checked {
+    background: rgba(26, 255, 213, 0.2) !important;
+    color: var(--tv-primary) !important;
 }
 
 .form-control:focus,

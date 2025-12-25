@@ -92,7 +92,7 @@
 @endsection
 
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             'use strict'

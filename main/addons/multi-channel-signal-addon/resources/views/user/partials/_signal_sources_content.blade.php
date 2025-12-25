@@ -1,22 +1,51 @@
 <div class="row gy-4">
+    <!-- Instructions Section -->
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-start">
+            <i class="las la-info-circle la-2x me-3 mt-1"></i>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading mb-2">{{ __('How to Add Signal Sources') }}</h6>
+                <p class="mb-2">{{ __('Signal sources are where your trading signals come from. Choose the type that matches your needs:') }}</p>
+                <ul class="mb-0 small">
+                    <li><strong>{{ __('Telegram Bot') }}</strong> - {{ __('Connect a Telegram to receive signals from channels/groups.') }}</li>
+                    <li><strong>{{ __('API/Webhook') }}</strong> - {{ __('Receive signals via HTTP POST requests (Coming Soon)') }}</li>
+                    <li><strong>{{ __('Web Scrape') }}</strong> - {{ __('Automatically scrape trading signals from websites (Coming Soon)') }}</li>
+                    <li><strong>{{ __('RSS Feed') }}</strong> - {{ __('Receive signals from RSS feeds (Coming Soon)') }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h4 class="mb-0">{{ __('My Signal Sources') }}</h4>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('user.signal-sources.create', ['type' => 'telegram']) }}" class="btn sp_theme_btn">
-                <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram') }}
-            </a>
-            <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn btn-outline-primary">
-                <i class="las la-mobile me-1"></i> {{ __('Add Telegram MTProto') }}
-            </a>
-            <a href="{{ route('user.signal-sources.create', ['type' => 'api']) }}" class="btn btn-outline-secondary">
-                <i class="las la-code-branch me-1"></i> {{ __('Add API') }}
-            </a>
-            <a href="{{ route('user.signal-sources.create', ['type' => 'web_scrape']) }}" class="btn btn-outline-info">
-                <i class="las la-spider me-1"></i> {{ __('Add Web Scrape') }}
-            </a>
-            <a href="{{ route('user.signal-sources.create', ['type' => 'rss']) }}" class="btn btn-outline-success">
-                <i class="las la-rss me-1"></i> {{ __('Add RSS') }}
-            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success btn-lg dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #10b981 !important;">
+                    <i class="las la-plus me-1"></i> {{ __('Add Signal Source') }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}">
+                            <i class="lab la-telegram-plane me-2"></i> {{ __('Telegram') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'api']) }}">
+                            <i class="las la-code-branch me-2"></i> {{ __('API / Webhook') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'web_scrape']) }}">
+                            <i class="las la-spider me-2"></i> {{ __('Web Scrape') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'rss']) }}">
+                            <i class="las la-rss me-2"></i> {{ __('RSS Feed') }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -179,12 +208,18 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">
-                                    <i class="las la-inbox la-2x text-muted mb-2"></i>
-                                    <p class="mb-0 text-muted">{{ __('No signal sources found.') }}</p>
-                                    <a href="{{ route('user.signal-sources.create') }}" class="btn btn-sm btn-primary mt-2">
-                                        {{ __('Create First Source') }}
-                                    </a>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="las la-inbox la-3x text-muted mb-3"></i>
+                                    <h5 class="mb-2">{{ __('No Signal Sources Yet') }}</h5>
+                                    <p class="text-muted mb-4">{{ __('Get started by adding your first signal source. Choose from Telegram Bot or Telegram MTProto above.') }}</p>
+                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                        <a href="{{ route('user.signal-sources.create', ['type' => 'telegram']) }}" class="btn btn-primary">
+                                            <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram Bot') }}
+                                        </a>
+                                        <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn btn-outline-primary">
+                                            <i class="las la-mobile me-1"></i> {{ __('Add Telegram MTProto') }}
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
@@ -201,8 +236,40 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
+    // Handle "Coming Soon" buttons
+    document.querySelectorAll('.coming-soon-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const feature = this.dataset.feature || 'This feature';
+            const message = feature + ' {{ __('feature is coming soon. We\'re working hard to bring you this functionality.') }}';
+            
+            // Use toastr if available (preferred for simple notifications)
+            if (typeof toastr !== 'undefined') {
+                toastr.info(message, '{{ __('Coming Soon') }}', {
+                    positionClass: "toast-top-right",
+                    timeOut: 5000,
+                    extendedTimeOut: 2000
+                });
+            } 
+            // Fallback to SweetAlert for modal-style notification
+            else if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: '{{ __('Coming Soon') }}',
+                    html: `<p>${message}</p><p class="small text-muted mt-2">{{ __('Stay tuned for updates!') }}</p>`,
+                    confirmButtonText: '{{ __('Got it') }}',
+                    confirmButtonColor: '#3085d6'
+                });
+            } 
+            // Final fallback to alert
+            else {
+                alert('{{ __('Coming Soon') }}: ' + message);
+            }
+        });
+    });
+
     document.querySelectorAll('.test-connection-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const btnElement = this;

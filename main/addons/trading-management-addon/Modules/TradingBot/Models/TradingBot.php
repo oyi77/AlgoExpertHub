@@ -43,6 +43,7 @@ class TradingBot extends Model
         'streaming_symbols', 'streaming_timeframes',
         'position_monitoring_interval', 'market_analysis_interval',
         'is_template', 'parent_bot_id', 'is_admin_owned',
+        'filter_priority', 'data_fetch_interval', 'health_status', 'health_checked_at',
     ];
 
     protected $casts = [
@@ -70,6 +71,10 @@ class TradingBot extends Model
         'market_analysis_interval' => 'integer',
         'is_template' => 'boolean',
         'is_admin_owned' => 'boolean',
+        'filter_priority' => 'array',
+        'data_fetch_interval' => 'integer',
+        'health_status' => 'string',
+        'health_checked_at' => 'datetime',
     ];
 
     /**

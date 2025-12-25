@@ -85,7 +85,7 @@
 
 @endsection
 
-@push('script')
+@push('scripts')
     <script>
         'use strict'
         $('.delete_confirm').on('click', function(e) {

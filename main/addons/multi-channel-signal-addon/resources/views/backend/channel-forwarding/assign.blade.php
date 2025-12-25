@@ -84,7 +84,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         document.getElementById('assignmentType').addEventListener('change', function() {
             const type = this.value;

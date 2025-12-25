@@ -110,7 +110,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('performanceChart').getContext('2d');

@@ -328,7 +328,7 @@
     </script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
     // Initialize dashboard - wait for both DOM and ApexCharts
     (function() {

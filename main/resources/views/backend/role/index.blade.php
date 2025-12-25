@@ -166,7 +166,7 @@
     <script src="{{ Config::jsLib('backend', 'select2.min.js') }}"></script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
         'use strict'
 

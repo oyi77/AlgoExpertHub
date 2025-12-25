@@ -285,6 +285,43 @@
             </div>
         </div>
         @endif
+                    </div>
+
+                    {{-- Analysis Tab --}}
+                    <div class="tab-pane fade" id="analysis" role="tabpanel">
+                        <div class="mt-4">
+                            <div class="text-center">
+                                <a href="{{ route('user.trading-management.trading-bots.analysis', $bot->id) }}" class="btn btn-primary">
+                                    <i class="fa fa-chart-line"></i> View Full Analysis
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Executions Tab --}}
+                    <div class="tab-pane fade" id="executions" role="tabpanel">
+                        <div class="mt-4">
+                            <div class="text-center">
+                                <a href="{{ route('user.trading-management.trading-bots.executions', $bot->id) }}" class="btn btn-primary">
+                                    <i class="fa fa-history"></i> View Execution History
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Monitor Tab --}}
+                    <div class="tab-pane fade" id="monitor" role="tabpanel">
+                        <div class="mt-4">
+                            <div class="text-center">
+                                <a href="{{ route('user.trading-management.trading-bots.monitor', $bot->id) }}" class="btn btn-primary">
+                                    <i class="fa fa-tachometer-alt"></i> View Real-Time Monitor
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- Worker Status & Monitoring Panel --}}
         <div class="row mt-4">
@@ -555,7 +592,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 // Auto-refresh monitoring data
 (function() {

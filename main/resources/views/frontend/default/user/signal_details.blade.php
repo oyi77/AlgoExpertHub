@@ -37,12 +37,18 @@
                     </li>
                     <li>
                         <span class="caption"><i class="fas fa-money-bill"></i> {{ __('Open') }}:</span>
-                        <span class="details">{{ $signal->open_price }}</span>
+                        <span class="details">{{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->open_price, optional($signal->pair)->name, optional($signal->market)->name) }}</span>
                     </li>
                     <li>
                         <span class="caption"><i class="fas fa-hand-holding-usd"></i> {{ __('Take profit') }}:</span>
-                        <span class="details">{{ $signal->tp }}</span>
+                        <span class="details">{{ \App\Helpers\Helper\Helper::formatSignalPrice($signal->tp, optional($signal->pair)->name, optional($signal->market)->name) }}</span>
                     </li>
+                    @if($signal->outcome)
+                    <li>
+                        <span class="caption"><i class="fas fa-flag-checkered"></i> {{ __('Outcome') }}:</span>
+                        <span class="details">{!! \App\Helpers\Helper\Helper::formatSignalOutcome($signal->outcome) !!}</span>
+                    </li>
+                    @endif
                 </ul>
             </div>
         </div>

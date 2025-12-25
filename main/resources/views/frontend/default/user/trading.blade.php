@@ -397,7 +397,7 @@
     </script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
         // Disable old polling code globally
         window.__TRADING_SSE_ENABLED = true;

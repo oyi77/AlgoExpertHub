@@ -50,6 +50,11 @@ Messages can arrive from multiple sources:
 - Extracts content from configured selectors
 - Creates `ChannelMessage` records
 
+**Trading Bot Signal** (Firebase):
+- Worker listens to Firestore updates → `trading-bot-signal-addon`
+- Converts Firebase signals to internal channel messages
+- Creates `ChannelMessage` records
+
 ---
 
 ## 2. Message Storage
@@ -341,6 +346,16 @@ foreach ($parsers as $parser) {
 - Scheduled job scrapes website
 - Extracts content from CSS selectors
 - Creates `ChannelMessage` for new content
+
+### 6. Trading Bot Signal (Firebase)
+**Configuration**:
+Managed via `trading-bot-signal-addon` configuration (env vars).
+- Source is automatically created and linked.
+
+**Flow**:
+- `TradingBotWorker` listens to Firebase Firestore.
+- New documents are converted into `ChannelMessage` objects.
+- Injected into the standard signal processing pipeline.
 
 ---
 

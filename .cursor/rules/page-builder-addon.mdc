@@ -1,0 +1,507 @@
+---
+description: Page Builder Addon - Drag-and-drop page builder with Laravel-Pagebuilder integration
+globs: ["main/addons/page-builder-addon/**/*"]
+alwaysApply: false
+---
+
+# Page Builder Addon Rules
+
+## Overview
+The **Page Builder Addon** provides a drag-and-drop visual page builder for creating and managing custom pages without coding. It integrates the `hansschouten/laravel-pagebuilder` package with the platform's theme system.
+
+## Addon Information
+- **Name**: `page-builder-addon`
+- **Title**: Page Builder
+- **Version**: 1.0.0
+- **Namespace**: `Addons\PageBuilderAddon`
+- **Status**: Active
+- **Author**: AlgoExpertHub
+- **Dependencies**: `hansschouten/laravel-pagebuilder` ^0.31
+
+## Purpose
+
+### Use Cases
+- Create custom landing pages
+- Build marketing pages without developer
+- Design custom layouts for campaigns
+- Create FAQ, About, Contact pages
+- Build custom user dashboards
+
+### Features
+- Visual drag-and-drop editor
+- Pre-built blocks (text, image, video, form, etc.)
+- Responsive design support
+- Theme integration
+- SEO optimization (meta tags, descriptions)
+- Page versioning
+- Template library
+
+## Architecture
+
+### Modules (2 Total)
+
+#### 1. Admin UI
+- **Key**: `admin_ui`
+- **Purpose**: Admin interface for page management
+- **Features**:
+  - Page CRUD operations
+  - Visual page editor
+  - Template management
+  - Theme template conversion
+- **Routes**: `/admin/page-builder/*`
+- **Menu**: Admin sidebar → Page Builder
+
+#### 2. Background Processing
+- **Key**: `processing`
+- **Purpose**: Background jobs for page processing
+- **Features**:
+  - Page migration from old system
+  - Theme template conversion
+  - Asset optimization
+- **Jobs**: `MigratePageJob`, `ConvertThemeTemplateJob`
+
+## Database Tables
+
+### pb_pages
+Stores page builder pages.
+
+**Schema**:
+- `id` (bigint, primary key)
+- `name` (string) - Page name
+- `slug` (string, unique) - URL slug
+- `title` (string) - Page title (for SEO)
+- `meta_description` (text) - Meta description (for SEO)
+- `meta_keywords` (text) - Meta keywords (for SEO)
+- `layout` (text) - Page layout JSON
+- `status` (enum: 'draft', 'published') - Page status
+- `theme` (string) - Theme name (default, blue, light)
+- `is_homepage` (boolean) - Is this the homepage?
+- `created_by` (foreign key to admins) - Creator
+- `updated_by` (foreign key to admins) - Last updater
+- `created_at`, `updated_at`
+
+### pb_blocks
+Stores custom blocks for reuse.
+
+**Schema**:
+- `id` (bigint, primary key)
+- `name` (string) - Block name
+- `category` (string) - Block category (text, media, form, etc.)
+- `html` (text) - Block HTML template
+- `css` (text) - Block CSS
+- `js` (text) - Block JavaScript
+- `thumbnail` (string) - Block thumbnail image
+- `is_public` (boolean) - Available to all users?
+- `created_by` (foreign key to admins)
+- `created_at`, `updated_at`
+
+### pb_templates
+Stores page templates.
+
+**Schema**:
+- `id` (bigint, primary key)
+- `name` (string) - Template name
+- `description` (text) - Template description
+- `layout` (text) - Template layout JSON
+- `thumbnail` (string) - Template thumbnail
+- `category` (string) - Template category (landing, marketing, etc.)
+- `is_public` (boolean) - Available to all users?
+- `created_by` (foreign key to admins)
+- `created_at`, `updated_at`
+
+## Key Services
+
+### PageBuilderService
+**Location**: `app/Services/PageBuilderService.php`
+
+**Responsibilities**:
+- Page CRUD operations
+- Page rendering
+- SEO management
+- Theme integration
+
+**Key Methods**:
+
+#### `create(array $data): array`
+Create a new page.
+
+**Parameters**:
+- `name` - Page name
+- `slug` - URL slug (auto-generated if not provided)
+- `title` - Page title
+- `meta_description` - Meta description
+- `layout` - Page layout JSON
+- `theme` - Theme name
+- `status` - draft or published
+
+**Returns**:
+```php
+[
+    'type' => 'success|error',
+    'message' => 'Page created successfully',
+    'data' => ['page' => $page]
+]
+```
+
+#### `update(int $id, array $data): array`
+Update an existing page.
+
+#### `publish(int $id): array`
+Publish a draft page.
+
+**Process**:
+1. Validate page layout
+2. Update status to 'published'
+3. Clear page cache
+4. Generate sitemap entry
+
+#### `render(string $slug): string`
+Render a page by slug.
+
+**Process**:
+1. Find page by slug
+2. Check if published
+3. Load theme layout
+4. Render page blocks
+5. Apply SEO meta tags
+6. Return HTML
+
+### ThemeTemplateService
+**Location**: `app/Services/ThemeTemplateService.php`
+
+**Responsibilities**:
+- Convert existing theme templates to page builder format
+- Extract blocks from Blade templates
+- Migrate old pages
+
+**Key Methods**:
+
+#### `convertToPageBuilder(string $bladePath): array`
+Convert a Blade template to page builder format.
+
+**Process**:
+1. Parse Blade template
+2. Extract HTML blocks
+3. Identify dynamic sections
+4. Convert to page builder JSON
+5. Create page record
+
+#### `extractBlocks(string $html): array`
+Extract reusable blocks from HTML.
+
+## Controllers
+
+### Backend\PageBuilderController
+**Location**: `app/Http/Controllers/Backend/PageBuilderController.php`
+
+**Routes**:
+- `GET /admin/page-builder` - List pages
+- `GET /admin/page-builder/create` - Create page form
+- `POST /admin/page-builder` - Store page
+- `GET /admin/page-builder/{id}/edit` - Edit page (visual editor)
+- `PUT /admin/page-builder/{id}` - Update page
+- `DELETE /admin/page-builder/{id}` - Delete page
+- `POST /admin/page-builder/{id}/publish` - Publish page
+- `GET /admin/page-builder/{id}/preview` - Preview page
+
+### PageController (Frontend)
+**Location**: `app/Http/Controllers/PageController.php`
+
+**Routes**:
+- `GET /{slug}` - Render page by slug
+- `GET /` - Render homepage (if `is_homepage=1`)
+
+## Visual Editor
+
+### Editor Interface
+**Location**: `/admin/page-builder/{id}/edit`
+
+**Features**:
+- Drag-and-drop blocks
+- Block settings panel
+- Responsive preview (desktop, tablet, mobile)
+- Undo/redo
+- Save draft
+- Publish
+- Preview
+
+### Available Blocks
+
+#### Text Blocks
+- Heading (H1-H6)
+- Paragraph
+- Quote
+- List (ordered, unordered)
+
+#### Media Blocks
+- Image
+- Image Gallery
+- Video (YouTube, Vimeo, upload)
+- Audio
+
+#### Layout Blocks
+- Container
+- Row/Column
+- Divider
+- Spacer
+
+#### Form Blocks
+- Contact Form
+- Newsletter Signup
+- Custom Form
+
+#### Advanced Blocks
+- HTML (custom code)
+- Button
+- Icon
+- Accordion
+- Tabs
+- Testimonial
+- Pricing Table
+- Call to Action
+
+### Block Configuration
+Each block has configurable properties:
+- Content (text, image, etc.)
+- Styling (colors, fonts, spacing)
+- Animation (fade, slide, etc.)
+- Responsive settings (hide on mobile, etc.)
+
+## Theme Integration
+
+### Theme Layouts
+Page builder pages use theme layouts for consistent design.
+
+**Layout Structure**:
+```blade
+<!-- resources/views/frontend/{theme}/layouts/page-builder.blade.php -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ $page->title }}</title>
+    <meta name="description" content="{{ $page->meta_description }}">
+    <!-- Theme CSS -->
+</head>
+<body>
+    @include('frontend.{theme}.partials.header')
+    
+    <main>
+        {!! $pageContent !!}
+    </main>
+    
+    @include('frontend.{theme}.partials.footer')
+</body>
+</html>
+```
+
+### Theme Switching
+Pages can be assigned to specific themes:
+- `default` - Default theme
+- `blue` - Blue theme
+- `light` - Light theme
+
+When rendering, the appropriate theme layout is used.
+
+## SEO Optimization
+
+### Meta Tags
+- Title tag (from `title` field)
+- Meta description (from `meta_description` field)
+- Meta keywords (from `meta_keywords` field)
+- Open Graph tags (for social sharing)
+- Twitter Card tags
+
+### Sitemap Integration
+Published pages automatically added to sitemap:
+```xml
+<url>
+    <loc>https://example.com/{slug}</loc>
+    <lastmod>{updated_at}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+</url>
+```
+
+### URL Structure
+- Clean URLs: `https://example.com/about` (not `/page/about`)
+- Slug validation (lowercase, hyphens, no special chars)
+- Automatic slug generation from page name
+
+## Templates
+
+### Template Library
+Pre-built templates for common page types:
+- Landing Page
+- About Us
+- Contact Us
+- FAQ
+- Pricing
+- Blog Post
+- Portfolio
+
+### Creating Templates
+1. Create page with desired layout
+2. Save as template
+3. Set template category
+4. Upload thumbnail
+5. Make public (optional)
+
+### Using Templates
+1. Create new page
+2. Select template
+3. Customize content
+4. Publish
+
+## Migration from Old System
+
+### Theme Template Migration
+**Job**: `ConvertThemeTemplateJob`
+
+**Process**:
+1. Scan theme directories for Blade templates
+2. For each template:
+   - Parse Blade syntax
+   - Extract HTML blocks
+   - Convert to page builder JSON
+   - Create page record
+   - Link to theme
+3. Log migration results
+
+**Command**:
+```bash
+php artisan page-builder:migrate-theme {theme-name}
+```
+
+### Old Page Migration
+**Job**: `MigratePageJob`
+
+**Process**:
+1. Export old pages from database
+2. Convert to page builder format
+3. Import into `pb_pages` table
+4. Preserve SEO data
+5. Update internal links
+
+## Configuration
+
+### Admin Settings
+**Location**: `/admin/page-builder/settings`
+
+**Options**:
+- Default theme
+- Enable/disable visual editor
+- Block library (enable/disable blocks)
+- SEO defaults (default meta description, keywords)
+- Image upload settings (max size, allowed formats)
+
+### Environment Variables
+```env
+PAGE_BUILDER_ENABLED=true
+PAGE_BUILDER_MAX_IMAGE_SIZE=5120  # KB
+PAGE_BUILDER_ALLOWED_BLOCKS=text,media,layout,form,advanced
+```
+
+## Permissions
+
+### Admin Permissions
+- `page-builder.view` - View pages
+- `page-builder.create` - Create pages
+- `page-builder.edit` - Edit pages
+- `page-builder.delete` - Delete pages
+- `page-builder.publish` - Publish pages
+- `page-builder.settings` - Manage settings
+
+### Permission Middleware
+```php
+Route::middleware(['admin', 'permission:page-builder.edit,admin'])
+    ->get('/admin/page-builder/{id}/edit', [PageBuilderController::class, 'edit']);
+```
+
+## Best Practices
+
+### Page Design
+1. Use consistent spacing (multiples of 8px)
+2. Limit color palette (use theme colors)
+3. Optimize images (compress before upload)
+4. Use semantic HTML (headings hierarchy)
+5. Test responsive design (all breakpoints)
+
+### SEO
+1. Unique title for each page (50-60 chars)
+2. Compelling meta description (150-160 chars)
+3. Use heading tags correctly (H1 once, H2-H6 for structure)
+4. Add alt text to images
+5. Use descriptive URLs (slugs)
+
+### Performance
+1. Minimize blocks per page (faster rendering)
+2. Lazy load images
+3. Minify CSS/JS
+4. Cache rendered pages
+5. Use CDN for assets
+
+### Security
+1. Sanitize user input (HTML blocks)
+2. Validate image uploads (type, size)
+3. Prevent XSS (escape output)
+4. Use CSRF protection
+5. Limit file upload size
+
+## Troubleshooting
+
+### Common Issues
+
+#### Visual Editor Not Loading
+- Check browser console for errors
+- Verify `hansschouten/laravel-pagebuilder` installed
+- Clear cache: `php artisan cache:clear`
+- Check permissions (admin user has `page-builder.edit`)
+
+#### Page Not Rendering
+- Check page status (must be 'published')
+- Verify slug is correct
+- Check theme layout exists
+- Clear view cache: `php artisan view:clear`
+
+#### Images Not Uploading
+- Check file size (within limit)
+- Verify file type (jpg, png, gif, svg)
+- Check storage permissions: `chmod -R 775 storage`
+- Verify disk space available
+
+### Debugging
+```php
+// Enable debug mode
+config(['app.debug' => true]);
+
+// Log page rendering
+Log::info('Rendering page', ['slug' => $slug, 'page' => $page]);
+
+// Check page layout JSON
+dd($page->layout);
+```
+
+## Future Enhancements
+
+### Planned Features
+- A/B testing for pages
+- Analytics integration (track page views, conversions)
+- Multi-language support (translate pages)
+- Version history (restore previous versions)
+- Collaboration (multiple admins editing)
+- Custom CSS per page
+- Advanced animations (scroll effects, parallax)
+- Form builder integration
+- E-commerce blocks (product, cart, checkout)
+
+## Support
+
+### Documentation
+- Laravel-Pagebuilder docs: https://github.com/HansSchouten/Laravel-Pagebuilder
+- Video tutorials (planned)
+- Admin guide: `docs/page-builder-admin-guide.md`
+
+### Help
+- GitHub issues (for bugs)
+- Admin support tickets (for usage questions)
+- Community forum (for tips and tricks)

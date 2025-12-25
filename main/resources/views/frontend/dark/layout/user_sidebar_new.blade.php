@@ -269,7 +269,7 @@
 </div>
 <!-- mobile bottom menu end -->
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             'use strict'

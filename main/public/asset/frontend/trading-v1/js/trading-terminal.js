@@ -13,10 +13,20 @@
         return activeModeBtn ? activeModeBtn.dataset.mode : 'real';
     })();
     let currentSymbol = (() => {
+        // First try localStorage (saved preference)
+        const savedSymbol = localStorage.getItem('tradingTerminalSymbol');
+        if (savedSymbol) {
+            return savedSymbol;
+        }
+        // Then try DOM element
         const el = document.getElementById('selectedSymbol');
         if (el) {
-            return el.textContent.replace('/', '').replace('USDT', 'USDT');
+            const symbol = el.textContent.replace('/', '').replace('USDT', 'USDT');
+            if (symbol) {
+                return symbol;
+            }
         }
+        // Default fallback
         return 'BTCUSDT';
     })();
     let currentInterval = '5m';
@@ -47,6 +57,21 @@
         // Initialize balance display
         updateBalanceDisplay(currentMode);
 
+        // Initialize order form symbol suffix
+        const orderAmountSymbol = document.getElementById('orderAmountSymbol');
+        if (orderAmountSymbol && currentSymbol) {
+            const baseSymbol = currentSymbol.replace('USDT', '').replace('USD', '').replace('EUR', '').replace('GBP', '');
+            orderAmountSymbol.textContent = baseSymbol || 'BTC';
+        }
+
+        // Sync saved symbol to URL if different
+        const url = new URL(window.location);
+        const urlSymbol = url.searchParams.get('symbol');
+        if (!urlSymbol || urlSymbol !== currentSymbol) {
+            url.searchParams.set('symbol', currentSymbol);
+            window.history.replaceState({}, '', url);
+        }
+
         // Load orderbook immediately via REST (instant load)
         loadOrderbookREST();
 
@@ -74,7 +99,9 @@
     // Expose functions globally for Golden Layout re-initialization
     window.initChart = initChart;
     window.connectWebSocket = connectWebSocket;
+    // Expose functions globally for onclick handlers and external access
     window.loadOrderbookREST = loadOrderbookREST;
+    window.selectSymbol = selectSymbol;
     window.loadOrderbook = loadOrderbook;
     window.updateOrderbook = updateOrderbook;
     window.updateDepthChart = updateDepthChart;
@@ -84,6 +111,12 @@
     // Expose currentSymbol as getter
     Object.defineProperty(window, 'currentSymbol', {
         get: function () { return currentSymbol; },
+        configurable: true
+    });
+
+    // Expose currentMode as getter
+    Object.defineProperty(window, 'currentMode', {
+        get: function () { return currentMode; },
         configurable: true
     });
 
@@ -289,15 +322,15 @@
         // Attach click handlers
         symbolList.querySelectorAll('.tv-symbol-item').forEach(item => {
             item.addEventListener('click', function (e) {
-                if (e.target.closest('.tv-symbol-favorite')) return; // Don't trigger on favorite button
-
-                const newSymbol = this.dataset.symbol;
-                if (newSymbol === currentSymbol) {
-                    document.getElementById('symbolDropdown')?.classList.remove('active');
+                // Don't trigger if clicking the favorite button
+                if (e.target.closest('.tv-symbol-favorite')) {
                     return;
                 }
 
-                selectSymbol(newSymbol);
+                const symbol = this.dataset.symbol;
+                if (symbol) {
+                    selectSymbol(symbol);
+                }
             });
         });
     }
@@ -306,62 +339,92 @@
         const symbolList = document.getElementById('symbolList');
         if (!symbolList) return;
 
+        // Don't do anything if same symbol
+        if (symbol === currentSymbol) {
+            document.getElementById('symbolDropdown')?.classList.remove('active');
+            return;
+        }
+
         // Update active state
         symbolList.querySelectorAll('.tv-symbol-item').forEach(i => i.classList.remove('active'));
         const activeItem = symbolList.querySelector(`[data-symbol="${symbol}"]`);
         if (activeItem) activeItem.classList.add('active');
 
-        // Unsubscribe from old market data channel
-        if (marketDataChannel && currentSymbol && window.Echo) {
-            window.Echo.leave(`market.${currentSymbol.toLowerCase()}`);
-        }
-
         // Update current symbol
         const oldSymbol = currentSymbol;
         currentSymbol = symbol;
-        const selectedSymbolEl = document.getElementById('selectedSymbol');
-        if (selectedSymbolEl) {
-            const pair = allTradingPairs.find(p => p.symbol === symbol);
-            selectedSymbolEl.textContent = pair ? pair.displaySymbol : symbol;
+
+        // Save to localStorage for persistence across reloads
+        localStorage.setItem('tradingTerminalSymbol', symbol);
+
+        console.log(`🔄 Symbol switching from ${oldSymbol} to ${symbol} - updating all components...`);
+
+        // Update URL parameter without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('symbol', symbol);
+        window.history.pushState({}, '', url.toString());
+
+        // Update orderbook headers
+        updateOrderbookHeaders(symbol);
+
+        // Reload orderbook data
+        loadOrderbookREST();
+
+        // Reload chart with new symbol
+        if (typeof initChart === 'function') {
+            initChart();
+        }
+
+        // Update price display
+        if (typeof updatePrice === 'function') {
+            updatePrice();
+        }
+
+        // Update order form symbol display
+        const orderAmountSymbol = document.getElementById('orderAmountSymbol');
+        if (orderAmountSymbol && currentSymbol) {
+            const baseSymbol = currentSymbol.replace('USDT', '').replace('USD', '').replace('EUR', '').replace('GBP', '');
+            orderAmountSymbol.textContent = baseSymbol;
+        }
+
+        // Update mobile trade modal title if it exists
+        const mobileModalTitle = document.getElementById('mobileModalTitle');
+        if (mobileModalTitle) {
+            // Title will be updated when modal opens, but we can pre-update if needed
         }
 
         // Close dropdown
         document.getElementById('symbolDropdown')?.classList.remove('active');
 
-        // Subscribe to new market data channel
-        if (window.Echo && symbol !== oldSymbol) {
-            const newSymbol = symbol.toLowerCase();
-            marketDataChannel = window.Echo.channel(`market.${newSymbol}`);
-            marketDataChannel.listen('.price.updated', (data) => {
-                if (data.price) {
-                    updatePriceFromWebSocket(data);
-                }
-            });
-            console.log(`WebSocket: Switched to market.${newSymbol}`);
-        }
+        // Log symbol change for debugging
+        console.log(`✅ Symbol changed from ${oldSymbol} to ${symbol} - all components updated`);
+    }
 
-        // Reload data if in real mode
-        if (currentMode === 'real') {
-            const container = document.getElementById('tradingview_chart');
-            if (container) container.innerHTML = '';
-            chart = null;
-            initChart();
-            // Load orderbook instantly via REST, then connect WebSocket
-            loadOrderbookREST();
-            // Reconnect Binance WebSocket for new symbol
-            if (ws) {
-                ws.close();
-                ws = null;
-            }
-            connectWebSocket();
-            loadPositions();
-            updatePrice();
+    /**
+     * Update orderbook header labels to show correct currency
+     */
+    function updateOrderbookHeaders(symbol) {
+        // Extract base and quote currencies
+        const baseSymbol = symbol.replace('USDT', '').replace('USD', '').replace('EUR', '').replace('GBP', '');
+        const quoteSymbol = symbol.includes('USDT') ? 'USDT' :
+            symbol.includes('USD') ? 'USD' :
+                symbol.includes('EUR') ? 'EUR' :
+                    symbol.includes('GBP') ? 'GBP' : 'USDT';
+
+        // Update orderbook header
+        const orderbookHeader = document.querySelector('.tv-orderbook-header');
+        if (orderbookHeader) {
+            orderbookHeader.innerHTML = `
+                <span>Price(${quoteSymbol})</span>
+                <span>Amount(${baseSymbol})</span>
+            `;
         }
     }
 
+
+
     function toggleFavorite(event, symbol) {
         event.stopPropagation();
-        const index = favorites.indexOf(symbol);
         if (index > -1) {
             favorites.splice(index, 1);
         } else {
@@ -429,6 +492,16 @@
         // Update balance display based on mode
         updateBalanceDisplay(mode);
 
+        // Update order panel mode indicator
+        const orderPanelMode = document.getElementById('orderPanelMode');
+        const orderPanelModeText = document.getElementById('orderPanelModeText');
+        if (orderPanelMode && orderPanelModeText) {
+            orderPanelMode.className = 'tv-order-mode-indicator ' + (mode === 'demo' ? 'demo' : 'real');
+            const demoText = orderPanelMode.dataset.demoText || 'Demo Mode';
+            const realText = orderPanelMode.dataset.realText || 'Real Trading';
+            orderPanelModeText.textContent = mode === 'demo' ? demoText : realText;
+        }
+
         if (mode === 'real') {
             initializeRealTrading();
         } else {
@@ -479,9 +552,9 @@
      * TradingView Chart Widget
      */
     function initChart() {
-        if (chart) return; // Already initialized
-
+        console.log('📺 initChart: Called for symbol:', currentSymbol);
         if (typeof TradingView === 'undefined') {
+            console.log('TradingView not loaded yet, retrying...');
             setTimeout(initChart, 100);
             return;
         }
@@ -489,38 +562,61 @@
         // Check if container exists
         const container = document.getElementById('tradingview_chart');
         if (!container) {
+            console.warn('Chart container not found');
             return;
         }
 
-        // Clear container first
+        // Completely clear the container and create a new unique container for the widget
         container.innerHTML = '';
+        const widgetContainer = document.createElement('div');
+        widgetContainer.id = 'tradingview_widget_' + Date.now(); // Unique ID to force fresh widget
+        widgetContainer.style.height = '600px';
+        container.appendChild(widgetContainer);
 
-        // Initialize TradingView widget
-        chart = new TradingView.widget({
-            "width": "100%",
-            "height": 600,
-            "symbol": "BINANCE:" + currentSymbol,
-            "interval": "5",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": false, // We control symbol via our dropdown
-            "container_id": "tradingview_chart",
-            "disabled_features": [
-                "use_localstorage_for_settings", // Prevent caching old studies
-                "volume_force_overlay"
-            ],
-            "overrides": {
-                "paneProperties.background": "#0a0e1a",
-                "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.05)",
-                "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.05)",
-                "scalesProperties.textColor": "#d1d4dc"
-            }
-        });
+        // Determine exchange prefix based on symbol
+        let exchangePrefix = 'BINANCE';
+        if (currentSymbol.includes('USDT') || currentSymbol.includes('BTC') || currentSymbol.includes('ETH')) {
+            exchangePrefix = 'BINANCE';
+        } else if (currentSymbol.includes('EUR') || currentSymbol.includes('GBP') || currentSymbol.includes('USD')) {
+            exchangePrefix = 'FX_IDC';
+        }
+
+        const symbolToLoad = exchangePrefix + ":" + currentSymbol;
+        console.log('Initializing TradingView widget with symbol:', symbolToLoad, 'in container:', widgetContainer.id);
+
+        // Initialize TradingView widget with current symbol
+        try {
+            chart = new TradingView.widget({
+                "width": "100%",
+                "height": 600,
+                "symbol": symbolToLoad,
+                "interval": "5",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": false, // We control symbol via our dropdown
+                "container_id": widgetContainer.id, // Use unique container ID
+                "disabled_features": [
+                    "use_localstorage_for_settings", // Prevent caching old studies
+                    "volume_force_overlay"
+                ],
+                "overrides": {
+                    "paneProperties.background": "#0a0e1a",
+                    "paneProperties.vertGridProperties.color": "rgba(255, 255, 255, 0.05)",
+                    "paneProperties.horzGridProperties.color": "rgba(255, 255, 255, 0.05)",
+                    "scalesProperties.textColor": "#d1d4dc"
+                }
+            });
+
+            console.log('✅ TradingView widget created successfully for', symbolToLoad);
+        } catch (error) {
+            console.error('Error creating TradingView widget:', error);
+            container.innerHTML = '<div class="tv-chart-loading"><i class="las la-exclamation-triangle" style="color: #ef4444;"></i><p>Error loading chart</p></div>';
+        }
     }
 
     // No need for loadCandlestickData or updateLegend as Widget handles it
@@ -642,7 +738,7 @@
      */
     let wsConnectionTimeout = null;
     let wsUsePolling = false; // Flag to track if we should use polling instead
-    
+
     function connectWebSocket() {
         // If we've determined WebSocket doesn't work, skip and use polling
         if (wsUsePolling) {
@@ -693,16 +789,16 @@
                 console.log('✅ Binance WebSocket connected for orderbook:', symbol);
                 wsReconnectAttempts = 0;
                 wsUsePolling = false; // Reset flag on successful connection
-                
+
                 // Clear timeout
                 if (wsConnectionTimeout) {
                     clearTimeout(wsConnectionTimeout);
                     wsConnectionTimeout = null;
                 }
-                
+
                 // Stop polling if it was running
                 stopOrderbookPolling();
-                
+
                 // Show connected indicator for both layouts
                 const spreadEl = document.getElementById('orderbookSpread');
                 const spreadElInteract = document.getElementById('orderbookSpread_interact');
@@ -736,7 +832,7 @@
                                 asks: data.asks
                             });
                         }
-                        
+
                         // Also update depth chart if it exists
                         if (window.updateDepthChart) {
                             window.updateDepthChart(data.asks, data.bids);
@@ -756,13 +852,13 @@
                 } else {
                     console.log('WebSocket connection unavailable, using REST polling');
                 }
-                
+
                 // Clear timeout
                 if (wsConnectionTimeout) {
                     clearTimeout(wsConnectionTimeout);
                     wsConnectionTimeout = null;
                 }
-                
+
                 // Show error indicator
                 const spreadEl = document.getElementById('orderbookSpread');
                 const spreadElInteract = document.getElementById('orderbookSpread_interact');
@@ -774,7 +870,7 @@
                     spreadElInteract.style.color = '#ef4444';
                     spreadElInteract.title = 'Using REST polling (WebSocket unavailable)';
                 }
-                
+
                 // If error occurs before connection, fallback immediately
                 if (ws && ws.readyState === WebSocket.CONNECTING) {
                     wsUsePolling = true;
@@ -790,13 +886,13 @@
                 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                     console.log('WebSocket closed:', event.code, event.reason || 'No reason provided');
                 }
-                
+
                 // Clear timeout
                 if (wsConnectionTimeout) {
                     clearTimeout(wsConnectionTimeout);
                     wsConnectionTimeout = null;
                 }
-                
+
                 ws = null;
 
                 // Show disconnected indicator for both layouts
@@ -845,7 +941,7 @@
             startOrderbookPolling();
         }
     }
-    
+
     /**
      * Fallback: Poll orderbook via REST API
      */
@@ -855,17 +951,17 @@
         if (orderbookPollInterval) {
             clearInterval(orderbookPollInterval);
         }
-        
+
         // Don't start polling if WebSocket is connected
         if (ws && ws.readyState === WebSocket.OPEN) {
             return;
         }
-        
+
         console.log('Starting orderbook REST polling (fallback mode)');
-        
+
         // Load immediately
         loadOrderbookREST();
-        
+
         // Poll every 2 seconds
         orderbookPollInterval = setInterval(() => {
             // Only poll if WebSocket is not connected
@@ -877,7 +973,7 @@
             }
         }, 2000);
     }
-    
+
     function stopOrderbookPolling() {
         if (orderbookPollInterval) {
             clearInterval(orderbookPollInterval);
@@ -898,12 +994,12 @@
      * Orderbook (REST Fallback)
      */
     function loadOrderbookREST() {
-        // Show loading state
+        console.log('📊 Loading orderbook for symbol:', currentSymbol);
         const asksContainer = document.getElementById('orderbookAsks');
         const bidsContainer = document.getElementById('orderbookBids');
 
         if (asksContainer && bidsContainer) {
-            asksContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: #848e9c;">Loading...</div>';
+            asksContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: #848e9c;"><i class="las la-spinner la-spin"></i> Loading...</div>';
             bidsContainer.innerHTML = '';
         }
 
@@ -912,7 +1008,7 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log('Orderbook data (REST):', data);
+                console.log('✅ Orderbook data loaded for', currentSymbol, ':', data);
                 if (data.success && data.data) {
                     renderOrderbook(data.data);
                 } else {
@@ -1430,15 +1526,56 @@
     }
 
     function placeOrder(direction) {
-        const amount = document.getElementById('orderAmount')?.value;
+        const amountInput = document.getElementById('orderAmount');
+        const amount = amountInput?.value;
         const slPrice = document.getElementById('stopLoss')?.value;
         const tpPrice = document.getElementById('takeProfit')?.value;
+        const errorDiv = document.getElementById('orderAmount-error');
 
-        if (!amount) {
+        // Clear previous errors
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+        if (amountInput) {
+            amountInput.classList.remove('is-invalid');
+        }
+
+        // Validate amount
+        if (!amount || parseFloat(amount) <= 0) {
+            const errorMsg = 'Amount is required and must be greater than 0. Please enter the quantity you want to trade.';
+            if (errorDiv) {
+                errorDiv.textContent = errorMsg;
+                errorDiv.style.display = 'block';
+            }
+            if (amountInput) {
+                amountInput.classList.add('is-invalid');
+                amountInput.focus();
+            }
             if (typeof toastr !== 'undefined') {
-                toastr.error('Please enter amount');
+                toastr.error('Please enter a valid amount');
             } else {
-                alert('Please enter amount');
+                alert(errorMsg);
+            }
+            return;
+        }
+
+        // Validate amount is not too large (check against available balance)
+        const availableBalance = parseFloat(document.getElementById('availableBalance')?.textContent?.replace(/[^\d.]/g, '') || '0');
+        const orderTotal = parseFloat(document.getElementById('orderTotal')?.value || '0');
+        if (orderTotal > availableBalance && currentMode === 'real') {
+            const errorMsg = `Insufficient balance. Available: ${availableBalance.toFixed(2)} USDT, Required: ${orderTotal.toFixed(2)} USDT. Please reduce the amount or deposit more funds.`;
+            if (errorDiv) {
+                errorDiv.textContent = errorMsg;
+                errorDiv.style.display = 'block';
+            }
+            if (amountInput) {
+                amountInput.classList.add('is-invalid');
+            }
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Insufficient balance');
+            } else {
+                alert(errorMsg);
             }
             return;
         }
@@ -1483,30 +1620,66 @@
             },
             body: JSON.stringify(orderData)
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to place order');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    // Clear any errors
+                    const errorDiv = document.getElementById('orderAmount-error');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                        errorDiv.textContent = '';
+                    }
+                    if (amountInput) {
+                        amountInput.classList.remove('is-invalid');
+                    }
+
                     if (typeof toastr !== 'undefined') {
-                        toastr.success(data.message);
+                        toastr.success(data.message || 'Order placed successfully');
                     } else {
-                        alert(data.message);
+                        alert(data.message || 'Order placed successfully');
                     }
                     document.getElementById('orderForm')?.reset();
                     loadPositions();
                 } else {
+                    // Display error message
+                    const errorMsg = data.message || 'Failed to place order. Please check your inputs and try again.';
+                    const errorDiv = document.getElementById('orderAmount-error');
+                    if (errorDiv) {
+                        errorDiv.textContent = errorMsg;
+                        errorDiv.style.display = 'block';
+                    }
+                    if (amountInput) {
+                        amountInput.classList.add('is-invalid');
+                    }
                     if (typeof toastr !== 'undefined') {
-                        toastr.error(data.message);
+                        toastr.error(errorMsg);
                     } else {
-                        alert(data.message);
+                        alert(errorMsg);
                     }
                 }
             })
             .catch(error => {
                 console.error('Error placing order:', error);
+                const errorMsg = error.message || 'Failed to place order. Please check your connection and try again.';
+                const errorDiv = document.getElementById('orderAmount-error');
+                if (errorDiv) {
+                    errorDiv.textContent = errorMsg;
+                    errorDiv.style.display = 'block';
+                }
+                if (amountInput) {
+                    amountInput.classList.add('is-invalid');
+                }
                 if (typeof toastr !== 'undefined') {
-                    toastr.error('Failed to place order');
+                    toastr.error(errorMsg);
                 } else {
-                    alert('Failed to place order');
+                    alert(errorMsg);
                 }
             });
     }

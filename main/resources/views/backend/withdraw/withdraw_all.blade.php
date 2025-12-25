@@ -202,7 +202,7 @@
 @endsection
 
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             'use strict'
@@ -352,7 +352,7 @@
 
 
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             'use strict'

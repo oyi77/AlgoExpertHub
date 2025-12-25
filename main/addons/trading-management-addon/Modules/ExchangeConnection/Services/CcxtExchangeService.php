@@ -37,27 +37,48 @@ class CcxtExchangeService
                 $exchanges = [];
                 $popularExchanges = $this->getPopularExchangesList();
                 $passphraseExchanges = $this->getPassphraseRequiredExchanges();
+                
+                // Limit processing if memory is low (simple heuristic)
+                $memoryLimit = ini_get('memory_limit');
+                $limitCount = -1; // Unlimited
+                if ($memoryLimit && stripos($memoryLimit, 'M') !== false) {
+                    // If limit is small (<256M), restrict processing
+                    $limitBytes = (int) $memoryLimit * 1024 * 1024;
+                    if ($limitBytes < 268435456) {
+                        $limitCount = 100; // Only process first 100 if low memory
+                    }
+                }
 
+                $count = 0;
                 foreach ($allExchanges as $exchangeId) {
                     try {
+                        if ($limitCount > 0 && $count >= $limitCount) {
+                            break;
+                        }
+
                         $exchangeInfo = $this->getExchangeInfo($exchangeId);
                         
                         if (empty($exchangeInfo)) {
                             continue; // Skip if we can't get info
                         }
                         
+                        // Check popularity and add if popular OR if we have space
+                        $isPopular = in_array(strtolower($exchangeId), array_map('strtolower', $popularExchanges));
+                        
+                        // Always include popular ones, but skip others if we hit limit
+                        if (!$isPopular && $limitCount > 0 && count($exchanges) >= $limitCount) {
+                            continue;
+                        }
+                        
                         $exchanges[$exchangeId] = [
                             'id' => $exchangeId,
                             'name' => $exchangeInfo['name'] ?? $this->formatExchangeName($exchangeId),
                             'needs_passphrase' => $this->checkIfPassphraseRequired($exchangeId, $passphraseExchanges),
-                            'popular' => in_array(strtolower($exchangeId), array_map('strtolower', $popularExchanges)),
+                            'popular' => $isPopular,
                         ];
-                    } catch (\Exception $e) {
-                        // Skip exchanges that fail to process
-                        Log::debug('Skipping exchange processing', [
-                            'exchange' => $exchangeId,
-                            'error' => $e->getMessage()
-                        ]);
+                        $count++;
+                    } catch (\Throwable $e) {
+                        // Skip exchanges that fail to process (catch all errors including fatal ones)
                         continue;
                     }
                 }
@@ -76,7 +97,7 @@ class CcxtExchangeService
                 ]);
 
                 return $exchanges;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error('Failed to get crypto exchanges from ccxt', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()

@@ -7,10 +7,10 @@ alwaysApply: true
 # Laravel Architecture Rules
 
 ## Framework & Version
-- **Framework**: Laravel 9.x
-- **PHP**: 8.0.2+
+- **Framework**: Laravel 10.x
+- **PHP**: 8.1+
 - **Architecture**: MVC with Service Layer pattern
-- **Base Path**: `/home1/algotrad/public_html/main/`
+- **Base Path**: `/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/main/`
 
 ## Directory Structure
 ```

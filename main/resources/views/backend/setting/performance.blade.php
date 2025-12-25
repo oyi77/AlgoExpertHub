@@ -774,7 +774,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Reset form confirmation

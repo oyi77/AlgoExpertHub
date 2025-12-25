@@ -100,7 +100,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Handle status toggle

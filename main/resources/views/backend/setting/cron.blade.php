@@ -94,7 +94,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(document).ready(function() {
         // Enhanced copy functionality for all cron job inputs

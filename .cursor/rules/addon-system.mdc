@@ -278,64 +278,61 @@ protected function registerAddonServiceProviders(): void
 
 ## Installed Addons
 
-### 1. Multi-Channel Signal Addon
+### 1. Trading Management Addon
+- **Slug**: `trading-management-addon`
+- **Namespace**: `Addons\TradingManagement`
+- **Purpose**: Unified trading system with data feeding, filtering, AI analysis, risk management, execution, and backtesting
+- **Modules**: 13 modules (data_provider, market_data, filter_strategy, ai_analysis, risk_management, execution, position_monitoring, copy_trading, backtesting, exchange_connection, global_settings, marketplace, trading_bot)
+- **Key Features**: Event-driven pipeline, mtapi.io integration, CCXT exchanges, metaapi.cloud, backtesting
+- **Routes**: `/admin/trading-management/*`, `/user/trading-management/*`
+- **Docs**: See `trading-management-addon.mdc`
+
+### 2. Multi-Channel Signal Addon
 - **Slug**: `multi-channel-signal-addon`
 - **Namespace**: `Addons\MultiChannelSignalAddon`
 - **Purpose**: Automatically forward messages from external channels into signals
-- **Features**:
-  - Signal Sources (Telegram Bot, MTProto, API, Web Scrape, RSS)
-  - Channel Forwarding & Assignment (user, plan, global scope)
-  - Message parsing (regex, AI, pattern templates)
-  - Auto-signal creation (drafts for review)
-  - Analytics & reporting
+- **Features**: Signal Sources (Telegram Bot, MTProto, API, Web Scrape, RSS), Message parsing (regex, AI, pattern templates), Auto-signal creation
 - **Key Models**: `ChannelSource`, `ChannelMessage`, `MessageParsingPattern`, `SignalAnalytic`
 - **Routes**: `/admin/signal-sources`, `/admin/channel-forwarding`, `/user/signal-sources`
 - **Docs**: `specs/active/multi-channel-signal-addon/`
 
-### 2. Trading Execution Engine Addon
-- **Slug**: `trading-execution-engine-addon`
-- **Namespace**: `Addons\TradingExecutionEngine`
-- **Purpose**: Execute trades on connected exchanges/brokers based on signals
-- **Features**:
-  - Connection management (crypto exchanges via CCXT, FX brokers via MT4/MT5)
-  - Automated signal execution
-  - Position monitoring (SL/TP tracking)
-  - Analytics (win rate, profit factor, drawdown)
-  - Notifications
-- **Key Models**: `ExecutionConnection`, `ExecutionLog`, `ExecutionPosition`, `ExecutionAnalytic`, `ExecutionNotification`
-- **Routes**: `/admin/execution-connections`, `/user/connections`, `/user/analytics`
-- **Jobs**: `ExecuteSignalJob`, `MonitorPositionsJob`, `UpdateAnalyticsJob`
+### 3. AI Connection Addon
+- **Slug**: `ai-connection-addon`
+- **Namespace**: `Addons\AiConnectionAddon`
+- **Purpose**: Centralized AI provider management for all platform features
+- **Features**: Connection management (OpenAI, Gemini, OpenRouter), Connection rotation, Rate limiting, Usage tracking
+- **Key Models**: `AiConnection`, `AiUsageLog`
+- **Routes**: `/admin/ai-connections/*`
+- **Docs**: See `ai-connection-addon.mdc`
 
-### 3. Trading Preset Addon
-- **Slug**: `trading-preset-addon`
-- **Namespace**: `Addons\TradingPresetAddon`
-- **Purpose**: Trading configuration presets for risk management and position sizing
-- **Features**:
-  - Preset management (create, edit, clone)
-  - 6 default presets (scalper, swing, aggressive, safe, grid, breakout)
-  - User onboarding (auto-assign default preset)
-  - Auto-assignment to new connections
-  - Multi-TP, break-even, trailing stop, layering, hedging
-- **Key Models**: `TradingPreset`
-- **Routes**: `/user/presets`, `/user/presets/marketplace`
-- **Integration**: Used by Execution Engine for position sizing
+### 4. Page Builder Addon
+- **Slug**: `page-builder-addon`
+- **Namespace**: `Addons\PageBuilderAddon`
+- **Purpose**: Drag-and-drop visual page builder
+- **Features**: Visual editor, Pre-built blocks, Theme integration, SEO optimization
+- **Key Models**: `PbPage`, `PbBlock`, `PbTemplate`
+- **Routes**: `/admin/page-builder/*`
+- **Docs**: See `page-builder-addon.mdc`
 
-### 4. Trading Bot Signal Addon
+### 5. OpenRouter Integration Addon
+- **Slug**: `openrouter-integration-addon`
+- **Namespace**: `Addons\OpenRouterIntegration`
+- **Purpose**: Access to 400+ AI models via OpenRouter
+- **Features**: Model routing, Fallback handling, Unified API
+- **Routes**: `/admin/openrouter/*`
+
+### 6. Trading Bot Signal Addon
 - **Slug**: `trading-bot-signal-addon`
 - **Namespace**: `Addons\TradingBotSignalAddon`
 - **Purpose**: Integration with external trading bots (Firebase-based)
-- **Features**:
-  - Firebase notification listening
-  - Signal processing from bot notifications
-  - Position tracking
-  - Backtest analytics
+- **Features**: Firebase notification listening, Signal processing, Position tracking
 - **Key Components**: `FirebaseService`, `SignalProcessorService`, `NotificationListener`
 
-### 5. Copy Trading Addon
-- **Slug**: `copy-trading-addon`
-- **Namespace**: `Addons\CopyTrading`
-- **Purpose**: Social trading - users copy other traders' signals
-- **Status**: Basic structure, implementation TBD
+### 7. AlgoExpert Plus Addon
+- **Slug**: `algoexpert-plus-addon`
+- **Namespace**: `Addons\AlgoExpertPlus`
+- **Purpose**: Premium features and platform enhancements
+- **Features**: Advanced analytics, Premium tools, Enhanced UI components
 
 ## Addon Management (Admin Interface)
 **Route**: `/admin/addons`

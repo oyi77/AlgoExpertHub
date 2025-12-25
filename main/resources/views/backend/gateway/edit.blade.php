@@ -243,7 +243,7 @@
 
 @endsection
 
-@push('script')
+@push('scripts')
 
 
 

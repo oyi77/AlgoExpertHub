@@ -208,6 +208,12 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('connections/{connection}/deactivate', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'deactivate'])
             ->name('connections.deactivate');
         
+        // MetaApi provisioning endpoints for execution connections
+        Route::post('connections/add-metaapi-account', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'addMetaApiAccount'])
+            ->name('connections.add-metaapi-account');
+        Route::post('connections/metaapi-account-status', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'getMetaApiAccountStatus'])
+            ->name('connections.metaapi-account-status');
+        
         // Executions Log tab
         Route::get('executions', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\TradingOperationsController::class, 'executions'])->name('executions');
         
@@ -400,6 +406,11 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::get('/{id}/logs', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'logs'])->name('logs');
         Route::get('/{id}/metrics', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'metrics'])->name('metrics');
         Route::post('/{id}/test-execution', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'testExecution'])->name('test-execution');
+        
+        // Monitoring routes
+        Route::get('/monitoring', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'monitoring'])->name('monitoring');
+        Route::get('/{id}/health', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'health'])->name('health');
+        Route::post('/bulk-action', [\Addons\TradingManagement\Modules\TradingBot\Controllers\Backend\TradingBotController::class, 'bulkAction'])->name('bulk-action');
     });
 
     // 7. System Health
@@ -421,5 +432,21 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         Route::post('traders/{id}/verify', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'verify'])->name('traders.verify');
         Route::delete('traders/{id}', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'destroy'])->name('traders.destroy');
         Route::post('traders/recalculate-leaderboard', [\Addons\TradingManagement\Modules\Marketplace\Controllers\Backend\TraderMarketplaceController::class, 'recalculateLeaderboard'])->name('traders.recalculate');
+    });
+
+    // 9. Backtesting Center (Admin)
+    Route::prefix('backtesting')->name('backtesting.')->group(function () {
+        Route::get('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'backtests'])->name('index');
+        Route::get('/create', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'create'])->name('create');
+        Route::post('/', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'store'])->name('store');
+        Route::get('/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'show'])->name('show');
+        Route::delete('/{backtest}', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/run', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'run'])->name('run');
+        Route::get('/{id}/status', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'status'])->name('status');
+        
+        // Data management
+        Route::post('/check-data-availability', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'checkDataAvailability'])->name('check-data');
+        Route::post('/validate-date-range', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'validateDateRange'])->name('validate-range');
+        Route::post('/download-data', [\Addons\TradingManagement\Modules\Backtesting\Controllers\Backend\BacktestController::class, 'downloadData'])->name('download-data');
     });
 

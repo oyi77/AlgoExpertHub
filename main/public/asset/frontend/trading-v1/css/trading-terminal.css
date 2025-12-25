@@ -219,18 +219,33 @@
 
 .tv-symbol-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 12px);
     left: 0;
-    width: 400px;
+    width: 480px;
     max-width: 90vw;
-    background: rgba(10, 14, 26, 0.98);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(10, 14, 26, 0.98) 0%, rgba(15, 20, 35, 0.98) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(26, 255, 213, 0.2);
+    border-radius: 16px;
     display: none;
     z-index: 1000;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 
+                0 0 0 1px rgba(26, 255, 213, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
     overflow: hidden;
+    transform-origin: top left;
+    animation: dropdownSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .tv-symbol-dropdown.active {
@@ -239,31 +254,36 @@
 
 .tv-symbol-search {
     width: 100%;
-    padding: 0.875rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(26, 255, 213, 0.15);
     color: #fff;
     font-size: 0.95em;
     box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
 .tv-symbol-search::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 400;
 }
 
 .tv-symbol-search:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(26, 255, 213, 0.05);
+    border-bottom-color: rgba(26, 255, 213, 0.3);
+    box-shadow: inset 0 -2px 0 rgba(26, 255, 213, 0.2);
 }
 
 .tv-symbol-categories {
     display: flex;
     gap: 0.5rem;
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-bottom: 1px solid rgba(26, 255, 213, 0.1);
     overflow-x: auto;
     scrollbar-width: none;
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .tv-symbol-categories::-webkit-scrollbar {
@@ -271,36 +291,66 @@
 }
 
 .tv-category-btn {
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.875em;
-    font-weight: 500;
+    padding: 0.6rem 1.1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85em;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.tv-category-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(26, 255, 213, 0.1), rgba(26, 255, 213, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .tv-category-label {
     font-size: inherit;
     line-height: 1;
+    position: relative;
+    z-index: 1;
 }
 
 .tv-category-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(26, 255, 213, 0.08);
+    border-color: rgba(26, 255, 213, 0.2);
     color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26, 255, 213, 0.15);
+}
+
+.tv-category-btn:hover::before {
+    opacity: 1;
 }
 
 .tv-category-btn.active {
-    background: rgba(26, 255, 213, 0.2);
-    border-color: #1AFFD5;
+    background: linear-gradient(135deg, rgba(26, 255, 213, 0.25), rgba(26, 255, 213, 0.15));
+    border-color: rgba(26, 255, 213, 0.5);
     color: #1AFFD5;
+    box-shadow: 0 4px 16px rgba(26, 255, 213, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.tv-category-btn.active i {
+    color: #1AFFD5;
+    filter: drop-shadow(0 0 8px rgba(26, 255, 213, 0.5));
 }
 
 .tv-symbol-list {
@@ -327,22 +377,47 @@
 }
 
 .tv-symbol-item {
-    padding: 1rem;
+    padding: 1.1rem 1.25rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: background 0.2s ease;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     gap: 1rem;
+    position: relative;
+}
+
+.tv-symbol-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #1AFFD5, #0D9488);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .tv-symbol-item:hover {
-    background: rgba(26, 255, 213, 0.08);
+    background: linear-gradient(90deg, rgba(26, 255, 213, 0.08) 0%, rgba(26, 255, 213, 0.03) 100%);
+    transform: translateX(2px);
+    border-bottom-color: rgba(26, 255, 213, 0.1);
+}
+
+.tv-symbol-item:hover::before {
+    opacity: 0.5;
 }
 
 .tv-symbol-item.active {
-    background: rgba(26, 255, 213, 0.15);
+    background: linear-gradient(90deg, rgba(26, 255, 213, 0.2) 0%, rgba(26, 255, 213, 0.08) 100%);
+    border-bottom-color: rgba(26, 255, 213, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.tv-symbol-item.active::before {
+    opacity: 1;
 }
 
 .tv-symbol-left {
@@ -1660,6 +1735,40 @@
 
 .tv-input:focus {
     outline: none;
+}
+
+.tv-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.tv-input.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.tv-helper-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 11px;
+    color: #848e9c;
+    line-height: 1.4;
+}
+
+.tv-error-message {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 11px;
+    color: #dc3545;
+    line-height: 1.4;
+    padding: 0.25rem 0.5rem;
+    background: rgba(220, 53, 69, 0.1);
+    border-left: 2px solid #dc3545;
+    border-radius: 4px;
+}
+
+.tv-error-message::before {
+    content: "⚠ ";
+    font-weight: bold;
 }
 
 .tv-input-suffix {

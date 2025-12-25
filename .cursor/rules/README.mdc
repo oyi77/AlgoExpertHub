@@ -10,7 +10,7 @@ alwaysApply: true
 This directory contains comprehensive cursor rules that codify the technical architecture, business logic, and development patterns for the trading signal platform. These rules serve as persistent memory for AI-assisted development.
 
 ## Platform Summary
-**AlgoExpertHub** is a Laravel-based subscription platform for distributing trading signals across Forex, Crypto, and Stock markets. The platform features:
+**AlgoExpertHub** is a Laravel 10-based subscription platform for distributing trading signals across Forex, Crypto, and Stock markets. The platform features:
 - Multi-plan subscription system with payment gateway integration
 - Signal creation, publishing, and distribution (manual & automated)
 - Multi-channel signal ingestion (Telegram, API, Web scraping, RSS)
@@ -117,11 +117,13 @@ This directory contains comprehensive cursor rules that codify the technical arc
   - Route naming, view naming, configuration
   - Permissions, queue jobs, scheduled tasks
 - Installed addons:
+  - **Trading Management Addon**: Unified trading system (data, filtering, AI, risk, execution, backtesting)
   - **Multi-Channel Signal Addon**: Signal ingestion from Telegram, API, RSS, web scraping
-  - **Trading Execution Engine Addon**: Auto-execute trades on exchanges/brokers
-  - **Trading Preset Addon**: Risk management presets (position sizing, SL/TP, etc.)
+  - **AI Connection Addon**: Centralized AI provider management (OpenAI, Gemini, OpenRouter)
+  - **Page Builder Addon**: Drag-and-drop page builder with Laravel-Pagebuilder
+  - **OpenRouter Integration Addon**: Access to 400+ AI models via OpenRouter
   - **Trading Bot Signal Addon**: Firebase integration for bot notifications
-  - **Copy Trading Addon**: Social trading (basic structure)
+  - **AlgoExpert Plus Addon**: Premium features and enhancements
 - Addon management (admin interface: upload, enable/disable, modules)
 - Testing addons
 - Best practices (loose coupling, database isolation, error handling, security)
@@ -433,8 +435,8 @@ This directory contains comprehensive cursor rules that codify the technical arc
 ## Technology Stack Summary
 
 ### Core Technologies
-- **Framework**: Laravel 9.x
-- **PHP**: 8.0.2+
+- **Framework**: Laravel 10.x
+- **PHP**: 8.1+
 - **Database**: MySQL
 - **Queue**: Database (or Redis)
 - **Cache**: File (or Redis)
@@ -476,6 +478,6 @@ These rules are living documents. As the codebase evolves:
 
 ---
 
-**Last Updated**: 2025-12-02
-**Version**: 1.0
+**Last Updated**: 2025-12-22
+**Version**: 2.0
 **Maintained By**: AI-Assisted Development Team

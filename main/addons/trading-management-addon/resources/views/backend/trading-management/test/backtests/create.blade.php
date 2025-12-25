@@ -138,7 +138,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const symbolInput = document.getElementById('symbol');

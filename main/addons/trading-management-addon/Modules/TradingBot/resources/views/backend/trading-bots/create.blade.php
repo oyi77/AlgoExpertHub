@@ -620,7 +620,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Form progress tracking

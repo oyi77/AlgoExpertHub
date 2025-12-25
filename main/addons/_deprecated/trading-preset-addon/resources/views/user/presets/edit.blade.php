@@ -180,7 +180,7 @@
     <script src="{{ Config::jsLib('backend', 'select2.min.js') }}"></script>
 @endpush
 
-@push('script')
+@push('scripts')
     @include('trading-preset-addon::backend.presets.partials.scripts')
 @endpush
 

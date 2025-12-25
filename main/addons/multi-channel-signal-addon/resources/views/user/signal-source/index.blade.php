@@ -5,21 +5,33 @@
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h4 class="mb-0">{{ __('My Signal Sources') }}</h4>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('user.signal-sources.create', ['type' => 'telegram']) }}" class="btn sp_theme_btn">
-                    <i class="lab la-telegram-plane me-1"></i> {{ __('Add Telegram') }}
-                </a>
-                <a href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}" class="btn btn-outline-primary">
-                    <i class="las la-mobile me-1"></i> {{ __('Add Telegram MTProto') }}
-                </a>
-                <a href="{{ route('user.signal-sources.create', ['type' => 'api']) }}" class="btn btn-outline-secondary">
-                    <i class="las la-code-branch me-1"></i> {{ __('Add API') }}
-                </a>
-                <a href="{{ route('user.signal-sources.create', ['type' => 'web_scrape']) }}" class="btn btn-outline-info">
-                    <i class="las la-spider me-1"></i> {{ __('Add Web Scrape') }}
-                </a>
-                <a href="{{ route('user.signal-sources.create', ['type' => 'rss']) }}" class="btn btn-outline-success">
-                    <i class="las la-rss me-1"></i> {{ __('Add RSS') }}
-                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success btn-lg dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #10b981 !important;">
+                        <i class="las la-plus me-1"></i> {{ __('Add Signal Source') }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'telegram_mtproto']) }}">
+                                <i class="lab la-telegram-plane me-2"></i> {{ __('Telegram') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'api']) }}">
+                                <i class="las la-code-branch me-2"></i> {{ __('API / Webhook') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'web_scrape']) }}">
+                                <i class="las la-spider me-2"></i> {{ __('Web Scrape') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('user.signal-sources.create', ['type' => 'rss']) }}">
+                                <i class="las la-rss me-2"></i> {{ __('RSS Feed') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -204,7 +216,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         document.querySelectorAll('.test-connection-btn').forEach(btn => {
             btn.addEventListener('click', function() {

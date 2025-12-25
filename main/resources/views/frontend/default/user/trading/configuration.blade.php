@@ -80,7 +80,8 @@
                         <!-- Connections Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'data-connections' ? 'show active' : '' }}" 
                              id="data-connections" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             data-loaded="{{ $activeTab === 'data-connections' ? 'true' : 'false' }}">
                             @if(isset($dataConnections) && $dataConnections->count() > 0)
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="mb-0">{{ __('My Connections') }}</h5>
@@ -113,12 +114,19 @@
                                             @foreach($dataConnections as $conn)
                                             <tr>
                                                 <td><strong>{{ $conn->name }}</strong></td>
-                                                <td>{{ $conn->provider ?? $conn->exchange_name ?? 'N/A' }}</td>
+                                                <td>{{ \App\Helpers\Helper\Helper::formatProviderName($conn->provider ?? $conn->exchange_name ?? 'N/A') }}</td>
                                                 <td>
-                                                    @if(isset($conn->connection_type))
-                                                        <span class="badge bg-info">{{ str_replace('_', ' ', $conn->connection_type) }}</span>
-                                                    @elseif(isset($conn->exchange_type))
-                                                         <span class="badge bg-info">{{ $conn->exchange_type }}</span>
+                                                    @php
+                                                        $connType = $conn->connection_type ?? $conn->exchange_type ?? $conn->type ?? null;
+                                                    @endphp
+                                                    @if($connType)
+                                                        @if($connType === 'CRYPTO_EXCHANGE' || $connType === 'ccxt_crypto')
+                                                            <span class="badge bg-primary">{{ __('Crypto Exchange') }}</span>
+                                                        @elseif($connType === 'FX_BROKER' || $connType === 'mtapi')
+                                                            <span class="badge bg-success">{{ __('FX Broker') }}</span>
+                                                        @else
+                                                            <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $connType)) }}</span>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-secondary">{{ __('Unknown') }}</span>
                                                     @endif
@@ -143,6 +151,20 @@
                                                     <a href="{{ $showRoute }}" 
                                                        class="btn btn-xs btn-outline-info">
                                                         <i class="las la-eye"></i> {{ __('View') }}
+                                                    </a>
+                                                    @endif
+                                                    @php
+                                                        $editRoute = null;
+                                                        if (Route::has('user.exchange-connections.edit')) {
+                                                            $editRoute = route('user.exchange-connections.edit', $conn->id);
+                                                        } elseif (Route::has('user.execution-connections.edit')) {
+                                                            $editRoute = route('user.execution-connections.edit', $conn->id);
+                                                        }
+                                                    @endphp
+                                                    @if($editRoute)
+                                                    <a href="{{ $editRoute }}" 
+                                                       class="btn btn-xs btn-outline-primary">
+                                                        <i class="las la-edit"></i> {{ __('Edit') }}
                                                     </a>
                                                     @endif
                                                 </td>
@@ -172,7 +194,8 @@
                         <!-- Risk Presets Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'risk-presets' ? 'show active' : '' }}" 
                              id="risk-presets" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             data-loaded="{{ $activeTab === 'risk-presets' ? 'true' : 'false' }}">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">{{ __('My Risk Presets') }}</h5>
                                 <div class="d-flex gap-2">
@@ -265,7 +288,8 @@
                         <!-- Smart Risk Management Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'smart-risk' ? 'show active' : '' }}" 
                              id="smart-risk" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             data-loaded="{{ $activeTab === 'smart-risk' ? 'true' : 'false' }}">
                             @if(isset($smartRiskSettings))
                                 <div class="alert alert-info">
                                     <i class="las la-info-circle"></i>
@@ -318,7 +342,8 @@
                         <!-- Filter Strategies Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'filter-strategies' ? 'show active' : '' }}" 
                              id="filter-strategies" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             data-loaded="{{ $activeTab === 'filter-strategies' ? 'true' : 'false' }}">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">{{ __('My Filter Strategies') }}</h5>
                                 <div class="d-flex gap-2">
@@ -394,7 +419,8 @@
                         <!-- AI Model Profiles Tab -->
                         <div class="tab-pane fade {{ $activeTab === 'ai-profiles' ? 'show active' : '' }}" 
                              id="ai-profiles" 
-                             role="tabpanel">
+                             role="tabpanel"
+                             data-loaded="{{ $activeTab === 'ai-profiles' ? 'true' : 'false' }}">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">{{ __('My AI Model Profiles') }}</h5>
                                 <div class="d-flex gap-2">
@@ -469,16 +495,80 @@
     @endif
 </div>
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'
         
-        // Function to switch tabs and update URL
+        // Function to switch tabs and update URL WITHOUT page reload
         function switchTab(tabName) {
+            // Update URL without reload
             const url = new URL(window.location);
             url.searchParams.set('tab', tabName);
-            window.location.href = url.toString();
+            window.history.replaceState({}, '', url);
+            
+            // Activate the tab using Bootstrap's tab API
+            const tabLink = document.querySelector(`#configurationTabs a[href="#${tabName}"]`);
+            if (tabLink) {
+                const tab = new bootstrap.Tab(tabLink);
+                tab.show();
+                
+                // Load tab content via AJAX if not already loaded
+                loadTabContent(tabName);
+            }
+        }
+        
+        // Function to load tab content via AJAX
+        function loadTabContent(tabName) {
+            const tabPane = document.getElementById(tabName);
+            if (!tabPane) return;
+            
+            // Check if content is already loaded (has data attribute)
+            if (tabPane.dataset.loaded === 'true') {
+                return;
+            }
+            
+            // Show loading state
+            const originalContent = tabPane.innerHTML;
+            tabPane.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading ${tabName.replace('-', ' ')}...</p>
+                </div>
+            `;
+            
+            // Fetch content via AJAX
+            fetch(`${window.location.pathname}?tab=${tabName}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Parse the response and extract the tab content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById(tabName);
+                
+                if (newContent) {
+                    tabPane.innerHTML = newContent.innerHTML;
+                    tabPane.dataset.loaded = 'true';
+                } else {
+                    // Fallback: restore original content
+                    tabPane.innerHTML = originalContent;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading tab content:', error);
+                tabPane.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="las la-exclamation-triangle"></i>
+                        Failed to load content. <a href="${window.location.pathname}?tab=${tabName}" class="alert-link">Click here to reload</a>.
+                    </div>
+                `;
+            });
         }
         
         // Make switchTab available globally
@@ -488,9 +578,10 @@
         const tabParam = urlParams.get('tab');
         
         if (tabParam) {
-            const tabLink = $('#configurationTabs a[href="#' + tabParam + '"]');
-            if (tabLink.length) {
-                const tab = new bootstrap.Tab(tabLink[0]);
+            const tabLink = document.querySelector(`#configurationTabs a[href="#${tabParam}"]`);
+            if (tabLink) {
+                // Activate tab on page load using Bootstrap API
+                const tab = new bootstrap.Tab(tabLink);
                 tab.show();
             }
         }

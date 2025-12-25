@@ -251,7 +251,7 @@
     <script src="{{ Config::jsLib('backend', 'chartjs.min.js') }}"></script>
 @endpush
 
-@push('script')
+@push('scripts')
     <script>
         $(function() {
             'use strict'

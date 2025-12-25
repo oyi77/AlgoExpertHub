@@ -63,7 +63,7 @@
     </form>
 @endsection
 
-@push('script')
+@push('scripts')
     <script>
         "use strict";
 

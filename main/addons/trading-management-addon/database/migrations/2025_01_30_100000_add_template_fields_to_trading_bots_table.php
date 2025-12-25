@@ -19,12 +19,19 @@ class AddTemplateFieldsToTradingBotsTable extends Migration
 {
     public function up()
     {
-        // Skip if table doesn't exist
-        if (!Schema::hasTable('trading_bots')) {
+        // Check for both possible table names
+        $tableName = Schema::hasTable('sp_trading_bots') ? 'sp_trading_bots' : (Schema::hasTable('trading_bots') ? 'trading_bots' : null);
+        
+        if (!$tableName) {
             return;
         }
 
-        Schema::table('trading_bots', function (Blueprint $table) {
+        // Skip if columns already exist
+        if (Schema::hasColumn($tableName, 'is_default_template')) {
+            return;
+        }
+
+        Schema::table($tableName, function (Blueprint $table) {
             // Template/Visibility fields
             $table->enum('visibility', ['PRIVATE', 'PUBLIC_MARKETPLACE'])->default('PRIVATE')->after('win_rate');
             $table->boolean('clonable')->default(true)->after('visibility');
@@ -46,11 +53,14 @@ class AddTemplateFieldsToTradingBotsTable extends Migration
 
     public function down()
     {
-        if (!Schema::hasTable('trading_bots')) {
+        // Check for both possible table names
+        $tableName = Schema::hasTable('sp_trading_bots') ? 'sp_trading_bots' : (Schema::hasTable('trading_bots') ? 'trading_bots' : null);
+        
+        if (!$tableName) {
             return;
         }
 
-        Schema::table('trading_bots', function (Blueprint $table) {
+        Schema::table($tableName, function (Blueprint $table) {
             $table->dropForeign(['created_by_user_id']);
             $table->dropIndex(['visibility']);
             $table->dropIndex(['is_default_template']);

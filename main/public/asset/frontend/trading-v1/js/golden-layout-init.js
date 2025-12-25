@@ -296,6 +296,18 @@
                     if (window.initializeOrderForm) {
                         window.initializeOrderForm();
                     }
+
+                    // Update mode indicator to reflect current mode
+                    // This is needed because the template has server-rendered mode text
+                    const orderPanelMode = element.querySelector('#orderPanelMode');
+                    const orderPanelModeText = element.querySelector('#orderPanelModeText');
+                    if (orderPanelMode && orderPanelModeText && window.currentMode) {
+                        const mode = window.currentMode;
+                        orderPanelMode.className = 'tv-order-mode-indicator ' + (mode === 'demo' ? 'demo' : 'real');
+                        const demoText = orderPanelMode.dataset.demoText || 'Demo Mode';
+                        const realText = orderPanelMode.dataset.realText || 'Real Trading';
+                        orderPanelModeText.textContent = mode === 'demo' ? demoText : realText;
+                    }
                 }, 100);
             }
         });

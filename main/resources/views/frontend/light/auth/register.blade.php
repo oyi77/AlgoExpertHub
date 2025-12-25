@@ -95,7 +95,7 @@
                 class="sp_site_color">{{ __('Login') }}</a></p>
     @endsection
 
-    @push('script')
+    @push('scripts')
         <script>
             "use strict";
 

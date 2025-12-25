@@ -378,7 +378,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <style>
     .nav-tabs {
         border-bottom: 2px solid #ddd;
@@ -399,7 +399,7 @@
 </style>
 @endpush
 
-@push('script')
+@push('scripts')
 <script>
     $(function() {
         'use strict'

@@ -90,7 +90,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 $(document).ready(function() {
     $('#positionSizeMode').change(function() {

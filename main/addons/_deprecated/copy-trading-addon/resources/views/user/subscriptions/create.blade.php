@@ -98,7 +98,7 @@
     </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <script>
 function toggleModeFields() {
     const easyMode = document.getElementById('mode_easy').checked;

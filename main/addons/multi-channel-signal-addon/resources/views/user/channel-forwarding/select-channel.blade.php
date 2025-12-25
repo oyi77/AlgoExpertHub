@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    @push('script')
+    @push('scripts')
     <script>
         function selectChannel(channelId, channelType) {
             // Uncheck all radios

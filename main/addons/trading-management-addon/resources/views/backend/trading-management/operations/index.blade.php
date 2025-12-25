@@ -453,7 +453,7 @@
     </div>
 </div>
 
-@push('script')
+@push('scripts')
 <script>
 function executeManualTrade() {
     const connectionId = document.getElementById('connection_id').value;
