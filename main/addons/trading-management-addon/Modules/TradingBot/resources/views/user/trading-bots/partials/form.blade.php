@@ -653,6 +653,141 @@
     </div>
 </div>
 
+{{-- Step 8: Advanced Configuration (Optional) --}}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fa fa-cog"></i> Step 8: Advanced Configuration (Optional)
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="form-group">
+            <label for="data_fetch_interval">{{ __('Data Fetch Interval (seconds)') }}</label>
+            <input type="number" 
+                   class="form-control @error('data_fetch_interval') is-invalid @enderror" 
+                   id="data_fetch_interval" 
+                   name="data_fetch_interval" 
+                   value="{{ old('data_fetch_interval', isset($bot) && $bot ? ($bot->data_fetch_interval ?? 60) : 60) }}" 
+                   min="10" 
+                   max="3600">
+            <small class="form-text text-muted">{{ __('Interval in seconds for fetching market data. Default: 60 seconds.') }}</small>
+            @error('data_fetch_interval')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label>{{ __('Filter Priority Configuration') }}</label>
+            <small class="form-text text-muted d-block mb-2">{{ __('Configure multiple filters with priority order. Leave empty to use single filter strategy above.') }}</small>
+            <div id="filter-priority-container">
+                @php
+                    $filterPriority = old('filter_priority', isset($bot) && $bot && $bot->filter_priority ? $bot->filter_priority : []);
+                @endphp
+                @if(!empty($filterPriority) && is_array($filterPriority))
+                    @foreach($filterPriority as $index => $filterConfig)
+                        <div class="filter-priority-item mb-3 p-3 border rounded">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <label>Filter Strategy</label>
+                                    <select name="filter_priority[{{ $index }}][filter_strategy_id]" class="form-control">
+                                        <option value="">-- Select Filter --</option>
+                                        @foreach($filterStrategies as $strategy)
+                                            <option value="{{ $strategy->id }}" 
+                                                    {{ ($filterConfig['filter_strategy_id'] ?? '') == $strategy->id ? 'selected' : '' }}>
+                                                {{ $strategy->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label>Priority</label>
+                                    <input type="number" name="filter_priority[{{ $index }}][priority]" 
+                                           class="form-control" 
+                                           value="{{ $filterConfig['priority'] ?? ($index + 1) }}" 
+                                           min="1">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Logic</label>
+                                    <select name="filter_priority[{{ $index }}][logic]" class="form-control">
+                                        <option value="AND" {{ ($filterConfig['logic'] ?? 'AND') == 'AND' ? 'selected' : '' }}>AND</option>
+                                        <option value="OR" {{ ($filterConfig['logic'] ?? '') == 'OR' ? 'selected' : '' }}>OR</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-danger btn-block remove-filter-priority">
+                                        <i class="fa fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+            <button type="button" class="btn btn-sm btn-secondary mt-2" id="add-filter-priority">
+                <i class="fa fa-plus"></i> Add Filter
+            </button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    // Filter Priority Management
+    document.addEventListener('DOMContentLoaded', function() {
+        let filterPriorityIndex = {{ !empty($filterPriority) && is_array($filterPriority) ? count($filterPriority) : 0 }};
+        
+        document.getElementById('add-filter-priority')?.addEventListener('click', function() {
+            const container = document.getElementById('filter-priority-container');
+            const filterStrategies = @json($filterStrategies ?? []);
+            
+            const html = `
+                <div class="filter-priority-item mb-3 p-3 border rounded">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label>Filter Strategy</label>
+                            <select name="filter_priority[${filterPriorityIndex}][filter_strategy_id]" class="form-control">
+                                <option value="">-- Select Filter --</option>
+                                ${filterStrategies.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Priority</label>
+                            <input type="number" name="filter_priority[${filterPriorityIndex}][priority]" 
+                                   class="form-control" 
+                                   value="${filterPriorityIndex + 1}" 
+                                   min="1">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Logic</label>
+                            <select name="filter_priority[${filterPriorityIndex}][logic]" class="form-control">
+                                <option value="AND">AND</option>
+                                <option value="OR">OR</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-danger btn-block remove-filter-priority">
+                                <i class="fa fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', html);
+            filterPriorityIndex++;
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-filter-priority')) {
+                e.target.closest('.filter-priority-item').remove();
+            }
+        });
+    });
+</script>
+@endpush
+
 {{-- Submit Buttons --}}
 <div class="d-flex justify-content-between">
     <a href="{{ isset($bot) ? route('user.trading-management.trading-bots.show', $bot->id) : route('user.trading-management.trading-bots.index') }}" class="btn btn-secondary">

@@ -92,20 +92,102 @@
             </div>
         </div>
 
-        <!-- Equity Curve (Simple placeholder - can be enhanced with Chart.js) -->
+        <!-- Equity Curve Chart -->
         <div class="col-12">
             <div class="sp_site_card">
                 <div class="card-header">
                     <h5 class="mb-0">{{ __('Equity Curve') }}</h5>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="las la-info-circle"></i> 
-                        {{ __('Equity curve visualization will be available in a future update.') }}
+                    <canvas id="equityCurveChart" height="80"></canvas>
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            {{ __('Account balance over time') }}
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
+
+        @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Generate equity curve data from trades
+                const trades = @json($trades->items() ?? []);
+                const initialBalance = {{ $backtest->initial_balance }};
+                const finalBalance = {{ $backtest->final_balance }};
+                
+                // Calculate equity curve points
+                let balance = initialBalance;
+                const equityData = [balance];
+                const labels = ['Start'];
+                
+                // Sort trades by entry time
+                const sortedTrades = trades.sort((a, b) => {
+                    return new Date(a.entry_time) - new Date(b.entry_time);
+                });
+                
+                sortedTrades.forEach((trade, index) => {
+                    balance += parseFloat(trade.profit_loss || 0);
+                    equityData.push(balance);
+                    labels.push(new Date(trade.exit_time || trade.entry_time).toLocaleDateString());
+                });
+                
+                // Add final balance point
+                if (equityData.length === 1) {
+                    equityData.push(finalBalance);
+                    labels.push('End');
+                }
+                
+                // Create chart
+                const ctx = document.getElementById('equityCurveChart');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '{{ __('Account Balance') }}',
+                                data: equityData,
+                                borderColor: balance >= initialBalance ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)',
+                                backgroundColor: balance >= initialBalance ? 'rgba(75, 192, 192, 0.2)' : 'rgba(255, 99, 132, 0.2)',
+                                tension: 0.1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return '$' + context.parsed.y.toFixed(2);
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toFixed(2);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+        @endpush
 
         <!-- Trade List -->
         <div class="col-12">
