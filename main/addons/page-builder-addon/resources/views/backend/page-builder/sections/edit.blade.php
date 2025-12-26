@@ -194,12 +194,27 @@ function initEditor() {
             const firstElement = @json($elements->first());
             if (firstElement && firstElement.content) {
                 try {
-                    const content = typeof firstElement.content === 'string' 
+                    let content = typeof firstElement.content === 'string'
                         ? JSON.parse(firstElement.content) 
                         : firstElement.content;
+
+                    let css = null;
+
+                    // Check for new structure { components: ..., css: ..., html: ... }
+                    if (content && !Array.isArray(content) && content.components) {
+                         css = content.css;
+                         content = content.components;
+                    }
+
                     editor.setComponents(content);
-                    if (firstElement.css) {
-                        editor.setStyle(firstElement.css);
+
+                    // Fallback to legacy css property if not in content object
+                    if (!css && firstElement.css) {
+                        css = firstElement.css;
+                    }
+
+                    if (css) {
+                        editor.setStyle(css);
                     }
                 } catch (e) {
                     console.warn('Could not load existing content:', e);
@@ -219,7 +234,7 @@ function initEditor() {
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i data-feather="loader" class="spin"></i> {{ __("Saving...") }}';
 
-                fetch('{{ route("admin.page-builder.sections.update", $sectionName) }}', {
+                fetch('{{ route("admin.page-builder.sections.update", $sectionName) }}?theme={{ $theme }}', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
