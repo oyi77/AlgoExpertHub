@@ -128,9 +128,35 @@ class SectionController extends Controller
                 $html = $request->input('html');
                 $css = $request->input('css');
                 $content = $request->input('content');
-                
-                // TODO: Convert pagebuilder content to Content model format
-                // For now, return success
+                $theme = $request->input('theme', $request->get('theme', 'default'));
+
+                // Convert pagebuilder content to Content model format
+                $sectionContent = [
+                    'components' => $content,
+                    'css' => $css,
+                    'html' => $html
+                ];
+
+                $contentModel = Content::where('name', $name)
+                    ->where('type', 'iteratable')
+                    ->where('theme', $theme)
+                    ->first();
+
+                if ($contentModel) {
+                    $contentModel->content = $sectionContent;
+                    $contentModel->save();
+                } else {
+                    $defaultLang = \App\Models\Language::where('status', 0)->first();
+                    $languageId = $defaultLang ? $defaultLang->id : 0;
+
+                    Content::create([
+                        'name' => $name,
+                        'type' => 'iteratable',
+                        'theme' => $theme,
+                        'content' => $sectionContent,
+                        'language_id' => $languageId
+                    ]);
+                }
                 
                 return response()->json([
                     'success' => true,
