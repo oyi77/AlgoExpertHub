@@ -42,9 +42,9 @@ class UserDashboardService
         $data['totalPayments'] = $user->payments()->where('status', 1)->sum('amount');
         $data['totalSupportTickets'] = $user->tickets()->count();
         $data['user'] = $user;
-        $data['transactions'] = $user->transactions()->latest()->with('user')->limit(3)->get();
+        $data['transactions'] = $user->transactions()->latest()->limit(3)->get();
 
-        $data['signals'] = DashboardSignal::where('user_id', $user->id)->latest()->with('signal.market', 'signal.pair', 'signal.time', 'user')->paginate(Helper::pagination());
+        $data['signals'] = DashboardSignal::where('user_id', $user->id)->latest()->with('signal.market', 'signal.pair', 'signal.time')->paginate(Helper::pagination());
 
 
         $months = array();
