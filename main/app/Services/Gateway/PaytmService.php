@@ -1,85 +1,78 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
-class PaytmService
+class PaytmService extends BaseAdapter
 {
-    private static $sandbox_endpoint_payment = 'https://securegw-stage.paytm.in/theia/processTransaction';
-    private static $production_endpoint_payment = 'https://securegw.paytm.in/theia/processTransaction';
+    private const SANDBOX_ENDPOINT = 'https://securegw-stage.paytm.in/theia/processTransaction';
+    private const PRODUCTION_ENDPOINT = 'https://securegw.paytm.in/theia/processTransaction';
 
-    public static function process($request, $paytm, $totalAmount, $deposit)
+    /**
+     * Process payment with Paytm.
+     */
+    public static function process($request, $paytm, float $totalAmount, $deposit): array
     {
+        $paytmParams = [
+            'MID' => trim($paytm->parameter->merchant_id),
+            'WEBSITE' => trim($paytm->parameter->merchant_website),
+            'CHANNEL_ID' => trim($paytm->parameter->merchant_channel),
+            'INDUSTRY_TYPE_ID' => trim($paytm->parameter->merchant_industry),
+            'ORDER_ID' => $deposit->trx,
+            'TXN_AMOUNT' => round($totalAmount, 2),
+            'CUST_ID' => (string)$deposit->user_id,
+            'CALLBACK_URL' => route('user.payment.success', $paytm->name),
+        ];
 
+        $paytmParams['CHECKSUMHASH'] = (new paytmCheckSum())->getChecksumFromArray($paytmParams, $paytm->parameter->merchant_key);
 
-        $paytm_params['MID'] = trim($paytm->parameter->merchant_id);
-        $paytm_params['WEBSITE'] = trim($paytm->parameter->merchant_website);
-        $paytm_params['CHANNEL_ID'] = trim($paytm->parameter->merchant_channel);
-        $paytm_params['INDUSTRY_TYPE_ID'] = trim($paytm->parameter->merchant_industry);
+        $response = [
+            'paytm_params' => $paytmParams,
+            'redirect_url' => $paytm->parameter->mode ? self::PRODUCTION_ENDPOINT : self::SANDBOX_ENDPOINT
+        ];
 
-
-        $paytm_params['ORDER_ID'] = $deposit->trx;
-        $paytm_params['TXN_AMOUNT'] = round($totalAmount, 2);
-        $paytm_params['CUST_ID'] = $deposit->user_id;
-        $paytm_params['CALLBACK_URL'] = route('user.payment.success', $paytm->name);
-        $paytm_params['CHECKSUMHASH'] = (new paytmCheckSum())->getChecksumFromArray($paytm_params, $paytm->parameter->merchant_key);
-
-        $response['paytm_params'] = $paytm_params;
-        if ($paytm->parameter->mode) {
-            $response['redirect_url'] = self::$production_endpoint_payment;
-        } else {
-            $response['redirect_url'] = self::$sandbox_endpoint_payment;
-        }
-
-
-        return ['type' => 'success', 'data' => json_decode(json_encode($response))];
+        return (new static())->successResponse('Redirect to Paytm', ['data' => $response]);
     }
 
-    public function success(Request $request)
+    /**
+     * Handle success callback from Paytm.
+     */
+    public function success(Request $request): array
     {
+        $orderId = $request->input('ORDERID');
+        $type = session('type');
 
-        if (session('type') == 'deposit') {
-            $payment = Deposit::where('trx', $request['ORDERID'])->first();
+        if ($type === 'deposit') {
+            $payment = Deposit::where('trx', $orderId)->first();
         } else {
-            $payment = Payment::where('trx', $request['ORDERID'])->first();
+            $payment = Payment::where('trx', $orderId)->first();
         }
 
-
+        if (!$payment) {
+            return $this->error('Transaction not found');
+        }
 
         $ptm = new paytmCheckSum();
+        $paramList = $request->all();
+        $checksumHash = $request->input('CHECKSUMHASH', '');
+        
+        $isValidChecksum = $ptm->verifychecksum_e($paramList, $payment->gateway->parameter->merchant_key, $checksumHash);
 
-        $paytmChecksum = "";
-        $paramList = array();
-        $isValidChecksum = "FALSE";
-        $paramList = $_POST;
-        $paytmChecksum = isset($_POST["CHECKSUMHASH"]) ? $_POST["CHECKSUMHASH"] : "";
-        $isValidChecksum = $ptm->verifychecksum_e($paramList, $payment->gateway->parameter->merchant_key, $paytmChecksum);
+        if ($isValidChecksum === "TRUE") {
+            if ($request->input('STATUS') === "TXN_SUCCESS") {
+                $this->handlePaymentSuccess($payment, 0.0, $request->input('BANKTXNID', ''));
 
-        $amount_paid = $request['TXNAMOUNT'];
-
-        if ($isValidChecksum == "TRUE") {
-            if ($_POST["STATUS"] == "TXN_SUCCESS") {
-                $payment_mode = $request['PAYMENTMODE'];
-                if (isset($_POST['BANKNAME']) && !empty($request['BANKNAME'])) {
-                    $payment_id = $request['BANKNAME'] . '-' . $request['BANKTXNID'];
-                } else {
-                    $payment_id = $request['BANKTXNID'];
-                }
-                $order_id   = $request['ORDERID'];
-                $amount_received = $request['TXNAMOUNT'];
-
-                Helper::paymentSuccess($payment, 0, $request['BANKTXNID']);
-            } else {
-                return array('type' => 'error', 'message' => 'Payment Unsuccessfull');
+                return $this->success('Payment Successful');
             }
-        } else {
-            return array('type' => 'error', 'message' => 'Some Error Occured');
+            
+            return $this->error('Payment Unsuccessful');
         }
 
-        return array('type' => 'success', 'message' => 'Payment Successfull');
+        return $this->error('Checksum verification failed');
     }
 }

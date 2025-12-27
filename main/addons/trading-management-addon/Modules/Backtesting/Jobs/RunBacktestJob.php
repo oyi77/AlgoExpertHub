@@ -78,8 +78,10 @@ class RunBacktestJob implements ShouldQueue
                 'win_rate' => $result->win_rate,
             ]);
 
-            // TODO: Send notification to user
-            // event(new BacktestCompleted($this->backtest));
+            // Send notification to user
+            if ($this->backtest->user) {
+                $this->backtest->user->notify(new \Addons\TradingManagement\Modules\Backtesting\Notifications\BacktestCompletedNotification($this->backtest));
+            }
 
         } catch (\Exception $e) {
             Log::error('Backtest execution failed', [

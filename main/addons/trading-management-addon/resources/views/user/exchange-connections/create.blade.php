@@ -680,24 +680,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // SHOW credentials for everything else
                 setDisplay(credentialsCard, true);
+                setDisplay(apiKeyField, true);
+                setDisplay(apiSecretField, true);
                 
                 if (isCrypto) {
-                    setDisplay(apiKeyField, true);
-                    setDisplay(apiSecretField, true);
-                    
                     let needsPassphrase = false;
                     // Check passphrase requirement
                     if (ccxtExchanges[provider]) {
                         needsPassphrase = ccxtExchanges[provider].needs_passphrase;
                     } else {
-                         needsPassphrase = ['okx', 'kucoin', 'coinbasepro', 'coinbase'].includes(provider);
+                         needsPassphrase = ['okx', 'kucoin', 'coinbasepro', 'coinbase', 'bybit'].includes(provider);
                     }
 
                     setDisplay(apiPassphraseField, true);
-                    if (document.getElementById('apiPassphraseInput')) {
-                        document.getElementById('apiPassphraseInput').style.display = 'block';
-                    }
-
+                    
                     const passphraseOptional = document.getElementById('apiPassphraseOptional');
                     if (passphraseOptional) {
                         if (needsPassphrase) {
@@ -714,8 +710,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     providerHint.textContent = '{{ __('Enter your API credentials from the exchange') }}';
                 } else {
                     // MTApi or other Forex providers
-                    setDisplay(apiKeyField, true);
-                    setDisplay(apiSecretField, true);
                     setDisplay(apiPassphraseField, false); // No passphrase for basic forex API
                     
                     // Show test connection button for forex providers too

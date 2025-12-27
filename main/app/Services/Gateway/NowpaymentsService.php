@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
 use App\Models\Configuration;
 
-
-class NowpaymentsService
+class NowpaymentsService extends BaseAdapter
 {
     public static function process($request, $gateway, $total, $deposit)
     {
         $client = new NowPaymentsAPI($gateway->parameter->nowpay_key);
-
         $general = Configuration::first();
 
         $payment = $client->createInvoice([
@@ -19,15 +19,17 @@ class NowpaymentsService
             "pay_currency" => "btc",
             "ipn_callback_url" => "https://nowpayments.io",
             "order_id" => $deposit->trx,
-            "order_description" => "Plan Purchage",
-            'success_url'=> "{{route('user.payment.success', $gateway->name)}}", 
-	        'cancel_url'=>"{{route('user.payment.success', $gateway->name)}}"
+            "order_description" => "Plan Purchase",
+            'success_url' => route('user.payment.success', $gateway->name), 
+            'cancel_url' => route('user.payment.success', $gateway->name)
         ]);
 
+        $data = json_decode($payment);
 
-        $a = json_decode($payment);
+        if ($data) {
+            return (new static())->success('Payment link created', ['invoice' => $data]);
+        }
 
-
-        return ['type' => 'success' , 'data' => $a];
+        return (new static())->error('Something Goes Wrong');
     }
 }

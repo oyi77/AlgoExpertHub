@@ -1,37 +1,51 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
-class VougepayService
+class VougepayService extends BaseAdapter
 {
-    public function success(Request $request)
+    /**
+     * Handle success callback from Vougepay.
+     */
+    public function success(Request $request): array
     {
-
         $request->validate([
             'transaction_id' => 'required'
         ]);
-        $vougue_url = "https://voguepay.com/?v_transaction_id=$request->transaction_id&type=json";
+
+        $vogueUrl = "https://voguepay.com/?v_transaction_id={$request->transaction_id}&type=json";
+        
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_URL, $vougue_url);
+        curl_setopt($ch, CURLOPT_URL, $vogueUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $vougueData = curl_exec($ch);
+        $vogueData = curl_exec($ch);
         curl_close($ch);
 
-        $vougueData = json_decode($vougueData);
-        $transaction_id = $vougueData->merchant_ref;
-
-        $deposit = Payment::where('trx', $transaction_id)->first();
-        if ($vougueData->status == "Approved") {
-            Helper::paymentSuccess($deposit, $deposit->charge, $request->transaction_id);
-
-            return ['type' => 'success', 'message' => 'Payment Successfull'];
+        $data = json_decode((string)$vogueData);
+        
+        if (!$data || !isset($data->merchant_ref)) {
+            return $this->error('Invalid response from Vougepay');
         }
 
-        return ['type' => 'error', 'message' => 'Payment Successfull'];
+        $transactionId = $data->merchant_ref;
+        $deposit = Payment::where('trx', $transactionId)->first();
+
+        if (!$deposit) {
+            return $this->error('Transaction not found');
+        }
+
+        if ($data->status === "Approved") {
+            $this->handlePaymentSuccess($deposit, (float)$deposit->charge, (string)$request->transaction_id);
+
+            return $this->success('Payment Successful');
+        }
+
+        return $this->error('Payment not approved');
     }
 }

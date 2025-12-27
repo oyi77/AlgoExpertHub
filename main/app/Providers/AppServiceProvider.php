@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
 
         // Enable database query logging
-        if (env('LOG_QUERIES', true)) {
+        if (env('LOG_QUERIES', false)) {
             DB::listen(function ($query) {
                 $sql = $query->sql;
                 $bindings = $query->bindings;

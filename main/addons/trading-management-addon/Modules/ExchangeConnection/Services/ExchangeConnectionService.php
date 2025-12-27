@@ -17,6 +17,12 @@ use Illuminate\Support\Facades\Log;
 class ExchangeConnectionService
 {
     /**
+     * Runtime cache for adapter instances
+     * @var array
+     */
+    protected static array $adapters = [];
+
+    /**
      * Test connection health
      * 
      * @param ExchangeConnection $connection
@@ -148,6 +154,11 @@ class ExchangeConnectionService
      */
     public function getAdapter(ExchangeConnection $connection)
     {
+        $cacheKey = $connection->id;
+        if (isset(self::$adapters[$cacheKey])) {
+            return self::$adapters[$cacheKey];
+        }
+
         $connectionType = $connection->connection_type ?? null;
         $provider = $connection->provider ?? $connection->exchange_name ?? null;
         $type = $connection->type ?? null; // legacy: 'crypto' or 'fx'
@@ -191,11 +202,17 @@ class ExchangeConnectionService
                 $credentials['timeout'] = $globalSettings['timeout'];
             }
             
-            return new MtapiGrpcAdapter($credentials);
+            $adapter = new MtapiGrpcAdapter($credentials);
         } else {
             // Default: MTAPI REST adapter (for FX brokers)
-            return new MtapiAdapter($connection->credentials ?? []);
+            $adapter = new MtapiAdapter($connection->credentials ?? []);
         }
+
+        if (isset($cacheKey)) {
+            self::$adapters[$cacheKey] = $adapter;
+        }
+
+        return $adapter;
     }
 
     /**

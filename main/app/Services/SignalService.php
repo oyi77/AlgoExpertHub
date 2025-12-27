@@ -1,4 +1,4 @@
-<?php
+declare(strict_types=1);
 
 namespace App\Services;
 
@@ -12,6 +12,8 @@ use App\Services\CacheManager;
 use App\Services\BaseService;
 use Telegram\Bot\Api;
 use Telegram\Bot\Laravel\Facades\Telegram;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 use NotificationChannels\Telegram\TelegramUpdates;
 
@@ -475,5 +477,48 @@ class SignalService extends BaseService
 
             curl_exec($curl);
         }
+    public function allSignals(array $params): array
+    {
+        return $this->cacheResult('signals-all-' . auth()->id() . '-' . md5(serialize($params)), function () use ($params) {
+            $user = auth()->user();
+            $currentPlan = $user->currentplan()->first();
+            
+            if ($currentPlan) {
+                $signals = Signal::where('is_published', 1)
+                    ->when($params['search'] ?? null, function ($query, $search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->where('id', $search)
+                                ->orWhere('title', 'LIKE', '%' . $search . '%');
+                        });
+                    })
+                    ->whereHas('plans', function ($query) use ($currentPlan) {
+                        $query->where('plans.id', $currentPlan->plan_id);
+                    })
+                    ->latest('published_date')
+                    ->with('plans', 'pair', 'time', 'market')
+                    ->paginate(Helper::pagination());
+            } else {
+                $signals = new LengthAwarePaginator(
+                    collect([]), 
+                    0, 
+                    Helper::pagination(), 
+                    1
+                );
+            }
+
+            return $this->successResponse('Signals retrieved successfully', ['signals' => $signals]);
+        });
+    }
+
+    public function details(int $id): array
+    {
+        return $this->cacheResult('signal-details-' . $id, function () use ($id) {
+            try {
+                $signal = Signal::findOrFail($id);
+                return $this->successResponse('Signal details retrieved successfully', ['signal' => $signal]);
+            } catch (\Exception $e) {
+                return $this->errorResponse('Signal not found', [], 404);
+            }
+        });
     }
 }

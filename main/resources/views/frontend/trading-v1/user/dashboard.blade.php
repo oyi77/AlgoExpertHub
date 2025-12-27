@@ -160,14 +160,13 @@
                                             }
                                         }
                                         
-                                        // Determine signal status (simplified - would need actual position tracking)
-                                        $status = 'active'; // Default - would check if TP/SL hit in real implementation
-                                        $statusClass = 'success';
-                                        $statusIcon = 'circle';
-                                        if ($signal->published_date && $signal->published_date->lt(now()->subDays(7))) {
+                                        // Determine signal status
+                                        $status = $signal->outcome ?? 'active';
+                                        $statusHtml = \App\Helpers\Helper\Helper::formatSignalOutcome($status);
+                                        
+                                        if ($status == 'active' && $signal->published_date && $signal->published_date->lt(now()->subDays(7))) {
                                             $status = 'expired';
-                                            $statusClass = 'secondary';
-                                            $statusIcon = 'clock';
+                                            $statusHtml = \App\Helpers\Helper\Helper::formatSignalOutcome($status);
                                         }
                                         
                                         // Get source
@@ -199,9 +198,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $statusClass }}">
-                                                <i class="las la-{{ $statusIcon }}"></i> {{ ucfirst($status) }}
-                                            </span>
+                                            {!! $statusHtml !!}
                                         </td>
                                         <td>
                                             <small>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
@@ -82,6 +84,8 @@ abstract class BaseService
 
     /**
      * Validate required parameters
+     * 
+     * @throws \InvalidArgumentException
      */
     protected function validateRequired(array $data, array $required): void
     {
@@ -135,7 +139,7 @@ abstract class BaseService
             
             if (is_array($value)) {
                 $query->whereIn($field, $value);
-            } elseif (str_contains($value, '%')) {
+            } elseif (is_string($value) && str_contains($value, '%')) {
                 $query->where($field, 'like', $value);
             } else {
                 $query->where($field, $value);
