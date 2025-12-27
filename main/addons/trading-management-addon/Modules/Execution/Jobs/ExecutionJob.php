@@ -4,8 +4,9 @@ namespace Addons\TradingManagement\Modules\Execution\Jobs;
 
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection;
 use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
-use Addons\TradingManagement\Modules\DataProvider\Services\AdapterFactory;
 use Addons\TradingManagement\Modules\Execution\Services\MarketStatusChecker;
+use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
+use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -461,45 +462,21 @@ class ExecutionJob implements ShouldQueue
     }
 
     /**
-     * Create adapter for execution connection
-     */
-    /**
-     * Get adapter from ExchangeConnectionService
+     * Create adapter for execution connection using ExchangeConnectionService
      */
     protected function createAdapter(ExecutionConnection $connection)
     {
-        // Try to find the linked ExchangeConnection model if this is an ExecutionConnection
-        // Note: ExecutionConnection might be an alias or legacy model. 
-        // We assume we can cast or find the ExchangeConnection.
+        $service = app(ExchangeConnectionService::class);
         
-        $service = app(\Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService::class);
+        // Hydrate ExchangeConnection model from ExecutionConnection data
+        // They share the same table (execution_connections) so we can cast/hydrate safely
+        // This avoids an extra DB query while ensuring the service gets the expected model class
+        $exchangeConnection = new ExchangeConnection();
+        $exchangeConnection->setRawAttributes($connection->getAttributes(), true);
+        $exchangeConnection->exists = true;
+        $exchangeConnection->setConnection($connection->getConnectionName()); // Preserve DB connection
         
-        // If ExecutionConnection is just an ExchangeConnection (same table/model), pass it directly
-        // If they are different, we might need to find the ExchangeConnection.
-        // Based on analysis, they seem to share structure or be related.
-        // Let's assume for now we can pass it if it implements contract or keys exist.
-        // Actually, ExchangeConnectionService expects ExchangeConnection model.
-        
-        // Hack: Create ExchangeConnection instance from ExecutionConnection data if needed
-        // Or better: Use the adapter creation logic BUT using the proper classes.
-        
-        // Since we already updated Adapters to be consistent, we can just instantiate them matching ExchangeConnectionService logic
-        // but it's better to use the Service if possible.
-        
-        // If ExecutionConnection is legacy, we might need manual instantiation.
-        // But we want to use the new Adapters we updated.
-        
-        $provider = $connection->provider ?? $connection->exchange_name ?? 'binance';
-        $credentials = $connection->credentials ?? [];
-        
-        if ($provider === 'metaapi') {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter($credentials);
-        } elseif (strpos($provider, 'mtapi') !== false) {
-             return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter($credentials);
-        }
-        
-        // Default CCXT
-        return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter($provider, $credentials);
+        return $service->getAdapter($exchangeConnection);
     }
 
     /**
