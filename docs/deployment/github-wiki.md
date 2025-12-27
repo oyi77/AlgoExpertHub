@@ -210,9 +210,6 @@ cd repository.wiki
 
 ```bash
 # Copy wiki files
-cp -r /opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.qoder/repowiki/en/content/* .
-
-# Copy docs files
 cp -r /opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/docs/* .
 ```
 

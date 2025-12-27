@@ -136,11 +136,8 @@ mkdir -p mkdocs-site/docs/qoder
 mkdir -p mkdocs-site/docs/docs
 
 # Copy and flatten Qoder wiki
-cd .qoder/repowiki/en/content
-find . -name "*.md" -exec bash -c 'cp "$1" "../../../../mkdocs-site/docs/qoder/$(echo "$1" | sed "s/\//-/g" | sed "s/^.\-//g")"' _ {} \;
-
-# Copy docs folder
-cp -r docs/* mkdocs-site/docs/docs/
+cd docs
+find . -name "*.md" -exec bash -c 'cp "$1" "../mkdocs-site/docs/qoder/$(echo "$1" | sed "s/\//-/g" | sed "s/^.\-//g")"' _ {} \;
 
 # Create index page
 cat > mkdocs-site/docs/index.md << 'EOF'
@@ -213,8 +210,7 @@ cp -r site/* ../main/public/wiki/
 mkdir -p main/public/wiki
 
 # Copy documentation
-cp -r .qoder/repowiki/en/content/* main/public/wiki/
-cp -r docs/* main/public/wiki/docs/
+cp -r docs/* main/public/wiki/
 
 # Create index.html
 cat > main/public/wiki/index.html << 'EOF'
@@ -324,8 +320,7 @@ class DocumentationController extends Controller
             'html_input' => 'strip',
             'allow_unsafe_links' => false,
         ]);
-        $this->wikiPath = base_path('../.qoder/repowiki/en/content');
-        $this->docsPath = base_path('../docs');
+        $this->wikiPath = base_path('docs');
     }
     
     public function index()
@@ -483,8 +478,7 @@ git checkout -b gh-pages
 
 # Copy documentation
 mkdir -p docs
-cp -r .qoder/repowiki/en/content/* docs/wiki/
-cp -r docs/* docs/guides/
+cp -r docs/* docs/wiki/
 
 # Create _config.yml for Jekyll
 cat > _config.yml << 'EOF'
@@ -517,8 +511,7 @@ RUN apk add --no-cache python3 py3-pip
 RUN pip3 install markdown
 
 # Copy documentation
-COPY .qoder/repowiki/en/content /usr/share/nginx/html/wiki
-COPY docs /usr/share/nginx/html/docs
+COPY docs /usr/share/nginx/html/wiki
 
 # Convert markdown to HTML
 RUN find /usr/share/nginx/html -name "*.md" -exec sh -c 'python3 -m markdown "$1" > "${1%.md}.html"' _ {} \;
@@ -579,13 +572,12 @@ $converter = new CommonMarkConverter([
     'allow_unsafe_links' => false,
 ]);
 
-$wikiPath = realpath(__DIR__ . '/../../../.qoder/repowiki/en/content');
-$docsPath = realpath(__DIR__ . '/../../../docs');
+$wikiPath = realpath(__DIR__ . '/../../docs');
 
-$file = $_GET['file'] ?? 'Project Overview.md';
+$file = $_GET['file'] ?? 'README.md';
 $type = $_GET['type'] ?? 'wiki';
 
-$basePath = $type === 'wiki' ? $wikiPath : $docsPath;
+$basePath = $wikiPath;
 $filePath = $basePath . '/' . $file;
 
 // Security: prevent directory traversal

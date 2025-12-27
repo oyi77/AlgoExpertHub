@@ -1,5 +1,7 @@
 # Payment Gateway Integration Flow
 
+![diagram](../images/README-6.svg)
+
 ## Overview
 The platform supports 15+ payment gateways for processing plan subscriptions and wallet deposits. All gateways follow a consistent service pattern with automated or manual processing, ensuring secure and reliable payment handling.
 

@@ -1,5 +1,7 @@
 # Trading Management Addon - User Guide
 
+![diagram](../../images/README-5.svg)
+
 ## Overview
 
 The **Trading Management Addon** is a comprehensive trading system that provides everything you need to automate your trading workflow—from data collection to trade execution and performance analysis.

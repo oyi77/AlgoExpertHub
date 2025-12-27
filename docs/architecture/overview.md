@@ -4,9 +4,13 @@
 
 AlgoExpertHub is a Laravel 10-based trading signal platform with a modular addon architecture. This document provides a high-level overview of the system design.
 
+![diagram](../images/README-1.svg)
+
 ## Core Architecture
 
 ### Layered Architecture
+
+![diagram](../images/README-2.svg)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -61,6 +65,8 @@ public function create($request): array
 
 ### Modular Architecture
 
+![diagram](../images/README-10.svg)
+
 Addons are self-contained packages that extend core functionality without modifying the main application.
 
 ```
@@ -91,6 +97,8 @@ addon-name/
 ```
 
 ### Addon Registration
+
+![diagram](../images/README-11.svg)
 
 ```php
 // app/Providers/AppServiceProvider.php
@@ -155,6 +163,8 @@ Event::listen(SignalPublished::class, function ($event) {
 
 ### Signal Creation and Distribution
 
+![diagram](../images/README-5.svg)
+
 ```
 Admin Creates Signal
     ↓
@@ -173,6 +183,8 @@ Notifications    Notifications    Signals
 ```
 
 ### Automated Trade Execution
+
+![diagram](../images/README-9.svg)
 
 ```
 Signal Published
@@ -202,6 +214,8 @@ For each connection:
 
 ### Core Tables
 
+![diagram](../images/README-3.svg)
+
 ```
 users (platform users)
     ↓
@@ -213,6 +227,8 @@ plan_signals (many-to-many)
 ```
 
 ### Addon Tables
+
+![diagram](../images/README-4.svg)
 
 ```
 Trading Management:
