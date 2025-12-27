@@ -1,43 +1,56 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
 use App\Models\Plan;
 use App\Services\UserPlanService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class PlanController extends Controller
 {
+    protected UserPlanService $planService;
 
-    protected $planservice;
-
-    public function __construct(UserPlanService $planservice)
+    public function __construct(UserPlanService $planService)
     {
-        $this->planservice = $planservice;
+        $this->planService = $planService;
     }
 
-    public function plans()
+    /**
+     * Display the plans page.
+     * 
+     * @return View
+     */
+    public function plans(): View
     {
         $data['title'] = 'Plans';
-
-        $data['plans'] = Plan::whereStatus(true)->paginate(Helper::pagination());
+        $data['plans'] = Plan::where('status', true)->paginate(Helper::pagination());
 
         return view(Helper::themeView('user.plans'))->with($data);
     }
 
-    public function subscribe(Request $request)
+    /**
+     * Subscribe to a plan.
+     * 
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function subscribe(Request $request): RedirectResponse
     {
-        $isSuccess = $this->planservice->subscribe($request);
+        $result = $this->planService->subscribe($request);
 
-        if ($isSuccess['type'] == 'error') {
-            return redirect()->back()->with('error', $isSuccess['message']);
+        if ($result['type'] === 'error') {
+            return redirect()->back()->with('error', $result['message']);
         }
 
-        if ($isSuccess['type'] == 'redirect') {
-            return redirect()->to($isSuccess['message']);
+        if ($result['type'] === 'redirect') {
+            return redirect()->to($result['message']);
         }
         
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('success', $result['message']);
     }
 }

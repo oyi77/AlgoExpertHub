@@ -101,7 +101,7 @@ class MetaApiSdkService
                 // Get actual SDK version from composer
                 $sdkVersion = $this->getSdkVersion();
                 
-                Log::info('MetaApiSdkService: SDK initialized', [
+                Log::debug('MetaApiSdkService: SDK initialized', [
                     'account_id' => $this->accountId,
                     'sdk_version' => $sdkVersion,
                     'use_sdk' => true,
@@ -265,7 +265,7 @@ class MetaApiSdkService
                 $this->connected = true;
                 $this->recordLatency('request', microtime(true) - $startTime);
                 
-                Log::info('MetaApiSdkService: Connected via REST adapter', [
+                Log::debug('MetaApiSdkService: Connected via REST adapter', [
                     'account_id' => $this->accountId,
                     'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
                 ]);

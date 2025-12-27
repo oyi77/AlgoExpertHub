@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
 use App\Helpers\Helper\Helper;
@@ -14,68 +16,52 @@ use PayPal\Api\RedirectUrls;
 use PayPal\Api\Transaction;
 use PayPal\Api\PaymentExecution;
 use PayPal\Rest\ApiContext;
+use Exception;
 
-class PaypalService
+class PaypalService extends BaseAdapter
 {
     public function process($request, $paypal, $totalAmount, $deposit)
     {
-
         $apiContext = new ApiContext(
             new OAuthTokenCredential(
                 $paypal->parameter->paypal_client_id,
                 $paypal->parameter->paypal_client_secret,
-
             )
         );
 
         $payer = new Payer();
         $payer->setPaymentMethod("paypal");
 
-        // Set redirect URLs
         $redirectUrls = new RedirectUrls();
         $redirectUrls->setReturnUrl(route('user.paypal'))
             ->setCancelUrl(route('home'));
 
-
-        // Set payment amount
         $amount = new Amount();
         $amount->setCurrency($paypal->parameter->gateway_currency)
             ->setTotal($totalAmount);
 
-        // Set transaction object
         $transaction = new Transaction();
         $transaction->setAmount($amount)
             ->setDescription("Transaction Number {$deposit->trx}");
 
-        // Create the full payment object
         $payment = new Payment();
         $payment->setIntent('sale')
             ->setPayer($payer)
             ->setRedirectUrls($redirectUrls)
             ->setTransactions(array($transaction));
 
-
-        // Create payment with valid API context
         try {
             $payment->create($apiContext);
-
-            // Get PayPal redirect URL and redirect the customer
             $approvalUrl = $payment->getApprovalLink();
-
-            // Redirect the customer to $approvalUrl
-        } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            echo $ex->getCode();
-            echo $ex->getData();
-            die($ex);
-        } catch (\Exception $ex) {
-            die($ex);
+        } catch (Exception $ex) {
+            $this->log('Paypal payment creation failed', ['error' => $ex->getMessage()]);
+            return null; // Paypal redirect logic seems to expect the payment object or it handles it elsewhere
         }
 
         return $payment;
     }
 
-
-    public function success()
+    public function success(): array
     {
         $paypal = Gateway::where('name', 'paypal')->firstOrFail();
 
@@ -92,35 +78,27 @@ class PaypalService
             )
         );
 
-        // Get payment object by passing paymentId
-        $paymentId = $_GET['paymentId'];
+        $paymentId = $_GET['paymentId'] ?? '';
         $payment = Payment::get($paymentId, $apiContext);
-        $payerId = $_GET['PayerID'];
+        $payerId = $_GET['PayerID'] ?? '';
 
-        // Execute payment with payer ID
         $execution = new PaymentExecution();
         $execution->setPayerId($payerId);
 
         try {
-            // Execute payment
             $result = $payment->execute($execution, $apiContext);
+            $transactionId = $result->id;
+            $transactionFee = json_decode($result->toJSON())->transactions[0]->related_resources[0]->sale->transaction_fee->value / $paypal->rate;
 
-            $transaction = $result->id;
-
-            $transactionFee = json_decode($result)->transactions[0]->related_resources[0]->sale->transaction_fee->value / $paypal->rate;
-
-            if ($result->state == 'approved') {
-
-                Helper::paymentSuccess($booking, $transactionFee, $transaction);
-
-                return ['type'=>'success', 'message'=>'Payment Successfully Done'];
+            if ($result->getState() == 'approved') {
+                $this->handlePaymentSuccess($booking, (float)$transactionFee, $transactionId);
+                return $this->success('Payment Successfully Done');
             }
-        } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            echo $ex->getCode();
-            echo $ex->getData();
-            die($ex);
-        } catch (\Exception $ex) {
-            die($ex);
+        } catch (Exception $ex) {
+            $this->log('Paypal payment success execution failed', ['error' => $ex->getMessage()]);
+            return $this->error('Something Goes Wrong');
         }
+
+        return $this->error('Something Goes Wrong');
     }
 }

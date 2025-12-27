@@ -1,37 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
 use Mollie\Laravel\Facades\Mollie as FacadesMollie;
 
-class MollieService
+class MollieService extends BaseAdapter
 {
-    public static function process($request, $gateway, $amount, $deposit)
+    /**
+     * Process payment with Mollie.
+     */
+    public static function process($request, $gateway, $amount, $deposit): array
     {
-
         FacadesMollie::api()->setApiKey($gateway->parameter->mollie_key);
 
         try {
             $payment = FacadesMollie::api()->payments->create([
                 "amount" => [
                     "currency" => $gateway->parameter->gateway_currency,
-                    "value" => '' . sprintf('%0.2f', round($amount, 2)) . '', // You must send the correct number of decimals, thus we enforce the use of strings
+                    "value" => sprintf('%0.2f', round((float)$amount, 2)),
                 ],
-                'description' => "Payment For Purhcasing Plan",
+                'description' => "Payment For Purchasing Plan",
                 "redirectUrl" => route('user.payment.success', $gateway->name),
                 'metadata' => [
                     "order_id" => $deposit->trx,
                 ],
-
             ]);
         } catch (\Throwable $th) {
-            return ['type' => 'error', 'message' => 'Something went wrong ! Check your api credentials'];
+            return (new static())->error('Something went wrong! Check your API credentials');
         }
-
-        $payment = FacadesMollie::api()->payments()->get($payment->id);
 
         session()->put('payment_id', $payment->id);
         session()->put('trx', $deposit->trx);
@@ -39,26 +39,39 @@ class MollieService
         return ['redirect_url' => $payment->getCheckoutUrl()];
     }
 
-
-    public static function success()
+    /**
+     * Handle success callback from Mollie.
+     */
+    public static function success(): array
     {
-        if (session('type') == 'deposit') {
-            $deposit = Deposit::where('trx', session('trx'))->first();
+        $trx = session('trx');
+        $type = session('type');
+        $paymentId = session('payment_id');
+
+        if ($type === 'deposit') {
+            $deposit = Deposit::where('trx', $trx)->first();
         } else {
-            $deposit = Payment::where('trx', session('trx'))->first();
+            $deposit = Payment::where('trx', $trx)->first();
+        }
+
+        if (!$deposit) {
+            return (new static())->error('Transaction not found');
         }
 
         FacadesMollie::api()->setApiKey($deposit->gateway->gateway_parameters->mollie_key);
 
-        $payment = FacadesMollie::api()->payments()->get(session('payment_id'));
+        try {
+            $payment = FacadesMollie::api()->payments()->get($paymentId);
 
-        if ($payment->isPaid()) {
+            if ($payment->isPaid()) {
+                (new static())->handlePaymentSuccess($deposit, (float)$deposit->charge, $deposit->transaction_id);
 
-            Helper::paymentSuccess($deposit, $deposit->charge, $deposit->transaction_id);
-
-            return ['type' => 'success' ,'message' => 'Payment Successfull'];
+                return (new static())->success('Payment Successful');
+            }
+        } catch (\Throwable $e) {
+            return (new static())->error('Mollie API error: ' . $e->getMessage());
         }
 
-        return ['type' => 'error' ,'message' => 'Something Went Wrong'];
+        return (new static())->error('Something Went Wrong');
     }
 }

@@ -1,31 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
-class PaystackService
+class PaystackService extends BaseAdapter
 {
-    public function success(Request $request)
+    /**
+     * Handle success callback from Paystack.
+     * 
+     * @param Request $request
+     * @return array
+     */
+    public function success(Request $request): array
     {
         if (isset($request['reference'])) {
+            $trx = session('trx');
+            $type = session('type');
 
-            if (session('type') == 'deposit') {
-
-                $message = 'Deposit Successfull';
-                $payment = Deposit::where('trx', session('trx'))->first();
+            if ($type === 'deposit') {
+                $payment = Deposit::where('trx', $trx)->first();
             } else {
-
-                $message = 'Payment Successfull';
-                $payment = Payment::where('trx', session('trx'))->first();
+                $payment = Payment::where('trx', $trx)->first();
             }
 
-            Helper::paymentSuccess($payment, $payment->charge, $request['reference']);
+            if (!$payment) {
+                return $this->error('Transaction not found');
+            }
 
-            return ['type' => 'success', 'message' => 'Payment Successfuly received'];
+            $this->handlePaymentSuccess($payment, (float)$payment->charge, $request['reference']);
+
+            return $this->success('Payment Successfully received');
         }
+
+        return $this->error('Invalid reference');
     }
 }

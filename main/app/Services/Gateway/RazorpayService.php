@@ -1,30 +1,43 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
+use Illuminate\Http\Request;
 
-class RazorPayService
+class RazorpayService extends BaseAdapter
 {
-    public static function success($request)
+    /**
+     * Handle success callback from Razorpay.
+     * 
+     * @param Request $request
+     * @return array
+     */
+    public static function success(Request $request): array
     {
-        $request = $request->all();
+        $data = $request->all();
+        $trx = session('trx');
+        $type = session('type');
 
-        if (session('type') == 'deposit') {
-            $deposit = Deposit::where('trx', session('trx'))->first();
+        if ($type === 'deposit') {
+            $deposit = Deposit::where('trx', $trx)->first();
         } else {
-            $deposit = Payment::where('trx', session('trx'))->first();
+            $deposit = Payment::where('trx', $trx)->first();
         }
 
-        if (isset($request['razorpay_payment_id'])) {
-
-            Helper::paymentSuccess($deposit, 0, $request['razorpay_payment_id']);
-
-            return ['type' => 'success', 'message' => 'Payment Successfull'];
+        if (!$deposit) {
+            return (new static())->error('Transaction not found');
         }
 
-        return ['type' => 'error', 'message' => 'Something Went Wrong'];
+        if (isset($data['razorpay_payment_id'])) {
+            (new static())->handlePaymentSuccess($deposit, 0.0, $data['razorpay_payment_id']);
+
+            return (new static())->success('Payment Successful');
+        }
+
+        return (new static())->error('Something Went Wrong');
     }
 }

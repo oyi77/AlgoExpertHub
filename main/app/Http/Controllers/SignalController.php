@@ -1,56 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
-use App\Models\DashboardSignal;
-use App\Models\Signal;
+use App\Services\SignalService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class SignalController extends Controller
 {
-    public function allSignals(Request $request)
+    protected SignalService $signalService;
+
+    public function __construct(SignalService $signalService)
+    {
+        $this->signalService = $signalService;
+    }
+
+    public function allSignals(Request $request): View
     {
         $data['title'] = 'All Signals';
-
-        $user = auth()->user();
         
-        // Get user's current active plan
-        $currentPlan = $user->currentplan()->first();
-        
-        if ($currentPlan) {
-            // Get all published signals from user's active plan
-            $data['signals'] = Signal::where('is_published', 1)
-                ->when($request->search, function ($item) use ($request) {
-                    $item->where(function ($item) use ($request) {
-                        $item->where('id', $request->search)
-                            ->orWhere('title', 'LIKE', '%' . $request->search . '%');
-                    });
-                })
-                ->whereHas('plans', function ($query) use ($currentPlan) {
-                    $query->where('plans.id', $currentPlan->plan_id);
-                })
-                ->latest('published_date')
-                ->with('plans', 'pair', 'time', 'market')
-                ->paginate(Helper::pagination());
-        } else {
-            // No active plan, show empty collection
-            $data['signals'] = new \Illuminate\Pagination\LengthAwarePaginator(
-                collect([]), 
-                0, 
-                Helper::pagination(), 
-                1
-            );
-        }
+        $result = $this->signalService->allSignals(['search' => $request->search]);
+        $data['signals'] = $result['data']['signals'];
 
         return view(Helper::themeView('user.signals'))->with($data);
     }
 
-    public function details($id)
+    public function details(int $id): View
     {
-        $data['signal'] = Signal::findOrFail($id);
-
         $data['title'] = 'Signal Description';
+        
+        $result = $this->signalService.details($id);
+        
+        if ($result['type'] === 'error') {
+            abort($result['code'] ?? 404);
+        }
+
+        $data['signal'] = $result['data']['signal'];
 
         return view(Helper::themeView('user.signal_details'))->with($data);
     }

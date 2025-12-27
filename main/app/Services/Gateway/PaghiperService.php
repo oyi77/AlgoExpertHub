@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
-class PaghiperService
+class PaghiperService extends BaseAdapter
 {
-    public static function process($request, $gateway, $amount, $deposit)
+    /**
+     * Process payment with Paghiper.
+     */
+    public static function process($request, $gateway, float $amount, $deposit): array
     {
-
         \PagHipperSDK\Auth::init(
             $gateway->parameter->paghiper_key,
             $gateway->parameter->token
@@ -20,16 +23,16 @@ class PaghiperService
         $pagHiper = new \PagHipperSDK\PagHiper();
         $items = [];
         $items[] = (new \PagHipperSDK\Entities\Item())
-            ->setItemId($deposit->id)
+            ->setItemId((string)$deposit->id)
             ->setDescription('Plan Purchase')
             ->setQuantity(1)
-            ->setPriceCents($amount);
+            ->setPriceCents((int)($amount * 100));
 
+        $user = auth()->user();
         $payer = (new \PagHipperSDK\Entities\Payer())
-            ->setPayerEmail(auth()->user()->email)
-            ->setPayerName(auth()->user()->username)
+            ->setPayerEmail($user->email)
+            ->setPayerName($user->username)
             ->setPayerCpfCnpj($request->cpf);
-
 
         $transaction = (new \PagHipperSDK\Entities\Transaction())
             ->setOrderId($deposit->trx)
@@ -42,26 +45,34 @@ class PaghiperService
 
         $transaction = $pagHiper->createTransaction($transaction);
 
-
-        return ['type' => 'success', 'data' => $transaction->getBankSlip()->getUrlSlip()];
+        return (new static())->successResponse('Redirect to Paghiper', ['redirect_url' => $transaction->getBankSlip()->getUrlSlip()]);
     }
 
-    public function success(Request $request)
+    /**
+     * Handle success callback from Paghiper.
+     */
+    public function success(Request $request): array
     {
-
         $transaction = \PagHipperSDK\Response\GetTransactionPix::populate($request->all());
+        $trx = session('trx');
+        $type = session('type');
 
-        if (session('type') == 'deposit') {
-            $deposit = Deposit::where('trx', session('trx'))->first();
+        if ($type === 'deposit') {
+            $deposit = Deposit::where('trx', $trx)->first();
         } else {
-            $deposit = Payment::where('trx', session('trx'))->first();
+            $deposit = Payment::where('trx', $trx)->first();
+        }
+
+        if (!$deposit) {
+            return $this->error('Transaction not found');
         }
 
         if (isset($request->transaction_id)) {
+            $this->handlePaymentSuccess($deposit, 0.0, $transaction->getOrderId());
 
-            Helper::paymentSuccess($deposit, 0, $transaction->getOrderId());
-
-            return ['type' => 'success', 'message' => 'Plan Subscribed Successfully'];
+            return $this->success('Plan Subscribed Successfully');
         }
+
+        return $this->error('Payment verification failed');
     }
 }

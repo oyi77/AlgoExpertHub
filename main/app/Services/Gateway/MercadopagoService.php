@@ -1,25 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Gateway;
 
-use App\Helpers\Helper\Helper;
-use App\Models\Configuration;
 use App\Models\Deposit;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 
-class MercadopagoService
+class MercadopagoService extends BaseAdapter
 {
-    public static function process($request, $gateway, $amount, $deposit)
+    /**
+     * Process payment with Mercadopago.
+     */
+    public static function process($request, $gateway, float $amount, $deposit): array
     {
-        $general = Configuration::first();
-
         $sandbox = false;
 
         $url = "https://api.mercadopago.com/checkout/preferences?access_token=" . $gateway->parameter->access_token;
         $headers = [
             "Content-Type: application/json",
         ];
+        
         $postParam = [
             'items' => [
                 [
@@ -52,31 +54,34 @@ class MercadopagoService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $result = curl_exec($ch);
         curl_close($ch);
-        $response = json_decode($result);
+        
+        $response = json_decode((string)$result);
 
-        $send['preference'] = $preference->id ?? '';
-
-        if (isset($response->auto_return) && $response->auto_return == 'approved') {
-            if ($sandbox) {
-                return ['type' => 'success', 'message' => $response->sandbox_init_point];
-            } else {
-                return ['type' => 'success', 'message' => $response->init_point];
-            }
-        } else {
-            return ['type' => 'error', 'message' => 'Invalid Request'];
+        if (isset($response->auto_return) && $response->auto_return === 'approved') {
+            $redirectUrl = $sandbox ? $response->sandbox_init_point : $response->init_point;
+            return (new static())->successResponse('Redirect to Mercadopago', ['redirect_url' => $redirectUrl]);
         }
+
+        return (new static())->error('Invalid Request');
     }
 
-    public static function success(Request $request)
+    /**
+     * Handle success callback from Mercadopago.
+     */
+    public function success(Request $request): array
     {
+        $trx = session('trx');
+        $type = session('type');
 
-
-        if (session('type') == 'deposit') {
-            $deposit = Deposit::where('trx', session('trx'))->first();
+        if ($type === 'deposit') {
+            $deposit = Deposit::where('trx', $trx)->first();
         } else {
-            $deposit = Payment::where('trx', session('trx'))->first();
+            $deposit = Payment::where('trx', $trx)->first();
         }
 
+        if (!$deposit) {
+            return $this->error('Transaction not found');
+        }
 
         $url = "https://api.mercadopago.com/v1/payments/" . $request['data']['id'] . "?access_token=" . $deposit->gateway->parameter->access_token;
 
@@ -87,12 +92,14 @@ class MercadopagoService
         $result = curl_exec($ch);
         curl_close($ch);
 
-        $paymentData = json_decode($result);
+        $paymentData = json_decode((string)$result);
 
-        if (isset($paymentData->status) && $paymentData->status == 'approved') {
-            Helper::paymentSuccess($deposit, 0, $deposit->trx);
+        if (isset($paymentData->status) && $paymentData->status === 'approved') {
+            $this->handlePaymentSuccess($deposit, 0.0, $deposit->trx);
 
-            return ['type' => 'success' , 'message' =>'Payment Succesfull'];
+            return $this->success('Payment Successful');
         }
+
+        return $this->error('Payment verification failed');
     }
 }
