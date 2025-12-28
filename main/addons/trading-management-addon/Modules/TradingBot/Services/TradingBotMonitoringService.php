@@ -141,18 +141,30 @@ class TradingBotMonitoringService
         $botLogFile = storage_path("logs/trading-bot-{$botId}.log");
         $logFile = null;
         
-        if (File::exists($botLogFile)) {
+        if (File::exists($botLogFile) && File::size($botLogFile) > 0) {
             $logFile = $botLogFile;
         } else {
             // Fallback to main Laravel log with bot_id filtering
-            $logFile = storage_path('logs/laravel.log');
+            // Check for daily logs (laravel-YYYY-MM-DD.log) and get the latest one
+            $logPath = storage_path('logs');
+            $files = glob($logPath . '/laravel*.log');
+            
+            if (!empty($files)) {
+                // Sort by name (which includes date) descending to get latest
+                rsort($files);
+                $logFile = $files[0];
+            } else {
+                $logFile = storage_path('logs/laravel.log');
+            }
         }
         
-        if (!File::exists($logFile)) {
+        if (!$logFile || !File::exists($logFile)) {
             return [];
         }
 
         $logs = [];
+        // Use standard file reading for potentially large files, reading last N bytes could be more efficient 
+        // but for now File::lines is sufficient as long as we limit processing
         $lines = File::lines($logFile);
         $matchedLines = [];
 
@@ -161,10 +173,13 @@ class TradingBotMonitoringService
         $reversedLines = array_reverse($allLines);
         
         foreach ($reversedLines as $line) {
-            // Skip lines that don't match Laravel log format
-            // Laravel logs start with [YYYY-MM-DD HH:MM:SS]
-            if (!preg_match('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $line)) {
-                // Skip non-Laravel format lines (PHP deprecations, etc.)
+            // Skip lines that don't match expected log format
+            // Check for standard Laravel [YYYY-MM-DD] or PHP-FPM [DD-Mon-YYYY]
+            $hasStandardTimestamp = preg_match('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/', $line);
+            $hasFpmTimestamp = preg_match('/\[\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2}:\d{2}\]/', $line);
+            
+            if (!$hasStandardTimestamp && !$hasFpmTimestamp) {
+                // Skip non-timestamped lines
                 continue;
             }
             
@@ -570,6 +585,17 @@ class TradingBotMonitoringService
         if (preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
             return $matches[1];
         }
+        
+        // PHP-FPM format: [28-Dec-2025 05:29:49]
+        if (preg_match('/\[(\d{2}-[a-zA-Z]{3}-\d{4} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
+            // Convert to Y-m-d H:i:s for consistency
+            try {
+                return \Carbon\Carbon::createFromFormat('d-M-Y H:i:s', $matches[1])->toDateTimeString();
+            } catch (\Exception $e) {
+                return $matches[1];
+            }
+        }
+        
         return null;
     }
 

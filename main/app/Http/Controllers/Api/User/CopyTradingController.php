@@ -1,21 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
+use App\Services\CopyTradingService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class CopyTradingController extends Controller
 {
+    protected CopyTradingService $service;
+
+    public function __construct(CopyTradingService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * Get copy trading settings
      */
     public function getSettings(): JsonResponse
     {
         try {
-            $userId = auth()->id();
-            
             // Check if trading-management-addon is active
             if (!\App\Support\AddonRegistry::active('trading-management-addon')) {
                 return response()->json([
@@ -24,29 +32,12 @@ class CopyTradingController extends Controller
                 ], 404);
             }
 
-            // Get settings from cache or database
-            $settings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings_' . $userId, [
-                'enabled' => false,
-                'min_provider_score' => 70,
-                'slippage_buffer_enabled' => false,
-                'dynamic_lot_enabled' => false,
-            ]);
-
-            // Get follower count if table exists
-            $followerCount = 0;
-            if (\Schema::hasTable('copy_trading_subscriptions')) {
-                $followerCount = \DB::table('copy_trading_subscriptions')
-                    ->where('trader_id', $userId)
-                    ->where('is_active', true)
-                    ->count();
-            }
+            $userId = auth()->id();
+            $data = $this->service->getSettings($userId);
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'settings' => $settings,
-                    'follower_count' => $followerCount
-                ]
+                'data' => $data
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -70,15 +61,7 @@ class CopyTradingController extends Controller
 
         try {
             $userId = auth()->id();
-            $currentSettings = \Illuminate\Support\Facades\Cache::get('smart_risk_settings_' . $userId, [
-                'enabled' => false,
-                'min_provider_score' => 70,
-                'slippage_buffer_enabled' => false,
-                'dynamic_lot_enabled' => false,
-            ]);
-
-            $settings = array_merge($currentSettings, $validated);
-            \Illuminate\Support\Facades\Cache::put('smart_risk_settings_' . $userId, $settings, now()->addYear());
+            $settings = $this->service->updateSettings($userId, $validated);
 
             return response()->json([
                 'success' => true,
@@ -99,20 +82,8 @@ class CopyTradingController extends Controller
     public function getTraders(Request $request): JsonResponse
     {
         try {
-            if (!\Schema::hasTable('trader_profiles')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trader profiles table does not exist'
-                ], 404);
-            }
-
-            $traders = \DB::table('trader_profiles')
-                ->where('visibility', 'PUBLIC')
-                ->where('is_verified', true)
-                ->join('users', 'trader_profiles.user_id', '=', 'users.id')
-                ->select('trader_profiles.*', 'users.username', 'users.email')
-                ->orderBy('total_profit_percent', 'desc')
-                ->paginate($request->get('per_page', 20));
+            $perPage = (int) $request->get('per_page', 20);
+            $traders = $this->service->getTraders($perPage);
 
             return response()->json([
                 'success' => true,
@@ -132,43 +103,20 @@ class CopyTradingController extends Controller
     public function getTrader($id): JsonResponse
     {
         try {
-            if (!\Schema::hasTable('trader_profiles')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trader profiles table does not exist'
-                ], 404);
-            }
+            $traderId = (int) $id;
+            $followerId = auth()->id();
+            $data = $this->service->getTraderProfile($traderId, $followerId);
 
-            $trader = \DB::table('trader_profiles')
-                ->where('user_id', $id)
-                ->where('visibility', 'PUBLIC')
-                ->join('users', 'trader_profiles.user_id', '=', 'users.id')
-                ->select('trader_profiles.*', 'users.username', 'users.email')
-                ->first();
-
-            if (!$trader) {
+            if (!$data) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Trader not found'
                 ], 404);
             }
 
-            // Check if current user is following
-            $isFollowing = false;
-            if (\Schema::hasTable('copy_trading_subscriptions')) {
-                $isFollowing = \DB::table('copy_trading_subscriptions')
-                    ->where('trader_id', $id)
-                    ->where('follower_id', auth()->id())
-                    ->where('is_active', true)
-                    ->exists();
-            }
-
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'trader' => $trader,
-                    'is_following' => $isFollowing
-                ]
+                'data' => $data
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -184,19 +132,9 @@ class CopyTradingController extends Controller
     public function getSubscriptions(Request $request): JsonResponse
     {
         try {
-            if (!\Schema::hasTable('copy_trading_subscriptions')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Copy trading subscriptions table does not exist'
-                ], 404);
-            }
-
-            $subscriptions = \DB::table('copy_trading_subscriptions')
-                ->where('follower_id', auth()->id())
-                ->join('users', 'copy_trading_subscriptions.trader_id', '=', 'users.id')
-                ->select('copy_trading_subscriptions.*', 'users.username as trader_username')
-                ->orderBy('created_at', 'desc')
-                ->paginate($request->get('per_page', 20));
+            $followerId = auth()->id();
+            $perPage = (int) $request->get('per_page', 20);
+            $subscriptions = $this->service->getSubscriptions($followerId, $perPage);
 
             return response()->json([
                 'success' => true,
@@ -216,19 +154,9 @@ class CopyTradingController extends Controller
     public function getHistory(Request $request): JsonResponse
     {
         try {
-            if (!\Schema::hasTable('copy_trading_executions')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Copy trading executions table does not exist'
-                ], 404);
-            }
-
-            $executions = \DB::table('copy_trading_executions')
-                ->where('follower_id', auth()->id())
-                ->join('users', 'copy_trading_executions.trader_id', '=', 'users.id')
-                ->select('copy_trading_executions.*', 'users.username as trader_username')
-                ->orderBy('created_at', 'desc')
-                ->paginate($request->get('per_page', 20));
+            $followerId = auth()->id();
+            $perPage = (int) $request->get('per_page', 20);
+            $executions = $this->service->getHistory($followerId, $perPage);
 
             return response()->json([
                 'success' => true,

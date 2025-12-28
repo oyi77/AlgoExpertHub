@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\TradeRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\CryptoTradeController as WebCryptoTradeController;
@@ -10,10 +13,12 @@ use App\Http\Controllers\CryptoTradeController as WebCryptoTradeController;
 class CryptoTradeController extends Controller
 {
     protected $webController;
+    protected TradeRepositoryInterface $repository;
 
-    public function __construct()
+    public function __construct(TradeRepositoryInterface $repository)
     {
         $this->webController = new WebCryptoTradeController();
+        $this->repository = $repository;
     }
 
     /**
@@ -105,10 +110,9 @@ class CryptoTradeController extends Controller
     public function trades(Request $request): JsonResponse
     {
         try {
-            $trades = \DB::table('trades')
-                ->where('user_id', auth()->id())
-                ->orderBy('created_at', 'desc')
-                ->paginate($request->get('per_page', 20));
+            $userId = auth()->id();
+            $perPage = (int) $request->get('per_page', 20);
+            $trades = $this->repository->getUserTrades($userId, $perPage);
 
             return response()->json([
                 'success' => true,
@@ -128,10 +132,9 @@ class CryptoTradeController extends Controller
     public function closeTrade(Request $request, $id): JsonResponse
     {
         try {
-            $trade = \DB::table('trades')
-                ->where('id', $id)
-                ->where('user_id', auth()->id())
-                ->first();
+            $userId = auth()->id();
+            $tradeId = (int) $id;
+            $trade = $this->repository->getUserTrade($tradeId, $userId);
 
             if (!$trade) {
                 return response()->json([

@@ -22,7 +22,42 @@ class TradingBotWorkerService
      */
     protected function getPhpCommand(): array
     {
-        return Helper::buildPhpCommand('', base_path());
+        return $this->buildPhpCommand('', base_path());
+    }
+
+    /**
+     * Build PHP command for background processes
+     * 
+     * @param string $iniString Additional INI settings
+     * @param string $path Working directory
+     * @return array ['command' => string, 'path' => string]
+     */
+    protected function buildPhpCommand($iniString = '', $path = null)
+    {
+        // Get PHP binary path
+        $phpBinary = PHP_BINARY;
+        
+        // If we are running in FPM, PHP_BINARY points to php-fpm which cannot run console scripts.
+        // Fallback to 'php' (assuming CLI is in PATH) if binary is missing or is fpm.
+        if (!$phpBinary || strpos($phpBinary, 'fpm') !== false) {
+            $phpBinary = 'php';
+        }
+
+        // Add standard memory limit and other settings if needed
+        $command = $phpBinary;
+        if (!empty($iniString)) {
+            $command .= ' ' . $iniString;
+        }
+
+        // Determine working directory
+        if (!$path) {
+            $path = base_path();
+        }
+
+        return [
+            'command' => $command,
+            'path' => $path
+        ];
     }
 
     /**
@@ -48,6 +83,7 @@ class TradingBotWorkerService
         try {
             // Start process in background using nohup
             $logPath = storage_path("logs/trading-bot-{$bot->id}.log");
+            
             $commandString = sprintf(
                 'cd %s && nohup %s %s trading-bot:worker %d > %s 2>&1 & echo $!',
                 escapeshellarg($workPath),
@@ -251,6 +287,7 @@ class TradingBotWorkerService
             // Don't throw - bot can still run, just won't have market data
         }
     }
+
 
     /**
      * Stop worker process for bot

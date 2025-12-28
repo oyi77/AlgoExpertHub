@@ -887,6 +887,58 @@ README;
     }
 
     /**
+     * List all available landing page templates
+     * 
+     * @return Collection
+     */
+    public function listLandings(): Collection
+    {
+        $landingsDir = resource_path('views/frontend/landings');
+        
+        if (!File::exists($landingsDir)) {
+            File::makeDirectory($landingsDir, 0755, true);
+            return collect();
+        }
+
+        $landings = collect();
+        $directories = File::directories($landingsDir);
+
+        foreach ($directories as $dir) {
+            $name = basename($dir);
+            $landingJson = $dir . '/landing.json';
+            $metadata = [
+                'name' => $name,
+                'display_name' => Str::title(str_replace(['-', '_'], ' ', $name)),
+                'description' => null,
+                'version' => null,
+                'author' => null,
+                'is_active' => $this->isActiveLanding($name)
+            ];
+
+            if (File::exists($landingJson)) {
+                $customMetadata = json_decode(File::get($landingJson), true);
+                $metadata = array_merge($metadata, $customMetadata);
+            }
+
+            $landings->push($metadata);
+        }
+
+        return $landings;
+    }
+
+    /**
+     * Check if a landing page is currently active
+     * 
+     * @param string $landingName
+     * @return bool
+     */
+    public function isActiveLanding(string $landingName): bool
+    {
+        $config = \App\Models\Configuration::first();
+        return $config && $config->landing_page === $landingName;
+    }
+
+    /**
      * Delete a theme
      */
     public function delete(string $themeName): array

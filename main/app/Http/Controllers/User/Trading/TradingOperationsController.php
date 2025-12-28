@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class TradingOperationsController extends Controller
 {
+    protected $tradingService;
+
+    public function __construct(\App\Services\TradingService $tradingService)
+    {
+        $this->tradingService = $tradingService;
+    }
+
     /**
      * Display unified Trading Operations page with tabs
      */
@@ -17,27 +24,10 @@ class TradingOperationsController extends Controller
         $data['title'] = __('Trading Operations');
         $data['activeTab'] = $request->get('tab', 'trading-bots');
         
-        // Check if addon is enabled
-        $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon');
+        $data['tradingManagementEnabled'] = $this->tradingService->isTradingManagementEnabled();
 
-        if ($data['tradingManagementEnabled']) {
-            // Trading Bots tab
-            if ($data['activeTab'] === 'trading-bots') {
-                if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {
-                    try {
-                        $data['bots'] = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::where('user_id', Auth::id())
-                            ->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
-                            ->latest()
-                            ->paginate(20, ['*'], 'bots_page');
-                    } catch (\Exception $e) {
-                        \Log::error('TradingOperations: Error loading trading bots', [
-                            'error' => $e->getMessage(),
-                            'trace' => $e->getTraceAsString()
-                        ]);
-                        $data['bots'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
-                    }
-                }
-            }
+        if ($data['tradingManagementEnabled'] && $data['activeTab'] === 'trading-bots') {
+            $data['bots'] = $this->tradingService->getTradingBots(Auth::id());
         }
 
         return view(Helper::themeView('user.trading.operations'), $data);

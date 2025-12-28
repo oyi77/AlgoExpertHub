@@ -789,7 +789,7 @@ class TradingBotService
             ]);
 
             // Fire event
-            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'running', $executedByUserId, $executedByAdminId));
+            event(new BotStatusChanged($bot->id, $executedByUserId, 'running', "Bot started from {$oldStatus}"));
 
             Log::info('Trading bot started', [
                 'bot_id' => $bot->id,
@@ -831,7 +831,7 @@ class TradingBotService
             ]);
 
             // Fire event
-            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'stopped', $executedByUserId, $executedByAdminId));
+            event(new BotStatusChanged($bot->id, $executedByUserId, 'stopped', "Bot stopped from {$oldStatus}"));
 
             Log::info('Trading bot stopped', [
                 'bot_id' => $bot->id,
@@ -876,7 +876,7 @@ class TradingBotService
             ]);
 
             // Fire event
-            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'paused', $executedByUserId, $executedByAdminId));
+            event(new BotStatusChanged($bot->id, $executedByUserId, 'paused', "Bot paused from {$oldStatus}"));
 
             Log::info('Trading bot paused', [
                 'bot_id' => $bot->id,
@@ -943,7 +943,7 @@ class TradingBotService
             ]);
 
             // Fire event
-            event(new BotStatusChanged($bot->fresh(), $oldStatus, 'running', $executedByUserId, $executedByAdminId));
+            event(new BotStatusChanged($bot->id, $executedByUserId, 'running', "Bot resumed from {$oldStatus}"));
 
             Log::info('Trading bot resumed', [
                 'bot_id' => $bot->id,

@@ -1,13 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\LanguageTranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class LanguageTranslationController extends Controller
 {
+    protected LanguageTranslationService $service;
+
+    public function __construct(LanguageTranslationService $service)
+    {
+        $this->service = $service;
+    }
 
     /**
      * Get translations for a language
@@ -15,11 +24,7 @@ class LanguageTranslationController extends Controller
     public function getTranslations($lang): JsonResponse
     {
         try {
-            $translations = \DB::table('language_translations')
-                ->where('language_code', $lang)
-                ->get()
-                ->pluck('value', 'key')
-                ->toArray();
+            $translations = $this->service->getTranslations($lang);
 
             return response()->json([
                 'success' => true,
@@ -47,13 +52,7 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            \DB::table('language_translations')
-                ->where('language_code', $lang)
-                ->where('key', $validated['key'])
-                ->update([
-                    'value' => $validated['value'],
-                    'updated_at' => now()
-                ]);
+            $this->service->updateTranslation($lang, $validated['key'], $validated['value']);
 
             return response()->json([
                 'success' => true,
@@ -79,19 +78,11 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            foreach ($validated['translations'] as $translation) {
-                \DB::table('language_translations')
-                    ->where('language_code', $lang)
-                    ->where('key', $translation['key'])
-                    ->update([
-                        'value' => $translation['value'],
-                        'updated_at' => now()
-                    ]);
-            }
+            $updated = $this->service->bulkUpdateTranslations($lang, $validated['translations']);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Translations updated successfully'
+                'message' => "Updated {$updated} translations successfully"
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -111,10 +102,7 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            \DB::table('language_translations')
-                ->where('language_code', $lang)
-                ->where('key', $validated['key'])
-                ->delete();
+            $this->service->deleteKey($lang, $validated['key']);
 
             return response()->json([
                 'success' => true,
@@ -139,42 +127,7 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            // Get translation settings
-            $settings = \DB::table('translation_settings')->first();
-            
-            if (!$settings || empty($settings->api_key)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Translation API is not configured'
-                ], 400);
-            }
-
-            // Get keys to translate
-            $query = \DB::table('language_translations')
-                ->where('language_code', $validated['target_language']);
-
-            if (!empty($validated['keys'])) {
-                $query->whereIn('key', $validated['keys']);
-            }
-
-            $translations = $query->get();
-
-            $translated = 0;
-            foreach ($translations as $translation) {
-                // Call AI translation service
-                // This is a placeholder - implement actual translation API call
-                $translatedValue = $this->translateText($translation->value, $validated['target_language'], $settings);
-                
-                \DB::table('language_translations')
-                    ->where('language_code', $lang)
-                    ->where('key', $translation->key)
-                    ->update([
-                        'value' => $translatedValue,
-                        'updated_at' => now()
-                    ]);
-                
-                $translated++;
-            }
+            $translated = $this->service->autoTranslate($validated['target_language'], $validated['keys'] ?? null);
 
             return response()->json([
                 'success' => true,
@@ -195,7 +148,7 @@ class LanguageTranslationController extends Controller
     public function getSettings(): JsonResponse
     {
         try {
-            $settings = \DB::table('translation_settings')->first();
+            $settings = $this->service->getSettings();
 
             return response()->json([
                 'success' => true,
@@ -222,17 +175,7 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            $existing = \DB::table('translation_settings')->first();
-            
-            if ($existing) {
-                \DB::table('translation_settings')
-                    ->where('id', $existing->id)
-                    ->update(array_merge($validated, ['updated_at' => now()]));
-            } else {
-                \DB::table('translation_settings')->insert(
-                    array_merge($validated, ['created_at' => now(), 'updated_at' => now()])
-                );
-            }
+            $this->service->updateSettings($validated);
 
             return response()->json([
                 'success' => true,
@@ -257,16 +200,7 @@ class LanguageTranslationController extends Controller
         ]);
 
         try {
-            $settings = \DB::table('translation_settings')->first();
-            
-            if (!$settings || empty($settings->api_key)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Translation API is not configured'
-                ], 400);
-            }
-
-            $translated = $this->translateText($validated['text'], $validated['target_language'], $settings);
+            $translated = $this->service->testApi($validated['text'], $validated['target_language']);
 
             return response()->json([
                 'success' => true,
@@ -282,15 +216,6 @@ class LanguageTranslationController extends Controller
                 'message' => 'Translation test failed: ' . $e->getMessage()
             ], 500);
         }
-    }
-
-    protected function translateText($text, $targetLanguage, $settings)
-    {
-        // Placeholder for actual translation API implementation
-        // This should call OpenAI, Google Translate, or other translation service
-        // Based on $settings->provider
-        
-        return $text; // Placeholder
     }
 }
 

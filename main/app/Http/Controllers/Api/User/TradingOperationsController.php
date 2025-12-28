@@ -1,33 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApiTradingOperationsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class TradingOperationsController extends Controller
 {
+    protected ApiTradingOperationsService $service;
+
+    public function __construct(ApiTradingOperationsService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * Get execution logs
      */
     public function executionLogs(Request $request): JsonResponse
     {
         try {
-            $query = \DB::table('execution_logs')
-                ->where('user_id', auth()->id())
-                ->orderBy('created_at', 'desc');
-
-            // Apply filters
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
-            }
-
-            if ($request->has('connection_id')) {
-                $query->where('connection_id', $request->connection_id);
-            }
-
-            $logs = $query->paginate($request->get('per_page', 20));
+            $userId = auth()->id();
+            $filters = $request->only(['status', 'connection_id']);
+            $perPage = (int) $request->get('per_page', 20);
+            $logs = $this->service->getExecutionLogs($userId, $filters, $perPage);
 
             return response()->json([
                 'success' => true,
@@ -58,13 +58,10 @@ class TradingOperationsController extends Controller
         ]);
 
         try {
-            // Verify connection belongs to user
-            $connection = \DB::table('execution_connections')
-                ->where('id', $validated['connection_id'])
-                ->where('user_id', auth()->id())
-                ->first();
+            $userId = auth()->id();
 
-            if (!$connection) {
+            // Verify connection belongs to user
+            if (!$this->service->verifyConnection($validated['connection_id'], $userId)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Execution connection not found'
@@ -72,24 +69,10 @@ class TradingOperationsController extends Controller
             }
 
             // Create execution log
-            $logId = \DB::table('execution_logs')->insertGetId([
-                'user_id' => auth()->id(),
-                'connection_id' => $validated['connection_id'],
-                'signal_id' => $validated['signal_id'] ?? null,
-                'symbol' => $validated['symbol'],
-                'direction' => $validated['direction'],
-                'amount' => $validated['amount'],
-                'price' => $validated['price'],
-                'stop_loss' => $validated['stop_loss'],
-                'take_profit' => $validated['take_profit'],
-                'status' => 'pending',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $logId = $this->service->createExecutionLog($userId, $validated);
 
             // Dispatch job to execute trade (if Execution Engine addon is active)
-            if (\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
-                // Dispatch execution job
+            if (\App\Support\AddonRegistry::active('trading-management-addon')) {
                 \Log::info('Manual trade execution requested', ['log_id' => $logId]);
             }
 
@@ -113,28 +96,7 @@ class TradingOperationsController extends Controller
     {
         try {
             $userId = auth()->id();
-
-            $stats = [
-                'total_trades' => \DB::table('execution_logs')->where('user_id', $userId)->count(),
-                'open_trades' => \DB::table('execution_logs')->where('user_id', $userId)->where('status', 'open')->count(),
-                'closed_trades' => \DB::table('execution_logs')->where('user_id', $userId)->where('status', 'closed')->count(),
-                'win_rate' => 0,
-                'total_profit' => 0,
-            ];
-
-            // Calculate win rate and profit if execution_positions table exists
-            if (\Schema::hasTable('execution_positions')) {
-                $positions = \DB::table('execution_positions')
-                    ->where('user_id', $userId)
-                    ->where('status', 'closed')
-                    ->get();
-
-                $winCount = $positions->where('profit', '>', 0)->count();
-                $stats['win_rate'] = $positions->count() > 0 
-                    ? round(($winCount / $positions->count()) * 100, 2) 
-                    : 0;
-                $stats['total_profit'] = $positions->sum('profit');
-            }
+            $stats = $this->service->getStatistics($userId);
 
             return response()->json([
                 'success' => true,
