@@ -19,12 +19,26 @@ class UserDashboardService
     {
         $user = auth()->user();
 
-        $data['currentPlan'] = $user->currentplan()->first();
-
         // Initialize TTL with default value
         $perf = GlobalConfiguration::getValue('performance', config('performance'));
         $ttlMap = $perf['cache']['ttl_map'] ?? [];
         $ttl = (int)($ttlMap['dashboard.user'] ?? 300);
+
+        $cachedTotals = Cache::remember('udash:totals:' . auth()->id(), $ttl, function () use ($user) {
+            return [
+                'currentPlan' => $user->currentplan()->first(),
+                'totalDeposit' => $user->deposits()->where('status', 1)->sum('amount'),
+                'totalWithdraw' => $user->withdraws()->where('status', 1)->sum('withdraw_amount'),
+                'totalPayments' => $user->payments()->where('status', 1)->sum('amount'),
+                'totalSupportTickets' => $user->tickets()->count(),
+            ];
+        });
+
+        $data['currentPlan'] = $cachedTotals['currentPlan'];
+        $data['totalDeposit'] = $cachedTotals['totalDeposit'];
+        $data['totalWithdraw'] = $cachedTotals['totalWithdraw'];
+        $data['totalPayments'] = $cachedTotals['totalPayments'];
+        $data['totalSupportTickets'] = $cachedTotals['totalSupportTickets'];
 
         if ($data['currentPlan'] != null) {
             $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
@@ -37,10 +51,6 @@ class UserDashboardService
 
 
         $data['totalbalance'] = $user->balance;
-        $data['totalDeposit'] = $user->deposits()->where('status', 1)->sum('amount');
-        $data['totalWithdraw'] = $user->withdraws()->where('status', 1)->sum('withdraw_amount');
-        $data['totalPayments'] = $user->payments()->where('status', 1)->sum('amount');
-        $data['totalSupportTickets'] = $user->tickets()->count();
         $data['user'] = $user;
         $data['transactions'] = $user->transactions()->latest()->limit(3)->get();
 
