@@ -14,6 +14,7 @@ trait HandlesThemeManagement
         $data['title'] = 'Manage Theme';
         $data['themes'] = $this->themeManager->list();
         $data['backendThemes'] = $this->themeManager->listBackend();
+        $data['landings'] = $this->themeManager->listLandings();
         return view('backend.setting.theme')->with($data);
     }
 
@@ -158,6 +159,29 @@ trait HandlesThemeManagement
             return redirect()->back()->with('success', 'All frontend themes have been deactivated successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to deactivate themes: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update active landing page
+     */
+    public function landingPageUpdate(Request $request)
+    {
+        try {
+            $general = Configuration::first();
+            $landingName = $request->input('landing_page');
+
+            if ($landingName === 'default') {
+                $general->landing_page = null;
+            } else {
+                $general->landing_page = $landingName;
+            }
+
+            $general->save();
+
+            return redirect()->back()->with('success', 'Landing Page updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update landing page: ' . $e->getMessage());
         }
     }
 }

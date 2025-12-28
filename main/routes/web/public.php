@@ -69,6 +69,11 @@ Route::get('links/{id}/{slug}', [FrontendController::class, 'linksDetails'])->na
 Route::post('subscribe', [FrontendController::class, 'subscribe'])->name('subscribe');
 Route::post('contact', [FrontendController::class, 'contactSend'])->name('contact');
 
+// Landing pages
+Route::get('landing/algo-expert-premium', function () {
+    return view('frontend.landings.algo-expert-premium.index');
+})->name('landing.algo-expert-premium');
+
 // PWA Routes
 Route::get('manifest.json', [\App\Http\Controllers\PWAController::class, 'manifest'])->name('pwa.manifest');
 Route::get('sw.js', [\App\Http\Controllers\PWAController::class, 'serviceWorker'])->name('pwa.serviceworker');

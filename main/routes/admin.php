@@ -292,6 +292,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('theme/download-template', [ConfigurationController::class, 'themeDownloadTemplate'])->name('manage.theme.download.template');
             Route::delete('theme/delete/{theme}', [ConfigurationController::class, 'themeDelete'])->name('manage.theme.delete');
             Route::post('theme/deactivate-all', [ConfigurationController::class, 'themeDeactivate'])->name('manage.theme.deactivate.all');
+            Route::post('landing-page/update', [ConfigurationController::class, 'landingPageUpdate'])->name('manage.landing.update');
             
             // Backward compatibility: Access pagebuilder from Manage Theme
             Route::get('manage-theme/page-builder', [ConfigurationController::class, 'themePageBuilder'])->name('manage.theme.page-builder');

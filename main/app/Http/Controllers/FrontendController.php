@@ -26,7 +26,7 @@ class FrontendController extends Controller
 
         $data['title'] = $data['page']->name;
 
-        return view(Helper::themeView('home'))->with($data);
+        return view(Helper::landingView())->with($data);
     }
 
     public function page(Request $request)

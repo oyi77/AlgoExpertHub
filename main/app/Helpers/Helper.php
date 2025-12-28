@@ -67,6 +67,19 @@ class Helper
         return \App\Repositories\ConfigurationRepository::get();
     }
 
+    /**
+     * Translate a string using Laravel's translation system
+     * 
+     * @param string $key The translation key or default text
+     * @param array $replace Optional replacement values
+     * @param string|null $locale Optional locale
+     * @return string Translated string
+     */
+    public static function trans($key, $replace = [], $locale = null)
+    {
+        return __($key, $replace, $locale);
+    }
+
     public static function imagePath($folder, $default = false)
     {
         $general = Helper::config();
@@ -521,6 +534,26 @@ class Helper
         }
     }
 
+    public static function landingView($view = 'index')
+    {
+        try {
+            $config = Configuration::first();
+            $landing = $config && $config->landing_page ? $config->landing_page : null;
+
+            if ($landing) {
+                $landingView = "frontend.landings.{$landing}.{$view}";
+                if (view()->exists($landingView)) {
+                    return $landingView;
+                }
+            }
+
+            // Fallback to theme home view
+            return self::themeView('home');
+        } catch (\Exception $e) {
+            return self::themeView('home');
+        }
+    }
+
     public static function backendTheme()
     {
         try {
@@ -720,6 +753,8 @@ class Helper
         }
         return '';
     }
+
+
 
     public static function paymentSuccess($deposit, $fee_amount, $transaction)
     {

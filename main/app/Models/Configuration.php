@@ -14,6 +14,7 @@ class Configuration extends Model
         'email_config' => 'object',
         'seo_tags' => 'array',
         'kyc' => 'array',
-        'enable_new_styles' => 'boolean'
+        'enable_new_styles' => 'boolean',
+        'landing_page' => 'string'
     ];
 }
