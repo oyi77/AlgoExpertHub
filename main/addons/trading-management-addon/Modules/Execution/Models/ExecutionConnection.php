@@ -135,9 +135,43 @@ class ExecutionConnection extends Model
     /**
      * Check if can execute trades
      */
+    /**
+     * Check if can execute trades
+     */
     public function canExecuteTrades(): bool
     {
         return $this->is_active && $this->status === 'active';
+    }
+
+    /**
+     * Get type label with legacy compatibility
+     */
+    public function getTypeAttribute($value)
+    {
+        // Return existing valid legacy values if present
+        if ($value === 'mtapi' || $value === 'ccxt_crypto') {
+            return $value;
+        }
+
+        // Fallback based on exchange_name (provider equivalent in this model)
+        $provider = $this->exchange_name;
+        if (in_array($provider, ['metaapi', 'mtapi', 'mtapi_grpc'])) {
+            return 'mtapi';
+        }
+
+        if (in_array($provider, ['binance', 'coinbase', 'coinbasepro', 'kraken', 'bybit', 'kucoin', 'okx'])) {
+            return 'ccxt_crypto';
+        }
+        
+        // Handle mapped values
+        if ($value === 'crypto') {
+            return 'ccxt_crypto';
+        }
+        if ($value === 'fx') {
+            return 'mtapi';
+        }
+
+        return $value ?? 'Unknown';
     }
 }
 

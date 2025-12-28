@@ -74,6 +74,7 @@
     @stack('style')
 
 
+    @livewireStyles
 </head>
 
 <body>
@@ -250,6 +251,7 @@
     @include('alert')
 
 
+    @livewireScripts
 </body>
 
 </html>

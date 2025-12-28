@@ -18,12 +18,11 @@ class LogBotStatusChange
     public function handle(BotStatusChanged $event): void
     {
         Log::info('Trading bot status changed', [
-            'bot_id' => $event->bot->id,
-            'bot_name' => $event->bot->name,
-            'old_status' => $event->oldStatus,
-            'new_status' => $event->newStatus,
-            'executed_by_user_id' => $event->executedByUserId,
-            'executed_by_admin_id' => $event->executedByAdminId,
+            'bot_id' => $event->botId,
+            'status' => $event->status,
+            'user_id' => $event->userId,
+            'message' => $event->message,
+            'metrics' => $event->metrics,
         ]);
     }
 }

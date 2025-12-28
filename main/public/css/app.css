@@ -469,5 +469,18 @@
 @media (min-width: 768px) {
     .hidden-desktop { display: none !important; }
 }
+/* ========================================
+   CUSTOM INTERACTIONS
+   ======================================== */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+.hover-text-info:hover { color: var(--bs-info) !important; }
+.hover-text-danger:hover { color: var(--bs-danger) !important; }
+.bg-opacity-75 { --bs-bg-opacity: 0.75; }
 
 

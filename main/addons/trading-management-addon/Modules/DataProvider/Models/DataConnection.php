@@ -152,6 +152,37 @@ class DataConnection extends Model
         return $this->type === 'ccxt_crypto';
     }
 
+    /**
+     * Get type label with legacy compatibility
+     */
+    public function getTypeAttribute($value)
+    {
+        // Return existing valid legacy values if present
+        if ($value === 'mtapi' || $value === 'ccxt_crypto') {
+            return $value;
+        }
+
+        // Fallback based on provider
+        $provider = $this->provider;
+        if (in_array($provider, ['metaapi', 'mtapi', 'mtapi_grpc'])) {
+            return 'mtapi';
+        }
+
+        if (in_array($provider, ['binance', 'coinbase', 'coinbasepro', 'kraken', 'bybit', 'kucoin', 'okx'])) {
+            return 'ccxt_crypto';
+        }
+        
+        // Handle mapped values
+        if ($value === 'crypto') {
+            return 'ccxt_crypto';
+        }
+        if ($value === 'fx') {
+            return 'mtapi';
+        }
+
+        return $value ?? 'Unknown';
+    }
+
     public function getOwner()
     {
         return $this->isAdminOwned() ? $this->admin : $this->user;

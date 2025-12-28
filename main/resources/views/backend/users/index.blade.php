@@ -13,6 +13,10 @@
                 <div class="card-header site-card-header justify-content-between align-items-center">
                     <div class="card-header-left">
                         <form action="" method="get">
+                            <!-- Existing search form retained but Livewire has its own search -->
+                            <!-- We can keep this or hide it. Livewire component has search built-in -->
+                            <!-- Hiding it to avoid confusion -->
+                            <!--
                             <div class="input-group flex-wrap user-search-area">
                                 <input type="text" class="form-control form-control-sm" placeholder="username or email or phone" name="search">
                                 <div class="input-group-append">
@@ -21,6 +25,7 @@
                                     </button>
                                 </div>
                             </div>
+                            -->
                         </form>
                     </div>
                     <div  class="card-header-right">
@@ -28,55 +33,27 @@
                     </div>
                 </div>
 
-                <div class="card-body p-0">
+                <div class="card-body p-4">
+                    <!-- Livewire Replacement -->
+                    <livewire:admin.users.users-table />
+
+                    <!-- Legacy Table (Commented Out for Backup)
                     <div class="table-responsive">
                         <table class="table student-data-table m-t-20">
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Sl') }}</th>
-                                    <th>{{ __('Username') }}</th>
-                                    <th>{{ __('Phone') }}</th>
-                                    <th>{{ __('Email') }}</th>
-                                    <th>{{ __('Country') }}</th>
-                                    <th>{{ __('Status') }}</th>
-                                    <th>{{ __('Action') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($users as $key => $user)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $user->username }}</td>
-                                        <td>{{ $user->phone }}</td>
-                                        <td>{{ $user->email }}</td>
-                                        <td>{{ $user->address->country ?? 'N/A' }}</td>
-                                        <td>
-                                            @if ($user->status)
-                                                <span class='badge badge-success'>{{ __('Active') }}</span>
-                                            @else
-                                                <span class='badge badge-danger'>{{ __('Inactive') }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('admin.user.details', $user) }}" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i></a>
-                                            <button class="btn btn-sm btn-outline-primary changePassword" data-url="{{ route('admin.user.password.change', $user) }}"><i class="fa fa-key"></i></button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td class="text-center" colspan="100%">{{ __('No Data Found') }}</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
+                            ...
                         </table>
                     </div>
+                    -->
                 </div>
 
+                <!-- Pagination handled by Livewire -->
+                <!--
                 @if ($users->hasPages())
                     <div class="card-footer">
                         {{ $users->links() }}
                     </div>
                 @endif
+                -->
             </div>
         </div>
     </div>
@@ -144,21 +121,6 @@
 @endsection
 
 @push('scripts')
-    <script>
-        $(function() {
-            'use strict'
-            $('.sendMail').on('click', function(e) {
-                e.preventDefault();
-                const modal = $('#mail');
-                modal.modal('show');
-            })
-
-            $('.changePassword').on('click', function(e) {
-                e.preventDefault();
-                const modal = $('#changePassword');
-                modal.find('form').attr('action', $(this).data('url'));
-                modal.modal('show');
-            })
-        })
-    </script>
+    <!-- Legacy script might interfere with Livewire, careful -->
+    <script src="{{ asset('js/pages/admin/users-index.js') }}"></script>
 @endpush

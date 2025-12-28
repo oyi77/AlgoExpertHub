@@ -58,11 +58,14 @@ class SignalAnalyticSeeder extends Seeder
             $tradeStatus = $tradeStatuses[array_rand($tradeStatuses)];
 
             // Generate realistic prices
+            // Generate realistic prices
             $basePrice = match(true) {
-                str_contains($currencyPair, 'BTC') => rand(30000, 60000),
-                str_contains($currencyPair, 'ETH') => rand(2000, 4000),
-                str_contains($currencyPair, 'XAU') => rand(1800, 2200),
-                default => rand(100, 200) / 100, // Forex pairs
+                str_contains($currencyPair, 'JPY') => rand(14000, 16000) / 100, // 140.00 - 160.00
+                str_contains($currencyPair, 'XAU') || str_contains($currencyPair, 'GOLD') => rand(250000, 275000) / 100, // 2500.00 - 2750.00
+                str_contains($currencyPair, 'BTC') => rand(9000000, 9800000) / 100, // 90000.00 - 98000.00
+                str_contains($currencyPair, 'ETH') => rand(320000, 360000) / 100, // 3200.00 - 3600.00
+                str_contains($currencyPair, 'US500') || str_contains($currencyPair, 'SPX') => rand(580000, 600000) / 100, // 5800.00 - 6000.00
+                default => rand(10500, 11500) / 10000, // 1.0500 - 1.1500 (EUR/USD, GBP/USD range)
             };
 
             $openPrice = $basePrice;

@@ -5,585 +5,364 @@
 @endsection
 
 @section('content')
-<div class="sp_site_card">
-    <div class="card-header">
-        <div class="d-flex flex-wrap align-items-center justify-content-between">
-            <h4><i class="fas fa-robot"></i> {{ $bot->name }}</h4>
-            <div>
-                @if(Route::has('user.trading-management.trading-bots.edit'))
-                <a href="{{ route('user.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-secondary">
-                    <i class="fa fa-edit"></i> Edit
-                </a>
-                @endif
-                @if(Route::has('user.trading-management.trading-bots.index'))
-                <a href="{{ route('user.trading-management.trading-bots.index') }}" class="btn btn-sm btn-secondary">
-                    <i class="fa fa-arrow-left"></i> Back
-                </a>
-                @endif
+
+<div class="row mb-4" style="position: relative; z-index: 10;">
+    <div class="col-12">
+
+        @if(Route::has('user.trading-management.trading-bots.index'))
+        <a href="{{ route('user.trading-management.trading-bots.index') }}" class="btn btn-outline-info mb-3">
+            <i class="fa fa-arrow-left me-1"></i> Back to Trading Bots
+        </a>
+        @endif
+        <div class="card shadow-sm border-0" style="overflow: visible;">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary">
+                            <i class="fas fa-robot fa-2x"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 font-weight-bold">{{ $bot->name }}</h4>
+                            <div class="d-flex flex-wrap gap-2 text-muted small">
+                                <span><i class="fas fa-hashtag me-1"></i>ID: {{ $bot->id }}</span>
+                                <span class="mx-2">•</span>
+                                <span>{{ $bot->exchangeConnection->name ?? 'No Connection' }}</span>
+                                <span class="mx-2">•</span>
+                                <span>{{ $bot->tradingPreset->name ?? 'No Preset' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        @php
+                            $isRunning = $bot->isRunning();
+                            $isPaused = $bot->isPaused();
+                            $isStopped = $bot->isStopped();
+                        @endphp
+
+                        {{-- Status Badges --}}
+                        <span class="badge {{ $isRunning ? 'bg-success' : ($isPaused ? 'bg-warning' : 'bg-secondary') }} px-3 py-2 rounded-pill">
+                            <i class="fas {{ $isRunning ? 'fa-sync fa-spin' : ($isPaused ? 'fa-pause' : 'fa-stop') }} me-1"></i>
+                            {{ $isRunning ? 'Running' : ($isPaused ? 'Paused' : 'Stopped') }}
+                        </span>
+
+                        @if($bot->is_paper_trading)
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+                                <i class="fas fa-flask me-1"></i> Paper Trading
+                            </span>
+                        @endif
+
+                        {{-- Control Buttons --}}
+                        <div class="d-flex align-items-center gap-3 ms-lg-3">
+                            @if($isStopped)
+                                <form action="{{ route('user.trading-management.trading-bots.start', $bot->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-success rounded-pill px-4 fw-bold shadow-sm transition-all hover-lift">
+                                        <i class="fa fa-play me-2"></i> Start Bot
+                                    </button>
+                                </form>
+                            @elseif($isRunning)
+                                <form action="{{ route('user.trading-management.trading-bots.pause', $bot->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-dark rounded-pill px-4 fw-bold shadow-sm transition-all hover-lift d-flex align-items-center">
+                                        <i class="fa fa-pause me-2"></i> Pause
+                                    </button>
+                                </form>
+                                
+                                <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Restart bot?">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link text-muted hover-text-info transition-all p-2" title="Restart Strategy">
+                                        <i class="fa fa-redo fa-lg"></i>
+                                    </button>
+                                </form>
+                                
+                                <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Stop bot?">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link text-muted hover-text-danger text-decoration-none fw-bold d-flex align-items-center transition-all" title="Stop Bot">
+                                        <i class="fa fa-stop me-2"></i> Stop
+                                    </button>
+                                </form>
+                            @elseif($isPaused)
+                                <form action="{{ route('user.trading-management.trading-bots.resume', $bot->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-success rounded-pill px-4 fw-bold shadow-sm transition-all hover-lift">
+                                        <i class="fa fa-play me-2"></i> Resume
+                                    </button>
+                                </form>
+                                <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Stop bot?">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link text-muted hover-text-danger text-decoration-none fw-bold d-flex align-items-center transition-all">
+                                        <i class="fa fa-stop me-2"></i> Stop
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                        
+                        {{-- Actions Dropdown --}}
+                        <div class="dropdown">
+                            <button class="btn btn-primary border shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                @if(Route::has('user.trading-management.trading-bots.edit'))
+                                <li>
+                                    <a href="{{ route('user.trading-management.trading-bots.edit', $bot->id) }}" class="dropdown-item">
+                                        <i class="fa fa-edit me-2 text-primary"></i> Edit Configuration
+                                    </a>
+                                </li>
+                                @endif
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ route('user.trading-management.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-block w-100">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item {{ $bot->is_active ? 'text-warning' : 'text-success' }}">
+                                            <i class="fa fa-{{ $bot->is_active ? 'toggle-on' : 'toggle-off' }} me-2"></i>
+                                            {{ $bot->is_active ? 'Deactivate Bot' : 'Activate Bot' }}
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="card-body">
-        {{-- Bot Control Buttons --}}
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card border-primary">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fa fa-play-circle text-primary"></i> Bot Controls
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex flex-wrap align-items-center">
-                            @php
-                                $isRunning = $bot->isRunning();
-                                $isPaused = $bot->isPaused();
-                                $isStopped = $bot->isStopped();
-                            @endphp
-                            
-                            {{-- Status Badge --}}
-                            <div class="mr-auto mb-2">
-                                <span class="badge 
-                                    @if($isRunning) bg-success
-                                    @elseif($isPaused) bg-warning
-                                    @else bg-secondary
-                                    @endif" style="font-size: 1rem; padding: 0.5rem 1rem;">
-                                    @if($isRunning)
-                                        <i class="fa fa-play-circle"></i> Running
-                                    @elseif($isPaused)
-                                        <i class="fa fa-pause-circle"></i> Paused
-                                    @else
-                                        <i class="fa fa-stop-circle"></i> Stopped
-                                    @endif
-                                </span>
-                                @if($bot->is_active)
-                                    <span class="badge bg-info">Active</span>
-                                @else
-                                    <span class="badge bg-secondary">Inactive</span>
-                                @endif
-                                @if($bot->is_paper_trading)
-                                    <span class="badge bg-warning">Paper Trading</span>
-                                @endif
-                            </div>
+</div>
 
-                            <div class="ml-auto d-flex flex-wrap" style="gap: 0.5rem;">
-                                {{-- Control Buttons --}}
-                                @if($isStopped)
-                                    <form action="{{ route('user.trading-management.trading-bots.start', $bot->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-success btn-lg">
-                                            <i class="fa fa-play"></i> Start Bot
-                                        </button>
-                                    </form>
-                                @elseif($isRunning)
-                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to restart this bot?">
-                                        @csrf
-                                        <button type="submit" class="btn btn-info btn-lg">
-                                            <i class="fa fa-redo"></i> Restart Bot
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.pause', $bot->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-warning btn-lg">
-                                            <i class="fa fa-pause"></i> Pause Bot
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to stop this bot?">
-                                        @csrf
-                                        <button type="submit" class="btn btn-danger btn-lg">
-                                            <i class="fa fa-stop"></i> Stop Bot
-                                        </button>
-                                    </form>
-                                @elseif($isPaused)
-                                    <form action="{{ route('user.trading-management.trading-bots.restart', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to restart this bot?">
-                                        @csrf
-                                        <button type="submit" class="btn btn-info btn-lg">
-                                            <i class="fa fa-redo"></i> Restart Bot
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.resume', $bot->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-success btn-lg">
-                                            <i class="fa fa-play"></i> Resume Bot
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('user.trading-management.trading-bots.stop', $bot->id) }}" method="POST" class="d-inline bot-action-form" data-confirm-message="Are you sure you want to stop this bot?">
-                                        @csrf
-                                        <button type="submit" class="btn btn-danger btn-lg">
-                                            <i class="fa fa-stop"></i> Stop Bot
-                                        </button>
-                                    </form>
-                                @endif
+<div class="row g-4 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase small mb-0 spacing-1">Total P/L</h6>
+                    <span class="badge bg-light text-dark rounded-circle p-2"><i class="fas fa-dollar-sign"></i></span>
+                </div>
+                <h3 class="mb-0 {{ $bot->total_profit >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ $bot->total_profit >= 0 ? '+' : '' }}{{ number_format($bot->total_profit, 2) }}
+                </h3>
+                <small class="text-muted">Total Profit/Loss</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase small mb-0 spacing-1">Win Rate</h6>
+                    <span class="badge bg-light text-dark rounded-circle p-2"><i class="fas fa-percentage"></i></span>
+                </div>
+                <h3 class="mb-0 text-primary">{{ number_format($bot->win_rate, 1) }}%</h3>
+                <small class="text-muted">{{ $bot->successful_executions }} / {{ $bot->total_executions }} Trades</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase small mb-0 spacing-1">Open Positions</h6>
+                    <span class="badge bg-light text-dark rounded-circle p-2"><i class="fas fa-layer-group"></i></span>
+                </div>
+                <h3 class="mb-0" id="total-open-positions">{{ $positionStats['total_open'] ?? 0 }}</h3>
+                <small class="text-muted">Active Trades</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase small mb-0 spacing-1">Unrealized P/L</h6>
+                    <span class="badge bg-light text-dark rounded-circle p-2"><i class="fas fa-chart-line"></i></span>
+                </div>
+                <h3 class="mb-0 {{ ($positionStats['total_unrealized_pnl'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}" id="total-unrealized-pnl">
+                    {{ ($positionStats['total_unrealized_pnl'] ?? 0) >= 0 ? '+' : '' }}{{ number_format($positionStats['total_unrealized_pnl'] ?? 0, 2) }}
+                </h3>
+                <small class="text-muted">Floating P/L</small>
+            </div>
+        </div>
+    </div>
+</div>
 
-                                {{-- Toggle Active Status --}}
-                                <form action="{{ route('user.trading-management.trading-bots.toggle-active', $bot->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-{{ $bot->is_active ? 'warning' : 'success' }}">
-                                        <i class="fa fa-{{ $bot->is_active ? 'toggle-on' : 'toggle-off' }}"></i>
-                                        {{ $bot->is_active ? 'Deactivate' : 'Activate' }}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        
-                        {{-- Status Info --}}
-                        <div class="mt-3">
-                            @if($isRunning && $bot->last_started_at)
-                                <small class="text-muted">
-                                    <i class="fa fa-clock"></i> Started: {{ $bot->last_started_at->format('Y-m-d H:i:s') }}
-                                </small>
-                            @elseif($isPaused && $bot->last_paused_at)
-                                <small class="text-muted">
-                                    <i class="fa fa-clock"></i> Paused: {{ $bot->last_paused_at->format('Y-m-d H:i:s') }}
-                                </small>
-                            @elseif($isStopped && $bot->last_stopped_at)
-                                <small class="text-muted">
-                                    <i class="fa fa-clock"></i> Stopped: {{ $bot->last_stopped_at->format('Y-m-d H:i:s') }}
-                                </small>
-                            @endif
-                        </div>
-                    </div>
+<div class="row g-4">
+    {{-- Main Content Column --}}
+    <div class="col-12 col-lg-8">
+        {{-- Live Monitor Panel --}}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-desktop text-primary me-2"></i>Live Monitor</h6>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark border">
+                        <i class="fas fa-circle text-{{ ($workerStatus['status'] ?? 'stopped') === 'running' ? 'success' : 'danger' }} me-1 small"></i>
+                        Worker: {{ ucfirst($workerStatus['status'] ?? 'stopped') }}
+                    </span>
                 </div>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <h5>Bot Information</h5>
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Name</th>
-                        <td>{{ $bot->name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Description</th>
-                        <td>{{ $bot->description ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Status</th>
-                        <td>
-                            @php
-                                $status = $bot->status ?? 'stopped';
-                            @endphp
-                            @if($status === 'running')
-                                <span class="badge bg-success"><i class="fa fa-play-circle"></i> Running</span>
-                            @elseif($status === 'paused')
-                                <span class="badge bg-warning"><i class="fa fa-pause-circle"></i> Paused</span>
-                            @else
-                                <span class="badge bg-secondary"><i class="fa fa-stop-circle"></i> Stopped</span>
-                            @endif
-                            @if($bot->is_active)
-                                <span class="badge bg-info">Active</span>
-                            @else
-                                <span class="badge bg-secondary">Inactive</span>
-                            @endif
-                            @if($bot->is_paper_trading)
-                                <span class="badge bg-warning">Paper Trading</span>
-                            @endif
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div class="col-md-6">
-                <h5>Configuration</h5>
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Exchange Connection</th>
-                        <td>{{ $bot->exchangeConnection->name ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Trading Preset</th>
-                        <td>{{ $bot->tradingPreset->name ?? 'N/A' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Filter Strategy</th>
-                        <td>{{ $bot->filterStrategy->name ?? 'None' }}</td>
-                    </tr>
-                    <tr>
-                        <th>AI Model Profile</th>
-                        <td>{{ $bot->aiModelProfile->name ?? 'None' }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <h5>Statistics</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <h6>Total Executions</h6>
-                                <h3>{{ $bot->total_executions }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <h6>Successful</h6>
-                                <h3 class="text-success">{{ $bot->successful_executions }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <h6>Win Rate</h6>
-                                <h3>{{ number_format($bot->win_rate, 1) }}%</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <h6>Total Profit</h6>
-                                <h3 class="{{ $bot->total_profit >= 0 ? 'text-success' : 'text-danger' }}">
-                                    ${{ number_format($bot->total_profit, 2) }}
-                                </h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if(isset($executions) && $executions->count() > 0)
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <h5>Recent Executions</h5>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
+                    <table class="table table-hover mb-0 align-middle" id="positions-table">
+                        <thead class="bg-light">
                             <tr>
-                                <th>Signal</th>
-                                <th>Symbol</th>
+                                <th class="ps-4">Symbol</th>
                                 <th>Side</th>
-                                <th>Status</th>
-                                <th>Date</th>
+                                <th>Entry</th>
+                                <th>Current</th>
+                                <th>P/L</th>
+                                <th class="pe-4 text-end">Time</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($executions as $execution)
+                        <tbody id="positions-tbody">
+                            @if(isset($openPositions) && count($openPositions) > 0)
+                                @foreach($openPositions as $position)
+                                    <tr>
+                                        <td class="ps-4 fw-bold">{{ $position['symbol'] ?? 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ ($position['direction'] ?? 'buy') === 'buy' ? 'success' : 'danger' }} bg-opacity-10 text-{{ ($position['direction'] ?? 'buy') === 'buy' ? 'success' : 'danger' }} border border-{{ ($position['direction'] ?? 'buy') === 'buy' ? 'success' : 'danger' }}">
+                                                {{ strtoupper($position['direction'] ?? 'N/A') }}
+                                            </span>
+                                        </td>
+                                        <td>{{ isset($position['entry_price']) ? number_format($position['entry_price'], 8) : '-' }}</td>
+                                        <td id="price-{{ $position['id'] ?? '' }}">{{ isset($position['current_price']) ? number_format($position['current_price'], 8) : '-' }}</td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="{{ (($position['profit_loss'] ?? 0) >= 0 ? 'text-success' : 'text-danger') }} fw-bold" id="pnl-{{ $position['id'] ?? '' }}">
+                                                    ${{ number_format($position['profit_loss'] ?? 0, 2) }}
+                                                </span>
+                                                <span class="small {{ (($position['profit_loss_percent'] ?? 0) >= 0 ? 'text-success' : 'text-danger') }}" id="pnl-pct-{{ $position['id'] ?? '' }}">
+                                                    {{ isset($position['profit_loss_percent']) ? number_format($position['profit_loss_percent'], 2) . '%' : '0%' }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="pe-4 text-end text-muted small">
+                                            @if(isset($position['opened_at']) && $position['opened_at'])
+                                                {{ \Carbon\Carbon::parse($position['opened_at'])->diffForHumans(null, true, true) }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
                                 <tr>
-                                    <td>{{ $execution->signal?->title ?? 'N/A' }}</td>
-                                    <td>{{ $execution->symbol ?: 'N/A' }}</td>
-                                    <td>{{ $execution->side ? strtoupper($execution->side) : 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ in_array($execution->status, ['SUCCESS', 'filled']) ? 'success' : 'warning' }}">
-                                            {{ ucfirst($execution->status ?? 'N/A') }}
-                                        </span>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                                            <span>No active positions</span>
+                                        </div>
                                     </td>
-                                    <td>{{ $execution->created_at ? $execution->created_at->format('Y-m-d H:i') : 'N/A' }}</td>
                                 </tr>
-                            @endforeach
+                            @endif
                         </tbody>
                     </table>
                 </div>
-                {{ $executions->links() }}
             </div>
         </div>
-        @endif
-                    </div>
 
-                    {{-- Analysis Tab --}}
-                    <div class="tab-pane fade" id="analysis" role="tabpanel">
-                        <div class="mt-4">
-                            <div class="text-center">
-                                <a href="{{ route('user.trading-management.trading-bots.analysis', $bot->id) }}" class="btn btn-primary">
-                                    <i class="fa fa-chart-line"></i> View Full Analysis
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+        {{-- Live Logs --}}
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-terminal text-dark me-2"></i>Live Logs</h6>
+                <select class="form-select form-select-sm w-auto" id="log-level-filter">
+                    <option value="">All Levels</option>
+                    <option value="error">Errors</option>
+                    <option value="warning">Warnings</option>
+                    <option value="info">Info</option>
+                </select>
+            </div>
+            <div class="card-body p-0">
+                <div class="bg-dark text-light p-3 font-monospace small" style="height: 300px; overflow-y: auto; border-radius: 0 0 calc(0.375rem - 1px) calc(0.375rem - 1px);" id="log-container">
+                    <div class="text-muted">Waiting for logs...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    {{-- Executions Tab --}}
-                    <div class="tab-pane fade" id="executions" role="tabpanel">
-                        <div class="mt-4">
-                            <div class="text-center">
-                                <a href="{{ route('user.trading-management.trading-bots.executions', $bot->id) }}" class="btn btn-primary">
-                                    <i class="fa fa-history"></i> View Execution History
-                                </a>
-                            </div>
-                        </div>
+    {{-- Sidebar Column --}}
+    <div class="col-12 col-lg-4">
+        {{-- Health Status --}}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-heartbeat text-danger me-2"></i>Health Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                        <span class="text-muted">Last Signal</span>
+                        <span class="fw-bold" id="last-signal-processed">
+                            {{ isset($botMetrics['last_signal_processed_at']) ? \Carbon\Carbon::parse($botMetrics['last_signal_processed_at'])->diffForHumans() : 'Never' }}
+                        </span>
                     </div>
-
-                    {{-- Monitor Tab --}}
-                    <div class="tab-pane fade" id="monitor" role="tabpanel">
-                        <div class="mt-4">
-                            <div class="text-center">
-                                <a href="{{ route('user.trading-management.trading-bots.monitor', $bot->id) }}" class="btn btn-primary">
-                                    <i class="fa fa-tachometer-alt"></i> View Real-Time Monitor
-                                </a>
-                            </div>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                        <span class="text-muted">Last Analysis</span>
+                        <span class="fw-bold" id="last-market-analysis">
+                            {{ isset($botMetrics['last_market_analysis_at']) ? \Carbon\Carbon::parse($botMetrics['last_market_analysis_at'])->diffForHumans() : 'Never' }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                        <span class="text-muted">Signals Processed</span>
+                        <span class="fw-bold" id="signals-processed">{{ $botMetrics['signals_processed'] ?? 0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Errors (24h)</span>
+                        <span class="badge bg-{{ ($botMetrics['error_count_24h'] ?? 0) > 0 ? 'danger' : 'success' }} rounded-pill" id="error-count">{{ $botMetrics['error_count_24h'] ?? 0 }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Worker Status & Monitoring Panel --}}
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card border-info">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fa fa-cog text-info"></i> Worker Status & Monitoring
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row" id="worker-status-panel">
-                            <div class="col-md-6">
-                                <h6>Worker Process Status</h6>
-                                <table class="table table-sm table-bordered">
-                                    <tr>
-                                        <th>Status</th>
-                                        <td>
-                                            <span class="badge bg-{{ ($workerStatus['status'] ?? 'stopped') === 'running' ? 'success' : (($workerStatus['status'] ?? 'stopped') === 'dead' ? 'danger' : 'secondary') }}" id="worker-status-badge">
-                                                {{ ucfirst($workerStatus['status'] ?? 'stopped') }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Worker PID</th>
-                                        <td id="worker-pid">{{ $workerStatus['worker_pid'] ?? 'N/A' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Uptime</th>
-                                        <td id="worker-uptime">{{ $workerStatus['uptime'] ?? 'N/A' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Started At</th>
-                                        <td id="worker-started-at">
-                                            @if(isset($workerStatus['worker_started_at']) && $workerStatus['worker_started_at'])
-                                                {{ \Carbon\Carbon::parse($workerStatus['worker_started_at'])->format('Y-m-d H:i:s') }}
-                                            @else
-                                                N/A
-                                            @endif
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Health Metrics</h6>
-                                <table class="table table-sm table-bordered">
-                                    <tr>
-                                        <th>Last Signal Processed</th>
-                                        <td id="last-signal-processed">
-                                            @if(isset($botMetrics['last_signal_processed_at']) && $botMetrics['last_signal_processed_at'])
-                                                {{ \Carbon\Carbon::parse($botMetrics['last_signal_processed_at'])->diffForHumans() }}
-                                            @else
-                                                Never
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Last Market Analysis</th>
-                                        <td id="last-market-analysis">
-                                            @if(isset($botMetrics['last_market_analysis_at']) && $botMetrics['last_market_analysis_at'])
-                                                {{ \Carbon\Carbon::parse($botMetrics['last_market_analysis_at'])->diffForHumans() }}
-                                            @else
-                                                Never
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Signals Processed</th>
-                                        <td id="signals-processed">{{ $botMetrics['signals_processed'] ?? 0 }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Errors (24h)</th>
-                                        <td>
-                                            <span class="badge bg-{{ ($botMetrics['error_count_24h'] ?? 0) > 0 ? 'danger' : 'success' }}" id="error-count">
-                                                {{ $botMetrics['error_count_24h'] ?? 0 }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Worker Restarts</th>
-                                        <td id="restart-count">{{ $botMetrics['worker_restart_count'] ?? 0 }}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        {{-- Real-time Logs --}}
-                        <div class="mt-3">
-                            <h6>Recent Logs</h6>
-                            <div class="form-group mb-2">
-                                <select class="form-control form-control-sm" id="log-level-filter" style="width: 150px; display: inline-block;">
-                                    <option value="">All Levels</option>
-                                    <option value="error">Error</option>
-                                    <option value="warning">Warning</option>
-                                    <option value="info">Info</option>
-                                    <option value="debug">Debug</option>
-                                </select>
-                            </div>
-                            <div class="border rounded p-2" style="background: #1e1e1e; color: #d4d4d4; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;" id="log-container">
-                                <div class="text-muted">Loading logs...</div>
-                            </div>
-                        </div>
-                    </div>
+        {{-- Configuration --}}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-sliders-h text-secondary me-2"></i>Configuration</h6>
+                @if(Route::has('user.trading-management.trading-bots.edit'))
+                    <a href="{{ route('user.trading-management.trading-bots.edit', $bot->id) }}" class="btn btn-sm btn-link text-decoration-none">Edit</a>
+                @endif
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="text-muted small text-uppercase">Exchange</label>
+                    <div class="fw-bold">{{ $bot->exchangeConnection->name ?? 'N/A' }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small text-uppercase">Strategy</label>
+                    <div class="fw-bold">{{ $bot->tradingPreset->name ?? 'N/A' }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small text-uppercase">Filter</label>
+                    <div class="fw-bold text-truncate">{{ $bot->filterStrategy->name ?? 'None' }}</div>
+                </div>
+                 <div class="mb-0">
+                    <label class="text-muted small text-uppercase">AI Profile</label>
+                    <div class="fw-bold text-truncate">{{ $bot->aiModelProfile->name ?? 'None' }}</div>
                 </div>
             </div>
         </div>
 
-        {{-- Position Monitoring Dashboard --}}
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card border-success">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fa fa-chart-line text-success"></i> Position Monitoring
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        {{-- Position Statistics --}}
-                        <div class="row mb-3">
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Open Positions</h6>
-                                        <h3 id="total-open-positions">{{ $positionStats['total_open'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Unrealized P/L</h6>
-                                        <h3 class="{{ ($positionStats['total_unrealized_pnl'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}" id="total-unrealized-pnl">
-                                            ${{ number_format($positionStats['total_unrealized_pnl'] ?? 0, 2) }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>At Risk</h6>
-                                        <h3 class="text-warning" id="positions-at-risk">{{ $positionStats['positions_at_risk'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Near TP</h6>
-                                        <h3 class="text-info" id="positions-near-tp">{{ $positionStats['positions_near_tp'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Open Positions Table --}}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover" id="positions-table">
-                                <thead>
-                                    <tr>
-                                        <th>Symbol</th>
-                                        <th>Direction</th>
-                                        <th>Entry Price</th>
-                                        <th>Current Price</th>
-                                        <th>Stop Loss</th>
-                                        <th>Take Profit</th>
-                                        <th>Quantity</th>
-                                        <th>P/L</th>
-                                        <th>P/L %</th>
-                                        <th>Status</th>
-                                        <th>Opened</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="positions-tbody">
-                                    @if(isset($openPositions) && count($openPositions) > 0)
-                                        @foreach($openPositions as $position)
-                                            <tr>
-                                                <td>{{ $position['symbol'] ?? 'N/A' }}</td>
-                                                <td>
-                                                    <span class="badge bg-{{ ($position['direction'] ?? 'buy') === 'buy' ? 'success' : 'danger' }}">
-                                                        {{ strtoupper($position['direction'] ?? 'N/A') }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ isset($position['entry_price']) ? number_format($position['entry_price'], 8) : 'N/A' }}</td>
-                                                <td id="price-{{ $position['id'] ?? '' }}">{{ isset($position['current_price']) ? number_format($position['current_price'], 8) : (isset($position['entry_price']) ? number_format($position['entry_price'], 8) : 'N/A') }}</td>
-                                                <td>{{ isset($position['stop_loss']) && $position['stop_loss'] ? number_format($position['stop_loss'], 8) : 'N/A' }}</td>
-                                                <td>{{ isset($position['take_profit']) && $position['take_profit'] ? number_format($position['take_profit'], 8) : 'N/A' }}</td>
-                                                <td>{{ isset($position['quantity']) ? number_format($position['quantity'], 8) : 'N/A' }}</td>
-                                                <td class="{{ (($position['profit_loss'] ?? 0) >= 0 ? 'text-success' : 'text-danger') }}" id="pnl-{{ $position['id'] ?? '' }}">
-                                                    ${{ number_format($position['profit_loss'] ?? 0, 2) }}
-                                                </td>
-                                                <td class="{{ (($position['profit_loss_percent'] ?? 0) >= 0 ? 'text-success' : 'text-danger') }}" id="pnl-pct-{{ $position['id'] ?? '' }}">
-                                                    {{ isset($position['profit_loss_percent']) ? number_format($position['profit_loss_percent'], 2) . '%' : '0%' }}
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-success">{{ ucfirst($position['status'] ?? 'open') }}</span>
-                                                </td>
-                                                <td>
-                                                    @if(isset($position['opened_at']) && $position['opened_at'])
-                                                        {{ \Carbon\Carbon::parse($position['opened_at'])->format('Y-m-d H:i') }}
-                                                    @else
-                                                        N/A
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @else
-                                        <tr>
-                                            <td colspan="11" class="text-center text-muted">No open positions</td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        {{-- Queue Status --}}
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-tasks text-info me-2"></i>Queue Status</h6>
             </div>
-        </div>
-
-        {{-- Queue Jobs Monitoring --}}
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card border-warning">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="fa fa-tasks text-warning"></i> Queue Jobs Status
-                        </h5>
+            <div class="card-body">
+                <div class="row text-center g-2">
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="small text-muted mb-1">Pending</div>
+                            <div class="fw-bold" id="pending-jobs">{{ $queueStats['pending'] ?? 0 }}</div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Pending Jobs</h6>
-                                        <h3 id="pending-jobs">{{ $queueStats['pending'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Processing</h6>
-                                        <h3 id="processing-jobs">{{ $queueStats['processing'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Failed Jobs</h6>
-                                        <h3 class="text-danger" id="failed-jobs">{{ $queueStats['failed'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h6>Executions (24h)</h6>
-                                        <h3 id="executions-24h">{{ $queueStats['executions_24h'] ?? 0 }}</h3>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="small text-muted mb-1">Active</div>
+                            <div class="fw-bold text-primary" id="processing-jobs">{{ $queueStats['processing'] ?? 0 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="small text-muted mb-1">Failed</div>
+                            <div class="fw-bold text-danger" id="failed-jobs">{{ $queueStats['failed'] ?? 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -603,7 +382,6 @@
     }
     
     const botId = {{ $bot->id }};
-    let logLevelFilter = '';
     
     // Worker status refresh (every 10 seconds)
     setInterval(function() {
@@ -614,33 +392,28 @@
                     const ws = data.worker_status;
                     const metrics = data.metrics;
                     
-                    // Update worker status badge
+                    // Update worker status badge (if exists in DOM)
                     const badge = document.getElementById('worker-status-badge');
                     if (badge) {
                         badge.textContent = (ws.status || 'stopped').charAt(0).toUpperCase() + (ws.status || 'stopped').slice(1);
                         badge.className = 'badge bg-' + ((ws.status || 'stopped') === 'running' ? 'success' : ((ws.status || 'stopped') === 'dead' ? 'danger' : 'secondary'));
                     }
                     
-                    // Update other fields
-                    if (document.getElementById('worker-pid')) document.getElementById('worker-pid').textContent = ws.worker_pid || 'N/A';
-                    if (document.getElementById('worker-uptime')) document.getElementById('worker-uptime').textContent = ws.uptime || 'N/A';
+                    // Update metrics
                     if (document.getElementById('last-signal-processed')) {
                         document.getElementById('last-signal-processed').textContent = 
-                            metrics.last_signal_processed_at ? 
-                            new Date(metrics.last_signal_processed_at).toLocaleString() : 'Never';
+                            metrics.last_signal_processed_at ? new Date(metrics.last_signal_processed_at).toLocaleString() : 'Never';
                     }
                     if (document.getElementById('last-market-analysis')) {
                         document.getElementById('last-market-analysis').textContent = 
-                            metrics.last_market_analysis_at ? 
-                            new Date(metrics.last_market_analysis_at).toLocaleString() : 'Never';
+                            metrics.last_market_analysis_at ? new Date(metrics.last_market_analysis_at).toLocaleString() : 'Never';
                     }
                     if (document.getElementById('signals-processed')) document.getElementById('signals-processed').textContent = metrics.signals_processed || 0;
                     if (document.getElementById('error-count')) {
                         const ec = document.getElementById('error-count');
                         ec.textContent = metrics.error_count_24h || 0;
-                        ec.className = 'badge bg-' + ((metrics.error_count_24h || 0) > 0 ? 'danger' : 'success');
+                        ec.className = 'badge rounded-pill bg-' + ((metrics.error_count_24h || 0) > 0 ? 'danger' : 'success');
                     }
-                    if (document.getElementById('restart-count')) document.getElementById('restart-count').textContent = metrics.worker_restart_count || 0;
                 }
             })
             .catch(error => console.error('Error fetching worker status:', error));
@@ -655,35 +428,45 @@
                     const stats = data.stats;
                     const positions = data.positions;
                     
-                    // Update stats
+                    // Update stats headings
                     if (document.getElementById('total-open-positions')) document.getElementById('total-open-positions').textContent = stats.total_open || 0;
                     if (document.getElementById('total-unrealized-pnl')) {
                         const pnlEl = document.getElementById('total-unrealized-pnl');
-                        pnlEl.textContent = '$' + parseFloat(stats.total_unrealized_pnl || 0).toFixed(2);
-                        pnlEl.className = (stats.total_unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger';
+                        const pnlVal = parseFloat(stats.total_unrealized_pnl || 0);
+                        pnlEl.textContent = (pnlVal >= 0 ? '+' : '') + pnlVal.toFixed(2);
+                        pnlEl.className = 'mb-0 ' + (pnlVal >= 0 ? 'text-success' : 'text-danger');
                     }
-                    if (document.getElementById('positions-at-risk')) document.getElementById('positions-at-risk').textContent = stats.positions_at_risk || 0;
-                    if (document.getElementById('positions-near-tp')) document.getElementById('positions-near-tp').textContent = stats.positions_near_tp || 0;
                     
                     // Update positions table
                     const tbody = document.getElementById('positions-tbody');
                     if (tbody) {
                         if (positions.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No open positions</td></tr>';
+                            tbody.innerHTML = `<tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                                            <span>No active positions</span>
+                                        </div>
+                                    </td>
+                                </tr>`;
                         } else {
                             tbody.innerHTML = positions.map(p => `
                                 <tr>
-                                    <td>${p.symbol || 'N/A'}</td>
-                                    <td><span class="badge bg-${(p.direction || 'buy') === 'buy' ? 'success' : 'danger'}">${(p.direction || 'N/A').toUpperCase()}</span></td>
-                                    <td>${p.entry_price ? parseFloat(p.entry_price).toFixed(8) : 'N/A'}</td>
-                                    <td id="price-${p.id || ''}">${p.current_price ? parseFloat(p.current_price).toFixed(8) : (p.entry_price ? parseFloat(p.entry_price).toFixed(8) : 'N/A')}</td>
-                                    <td>${p.stop_loss ? parseFloat(p.stop_loss).toFixed(8) : 'N/A'}</td>
-                                    <td>${p.take_profit ? parseFloat(p.take_profit).toFixed(8) : 'N/A'}</td>
-                                    <td>${p.quantity ? parseFloat(p.quantity).toFixed(8) : 'N/A'}</td>
-                                    <td class="${(p.profit_loss || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-${p.id || ''}">$${parseFloat(p.profit_loss || 0).toFixed(2)}</td>
-                                    <td class="${(p.profit_loss_percent || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-pct-${p.id || ''}">${p.profit_loss_percent ? parseFloat(p.profit_loss_percent).toFixed(2) + '%' : '0%'}</td>
-                                    <td><span class="badge bg-success">${(p.status || 'open').charAt(0).toUpperCase() + (p.status || 'open').slice(1)}</span></td>
-                                    <td>${p.opened_at ? new Date(p.opened_at).toLocaleString() : 'N/A'}</td>
+                                    <td class="ps-4 fw-bold">${p.symbol || 'N/A'}</td>
+                                    <td>
+                                        <span class="badge bg-${(p.direction || 'buy') === 'buy' ? 'success' : 'danger'} bg-opacity-10 text-${(p.direction || 'buy') === 'buy' ? 'success' : 'danger'} border border-${(p.direction || 'buy') === 'buy' ? 'success' : 'danger'}">
+                                            ${(p.direction || 'N/A').toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td>${p.entry_price ? parseFloat(p.entry_price).toFixed(8) : '-'}</td>
+                                    <td id="price-${p.id || ''}">${p.current_price ? parseFloat(p.current_price).toFixed(8) : (p.entry_price ? parseFloat(p.entry_price).toFixed(8) : '-')}</td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="${(p.profit_loss || 0) >= 0 ? 'text-success' : 'text-danger'} fw-bold" id="pnl-${p.id || ''}">$${parseFloat(p.profit_loss || 0).toFixed(2)}</span>
+                                            <span class="small ${(p.profit_loss || 0) >= 0 ? 'text-success' : 'text-danger'}" id="pnl-pct-${p.id || ''}">${p.profit_loss_percent ? parseFloat(p.profit_loss_percent).toFixed(2) + '%' : '0%'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end text-muted small">${p.opened_at ? new Date(p.opened_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
                                 </tr>
                             `).join('');
                         }
@@ -693,7 +476,7 @@
             .catch(error => console.error('Error fetching positions:', error));
     }, 5000);
     
-    // Logs refresh (every 10 seconds)
+    // Logs refresh (every 5 seconds)
     function refreshLogs() {
         const level = document.getElementById('log-level-filter')?.value || '';
         fetch(`{{ route('user.trading-management.trading-bots.logs', $bot->id) }}?limit=50&level=${level}`)
@@ -706,18 +489,13 @@
                             container.innerHTML = '<div class="text-muted">No logs found</div>';
                         } else {
                             container.innerHTML = data.logs.map(log => {
-                                // Skip logs with invalid format
-                                if (log.level === 'unknown' && !log.timestamp) {
-                                    return '';
-                                }
-                                const levelClass = log.level === 'error' ? 'text-danger' : (log.level === 'warning' ? 'text-warning' : (log.level === 'info' ? 'text-info' : 'text-muted'));
-                                const level = (log.level || 'info').toUpperCase();
+                                if (log.level === 'unknown' && !log.timestamp) return '';
+                                const levelColor = log.level === 'error' ? 'text-danger' : (log.level === 'warning' ? 'text-warning' : (log.level === 'info' ? 'text-info' : 'text-muted'));
                                 const message = log.message || log.raw || '';
-                                // Only show if we have a valid message
-                                if (!message || message.trim() === '') {
-                                    return '';
-                                }
-                                return `<div class="${levelClass}">[${log.timestamp || 'N/A'}] [${level}] ${message}</div>`;
+                                if (!message || message.trim() === '') return '';
+                                // Format: [10:00:00] [INFO] Message
+                                const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : 'N/A';
+                                return `<div class="mb-1"><span class="text-muted">[${time}]</span> <span class="${levelColor} fw-bold">[${(log.level || 'INFO').toUpperCase()}]</span> <span class="text-light">${message}</span></div>`;
                             }).filter(html => html !== '').join('');
                             container.scrollTop = container.scrollHeight;
                         }
@@ -727,7 +505,7 @@
             .catch(error => console.error('Error fetching logs:', error));
     }
     
-    setInterval(refreshLogs, 10000);
+    setInterval(refreshLogs, 5000);
     refreshLogs(); // Initial load
     
     // Log level filter change
@@ -746,51 +524,40 @@
                     if (document.getElementById('pending-jobs')) document.getElementById('pending-jobs').textContent = qs.pending || 0;
                     if (document.getElementById('processing-jobs')) document.getElementById('processing-jobs').textContent = qs.processing || 0;
                     if (document.getElementById('failed-jobs')) document.getElementById('failed-jobs').textContent = qs.failed || 0;
-                    if (document.getElementById('executions-24h')) document.getElementById('executions-24h').textContent = qs.executions_24h || 0;
                 }
             })
             .catch(error => console.error('Error fetching queue stats:', error));
     }, 15000);
 })();
 
-// Handle bot action forms with confirmation
-// Use vanilla JS or check if jQuery is loaded
+// SweetAlert2 Confirmation
 if (typeof jQuery !== 'undefined') {
     jQuery(document).ready(function($) {
         $('.bot-action-form').on('submit', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
             const form = $(this);
             const message = form.data('confirm-message') || 'Are you sure?';
             
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: '{{ __("Confirmation") }}',
+                    title: 'Confirm Action',
                     text: message,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: '{{ __("Confirm") }}',
-                    cancelButtonText: '{{ __("Cancel") }}'
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         form.off('submit').submit();
                     }
                 });
             } else {
-                if (confirm(message)) {
-                    form.off('submit').submit();
-                }
+                if (confirm(message)) form.off('submit').submit();
             }
-            
-            return false;
         });
     });
-} else {
-    console.error('jQuery not loaded - bot action confirmations will not work');
 }
 </script>
 @endpush

@@ -148,6 +148,14 @@ class FilterStrategy extends Model
     }
 
     /**
+     * Get indicators from config
+     */
+    public function getIndicatorsAttribute()
+    {
+        return $this->config['indicators'] ?? [];
+    }
+
+    /**
      * Check if this filter should skip all analysis
      */
     public function shouldSkipAnalysis(): bool

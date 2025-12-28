@@ -175,7 +175,7 @@
                     <button type="button" id="subBtn" class="btn btn-sm py-2 btn-danger">{{ __('Subtract Balance') }}</button>
                 </div>
 
-                <form action="{{ route('admin.user.balance.update', $user->id) }}" method="post" id="addBalance" class="mt-3">
+                <form action="{{ route('admin.user.balance.update', $user->id) }}" method="post" id="addBalance" class="mt-3" data-user-id="{{ $user->id }}">
                     @csrf
                     <div class="input-group mb-3">
                         <input type="hidden" class="form-control" name="user_id" value="{{ $user->id }}">
@@ -187,7 +187,7 @@
                         </button>
                     </div>
                 </form>
-                <form action="{{ route('admin.user.balance.update', $user->id) }}" method="post" id="subBalance" class="mt-3">
+                <form action="{{ route('admin.user.balance.update', $user->id) }}" method="post" id="subBalance" class="mt-3" data-user-id="{{ $user->id }}">
                     @csrf
                     <div class="input-group mb-3">
                         <input type="hidden" class="form-control" name="user_id" value="{{ $user->id }}">
@@ -469,141 +469,11 @@
 
 @push('scripts')
     <script>
-        
-        
-        $(function() {
-            'use strict'
-
-            let addBalance = $("#addBalance");
-            let subBalance = $("#subBalance");
-
-            addBalance.addClass('d-none');
-            subBalance.addClass('d-none');
-
-            $("#addBtn").on('click', function(){
-                addBalance.toggleClass('d-none');
-                if(subBalance.hasClass('d-none')) {
-                    return true;
-                } else {
-                    subBalance.addClass('d-none');
-                }
-            });
-
-            $("#subBtn").on('click', function(){
-                subBalance.toggleClass('d-none');
-                if(addBalance.hasClass('d-none')) {
-                    return true;
-                } else {
-                    addBalance.addClass('d-none');
-                }
-            });
-            
-            $('#addBalance').on('submit', function(e) {
-                e.preventDefault();
-
-                let formData = $(this).serializeArray();
-                const action = $(this).attr('action');
-                const type = formData[2].value;
-                const balance = formData[3].value;
-
-                Swal.fire({
-                    title: '{{ __('Confirmation') }}',
-                    text: '{{ __('Are you sure to perform this action') }}?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: '{{ __('Update') }}',
-                    cancelButtonText: '{{ __('Close') }}'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const form = $('<form>', {
-                            'method': 'POST',
-                            'action': action
-                        })
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': '_token',
-                            'value': '{{ csrf_token() }}'
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'user_id',
-                            'value': '{{ $user->id }}'
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'type',
-                            'value': type
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'balance',
-                            'value': balance
-                        }))
-                        $('body').append(form)
-                        form.submit()
-                    }
-                })
-            })
-
-
-            $('#subBalance').on('submit', function(e) {
-                e.preventDefault();
-
-                let formData = $(this).serializeArray();
-                const action = $(this).attr('action');
-                const type = formData[2].value;
-                const balance = formData[3].value;
-
-                Swal.fire({
-                    title: '{{ __('Confirmation') }}',
-                    text: '{{ __('Are you sure to perform this action') }}?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: '{{ __('Update') }}',
-                    cancelButtonText: '{{ __('Close') }}'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const form = $('<form>', {
-                            'method': 'POST',
-                            'action': action
-                        })
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': '_token',
-                            'value': '{{ csrf_token() }}'
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'user_id',
-                            'value': '{{ $user->id }}'
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'type',
-                            'value': type
-                        }))
-                        form.append($('<input>', {
-                            'type': 'hidden',
-                            'name': 'balance',
-                            'value': balance
-                        }))
-                        $('body').append(form)
-                        form.submit()
-                    }
-                })
-            })
-
-            $('.sendMail').on('click', function(e) {
-                e.preventDefault();
-
-                const modal = $('#mail');
-
-                modal.modal('show');
-            })
-        })
+        window.csrf_token = "{{ csrf_token() }}";
+        window.confirmationTitle = "{{ __('Confirmation') }}";
+        window.confirmationText = "{{ __('Are you sure to perform this action') }}?";
+        window.updateButtonText = "{{ __('Update') }}";
+        window.closeButtonText = "{{ __('Close') }}";
     </script>
+    <script src="{{ asset('js/pages/admin/users-details.js') }}"></script>
 @endpush

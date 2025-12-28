@@ -39,6 +39,11 @@
             <i data-feather="layout"></i> Backend Themes
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" id="landing-tab" data-toggle="tab" href="#landing" role="tab" aria-controls="landing" aria-selected="false">
+            <i data-feather="home"></i> Landing Pages
+        </a>
+    </li>
 </ul>
 
 <div class="tab-content" id="themeTabContent">
@@ -223,6 +228,113 @@
             </div>
         </div>
     </div>
+
+    <!-- Landing Pages Tab -->
+    <div class="tab-pane fade" id="landing" role="tabpanel" aria-labelledby="landing-tab">
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table" id="landingPagesTable">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('Landing Page') }}</th>
+                                        <th>{{ __('Version') }}</th>
+                                        <th>{{ __('Author') }}</th>
+                                        <th>{{ __('Status') }}</th>
+                                        <th>{{ __('Actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <h5 class="mb-1">{{ __('Active Theme Default') }}</h5>
+                                            <small class="text-muted d-block">{{ __('Uses the home page defined in your active theme.') }}</small>
+                                        </td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td>
+                                            @php
+                                                $config = \App\Models\Configuration::first();
+                                            @endphp
+                                            @if(!$config->landing_page)
+                                                <span class="badge badge-success">{{ __('Activated') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">{{ __('Inactive') }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($config->landing_page)
+                                                <a href="#" class="btn btn-sm btn-primary active-landing-btn" data-landing="default">
+                                                    <i data-feather="check"></i> {{ __('Activate') }}
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+
+                                    @foreach($landings as $landing)
+                                    <tr>
+                                        <td>
+                                            <h5 class="mb-1">{{ $landing['display_name'] }}</h5>
+                                            @if(isset($landing['description']))
+                                                <small class="text-muted d-block">{{ $landing['description'] }}</small>
+                                            @endif
+                                        </td>
+                                        <td>{{ $landing['version'] ?? '-' }}</td>
+                                        <td>{{ $landing['author'] ?? '-' }}</td>
+                                        <td>
+                                            @if($landing['is_active'])
+                                                <span class="badge badge-success">{{ __('Activated') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">{{ __('Inactive') }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if(!$landing['is_active'])
+                                                <a href="#" class="btn btn-sm btn-primary active-landing-btn" data-landing="{{ $landing['name'] }}">
+                                                    <i data-feather="check"></i> {{ __('Activate') }}
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activate Landing Page Modal -->
+<div class="modal fade" id="activeLanding" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form action="{{ route('admin.manage.landing.update') }}" method="post">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ __('Activate Landing Page') }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <input type="hidden" name="landing_page" id="activeLandingName">
+                        <p>{{ __('Are you sure you want to activate this landing page?') }}</p>
+                        <p class="mb-0"><strong id="activeLandingDisplayName"></strong></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('Close') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Activate') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Activate Frontend Theme Modal -->
@@ -378,7 +490,7 @@
 </div>
 @endsection
 
-@push('scripts')
+@push('script')
 <style>
     .nav-tabs {
         border-bottom: 2px solid #ddd;
@@ -397,9 +509,7 @@
         font-weight: 600;
     }
 </style>
-@endpush
 
-@push('scripts')
 <script>
     $(function() {
         'use strict'
@@ -444,6 +554,19 @@
             $('#deleteThemeForm').attr('action', deleteUrl);
             $('#deleteThemeName').text(displayName);
             $('#deleteThemeModal').modal('show');
+        });
+
+        // Activate Landing Page
+        $('.active-landing-btn').on('click', function(e) {
+            e.preventDefault();
+            const modal = $('#activeLanding');
+            const landingName = $(this).data('landing');
+            const displayName = $(this).closest('tr').find('h5').text().trim();
+
+            modal.find('#activeLandingName').val(landingName);
+            modal.find('#activeLandingDisplayName').text(displayName);
+
+            modal.modal('show');
         });
 
         // Reinitialize feather icons after tab switch

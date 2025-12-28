@@ -99,6 +99,10 @@ The system SHALL provide real-time monitoring capabilities including status, hea
 - **WHEN** monitoring page is open
 - **THEN** the system SHALL auto-refresh data every 5 seconds
 
+#### Scenario: Display descriptive outcome badges
+- **WHEN** a signal has an outcome (TP Hit, SL Hit, etc.)
+- **THEN** the system SHALL display a color-coded status badge on the dashboard
+
 ### Requirement: Enhanced Bot Configuration
 The system SHALL support advanced configuration options including data fetch interval and filter priority.
 

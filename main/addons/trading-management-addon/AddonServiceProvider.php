@@ -179,6 +179,20 @@ class AddonServiceProvider extends ServiceProvider
             );
         }
 
+        // Execution module services and repositories
+        if ($this->isModuleEnabled('execution')) {
+            // Bind repository interface to implementation
+            $this->app->bind(
+                \Addons\TradingManagement\Modules\Execution\Repositories\ExecutionRepositoryInterface::class,
+                \Addons\TradingManagement\Modules\Execution\Repositories\ExecutionRepository::class
+            );
+
+            // Register execution operations service
+            $this->app->singleton(
+                \Addons\TradingManagement\Modules\Execution\Services\ExecutionOperationsService::class
+            );
+        }
+
         // Copy Trading services
         if ($this->isModuleEnabled('copy_trading')) {
             $this->app->singleton(

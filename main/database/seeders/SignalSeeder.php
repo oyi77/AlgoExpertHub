@@ -53,14 +53,24 @@ class SignalSeeder extends Seeder
             $direction = $directions[array_rand($directions)];
             
             // Generate realistic prices
-            $basePrice = rand(100, 50000) / 100;
+            // Generate realistic prices
+            $basePrice = match(true) {
+                str_contains($pair->name, 'JPY') => rand(14000, 16000) / 100, // 140.00 - 160.00
+                str_contains($pair->name, 'XAU') || str_contains($pair->name, 'GOLD') => rand(250000, 275000) / 100, // 2500.00 - 2750.00
+                str_contains($pair->name, 'BTC') => rand(9000000, 9800000) / 100, // 90000.00 - 98000.00
+                str_contains($pair->name, 'ETH') => rand(320000, 360000) / 100, // 3200.00 - 3600.00
+                str_contains($pair->name, 'US500') || str_contains($pair->name, 'SPX') => rand(580000, 600000) / 100, // 5800.00 - 6000.00
+                str_contains($pair->name, 'US30') || str_contains($pair->name, 'DJI') => rand(4200000, 4400000) / 100, // 42000.00 - 44000.00
+                default => rand(10500, 11500) / 10000, // 1.0500 - 1.1500 (EUR/USD, GBP/USD range)
+            };
+
             $openPrice = $basePrice;
             $sl = $direction === 'buy' 
-                ? $basePrice * (1 - rand(10, 50) / 1000) // 1-5% below for buy
-                : $basePrice * (1 + rand(10, 50) / 1000); // 1-5% above for sell
+                ? $basePrice * (1 - rand(5, 20) / 1000) // 0.5-2% below for buy
+                : $basePrice * (1 + rand(5, 20) / 1000); // 0.5-2% above for sell
             $tp = $direction === 'buy'
-                ? $basePrice * (1 + rand(20, 100) / 1000) // 2-10% above for buy
-                : $basePrice * (1 - rand(20, 100) / 1000); // 2-10% below for sell
+                ? $basePrice * (1 + rand(10, 40) / 1000) // 1-4% above for buy
+                : $basePrice * (1 - rand(10, 40) / 1000); // 1-4% below for sell
 
             $isPublished = rand(0, 10) > 2; // 80% published
             // published_date is NOT NULL, so always set a value

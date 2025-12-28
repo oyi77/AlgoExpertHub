@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Addons\TradingManagement\Modules\Execution\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionLog;
+use Addons\TradingManagement\Modules\Execution\Services\ExecutionOperationsService;
 use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
-use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionAnalytic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,43 +15,28 @@ use Illuminate\Support\Facades\DB;
  * Trading Operations Controller
  * 
  * Handles executions, positions, and analytics views
+ * 
+ * Refactored to use service layer pattern - all business logic delegated to ExecutionOperationsService
  */
 class TradingOperationsController extends Controller
 {
+    protected ExecutionOperationsService $service;
+
+    public function __construct(ExecutionOperationsService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * Executions log
      */
     public function executions(Request $request)
     {
         $title = 'Execution Log';
-        $query = ExecutionLog::with(['connection', 'signal']);
-
-        // Filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('connection_id')) {
-            $query->where('connection_id', $request->connection_id);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-
-        $executions = $query->orderBy('created_at', 'desc')->paginate(50);
-
-        // Stats
-        $stats = [
-            'total' => ExecutionLog::count(),
-            'success' => ExecutionLog::where('status', 'SUCCESS')->count(),
-            'failed' => ExecutionLog::where('status', 'FAILED')->count(),
-            'pending' => ExecutionLog::where('status', 'PENDING')->count(),
-        ];
+        
+        $result = $this->service->getExecutionLogs($request);
+        $executions = $result['executions'];
+        $stats = $result['stats'];
 
         return view('trading-management::backend.trading-management.operations.executions', compact('title', 'executions', 'stats'));
     }
@@ -60,26 +47,10 @@ class TradingOperationsController extends Controller
     public function openPositions(Request $request)
     {
         $title = 'Open Positions';
-        $query = ExecutionPosition::with(['connection', 'signal', 'preset'])
-            ->where('status', 'open');
-
-        // Filters
-        if ($request->filled('connection_id')) {
-            $query->where('connection_id', $request->connection_id);
-        }
-
-        if ($request->filled('symbol')) {
-            $query->where('symbol', 'like', '%' . $request->symbol . '%');
-        }
-
-        $positions = $query->orderBy('created_at', 'desc')->paginate(50);
-
-        // Stats
-        $stats = [
-            'total_open' => ExecutionPosition::where('status', 'open')->count(),
-            'total_pnl' => ExecutionPosition::where('status', 'open')->sum('pnl'),
-            'avg_pnl' => ExecutionPosition::where('status', 'open')->avg('pnl'),
-        ];
+        
+        $result = $this->service->getOpenPositions($request);
+        $positions = $result['positions'];
+        $stats = $result['stats'];
 
         return view('trading-management::backend.trading-management.operations.positions-open', compact('title', 'positions', 'stats'));
     }
@@ -91,26 +62,7 @@ class TradingOperationsController extends Controller
     {
         $positionIds = $request->input('position_ids', []);
         
-        if (empty($positionIds)) {
-            return response()->json([
-                'success' => true,
-                'data' => []
-            ]);
-        }
-
-        $positions = ExecutionPosition::whereIn('id', $positionIds)
-            ->where('status', 'open')
-            ->get();
-
-        $updates = $positions->map(function ($position) {
-            return [
-                'id' => $position->id,
-                'current_price' => $position->current_price,
-                'pnl' => $position->pnl,
-                'pnl_percentage' => $position->pnl_percentage,
-                'last_price_update_at' => $position->last_price_update_at ? $position->last_price_update_at->toIso8601String() : null,
-            ];
-        });
+        $updates = $this->service->getPositionUpdates($positionIds);
 
         return response()->json([
             'success' => true,
@@ -124,35 +76,10 @@ class TradingOperationsController extends Controller
     public function closedPositions(Request $request)
     {
         $title = 'Closed Positions';
-        $query = ExecutionPosition::with(['connection', 'signal', 'preset'])
-            ->where('status', 'closed');
-
-        // Filters
-        if ($request->filled('connection_id')) {
-            $query->where('connection_id', $request->connection_id);
-        }
-
-        if ($request->filled('symbol')) {
-            $query->where('symbol', 'like', '%' . $request->symbol . '%');
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('closed_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('closed_at', '<=', $request->date_to);
-        }
-
-        $positions = $query->orderBy('closed_at', 'desc')->paginate(50);
-
-        // Stats
-        $stats = [
-            'total_closed' => ExecutionPosition::where('status', 'closed')->count(),
-            'total_profit' => ExecutionPosition::where('status', 'closed')->where('pnl', '>', 0)->sum('pnl'),
-            'total_loss' => ExecutionPosition::where('status', 'closed')->where('pnl', '<', 0)->sum('pnl'),
-            'win_rate' => $this->calculateWinRate(),
-        ];
+        
+        $result = $this->service->getClosedPositions($request);
+        $positions = $result['positions'];
+        $stats = $result['stats'];
 
         return view('trading-management::backend.trading-management.operations.positions-closed', compact('title', 'positions', 'stats'));
     }
@@ -162,77 +89,14 @@ class TradingOperationsController extends Controller
      */
     public function analytics(Request $request)
     {
-        // Get date range (default last 30 days)
-        $dateFrom = $request->input('date_from', now()->subDays(30)->toDateString());
-        $dateTo = $request->input('date_to', now()->toDateString());
-
-        // Performance metrics
-        $metrics = [
-            'total_trades' => ExecutionPosition::where('status', 'closed')
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->count(),
-            
-            'winning_trades' => ExecutionPosition::where('status', 'closed')
-                ->where('pnl', '>', 0)
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->count(),
-            
-            'losing_trades' => ExecutionPosition::where('status', 'closed')
-                ->where('pnl', '<', 0)
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->count(),
-            
-            'total_pnl' => ExecutionPosition::where('status', 'closed')
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->sum('pnl'),
-            
-            'avg_win' => ExecutionPosition::where('status', 'closed')
-                ->where('pnl', '>', 0)
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->avg('pnl'),
-            
-            'avg_loss' => ExecutionPosition::where('status', 'closed')
-                ->where('pnl', '<', 0)
-                ->whereBetween('closed_at', [$dateFrom, $dateTo])
-                ->avg('pnl'),
-        ];
-
-        // Calculate derived metrics
-        $metrics['win_rate'] = $metrics['total_trades'] > 0 
-            ? ($metrics['winning_trades'] / $metrics['total_trades']) * 100 
-            : 0;
-
-        $metrics['profit_factor'] = abs($metrics['avg_loss']) > 0 
-            ? abs($metrics['avg_win'] / $metrics['avg_loss']) 
-            : 0;
-
-        // Daily PnL chart data
-        $dailyPnl = ExecutionPosition::select(
-                DB::raw('DATE(closed_at) as date'),
-                DB::raw('SUM(pnl) as pnl'),
-                DB::raw('COUNT(*) as trades')
-            )
-            ->where('status', 'closed')
-            ->whereBetween('closed_at', [$dateFrom, $dateTo])
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // Top performing connections
-        $topConnections = ExecutionPosition::select(
-                'connection_id',
-                DB::raw('COUNT(*) as total_trades'),
-                DB::raw('SUM(pnl) as total_pnl')
-            )
-            ->with('connection')
-            ->where('status', 'closed')
-            ->whereBetween('closed_at', [$dateFrom, $dateTo])
-            ->groupBy('connection_id')
-            ->orderBy('total_pnl', 'desc')
-            ->limit(10)
-            ->get();
-
         $title = 'Trading Analytics';
+        
+        $result = $this->service->getAnalytics($request);
+        $metrics = $result['metrics'];
+        $dailyPnl = $result['dailyPnl'];
+        $topConnections = $result['topConnections'];
+        $dateFrom = $result['dateFrom'];
+        $dateTo = $result['dateTo'];
 
         return view('trading-management::backend.trading-management.operations.analytics', compact(
             'title',
@@ -517,16 +381,6 @@ class TradingOperationsController extends Controller
         }
     }
 
-    /**
-     * Calculate win rate
-     */
-    protected function calculateWinRate()
-    {
-        $total = ExecutionPosition::where('status', 'closed')->count();
-        $wins = ExecutionPosition::where('status', 'closed')->where('pnl', '>', 0)->count();
-
-        return $total > 0 ? ($wins / $total) * 100 : 0;
-    }
 
     /**
      * Get adapter for connection

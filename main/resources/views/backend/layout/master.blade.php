@@ -133,6 +133,7 @@
     </script>
     @endif
 
+    @livewireStyles
 </head>
 <body>
 
@@ -212,6 +213,7 @@
     @stack('script')
     @include('backend.layout.alert')
 
+    @livewireScripts
     <script>
         // Ensure jQuery is available before executing any scripts
         (function() {

@@ -441,16 +441,7 @@
 <script src="{{ asset('asset/frontend/trading-v1/js/layout-manager.js') }}"></script>
 
 <!-- String.trimStart polyfill for older browsers -->
-<script>
-    if (!String.prototype.trimStart) {
-        String.prototype.trimStart = function() {
-            return this.replace(/^\s+/, '');
-        };
-    }
-    if (!String.prototype.trimLeft) {
-        String.prototype.trimLeft = String.prototype.trimStart;
-    }
-</script>
+<script src="{{ asset('asset/frontend/trading-v1/js/polyfill.js') }}"></script>
 <!-- Golden Layout -->
 <script src="{{ asset('asset/frontend/trading-v1/js/goldenlayout.js') }}"></script>
 <!-- ECharts -->

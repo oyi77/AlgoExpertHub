@@ -127,6 +127,8 @@
         <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
     @endif
 
+    <script src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
+
     <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
 
     @include('alert')

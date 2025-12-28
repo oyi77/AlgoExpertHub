@@ -76,24 +76,8 @@
 
 @push('scripts')
     <script>
-        $(function() {
-            'use strict'
-
-            $.uploadPreview({
-                input_field: "#image-upload", // Default: .image-upload
-                preview_box: "#image-preview", // Default: .image-preview
-                label_field: "#image-label", // Default: .image-label
-                label_default: "{{ __('Choose File') }}", // Default: Choose File
-                label_selected: "{{ __('Update Image') }}", // Default: Change File
-                no_label: false, // Default: false
-                success_callback: null // Default: null
-            });
-
-            $('.site-currency').on('keyup', function() {
-                $('.append_currency').text($(this).val())
-            })
-
-            $('.append_currency').text($('.site-currency').val())
-        })
+        window.chooseFileLabel = "{{ __('Choose File') }}";
+        window.updateImageLabel = "{{ __('Update Image') }}";
     </script>
+    <script src="{{ asset('js/pages/admin/gateway-form.js') }}"></script>
 @endpush

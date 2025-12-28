@@ -228,8 +228,17 @@ class TradingBotStrategyWorker
         }
 
         $credentials = $dataConnection->credentials ?? [];
-        $accountId = $credentials['account_id'] ?? null;
+        $accountId = $credentials['account_id'] ?? 
+                    $credentials['metaapi_account_id'] ?? 
+                    $credentials['accountId'] ?? 
+                    $credentials['metaapiAccountId'] ?? 
+                    null;
+        
         if (!$accountId) {
+             Log::warning('TradingBotStrategyWorker: No account_id in data connection credentials', [
+                'bot_id' => $this->bot->id,
+                'available_keys' => array_keys($credentials),
+            ]);
             return [
                 'healthy' => false,
                 'can_recover' => false,
@@ -319,7 +328,12 @@ class TradingBotStrategyWorker
                         if (!empty($fetchedCandles)) {
                             // Store in Redis list (same format as streaming)
                             $credentials = $dataConnection->credentials ?? [];
-                            $accountId = $credentials['account_id'] ?? null;
+                            $accountId = $credentials['account_id'] ?? 
+                                        $credentials['metaapi_account_id'] ?? 
+                                        $credentials['accountId'] ?? 
+                                        $credentials['metaapiAccountId'] ?? 
+                                        null;
+                            
                             if ($accountId) {
                                 $redisPrefix = config('trading-management.metaapi.streaming.redis_prefix', 'metaapi:stream');
                                 $candlesCacheKey = sprintf('%s:%s:%s:%s:candles', $redisPrefix, $accountId, $symbol, $timeframe);
@@ -400,7 +414,11 @@ class TradingBotStrategyWorker
         }
 
         $credentials = $dataConnection->credentials ?? [];
-        $accountId = $credentials['account_id'] ?? null;
+        $accountId = $credentials['account_id'] ?? 
+                    $credentials['metaapi_account_id'] ?? 
+                    $credentials['accountId'] ?? 
+                    $credentials['metaapiAccountId'] ?? 
+                    null;
 
         if (!$accountId) {
             return;
@@ -465,12 +483,17 @@ class TradingBotStrategyWorker
         }
 
         $credentials = $dataConnection->credentials ?? [];
-        $accountId = $credentials['account_id'] ?? null;
+        $accountId = $credentials['account_id'] ?? 
+                    $credentials['metaapi_account_id'] ?? 
+                    $credentials['accountId'] ?? 
+                    $credentials['metaapiAccountId'] ?? 
+                    null;
 
         if (!$accountId) {
             Log::warning('TradingBotStrategyWorker: No account_id in data connection', [
                 'bot_id' => $this->bot->id,
                 'data_connection_id' => $dataConnection->id,
+                'available_keys' => array_keys($credentials),
             ]);
             return [];
         }

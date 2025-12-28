@@ -47,4 +47,28 @@ class Config
             'why_choose_us'
         ];
     }
+
+    /**
+     * Translate a string using Laravel's translation system
+     * 
+     * @param string $key The translation key or default text
+     * @param array $replace Optional replacement values
+     * @param string|null $locale Optional locale
+     * @return string Translated string
+     */
+    public static function trans($key, $replace = [], $locale = null)
+    {
+        return __($key, $replace, $locale);
+    }
+
+    /**
+     * Get a configuration value from the builder
+     * 
+     * @param string $key The configuration key
+     * @return mixed Configuration value
+     */
+    public static function builder($key)
+    {
+        return \App\Helpers\Helper\Helper::builder($key);
+    }
 }

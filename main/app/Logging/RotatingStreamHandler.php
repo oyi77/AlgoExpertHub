@@ -30,7 +30,7 @@ class RotatingStreamHandler extends StreamHandler
     /**
      * {@inheritdoc}
      */
-    protected function write(array $record): void
+    protected function write(\Monolog\LogRecord $record): void
     {
         $this->writeCount++;
         

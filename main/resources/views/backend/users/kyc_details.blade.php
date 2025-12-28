@@ -112,30 +112,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        $(function() {
-            'use strict'
-            
-            $('.approve').on('click', function() {
-                const modal = $('#approve')
-
-
-                modal.find('form').attr('action', $(this).data('url'))
-
-
-                modal.modal('show')
-            })
-
-
-            $('.reject').on('click', function() {
-                const modal = $('#reject')
-
-
-                modal.find('form').attr('action', $(this).data('url'))
-
-
-                modal.modal('show')
-            })
-        })
-    </script>
+    <script src="{{ asset('js/pages/admin/users-kyc-details.js') }}"></script>
 @endpush

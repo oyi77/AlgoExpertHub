@@ -92,21 +92,8 @@
 
 @push('scripts')
     <script>
-        $(function() {
-            'use strict'
-            
-            $(".js-example-tokenizer").select2({
-                placeholder: "Select Role"
-            })
-            $.uploadPreview({
-                input_field: "#image-upload", // Default: .image-upload
-                preview_box: "#image-preview", // Default: .image-preview
-                label_field: "#image-label", // Default: .image-label
-                label_default: "{{ __('Choose File') }}", // Default: Choose File
-                label_selected: "{{ __('Update Image') }}", // Default: Change File
-                no_label: false, // Default: false
-                success_callback: null // Default: null
-            });
-        })
+        window.chooseFileLabel = "{{ __('Choose File') }}";
+        window.updateImageLabel = "{{ __('Update Image') }}";
     </script>
+    <script src="{{ asset('js/pages/admin/admins-form.js') }}"></script>
 @endpush

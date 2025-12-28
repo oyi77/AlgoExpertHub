@@ -128,6 +128,47 @@ class ExchangeConnection extends Model
     {
         return $this->provider ?? $this->exchange_name ?? '';
     }
-    
+
+    /**
+     * Get type label with legacy compatibility
+     * Handles mapping for views that expect 'mtapi' or 'ccxt_crypto'
+     */
+    public function getTypeAttribute($value)
+    {
+        // Return existing valid legacy values if present
+        if ($value === 'mtapi' || $value === 'ccxt_crypto') {
+            return $value;
+        }
+
+        // Map based on new connection_type enum if available
+        if (isset($this->attributes['connection_type'])) {
+            if ($this->attributes['connection_type'] === 'CRYPTO_EXCHANGE') {
+                return 'ccxt_crypto';
+            }
+            if ($this->attributes['connection_type'] === 'FX_BROKER') {
+                return 'mtapi';
+            }
+        }
+
+        // Fallback based on provider
+        $provider = $this->provider ?? $this->exchange_name;
+        if (in_array($provider, ['metaapi', 'mtapi', 'mtapi_grpc'])) {
+            return 'mtapi';
+        }
+
+        if (in_array($provider, ['binance', 'coinbase', 'coinbasepro', 'kraken', 'bybit', 'kucoin', 'okx'])) {
+            return 'ccxt_crypto';
+        }
+        
+        // Handle mapped values from controller that might have been saved
+        if ($value === 'crypto') {
+            return 'ccxt_crypto';
+        }
+        if ($value === 'fx') {
+            return 'mtapi';
+        }
+
+        return $value ?? 'Unknown';
+    }
 }
 

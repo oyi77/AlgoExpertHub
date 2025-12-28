@@ -27,11 +27,11 @@ class SecurityHeaders
         // Content Security Policy
         $response->headers->set('Content-Security-Policy', 
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; " .
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .
-            "font-src 'self' https://fonts.gstatic.com; " .
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://s3.tradingview.com; " .
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://maxst.icons8.com; " .
+            "font-src 'self' https://fonts.gstatic.com https://maxst.icons8.com https://cdnjs.cloudflare.com data:; " .
             "img-src 'self' data: https:; " .
-            "connect-src 'self' https://api.tradingview.com;"
+            "connect-src 'self' https://api.tradingview.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://cdn.shopimgs.com;"
         );
 
         // Prevent clickjacking

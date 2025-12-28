@@ -24,6 +24,28 @@ class AppServiceProvider extends ServiceProvider
         // Register queue optimization services
         $this->app->singleton(\App\Services\QueueOptimizer::class);
         
+        // Register services
+        $this->app->singleton(\App\Services\CopyTradingService::class);
+        $this->app->singleton(\App\Services\ApiTradingOperationsService::class);
+        $this->app->singleton(\App\Services\LanguageTranslationService::class);
+
+        // Bind Repositories
+        $this->app->bind(
+            \App\Repositories\TradingRepositoryInterface::class,
+            \App\Repositories\TradingRepository::class
+        );
+        $this->app->bind(
+            \App\Repositories\CopyTradingRepositoryInterface::class,
+            \App\Repositories\CopyTradingRepository::class
+        );
+        $this->app->bind(
+            \App\Repositories\TradeRepositoryInterface::class,
+            \App\Repositories\TradeRepository::class
+        );
+        $this->app->bind(
+            \App\Repositories\LanguageTranslationRepositoryInterface::class,
+            \App\Repositories\LanguageTranslationRepository::class
+        );
     }
     
     public function boot()

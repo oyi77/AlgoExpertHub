@@ -94,62 +94,7 @@
 
 @push('scripts')
     <script>
-        'use strict'
-
-        $(function() {
-
-            $(".js-example-tokenizer").select2({
-                placeholder: "Give Permission",
-                tags: true,
-                tokenSeparators: [',', ' ']
-            })
-
-            $('.status').on('change', function() {
-
-                let id = $(this).data('id');
-                let route = $(this).data('route');
-
-                $.ajax({
-
-                    url: route,
-                    method: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        @include('backend.layout.ajax_alert', [
-                            'message' => 'Successfully change status',
-                            'message_error' => '',
-                        ])
-                    }
-
-                })
-            })
-
-
-            $('.add').on('click', function() {
-                const modal = $('#role')
-
-
-                modal.modal('show')
-            })
-
-
-            $('.edit').on('click', function() {
-                const modal = $('#role_edit')
-
-                modal.find('input[name=role]').val($(this).data('name'));
-
-                modal.find('form').attr('action', $(this).data('href'));
-
-
-                modal.find('.js-example-tokenizer').val($(this).data('permission')).trigger('change')
-
-            
-
-                modal.modal('show')
-            })
-
-        })
+        window.csrf_token = "{{ csrf_token() }}";
     </script>
+    <script src="{{ asset('js/pages/admin/admins-index.js') }}"></script>
 @endpush
