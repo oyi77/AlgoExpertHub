@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 
@@ -33,12 +34,15 @@ class GlobalConfiguration extends Model
     public static function getValue(string $key, $default = null)
     {
         try {
-            if (!Schema::hasTable('global_configurations')) {
-                \Log::warning('global_configurations table does not exist', ['key' => $key]);
-                return $default;
-            }
-            $config = static::where('config_key', $key)->first();
-            return $config ? $config->config_value : $default;
+            // Cache for 24 hours to avoid frequent database queries
+            return Cache::remember("global_config:{$key}", 86400, function () use ($key, $default) {
+                if (!Schema::hasTable('global_configurations')) {
+                    \Log::warning('global_configurations table does not exist', ['key' => $key]);
+                    return $default;
+                }
+                $config = static::where('config_key', $key)->first();
+                return $config ? $config->config_value : $default;
+            });
         } catch (\Exception $e) {
             \Log::error('GlobalConfiguration::getValue error', [
                 'key' => $key,
@@ -63,6 +67,9 @@ class GlobalConfiguration extends Model
                 \Log::warning('global_configurations table does not exist', ['key' => $key]);
                 throw new \Exception('global_configurations table does not exist');
             }
+
+            Cache::forget("global_config:{$key}");
+
             return static::updateOrCreate(
                 ['config_key' => $key],
                 [
