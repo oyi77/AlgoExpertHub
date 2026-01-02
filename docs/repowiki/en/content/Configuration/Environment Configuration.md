@@ -16,8 +16,8 @@
 - [config/laravel-crypto-payment-gateway.php](file://main/config/laravel-crypto-payment-gateway.php)
 - [addons/openrouter-integration-addon/config/openrouter.php](file://main/addons/openrouter-integration-addon/config/openrouter.php)
 - [addons/algoexpert-plus-addon/config/algoexpert-plus.php](file://main/addons/algoexpert-plus-addon/config/algoexpert-plus.php)
-- [docs/env-configuration-translation.md](file://main/docs/env-configuration-translation.md)
-- [docs/deployment-guide.md](file://main/docs/deployment-guide.md)
+- [docs/env-configuration-translation.md](./development/env-configuration-translation.md)
+- [docs/deployment-guide.md](./deployment/deployment-guide-main.md)
 </cite>
 
 ## Table of Contents
@@ -312,8 +312,8 @@ Common configuration errors and resolutions:
 - Redis connectivity: Confirm REDIS_HOST, REDIS_PORT, REDIS_PASSWORD; ensure Redis server is reachable.
 
 **Section sources**
-- [docs/env-configuration-translation.md](file://main/docs/env-configuration-translation.md#L144-L192)
-- [docs/deployment-guide.md](file://main/docs/deployment-guide.md#L406-L463)
+- [docs/env-configuration-translation.md](./development/env-configuration-translation.md#L144-L192)
+- [docs/deployment-guide.md](./deployment/deployment-guide-main.md#L406-L463)
 
 ## Conclusion
 Environment-based configuration enables flexible, secure, and scalable deployment across environments. Use .env files to override defaults in config/, apply environment-specific examples, and follow security best practices to protect sensitive credentials. Monitor and tune configuration for performance and reliability.
@@ -331,8 +331,8 @@ Environment-based configuration enables flexible, secure, and scalable deploymen
 - Use admin panels for payment gateway credentials where applicable.
 
 **Section sources**
-- [docs/env-configuration-translation.md](file://main/docs/env-configuration-translation.md#L182-L192)
-- [docs/deployment-guide.md](file://main/docs/deployment-guide.md#L406-L463)
+- [docs/env-configuration-translation.md](./development/env-configuration-translation.md#L182-L192)
+- [docs/deployment-guide.md](./deployment/deployment-guide-main.md#L406-L463)
 
 ### Environment-Specific Configuration Examples
 - Development: Local SMTP, file cache/session, debug enabled, low logging level.

@@ -29,7 +29,16 @@ Welcome to the AlgoExpertHub documentation. This guide will help you navigate th
 - **[Developer Onboarding](./development/onboarding.md)** - Quick start guide for new developers.
 - **[Theme Development](./development/theme-development.md)** - Creating custom frontend themes.
 - **[Performance Optimization](./development/performance-optimization.md)** - Implementation details for performance.
+- **[Performance Playbook](./development/performance-playbook.md)** - Performance best practices and playbook.
+- **[Coding Standards](./development/coding-standards.md)** - Code style and standards guidelines.
+- **[Security Practices](./development/security-practices.md)** - Security best practices.
+- **[Testing Strategy](./development/testing-strategy.md)** - Testing approach and guidelines.
 - **[Database Schema](./development/database-schema.md)** - Reference for database tables.
+- **[Livewire Components](./development/livewire-components.md)** - Livewire component documentation.
+- **[Package Implementation Status](./development/package-implementation-status.md)** - Status of package implementations.
+- **[Implementation Summary](./development/implementation-summary.md)** - Summary of implementations.
+- **[Language Management](./development/language-management-improvements.md)** - Language management improvements.
+- **[Environment Configuration](./development/env-configuration-translation.md)** - Environment configuration guide.
 - **[Troubleshooting](./development/troubleshooting.md)** - Common issues and solutions.
 
 ## 🚀 Deployment
@@ -47,6 +56,9 @@ Welcome to the AlgoExpertHub documentation. This guide will help you navigate th
 
 ## 🔄 Migration
 - **[Laravel 10 Upgrade](./migration/laravel-10-upgrade.md)** - Summary of the upgrade to Laravel 10.
+- **[Laravel Notify Migration](./migration/laravel-notify-migration.md)** - Complete migration guide for Laravel Notify.
+- **[Laravel Notify Migration Audit](./migration/laravel-notify-migration-audit.md)** - Detailed audit report.
+- **[Laravel Notify Migration Summary](./migration/laravel-notify-migration-summary.md)** - Final migration summary.
 - **[Deprecated Addons](./migration/deprecated-addons.md)** - Guide for migrating from deprecated addons.
 
 ## 📚 Archives
