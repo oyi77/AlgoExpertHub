@@ -21,16 +21,8 @@
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'all.min.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'line-awesome.min.css') }}">
 
-    @php
-        $alertType = optional(Config::config())->alert ?? 'sweetalert';
-    @endphp
-    @if ($alertType === 'izi')
-        <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'izitoast.min.css') }}">
-    @elseif($alertType === 'toast')
-        <link href="{{ Config::cssLib('frontend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
-        <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
 
     @stack('external-css')
 
@@ -116,22 +108,14 @@
     @stack('external-script')
 
 
-    @php
-        $alertType = optional(Config::config())->alert ?? 'sweetalert';
-    @endphp
-    @if ($alertType === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
-    @elseif($alertType === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
-    @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
 
     <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
 
     @include('alert')
 
-    @stack('script')
+    @stack('scripts')
 
     <script>
         'use strict'

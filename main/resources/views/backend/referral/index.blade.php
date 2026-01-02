@@ -157,6 +157,32 @@
 @push('scripts')
     <script>
         'use strict';
+        
+        // Helper function to show notifications consistently
+        function showNotification(success, message, title) {
+            if (typeof notify !== 'undefined') {
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title(title || 'Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title(title || 'Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
 
         $(document).ready(function() {
 
@@ -241,44 +267,10 @@
 
                     success: function(response) {
                         if (response.success) {
-
-                            @if (Config::config()->alert === 'izi')
-                                iziToast.success({
-                                    position: 'topRight',
-                                    message: "Refferal changed Successfully",
-                                });
-                            @elseif (Config::config()->alert === 'toast')
-                                toastr.success("Refferal changed Successfully", {
-                                    positionClass: "toast-top-right"
-
-                                })
-                            @else
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: "Refferal changed Successfully"
-                                })
-                            @endif
-
-                            return
+                            showNotification(true, 'Refferal changed Successfully');
+                            return;
                         }
-
-
-                        @if (Config::config()->alert === 'izi')
-                            iziToast.error({
-                                position: 'topRight',
-                                message: "Something went wrong",
-                            });
-                        @elseif (Config::config()->alert === 'toast')
-                            toastr.error("Something went wrong", {
-                                positionClass: "toast-top-right"
-
-                            })
-                        @else
-                            Swal.fire({
-                                icon: 'error',
-                                title: "Something went wrong"
-                            })
-                        @endif
+                        showNotification(false, 'Something went wrong');
                     }
                 })
             })
@@ -306,44 +298,10 @@
 
                     success: function(response) {
                         if (response.success) {
-
-                            @if (Config::config()->alert === 'izi')
-                                iziToast.success({
-                                    position: 'topRight',
-                                    message: "Refferal changed Successfully",
-                                });
-                            @elseif (Config::config()->alert === 'toast')
-                                toastr.success("Refferal changed Successfully", {
-                                    positionClass: "toast-top-right"
-
-                                })
-                            @else
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: "Refferal changed Successfully"
-                                })
-                            @endif
-
-                            return
+                            showNotification(true, 'Refferal changed Successfully');
+                            return;
                         }
-
-
-                        @if (Config::config()->alert === 'izi')
-                            iziToast.error({
-                                position: 'topRight',
-                                message: "Something went wrong",
-                            });
-                        @elseif (Config::config()->alert === 'toast')
-                            toastr.error("Something went wrong", {
-                                positionClass: "toast-top-right"
-
-                            })
-                        @else
-                            Swal.fire({
-                                icon: 'error',
-                                title: "Something went wrong"
-                            })
-                        @endif
+                        showNotification(false, 'Something went wrong');
                     }
                 })
             })

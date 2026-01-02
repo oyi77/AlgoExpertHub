@@ -112,6 +112,32 @@
 
 @push('scripts')
     <script>
+        // Helper function to show notifications consistently
+        function showNotification(success, message, title) {
+            if (typeof notify !== 'undefined') {
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title(title || 'Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title(title || 'Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
         $(function() {
             'use strict'
             $(document).on('change', '.imageUploader', function() {
@@ -136,11 +162,8 @@
                 let currency = $('#currency option:selected').val();
 
                 if (currencyAdded.includes(currency)) {
-                    iziToast.error({
-                        message: "Already Added This Currency",
-                        position: 'topRight'
-                    });
-                    return
+                    showNotification(false, 'Already Added This Currency');
+                    return;
                 }
                 let html = `
 

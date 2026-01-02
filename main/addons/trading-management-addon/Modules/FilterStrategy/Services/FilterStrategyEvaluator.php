@@ -172,6 +172,25 @@ class FilterStrategyEvaluator
                         $indicators[$name] = $this->indicatorService->calculatePSAR($candles, $step, $max);
                         break;
 
+                    case 'atr':
+                    case 'average_true_range':
+                        $period = $params['period'] ?? 14;
+                        $indicators[$name] = $this->indicatorService->calculateATR($candles, $period);
+                        break;
+
+                    case 'adx':
+                    case 'average_directional_index':
+                        $period = $params['period'] ?? 14;
+                        $adxData = $this->indicatorService->calculateADX($candles, $period);
+                        $indicators[$name] = $adxData;
+                        // Also provide +DI and -DI if needed
+                        $adxWithDI = $this->indicatorService->calculateADXWithDI($candles, $period);
+                        if ($adxWithDI['plus_di'] !== null) {
+                            $indicators[$name . '_plus_di'] = $adxWithDI['plus_di'];
+                            $indicators[$name . '_minus_di'] = $adxWithDI['minus_di'];
+                        }
+                        break;
+
                     default:
                         Log::warning("FilterStrategyEvaluator: Unknown indicator type: {$name}");
                         break;

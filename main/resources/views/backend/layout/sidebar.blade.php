@@ -195,51 +195,42 @@
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Execution') }}</span></a>
                     <ul aria-expanded="false">
-                        @if (Route::has('admin.execution-connections.index'))
-                        <li><a href="{{ route('admin.execution-connections.index') }}" aria-expanded="false">{{ __('My Connections') }}</a></li>
+                        @if (Route::has('admin.trading-management.exchange-connections.index'))
+                        <li><a href="{{ route('admin.trading-management.exchange-connections.index') }}" aria-expanded="false">{{ __('Exchange Connections') }}</a></li>
                         @endif
-                        @if (Route::has('admin.execution-executions.index'))
-                        <li><a href="{{ route('admin.execution-executions.index') }}" aria-expanded="false">{{ __('Executions') }}</a></li>
-                        @endif
-                        @if (Route::has('admin.execution-positions.index'))
-                        <li><a href="{{ route('admin.execution-positions.index') }}" aria-expanded="false">{{ __('Open Positions') }}</a></li>
-                        @endif
-                        @if (Route::has('admin.execution-positions.closed'))
-                        <li><a href="{{ route('admin.execution-positions.closed') }}" aria-expanded="false">{{ __('Closed Positions') }}</a></li>
-                        @endif
-                        @if (Route::has('admin.execution-analytics.index'))
-                        <li><a href="{{ route('admin.execution-analytics.index') }}" aria-expanded="false">{{ __('Analytics') }}</a></li>
+                        @if (Route::has('admin.trading-management.operations.index'))
+                        <li><a href="{{ route('admin.trading-management.operations.index') }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
                         @endif
                     </ul>
                 </li>
             @endif
 
             @if ($adminUser && $tradingPresetAdminModuleEnabled && !$tradingManagementEnabled)
-                <li><a href="{{ route('admin.trading-presets.index') }}" aria-expanded="false"><i
+                @if (Route::has('admin.trading-management.config.index'))
+                <li><a href="{{ route('admin.trading-management.config.index') }}" aria-expanded="false"><i
                             data-feather="settings"></i><span class="nav-text">{{ __('Trading Presets') }}</span></a>
                 </li>
+                @endif
             @endif
 
             @if ($adminUser && $filterStrategyAdminModuleEnabled && !$tradingManagementEnabled)
-                @if (Route::has('admin.filter-strategies.index'))
-                <li><a href="{{ route('admin.filter-strategies.index') }}" aria-expanded="false"><i
+                @if (Route::has('admin.trading-management.strategy.index'))
+                <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false"><i
                             data-feather="filter"></i><span class="nav-text">{{ __('Filter Strategies') }}</span></a>
                 </li>
                 @endif
             @endif
 
             @if ($adminUser && $aiTradingAdminModuleEnabled && !$tradingManagementEnabled)
+                @if (Route::has('admin.trading-management.strategy.index'))
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="cpu"></i><span class="nav-text">{{ __('AI Trading') }}</span></a>
                     <ul aria-expanded="false">
-                        @if (Route::has('admin.ai-model-profiles.index'))
-                        <li><a href="{{ route('admin.ai-model-profiles.index') }}" aria-expanded="false">{{ __('AI Model Profiles') }}</a></li>
-                        @endif
-                        @if (Route::has('admin.ai-decision-logs.index'))
-                        <li><a href="{{ route('admin.ai-decision-logs.index') }}" aria-expanded="false">{{ __('Decision Logs') }}</a></li>
-                        @endif
+                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('AI Model Profiles') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.strategy.index') }}" aria-expanded="false">{{ __('Decision Logs') }}</a></li>
                     </ul>
                 </li>
+                @endif
             @endif
 
             @if ($adminUser && $aiConnectionAdminModuleEnabled)
@@ -264,17 +255,15 @@
 
             {{-- OLD: Hidden when new Trading Management active --}}
             @if ($adminUser && $copyTradingAdminModuleEnabled && !$tradingManagementEnabled)
+                @if (Route::has('admin.trading-management.copy-trading.index'))
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="copy"></i><span class="nav-text">{{ __('Copy Trading') }}</span></a>
                     <ul aria-expanded="false">
-                        @if (Route::has('admin.copy-trading.settings'))
-                        <li><a href="{{ route('admin.copy-trading.settings') }}" aria-expanded="false">{{ __('My Settings') }}</a></li>
-                        @endif
-                        @if (Route::has('admin.copy-trading.traders.index'))
-                        <li><a href="{{ route('admin.copy-trading.traders.index') }}" aria-expanded="false">{{ __('Manage Traders') }}</a></li>
-                        @endif
+                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">{{ __('My Settings') }}</a></li>
+                        <li><a href="{{ route('admin.trading-management.copy-trading.index') }}" aria-expanded="false">{{ __('Manage Traders') }}</a></li>
                     </ul>
                 </li>
+                @endif
             @endif
 
             @if ($adminUser && $srmAdminModuleEnabled && !$tradingManagementEnabled)

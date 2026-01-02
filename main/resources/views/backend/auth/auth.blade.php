@@ -12,13 +12,8 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ Config::fetchImage('icon', Config::config()->favicon, true) }}">
 
     
-    @if (Config::config()->alert === 'izi')
-        <link rel="stylesheet" href="{{ Config::cssLib('backend', 'izitoast.min.css') }}">
-    @elseif(Config::config()->alert === 'toast')
-        <link href="{{ Config::cssLib('backend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
-        <link href="{{ Config::cssLib('backend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
 
     <link href="{{ Config::cssLib('backend', 'main.css') }}" rel="stylesheet">
 
@@ -36,18 +31,13 @@
 
     <script src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
 
-    @if (Config::config()->alert === 'izi')
-        <script src="{{ Config::jsLib('backend', 'izitoast.min.js') }}"></script>
-    @elseif(Config::config()->alert === 'toast')
-        <script src="{{ Config::jsLib('backend', 'toastr.min.js') }}"></script>
-    @else
-        <script src="{{ Config::jsLib('backend', 'sweetalert.min.js') }}"></script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
 
     @include('alert')
 
 
-    @stack('script')
+    @stack('scripts')
 
 </body>
 

@@ -22,7 +22,7 @@ class ConfigurationSeeder extends Seeder
                 'currency' => 'usd',
                 'pagination' => 10,
                 'number_format' => 2,
-                'alert' => 'izi',
+                'alert' => 'notify',
                 'logo' => 'logo.png',
                 'favicon' => 'favicon.png',
                 'reg_enabled' => true,

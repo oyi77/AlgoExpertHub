@@ -64,14 +64,20 @@ class AiConnectionService
      * @param string $prompt Prompt to send to AI
      * @param array $options Additional options (temperature, max_tokens, etc.)
      * @param string $feature Feature name for tracking (translation, parsing, market_analysis)
+     * @param int $depth Current recursion depth (internal use)
      * @return array Result with response, tokens_used, cost, connection_used
      */
     public function execute(
         int $connectionId,
         string $prompt,
         array $options = [],
-        string $feature = 'general'
+        string $feature = 'general',
+        int $depth = 0
     ): array {
+        // ✅ Potential Issue #1 Fix: Add depth limit to prevent infinite recursion
+        if ($depth >= 5) {
+            throw new \Exception('Max connection rotation depth reached (5). All connections may be unavailable.');
+        }
         $startTime = microtime(true);
         $connection = AiConnection::find($connectionId);
 
@@ -155,8 +161,8 @@ class AiConnectionService
                 $alternativeConnection = $this->rotationService->getNextConnection($connection->provider_id, $connectionId);
 
                 if ($alternativeConnection) {
-                    // Recursive call with alternative connection
-                    return $this->execute($alternativeConnection->id, $prompt, $options, $feature);
+                    // ✅ Potential Issue #1 Fix: Recursive call with incremented depth
+                    return $this->execute($alternativeConnection->id, $prompt, $options, $feature, $depth + 1);
                 }
             }
 

@@ -220,8 +220,8 @@
             <span>SUPPORT</span>
         </div>
         
-        @if(Route::has('user.ticket'))
-            <a href="{{ route('user.ticket') }}" class="tv-sidebar-link {{ request()->routeIs('user.ticket*') ? 'active' : '' }}">
+        @if(Route::has('user.ticket.index'))
+            <a href="{{ route('user.ticket.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.ticket*') ? 'active' : '' }}">
                 <i class="las la-ticket-alt"></i>
                 <span>Support Tickets</span>
             </a>

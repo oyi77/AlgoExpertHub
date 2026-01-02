@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Helpers\NotificationHelper;
 use App\Models\Configuration;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class ConfigurationRequest extends FormRequest
@@ -48,7 +51,7 @@ class ConfigurationRequest extends FormRequest
                 'min_amount' => 'required|numeric',
                 'max_amount' => 'required|numeric',
 
-                'alert' => 'required|in:izi,toast,sweet',
+                'alert' => 'required|in:notify,izi,toast,sweet',
                 'site_currency' => 'required|max:10',
                 'pagination_limit' => 'nullable|numeric|gt:0',
                 'logo' => [Rule::requiredIf(function () use ($general) {
@@ -89,5 +92,32 @@ class ConfigurationRequest extends FormRequest
         } else {
             return [];
         }
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator): void
+    {
+        if ($this->expectsJson()) {
+            throw new HttpResponseException(
+                response()->json([
+                    'type' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422)
+            );
+        }
+
+        // For web requests, redirect back with validation errors and notification
+        $errors = $validator->errors()->all();
+        $errorMessage = !empty($errors) ? implode(' ', $errors) : 'Please check the form for errors.';
+        
+        throw new HttpResponseException(
+            redirect()->back()
+                ->withInput()
+                ->withErrors($validator)
+                ->with('notify', NotificationHelper::error($errorMessage, 'Validation Error'))
+        );
     }
 }

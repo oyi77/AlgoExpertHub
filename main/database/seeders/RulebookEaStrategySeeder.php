@@ -137,16 +137,19 @@ class RulebookEaStrategySeeder extends Seeder
                         ],
                     ],
 
-                    // Fibonacci Retracement Rule
+                    // Fibonacci Retracement Rule (Enhanced with dynamic levels)
                     'fibonacci' => [
                         'enabled' => true,
-                        'levels' => [0.236, 0.382, 0.11, 0.61],  // Standard + custom levels
+                        'levels' => [0.236, 0.382, 0.5, 0.618, 0.11, 0.61],  // Standard + custom levels
                         'lookback' => 20,
                         'tolerance' => 0.001,
                         'direction' => 'BUY',  // Will be determined by signal direction
+                        'dynamic_levels' => true,  // Calculate levels from recent swing highs/lows
+                        'swing_detection_period' => 50,  // Look back 50 candles for swing detection
+                        'min_swing_distance_pct' => 2.0,  // Minimum 2% price movement for swing
                     ],
 
-                    // Support/Resistance Mapping Rule
+                    // Support/Resistance Mapping Rule (Enhanced with strength scoring)
                     'sr_mapping' => [
                         'enabled' => true,
                         'timeframe' => 'D1',
@@ -154,13 +157,29 @@ class RulebookEaStrategySeeder extends Seeder
                         'min_strength' => 0.5,
                         'validate_break' => true,
                         'direction' => 'BUY',  // Will be determined by signal direction
+                        'strength_scoring' => true,  // Enable strength scoring
+                        'strength_factors' => [
+                            'touches' => 0.4,  // 40% weight for number of touches
+                            'time_held' => 0.3,  // 30% weight for time level held
+                            'rejections' => 0.3,  // 30% weight for rejection patterns (wicks)
+                        ],
+                        'min_touches' => 2,  // Minimum 2 touches for valid S/R
+                        'time_decay_factor' => 0.1,  // Reduce strength over time
                     ],
 
-                    // 3-Bar Candle Validation Rule
+                    // Multi-Candle Pattern Recognition (Enhanced)
                     'candle_validation' => [
                         'enabled' => true,
                         'bars' => 3,
                         'min_confirmations' => 2,  // At least 2 of 3 candles must confirm
+                        'pattern_recognition' => true,  // Enable pattern recognition
+                        'patterns' => [
+                            'engulfing' => true,  // Bullish/Bearish engulfing patterns
+                            'pin_bar' => true,  // Pin bar (hammer/shooting star)
+                            'inside_bar' => true,  // Inside bar pattern
+                            'three_line_strike' => true,  // Three-line strike pattern
+                        ],
+                        'pattern_strength_required' => 0.6,  // Minimum pattern strength (0-1)
                     ],
                 ],
             ],

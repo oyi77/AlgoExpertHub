@@ -145,6 +145,8 @@
                                                         <i class="las la-copy"></i> {{ __('Clone') }}
                                                     </a>
                                                 @endif
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

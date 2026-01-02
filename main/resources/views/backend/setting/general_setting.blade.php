@@ -1,4 +1,4 @@
-<form action="{{ route('admin.general.basic') }}" method="post" enctype="multipart/form-data">
+<form id="general-settings-form" action="{{ route('admin.general.basic') }}" method="post" enctype="multipart/form-data">
 
     @csrf
 
@@ -53,7 +53,7 @@
 
         <div class="mb-4 col-xxl-3 col-lg-4 col-sm-6">
             <label for="timezone">{{ __('Timezone') }}</label>
-            <select name="timezone" id="" class="form-control">
+            <select name="timezone" id="timezone" class="form-control">
                 @foreach ($timezone as $zone)
                     <option value="{{$zone}}" {{env('APP_TIMEZONE') == $zone ? 'selected' : ''}}>{{$zone}}</option>
                 @endforeach
@@ -62,10 +62,11 @@
 
         <div class="mb-4 col-xxl-3 col-lg-4 col-sm-6">
             <label for="alert">{{ __('Alert Type') }}</label>
-            <select name="alert" id="" class="form-control">
-                <option value="izi" {{Config::config()->alert === 'izi' ? 'selected' : ''}}>{{__('IziToast')}}</option>
-                <option value="toast" {{Config::config()->alert === 'toast' ? 'selected' : ''}}>{{__('Toaster')}}</option>
-                <option value="sweet" {{Config::config()->alert === 'sweet' ? 'selected' : ''}}>{{__('Sweetalert')}}</option>
+            <select name="alert" id="alert" class="form-control">
+                <option value="notify" {{Config::config()->alert === 'notify' || Config::config()->alert === null ? 'selected' : ''}}>{{__('Laravel Notify')}} ({{__('Recommended')}})</option>
+                <option value="izi" {{Config::config()->alert === 'izi' ? 'selected' : ''}}>{{__('IziToast')}} ({{__('Legacy')}})</option>
+                <option value="toast" {{Config::config()->alert === 'toast' ? 'selected' : ''}}>{{__('Toaster')}} ({{__('Legacy')}})</option>
+                <option value="sweet" {{Config::config()->alert === 'sweet' ? 'selected' : ''}}>{{__('Sweetalert')}} ({{__('Legacy')}})</option>
             </select>
         </div>
 
@@ -170,11 +171,150 @@
         </div>
 
         <div class="mb-4 col-md-12 mt-4">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" id="general-settings-submit">
                 <i class="fas fa-sync-alt mr-2"></i>
-                {{ __('Update General Settings') }}
+                <span class="btn-text">{{ __('Update General Settings') }}</span>
+                <span class="btn-loading d-none">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    {{ __('Saving...') }}
+                </span>
             </button>
         </div>
     </div>
 
 </form>
+
+@push('scripts')
+<script>
+(function() {
+    'use strict';
+    
+    // Wait for dependencies to be available
+    function waitForDependencies(callback) {
+        var attempts = 0;
+        var maxAttempts = 50;
+        
+        function check() {
+            if (typeof window.jQuery !== 'undefined' && typeof notify !== 'undefined') {
+                callback();
+                return;
+            }
+            
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(check, 100);
+            } else {
+                console.warn('Dependencies not loaded after 5 seconds, proceeding anyway');
+                callback();
+            }
+        }
+        
+        // Listen for notify-loaded event
+        var notifyHandler = function() {
+            window.removeEventListener('notify-loaded', notifyHandler);
+            setTimeout(check, 100);
+        };
+        window.addEventListener('notify-loaded', notifyHandler, { once: true });
+        
+        // Start checking
+        check();
+    }
+    
+    waitForDependencies(function() {
+        var $ = window.jQuery || window.$;
+        
+        $(document).ready(function() {
+            var form = $('#general-settings-form');
+            var submitBtn = $('#general-settings-submit');
+            var btnText = submitBtn.find('.btn-text');
+            var btnLoading = submitBtn.find('.btn-loading');
+            
+            form.on('submit', function(e) {
+                e.preventDefault();
+                
+                // Disable submit button
+                submitBtn.prop('disabled', true);
+                btnText.addClass('d-none');
+                btnLoading.removeClass('d-none');
+                
+                // Create FormData for file uploads
+                var formData = new FormData(this);
+                
+                // Send AJAX request
+                fetch(form.attr('action'), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(response) {
+                    return response.json().then(function(data) {
+                        if (!response.ok) {
+                            throw data;
+                        }
+                        return data;
+                    }).catch(function() {
+                        // If JSON parsing fails, try to get text
+                        return response.text().then(function(text) {
+                            throw {
+                                message: text || 'An error occurred',
+                                title: 'Error'
+                            };
+                        });
+                    });
+                })
+                .then(function(data) {
+                    // Show success notification
+                    showNotification(data.type || 'success', data.message || 'Settings updated successfully', data.title || 'Success');
+                    
+                    // Re-enable submit button
+                    submitBtn.prop('disabled', false);
+                    btnText.removeClass('d-none');
+                    btnLoading.addClass('d-none');
+                })
+                .catch(function(error) {
+                    // Show error notification
+                    var errorMessage = error.message || 'Failed to update settings. Please try again.';
+                    var errorTitle = error.title || 'Error';
+                    
+                    showNotification('error', errorMessage, errorTitle);
+                    
+                    // Re-enable submit button
+                    submitBtn.prop('disabled', false);
+                    btnText.removeClass('d-none');
+                    btnLoading.addClass('d-none');
+                });
+            });
+        });
+    });
+    
+    // Helper function to show notifications
+    function showNotification(type, message, title) {
+        if (typeof notify !== 'undefined') {
+            try {
+                var notification = notify()[type]();
+                if (title && typeof notification.title === 'function') {
+                    notification = notification.title(title);
+                }
+                if (message && typeof notification.message === 'function') {
+                    notification = notification.message(message);
+                }
+                if (typeof notification.send === 'function') {
+                    notification.send();
+                }
+            } catch(e) {
+                console.error('Error showing notification:', e);
+                alert(message);
+            }
+        } else {
+            // Fallback to alert if notify is not available
+            alert(title + ': ' + message);
+        }
+    }
+})();
+</script>
+@endpush

@@ -28,38 +28,41 @@
                             </div>
 
 
+                            @php
+                                $emailConfig = Config::config()->email_config ?? null;
+                            @endphp
                             <div class="form-group col-md-6">
                                 <label for="">{{ __('SMTP HOST') }}</label>
                                 <input type="text" name="email_config[smtp_host]" class="form-control"
-                                    value="{{ env('DEMO') ? '------' : Config::config()->email_config->MAIL_HOST }}">
+                                    value="{{ env('DEMO') ? '------' : ($emailConfig ? ($emailConfig->MAIL_HOST ?? '') : '') }}">
                             </div>
 
                             <div class="form-group col-md-6">
                                 <label for="">{{ __('SMTP Username') }}</label>
                                 <input type="text" name="email_config[smtp_username]" class="form-control"
-                                    value="{{ env('DEMO') ? '------' : Config::config()->email_config->MAIL_USERNAME }}">
+                                    value="{{ env('DEMO') ? '------' : ($emailConfig ? ($emailConfig->MAIL_USERNAME ?? '') : '') }}">
                             </div>
 
                             <div class="form-group col-md-6">
                                 <label for="">{{ __('SMTP Password') }}</label>
                                 <input type="text" name="email_config[smtp_password]" class="form-control"
-                                    value="{{ env('DEMO') ? '------' : Config::config()->email_config->MAIL_PASSWORD }}">
+                                    value="{{ env('DEMO') ? '------' : ($emailConfig ? ($emailConfig->MAIL_PASSWORD ?? '') : '') }}">
                             </div>
 
                             <div class="form-group col-md-6">
                                 <label for="">{{ __('SMTP port') }}</label>
                                 <input type="text" name="email_config[smtp_port]" class="form-control"
-                                    value="{{ Config::config()->email_config->MAIL_PORT }}">
+                                    value="{{ $emailConfig ? ($emailConfig->MAIL_PORT ?? '') : '' }}">
                             </div>
 
                             <div class="form-group col-md-6">
                                 <label for="">{{ __('SMTP Encryption') }}</label>
                                 <select name="email_config[smtp_encryption]" id="encryption" class="form-control selectric">
                                     <option value="ssl"
-                                        {{ Config::config()->email_config->MAIL_ENCRYPTION == 'ssl' ? 'selected' : '' }}>
+                                        {{ ($emailConfig && ($emailConfig->MAIL_ENCRYPTION ?? '') == 'ssl') ? 'selected' : '' }}>
                                         {{ __('SSL') }}</option>
                                     <option value="tls"
-                                        {{ Config::config()->email_config->MAIL_ENCRYPTION == 'tls' ? 'selected' : '' }}>
+                                        {{ ($emailConfig && ($emailConfig->MAIL_ENCRYPTION ?? '') == 'tls') ? 'selected' : '' }}>
                                         {{ __('TLS') }}</option>
                                 </select>
                                 <code class="hint"></code>

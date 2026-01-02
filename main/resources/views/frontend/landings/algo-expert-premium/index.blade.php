@@ -431,7 +431,7 @@
     </div>
 </section>
 
-@push('script')
+@push('scripts')
 <script>
     // Counter animation
     function animateCounter(element) {

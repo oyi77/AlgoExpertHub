@@ -12,6 +12,7 @@ use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Template;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Notifications\PlanSubscriptionNotification;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -107,8 +108,8 @@ class UserPlanService extends BaseService
         $subscription = $this->createSubscription($data);
         $payment = $this->makePayment($data);
 
-        $user->balance -= $data['final_amount'];
-        $user->save();
+        // ✅ Bug #5 Fix: Use atomic decrement to prevent race conditions
+        $user->decrement('balance', $data['final_amount']);
 
         $this->makeTransaction($data);
 
@@ -131,14 +132,25 @@ class UserPlanService extends BaseService
      */
     protected function createSubscription(array $data): PlanSubscription
     {
-        auth()->user()->subscriptions()->where('is_current', 1)->update(['is_current' => 0]);
+        // ✅ Bug #6 Fix: Use transaction with row locking to prevent race conditions
+        return DB::transaction(function () use ($data) {
+            $user = User::lockForUpdate()->find($data['user_id']);
+            
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+            
+            // Deactivate existing subscriptions atomically
+            $user->subscriptions()->where('is_current', 1)->update(['is_current' => 0]);
 
-        return PlanSubscription::create([
-            'plan_id' => $data['plan_id'],
-            'user_id' => $data['user_id'],
-            'is_current' => 1,
-            'plan_expired_at' => $data['plan_expired_at']
-        ]);
+            // Create new subscription
+            return PlanSubscription::create([
+                'plan_id' => $data['plan_id'],
+                'user_id' => $data['user_id'],
+                'is_current' => 1,
+                'plan_expired_at' => $data['plan_expired_at']
+            ]);
+        });
     }
 
     /**

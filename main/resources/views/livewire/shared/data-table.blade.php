@@ -70,7 +70,11 @@
                         @endforeach
                         <td class="border-dashed border-t border-gray-200 px-6 py-3">
                             <!-- Actions slot or default actions -->
-                            @yield('actions', view('livewire.shared.actions', ['item' => $item]))
+                            @hasSection('actions')
+                                @yield('actions')
+                            @else
+                                @include('livewire.shared.actions', ['item' => $item])
+                            @endif
                         </td>
                     </tr>
                 @empty

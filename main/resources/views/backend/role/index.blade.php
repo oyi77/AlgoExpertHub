@@ -169,6 +169,32 @@
 @push('scripts')
     <script>
         'use strict'
+        
+        // Helper function to show notifications consistently
+        function showNotification(success, message, title) {
+            if (typeof notify !== 'undefined') {
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title(title || 'Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title(title || 'Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
 
         $(function() {
 
@@ -199,11 +225,7 @@
                     method: "POST",
 
                     success: function(response) {
-                        iziToast.success({
-
-                            message: response.success,
-                            position: 'topRight'
-                        });
+                        showNotification(true, response.success || 'Operation successful');
                     }
                 })
             })

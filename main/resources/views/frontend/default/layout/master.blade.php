@@ -154,7 +154,7 @@
 
     <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
-    @stack('script')
+    @stack('scripts')
 
 
     @if (optional(Config::config())->twak_allow)

@@ -161,7 +161,27 @@
                                     {{ __('Error: ') }}{{ $octaneStatus['error'] }}
                                 @else
                                     <i class="las la-exclamation-circle"></i> 
-                                    {{ __('Octane server is stopped. Start it with: php artisan octane:start') }}
+                                    {{ __('Octane server is stopped.') }}
+                                    @if(isset($octaneStatus['supervisor']) && $octaneStatus['supervisor']['available'])
+                                        <br>
+                                        <small>
+                                            @if($octaneStatus['supervisor']['running'])
+                                                @if($octaneStatus['supervisor']['configured'])
+                                                    @if($octaneStatus['supervisor']['octane_status'])
+                                                        <strong>{{ __('Supervisor Status:') }}</strong> {{ $octaneStatus['supervisor']['octane_status'] }}
+                                                    @else
+                                                        {{ __('Supervisor is running but Octane program status is unknown.') }}
+                                                    @endif
+                                                @else
+                                                    {{ __('Supervisor is running but Octane is not configured. Add supervisor-octane.conf to supervisor config.') }}
+                                                @endif
+                                            @else
+                                                {{ __('Supervisor is not running. To enable auto-start, install and configure supervisor.') }}
+                                            @endif
+                                        </small>
+                                    @endif
+                                    <br>
+                                    <small>{{ __('Manual start:') }} <code>php artisan octane:start</code> {{ __('or') }} <code>docker exec 1Panel-php8-mrTy php artisan octane:start</code></small>
                                 @endif
                             </div>
                         </div>
@@ -395,17 +415,45 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        setTimeout(function() {
-            var phpVersion = $('#sys-php-version').text();
-            var laravelVersion = $('#sys-laravel-version').text();
-            var opcacheStatus = $('#opcache-enabled-status').find('.badge').text();
-            if (phpVersion) $('#quick-php-version').text(phpVersion);
-            if (laravelVersion) $('#quick-laravel-version').text(laravelVersion);
-            if (opcacheStatus) {
-                var badgeClass = opcacheStatus.includes('Enabled') ? 'badge-success' : 'badge-danger';
-                $('#quick-opcache-status').html('<span class="badge ' + badgeClass + '">' + opcacheStatus + '</span>');
-            }
-        }, 2000);
+        // Load PHP and Laravel versions immediately
+        var phpVersion = $('#sys-php-version').text();
+        var laravelVersion = $('#sys-laravel-version').text();
+        if (phpVersion) $('#quick-php-version').text(phpVersion);
+        if (laravelVersion) $('#quick-laravel-version').text(laravelVersion);
+        
+        // Load OPcache status via AJAX
+        loadOpcacheStatus();
+        
+        function loadOpcacheStatus() {
+            $.ajax({
+                url: '{{ route("admin.performance.status") }}',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success && response.data && response.data.opcache) {
+                        var opcache = response.data.opcache;
+                        var badgeClass = opcache.enabled ? 'badge-success' : 'badge-danger';
+                        var statusText = opcache.enabled ? '{{ __("Enabled") }}' : '{{ __("Disabled") }}';
+                        $('#quick-opcache-status').html('<span class="badge ' + badgeClass + '">' + statusText + '</span>');
+                    } else {
+                        $('#quick-opcache-status').html('<span class="badge badge-secondary">{{ __("Not Available") }}</span>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to load OPcache status:', error);
+                    // Try to read from existing element as fallback
+                    setTimeout(function() {
+                        var opcacheStatus = $('#opcache-enabled-status').find('.badge').text();
+                        if (opcacheStatus) {
+                            var badgeClass = opcacheStatus.includes('Enabled') ? 'badge-success' : 'badge-danger';
+                            $('#quick-opcache-status').html('<span class="badge ' + badgeClass + '">' + opcacheStatus + '</span>');
+                        } else {
+                            $('#quick-opcache-status').html('<span class="badge badge-secondary">{{ __("Not Available") }}</span>');
+                        }
+                    }, 1000);
+                }
+            });
+        }
     });
 </script>
 @endpush

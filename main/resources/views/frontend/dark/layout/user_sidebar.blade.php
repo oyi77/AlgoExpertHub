@@ -67,13 +67,13 @@
         @endif
 
         @if ($executionEngineUserModuleEnabled)
-            @if (Route::has('user.execution-connections.index'))
-            <li class="{{ Config::singleMenu('user.execution-connections.index') }}"><a href="{{ route('user.execution-connections.index') }}"><i
-                        class="fas fa-exchange-alt"></i> {{ __('Auto Trading') }}</a></li>
+            @if (Route::has('user.trading.operations.index'))
+            <li class="{{ Config::singleMenu('user.trading.operations.index') }}"><a href="{{ route('user.trading.operations.index') }}"><i
+                        class="fas fa-exchange-alt"></i> {{ __('Trading Operations') }}</a></li>
             @endif
-            @if (Route::has('user.execution-analytics.index'))
-            <li class="{{ Config::singleMenu('user.execution-analytics.index') }}"><a href="{{ route('user.execution-analytics.index') }}"><i
-                        class="fas fa-chart-bar"></i> {{ __('Trading Analytics') }}</a></li>
+            @if (Route::has('user.trading.configuration.index'))
+            <li class="{{ Config::singleMenu('user.trading.configuration.index') }}"><a href="{{ route('user.trading.configuration.index') }}"><i
+                        class="fas fa-cog"></i> {{ __('Trading Configuration') }}</a></li>
             @endif
         @endif
 

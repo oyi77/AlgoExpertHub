@@ -297,7 +297,7 @@
 
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     </script>
-    @stack('script')
+    @stack('scripts')
     @livewireScripts
 </body>
 </html>

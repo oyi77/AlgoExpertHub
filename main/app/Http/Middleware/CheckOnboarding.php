@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Helpers\NotificationHelper;
 use App\Services\UserOnboardingService;
 use Closure;
 use Illuminate\Http\Request;
@@ -83,7 +84,7 @@ class CheckOnboarding
             // Check if user is already on an onboarding route
             if (!$request->routeIs('user.onboarding.*')) {
                 return redirect()->route('user.onboarding.welcome')
-                    ->with('info', __('Please complete the onboarding process to continue.'));
+                    ->with('notify', NotificationHelper::info(__('Please complete the onboarding process to continue.'), 'Info'));
             }
         }
 

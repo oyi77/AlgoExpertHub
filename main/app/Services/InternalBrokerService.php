@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\InternalTrade;
@@ -120,8 +122,12 @@ class InternalBrokerService
             return;
         }
 
-        // Update P&L
-        $trade->updatePnL($currentPrice);
+        // ✅ Bug #1 Fix: Wrap entire method in transaction to ensure atomicity
+        DB::beginTransaction();
+        
+        try {
+            // Update P&L
+            $trade->updatePnL($currentPrice);
 
         // Check stop-loss
         if ($trade->sl_price) {
@@ -158,6 +164,11 @@ class InternalBrokerService
                     ]);
                 }
                 
+                // Note: closePosition() starts its own transaction, so we commit this transaction first
+                // to ensure P&L update is saved, then closePosition handles closing in its own transaction
+                DB::commit();
+                
+                // Call closePosition (which starts its own transaction)
                 $this->closePosition($trade, $executionPrice);
                 Log::info('Position closed by stop-loss', [
                     'trade_id' => $trade->id,
@@ -204,6 +215,10 @@ class InternalBrokerService
                     ]);
                 }
                 
+                // Note: closePosition() starts its own transaction, so we commit this transaction first
+                DB::commit();
+                
+                // Call closePosition (which starts its own transaction)
                 $this->closePosition($trade, $executionPrice);
                 Log::info('Position closed by take-profit', [
                     'trade_id' => $trade->id,
@@ -213,6 +228,18 @@ class InternalBrokerService
                 ]);
                 return;
             }
+        }
+        
+        // ✅ Bug #1 Fix: Commit transaction if no SL/TP triggered
+        DB::commit();
+        
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update position', [
+                'trade_id' => $trade->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
         }
     }
 

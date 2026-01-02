@@ -585,6 +585,9 @@ class SystemHealthService
             $workers = $this->getOctaneWorkerCount($server);
             $port = $this->getOctanePort();
             $config = $this->getOctaneConfig();
+            
+            // Check supervisor status if available
+            $supervisorStatus = $this->checkSupervisorStatus();
 
             return [
                 'available' => true,
@@ -595,6 +598,7 @@ class SystemHealthService
                 'workers' => $workers,
                 'port' => $port,
                 'config' => $config,
+                'supervisor' => $supervisorStatus,
             ];
         } catch (\Throwable $e) {
             return [
@@ -606,6 +610,56 @@ class SystemHealthService
             ];
         }
     }
+    
+    /**
+     * Check if supervisor is running and managing Octane
+     */
+    protected function checkSupervisorStatus(): ?array
+    {
+        try {
+            $shellExecAvailable = function_exists('shell_exec') && 
+                                   !in_array('shell_exec', explode(',', ini_get('disable_functions')));
+            
+            if (!$shellExecAvailable) {
+                return [
+                    'available' => false,
+                    'message' => 'shell_exec is disabled, cannot check supervisor status',
+                ];
+            }
+            
+            // Check if supervisor is running
+            $supervisorRunning = shell_exec("ps aux | grep 'supervisord\|supervisor' | grep -v grep | wc -l");
+            $supervisorRunning = (int) trim($supervisorRunning ?: '0') > 0;
+            
+            // Check if Octane program is configured in supervisor
+            $octaneConfigured = false;
+            $supervisorConfigPath = base_path('supervisor-octane.conf');
+            if (file_exists($supervisorConfigPath)) {
+                $octaneConfigured = true;
+            }
+            
+            // Try to check supervisorctl status (if available)
+            $octaneSupervisorStatus = null;
+            if ($supervisorRunning) {
+                $status = @shell_exec("supervisorctl status octane 2>&1");
+                if ($status && !str_contains($status, 'ERROR') && !str_contains($status, 'no such process')) {
+                    $octaneSupervisorStatus = trim($status);
+                }
+            }
+            
+            return [
+                'available' => true,
+                'running' => $supervisorRunning,
+                'configured' => $octaneConfigured,
+                'octane_status' => $octaneSupervisorStatus,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'available' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
 
     /**
      * Check if Octane server is running
@@ -613,19 +667,56 @@ class SystemHealthService
     protected function checkOctaneRunning(string $server): bool
     {
         try {
+            // Check if shell_exec is available
+            $shellExecAvailable = function_exists('shell_exec') && 
+                                   !in_array('shell_exec', explode(',', ini_get('disable_functions')));
+            
             if ($server === 'swoole') {
-                // Check for Swoole processes
-                $command = "ps aux | grep 'octane:start\|octane:serve' | grep -v grep | wc -l";
-                $count = (int) trim(shell_exec($command) ?: '0');
-                return $count > 0;
+                if ($shellExecAvailable) {
+                    // Method 1: Check for Swoole processes via shell
+                    $command = "ps aux | grep 'octane:start\|octane:serve' | grep -v grep | wc -l";
+                    $count = (int) trim(shell_exec($command) ?: '0');
+                    if ($count > 0) {
+                        return true;
+                    }
+                }
+                
+                // Method 2: Check if port is listening (alternative method)
+                $port = $this->getOctanePort();
+                if ($port && $shellExecAvailable) {
+                    // Check if port is in use
+                    $command = "netstat -tuln 2>/dev/null | grep ':$port ' || ss -tuln 2>/dev/null | grep ':$port '";
+                    $result = shell_exec($command);
+                    if (!empty($result)) {
+                        return true;
+                    }
+                }
+                
+                // Method 3: Try to connect to the port
+                if ($port) {
+                    $connection = @fsockopen('127.0.0.1', $port, $errno, $errstr, 1);
+                    if ($connection) {
+                        fclose($connection);
+                        return true;
+                    }
+                }
+                
+                return false;
             } elseif ($server === 'roadrunner') {
-                // Check for RoadRunner processes
-                $command = "ps aux | grep 'rr\|roadrunner' | grep -v grep | wc -l";
-                $count = (int) trim(shell_exec($command) ?: '0');
-                return $count > 0;
+                if ($shellExecAvailable) {
+                    // Check for RoadRunner processes
+                    $command = "ps aux | grep 'rr\|roadrunner' | grep -v grep | wc -l";
+                    $count = (int) trim(shell_exec($command) ?: '0');
+                    return $count > 0;
+                }
+                return false;
             }
             return false;
         } catch (\Throwable $e) {
+            \Log::warning('Failed to check Octane status', [
+                'server' => $server,
+                'error' => $e->getMessage()
+            ]);
             return false;
         }
     }
@@ -636,14 +727,26 @@ class SystemHealthService
     protected function getOctaneWorkerCount(string $server): int
     {
         try {
-            if ($server === 'swoole') {
+            // Check if shell_exec is available
+            $shellExecAvailable = function_exists('shell_exec') && 
+                                   !in_array('shell_exec', explode(',', ini_get('disable_functions')));
+            
+            if ($server === 'swoole' && $shellExecAvailable) {
                 // Count Octane worker processes
                 $command = "ps aux | grep 'octane:start\|octane:serve' | grep -v grep | wc -l";
-                return (int) trim(shell_exec($command) ?: '0');
+                $count = (int) trim(shell_exec($command) ?: '0');
+                // Subtract 1 for the main process, or return config value if process check fails
+                if ($count > 0) {
+                    return max(1, $count - 1); // At least 1 worker
+                }
+                // Fallback to config value
+                return config('octane.workers', 4);
             }
-            return 0;
+            // Fallback to config value
+            return config('octane.workers', 4);
         } catch (\Throwable $e) {
-            return 0;
+            // Fallback to config value on error
+            return config('octane.workers', 4);
         }
     }
 

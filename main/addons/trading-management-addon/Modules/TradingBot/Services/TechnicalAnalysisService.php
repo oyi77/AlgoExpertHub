@@ -373,7 +373,10 @@ class TechnicalAnalysisService
     }
 
     /**
-     * Calculate Relative Strength Index (RSI)
+     * Calculate Relative Strength Index (RSI) using Wilder's smoothing
+     * 
+     * Wilder's smoothing uses: avgGain = (prevAvgGain * (period - 1) + currentGain) / period
+     * This is different from simple EMA and is the standard for RSI calculation
      */
     protected function calculateRSI(array $ohlcv, int $period = 14): ?float
     {
@@ -385,17 +388,30 @@ class TechnicalAnalysisService
         $gains = [];
         $losses = [];
 
+        // Calculate price changes
         for ($i = 1; $i < count($closes); $i++) {
             $change = $closes[$i] - $closes[$i - 1];
             $gains[] = $change > 0 ? $change : 0;
             $losses[] = $change < 0 ? abs($change) : 0;
         }
 
-        $avgGain = array_sum(array_slice($gains, -$period)) / $period;
-        $avgLoss = array_sum(array_slice($losses, -$period)) / $period;
+        // Initial average (simple average of first period values)
+        $initialGains = array_slice($gains, 0, $period);
+        $initialLosses = array_slice($losses, 0, $period);
+        
+        $avgGain = array_sum($initialGains) / $period;
+        $avgLoss = array_sum($initialLosses) / $period;
 
+        // Apply Wilder's smoothing for remaining values
+        // Formula: newAvg = (oldAvg * (period - 1) + newValue) / period
+        for ($i = $period; $i < count($gains); $i++) {
+            $avgGain = ($avgGain * ($period - 1) + $gains[$i]) / $period;
+            $avgLoss = ($avgLoss * ($period - 1) + $losses[$i]) / $period;
+        }
+
+        // Calculate RSI
         if ($avgLoss == 0) {
-            return 100;
+            return 100; // Avoid division by zero
         }
 
         $rs = $avgGain / $avgLoss;
@@ -479,31 +495,119 @@ class TechnicalAnalysisService
      */
     protected function calculateStochastic(array $ohlcv, array $params): ?array
     {
-        $period = $params['period'] ?? 14;
+        $kPeriod = $params['period'] ?? 14;
+        $dPeriod = $params['d_period'] ?? 3;
+        $smooth = $params['smooth'] ?? 3;
         
-        if (count($ohlcv) < $period) {
-            return null;
+        // Need enough data for %K period + smoothing + %D period
+        $minRequired = $kPeriod + $smooth + $dPeriod - 1;
+        
+        if (count($ohlcv) < $minRequired) {
+            // Fallback: calculate single %K if we have at least kPeriod candles
+            if (count($ohlcv) < $kPeriod) {
+                return null;
+            }
+            
+            $recent = array_slice($ohlcv, -$kPeriod);
+            $highs = array_column($recent, 'high');
+            $lows = array_column($recent, 'low');
+            $closes = array_column($recent, 'close');
+
+            $highestHigh = max($highs);
+            $lowestLow = min($lows);
+            $currentClose = end($closes);
+
+            if ($highestHigh == $lowestLow) {
+                return null;
+            }
+
+            $k = (($currentClose - $lowestLow) / ($highestHigh - $lowestLow)) * 100;
+            
+            // Can't calculate %D without enough data, return %K only
+            return [
+                'k' => $k,
+                'd' => $k, // Fallback: use %K as %D when insufficient data
+            ];
         }
 
-        $recent = array_slice($ohlcv, -$period);
-        $highs = array_column($recent, 'high');
-        $lows = array_column($recent, 'low');
-        $closes = array_column($recent, 'close');
+        // Calculate %K series for all available periods
+        $kSeries = [];
+        $highs = array_column($ohlcv, 'high');
+        $lows = array_column($ohlcv, 'low');
+        $closes = array_column($ohlcv, 'close');
 
-        $highestHigh = max($highs);
-        $lowestLow = min($lows);
-        $currentClose = end($closes);
+        // Calculate raw %K for each period
+        for ($i = $kPeriod - 1; $i < count($ohlcv); $i++) {
+            $periodHighs = array_slice($highs, $i - $kPeriod + 1, $kPeriod);
+            $periodLows = array_slice($lows, $i - $kPeriod + 1, $kPeriod);
+            
+            $highestHigh = max($periodHighs);
+            $lowestLow = min($periodLows);
+            $currentClose = $closes[$i];
 
-        if ($highestHigh == $lowestLow) {
-            return null;
+            if ($highestHigh == $lowestLow) {
+                $kSeries[$i] = 50; // Neutral value when no range
+            } else {
+                $kSeries[$i] = (($currentClose - $lowestLow) / ($highestHigh - $lowestLow)) * 100;
+            }
         }
 
-        $k = (($currentClose - $lowestLow) / ($highestHigh - $lowestLow)) * 100;
-        $d = $k; // Simplified - should be SMA of %K
+        // Smooth %K if smooth parameter > 1
+        if ($smooth > 1 && count($kSeries) >= $smooth) {
+            $smoothedK = [];
+            $keys = array_keys($kSeries);
+            
+            // First (smooth - 1) values use raw %K
+            for ($i = 0; $i < $smooth - 1; $i++) {
+                $smoothedK[$keys[$i]] = $kSeries[$keys[$i]];
+            }
+            
+            // Smooth remaining values
+            for ($i = $smooth - 1; $i < count($keys); $i++) {
+                $sum = 0;
+                for ($j = $i - $smooth + 1; $j <= $i; $j++) {
+                    $sum += $kSeries[$keys[$j]];
+                }
+                $smoothedK[$keys[$i]] = $sum / $smooth;
+            }
+            
+            $kSeries = $smoothedK;
+        }
+
+        // Calculate %D as SMA of %K over dPeriod
+        $dSeries = [];
+        $kValues = array_values($kSeries);
+        $kKeys = array_keys($kSeries);
+        
+        // Need at least dPeriod values of %K to calculate %D
+        if (count($kValues) >= $dPeriod) {
+            // First (dPeriod - 1) values of %D are null
+            for ($i = 0; $i < $dPeriod - 1; $i++) {
+                $dSeries[$kKeys[$i]] = null;
+            }
+            
+            // Calculate %D as SMA of %K
+            for ($i = $dPeriod - 1; $i < count($kValues); $i++) {
+                $sum = 0;
+                for ($j = $i - $dPeriod + 1; $j <= $i; $j++) {
+                    $sum += $kValues[$j];
+                }
+                $dSeries[$kKeys[$i]] = $sum / $dPeriod;
+            }
+        } else {
+            // Not enough data for %D, use %K as fallback
+            foreach ($kSeries as $key => $value) {
+                $dSeries[$key] = $value;
+            }
+        }
+
+        // Return latest values
+        $latestK = end($kSeries);
+        $latestD = end($dSeries);
 
         return [
-            'k' => $k,
-            'd' => $d,
+            'k' => $latestK,
+            'd' => $latestD !== null ? $latestD : $latestK,
         ];
     }
 

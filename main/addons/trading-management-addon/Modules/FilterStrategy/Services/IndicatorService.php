@@ -114,6 +114,303 @@ class IndicatorService
     }
 
     /**
+     * Calculate ATR (Average True Range)
+     * 
+     * ATR measures market volatility by calculating the average of true ranges over a period.
+     * True Range = max(high - low, abs(high - prevClose), abs(low - prevClose))
+     * 
+     * @param array $candles Array of candles with 'high', 'low', 'close' keys
+     * @param int $period ATR period (default 14)
+     * @return array Array of ATR values (same length as candles, null for insufficient data)
+     */
+    public function calculateATR(array $candles, int $period = 14): array
+    {
+        if (count($candles) < $period + 1) {
+            return array_fill(0, count($candles), null);
+        }
+
+        $atr = [];
+        $trueRanges = [];
+
+        // Calculate True Range for each candle (starting from index 1)
+        for ($i = 0; $i < count($candles); $i++) {
+            if ($i === 0) {
+                // First candle: TR = high - low
+                $tr = (float) $candles[$i]['high'] - (float) $candles[$i]['low'];
+                $trueRanges[$i] = $tr;
+                $atr[$i] = null; // Not enough data for ATR yet
+            } else {
+                // True Range = max(high - low, abs(high - prevClose), abs(low - prevClose))
+                $high = (float) $candles[$i]['high'];
+                $low = (float) $candles[$i]['low'];
+                $prevClose = (float) $candles[$i - 1]['close'];
+                
+                $tr1 = $high - $low;
+                $tr2 = abs($high - $prevClose);
+                $tr3 = abs($low - $prevClose);
+                
+                $tr = max($tr1, $tr2, $tr3);
+                $trueRanges[$i] = $tr;
+                
+                // Calculate ATR as SMA of True Ranges
+                if ($i < $period) {
+                    $atr[$i] = null; // Not enough data yet
+                } else {
+                    // Get last 'period' true ranges
+                    $periodTRs = array_slice($trueRanges, $i - $period + 1, $period);
+                    $atr[$i] = array_sum($periodTRs) / $period;
+                }
+            }
+        }
+
+        return $atr;
+    }
+
+    /**
+     * Get latest ATR value
+     * 
+     * @param array $candles
+     * @param int $period
+     * @return float|null Latest ATR value
+     */
+    public function getLatestATR(array $candles, int $period = 14): ?float
+    {
+        $atr = $this->calculateATR($candles, $period);
+        $latest = end($atr);
+        return $latest !== null ? (float) $latest : null;
+    }
+
+    /**
+     * Calculate ADX (Average Directional Index)
+     * 
+     * ADX measures trend strength (not direction). Values above 25 indicate strong trend.
+     * 
+     * Calculation steps:
+     * 1. Calculate +DM and -DM (Directional Movement)
+     * 2. Calculate True Range (TR)
+     * 3. Calculate +DI and -DI (Directional Indicators)
+     * 4. Calculate DX = 100 * abs(+DI - -DI) / (+DI + -DI)
+     * 5. Calculate ADX as EMA of DX
+     * 
+     * @param array $candles Array of candles with 'high', 'low', 'close' keys
+     * @param int $period ADX period (default 14)
+     * @return array Array of ADX values (same length as candles, null for insufficient data)
+     */
+    public function calculateADX(array $candles, int $period = 14): array
+    {
+        if (count($candles) < $period * 2) {
+            return array_fill(0, count($candles), null);
+        }
+
+        $adx = [];
+        $plusDI = [];
+        $minusDI = [];
+        $dx = [];
+        $tr = [];
+        $plusDM = [];
+        $minusDM = [];
+
+        // Calculate +DM, -DM, and TR for each candle
+        for ($i = 0; $i < count($candles); $i++) {
+            if ($i === 0) {
+                // First candle: TR = high - low, no DM
+                $tr[$i] = (float) $candles[$i]['high'] - (float) $candles[$i]['low'];
+                $plusDM[$i] = 0;
+                $minusDM[$i] = 0;
+                $plusDI[$i] = null;
+                $minusDI[$i] = null;
+                $dx[$i] = null;
+                $adx[$i] = null;
+            } else {
+                $high = (float) $candles[$i]['high'];
+                $low = (float) $candles[$i]['low'];
+                $prevHigh = (float) $candles[$i - 1]['high'];
+                $prevLow = (float) $candles[$i - 1]['low'];
+                $prevClose = (float) $candles[$i - 1]['close'];
+
+                // Calculate True Range
+                $tr1 = $high - $low;
+                $tr2 = abs($high - $prevClose);
+                $tr3 = abs($low - $prevClose);
+                $tr[$i] = max($tr1, $tr2, $tr3);
+
+                // Calculate Directional Movement
+                $upMove = $high - $prevHigh;
+                $downMove = $prevLow - $low;
+
+                if ($upMove > $downMove && $upMove > 0) {
+                    $plusDM[$i] = $upMove;
+                    $minusDM[$i] = 0;
+                } elseif ($downMove > $upMove && $downMove > 0) {
+                    $plusDM[$i] = 0;
+                    $minusDM[$i] = $downMove;
+                } else {
+                    $plusDM[$i] = 0;
+                    $minusDM[$i] = 0;
+                }
+
+                // Calculate +DI and -DI (smoothed)
+                if ($i < $period) {
+                    $plusDI[$i] = null;
+                    $minusDI[$i] = null;
+                    $dx[$i] = null;
+                    $adx[$i] = null;
+                } else {
+                    // Use Wilder's smoothing for +DM, -DM, and TR
+                    if ($i === $period) {
+                        // Initial: simple average
+                        $sumPlusDM = array_sum(array_slice($plusDM, 1, $period));
+                        $sumMinusDM = array_sum(array_slice($minusDM, 1, $period));
+                        $sumTR = array_sum(array_slice($tr, 1, $period));
+                    } else {
+                        // Wilder's smoothing: new = (old * (period - 1) + new) / period
+                        $sumPlusDM = ($sumPlusDM * ($period - 1) + $plusDM[$i]) / $period;
+                        $sumMinusDM = ($sumMinusDM * ($period - 1) + $minusDM[$i]) / $period;
+                        $sumTR = ($sumTR * ($period - 1) + $tr[$i]) / $period;
+                    }
+
+                    // Calculate +DI and -DI
+                    if ($sumTR > 0) {
+                        $plusDI[$i] = 100 * ($sumPlusDM / $sumTR);
+                        $minusDI[$i] = 100 * ($sumMinusDM / $sumTR);
+                    } else {
+                        $plusDI[$i] = 0;
+                        $minusDI[$i] = 0;
+                    }
+
+                    // Calculate DX
+                    $diSum = $plusDI[$i] + $minusDI[$i];
+                    if ($diSum > 0) {
+                        $dx[$i] = 100 * abs($plusDI[$i] - $minusDI[$i]) / $diSum;
+                    } else {
+                        $dx[$i] = 0;
+                    }
+
+                    // Calculate ADX as EMA of DX
+                    if ($i === $period) {
+                        // Initial ADX: average of first period DX values
+                        $dxValues = array_filter(array_slice($dx, $period, $period), fn($v) => $v !== null);
+                        $adx[$i] = !empty($dxValues) ? array_sum($dxValues) / count($dxValues) : 0;
+                    } else {
+                        // ADX = (prevADX * (period - 1) + currentDX) / period (Wilder's smoothing)
+                        $prevADX = $adx[$i - 1] ?? 0;
+                        $adx[$i] = ($prevADX * ($period - 1) + $dx[$i]) / $period;
+                    }
+                }
+            }
+        }
+
+        return $adx;
+    }
+
+    /**
+     * Get latest ADX value
+     * 
+     * @param array $candles
+     * @param int $period
+     * @return float|null Latest ADX value
+     */
+    public function getLatestADX(array $candles, int $period = 14): ?float
+    {
+        $adx = $this->calculateADX($candles, $period);
+        $latest = end($adx);
+        return $latest !== null ? (float) $latest : null;
+    }
+
+    /**
+     * Get +DI and -DI values along with ADX
+     * 
+     * @param array $candles
+     * @param int $period
+     * @return array ['adx' => float|null, 'plus_di' => float|null, 'minus_di' => float|null]
+     */
+    public function calculateADXWithDI(array $candles, int $period = 14): array
+    {
+        if (count($candles) < $period * 2) {
+            return [
+                'adx' => null,
+                'plus_di' => null,
+                'minus_di' => null,
+            ];
+        }
+
+        // Calculate ADX (which internally calculates +DI and -DI)
+        // We need to extract +DI and -DI from the calculation
+        // For simplicity, return latest values
+        $adx = $this->calculateADX($candles, $period);
+        
+        // Recalculate to get DI values (simplified - in production, store DI during ADX calc)
+        $plusDI = [];
+        $minusDI = [];
+        $tr = [];
+        $plusDM = [];
+        $minusDM = [];
+        $sumPlusDM = 0;
+        $sumMinusDM = 0;
+        $sumTR = 0;
+
+        for ($i = 1; $i < count($candles); $i++) {
+            $high = (float) $candles[$i]['high'];
+            $low = (float) $candles[$i]['low'];
+            $prevHigh = (float) $candles[$i - 1]['high'];
+            $prevLow = (float) $candles[$i - 1]['low'];
+            $prevClose = (float) $candles[$i - 1]['close'];
+
+            // Calculate TR
+            $tr1 = $high - $low;
+            $tr2 = abs($high - $prevClose);
+            $tr3 = abs($low - $prevClose);
+            $tr[$i] = max($tr1, $tr2, $tr3);
+
+            // Calculate DM
+            $upMove = $high - $prevHigh;
+            $downMove = $prevLow - $low;
+
+            if ($upMove > $downMove && $upMove > 0) {
+                $plusDM[$i] = $upMove;
+                $minusDM[$i] = 0;
+            } elseif ($downMove > $upMove && $downMove > 0) {
+                $plusDM[$i] = 0;
+                $minusDM[$i] = $downMove;
+            } else {
+                $plusDM[$i] = 0;
+                $minusDM[$i] = 0;
+            }
+
+            // Calculate smoothed DI
+            if ($i >= $period) {
+                if ($i === $period) {
+                    $sumPlusDM = array_sum(array_slice($plusDM, 1, $period));
+                    $sumMinusDM = array_sum(array_slice($minusDM, 1, $period));
+                    $sumTR = array_sum(array_slice($tr, 1, $period));
+                } else {
+                    $sumPlusDM = ($sumPlusDM * ($period - 1) + $plusDM[$i]) / $period;
+                    $sumMinusDM = ($sumMinusDM * ($period - 1) + $minusDM[$i]) / $period;
+                    $sumTR = ($sumTR * ($period - 1) + $tr[$i]) / $period;
+                }
+
+                if ($sumTR > 0) {
+                    $plusDI[$i] = 100 * ($sumPlusDM / $sumTR);
+                    $minusDI[$i] = 100 * ($sumMinusDM / $sumTR);
+                } else {
+                    $plusDI[$i] = 0;
+                    $minusDI[$i] = 0;
+                }
+            }
+        }
+
+        $latestPlusDI = end($plusDI);
+        $latestMinusDI = end($minusDI);
+        $latestADX = end($adx);
+
+        return [
+            'adx' => $latestADX !== null ? (float) $latestADX : null,
+            'plus_di' => $latestPlusDI !== null ? (float) $latestPlusDI : null,
+            'minus_di' => $latestMinusDI !== null ? (float) $latestMinusDI : null,
+        ];
+    }
+
+    /**
      * Calculate Parabolic SAR
      */
     public function calculatePSAR(

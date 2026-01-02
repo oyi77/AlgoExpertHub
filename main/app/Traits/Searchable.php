@@ -27,7 +27,7 @@ trait Searchable
 
                         [$relationName, $relationAttribute] = explode('.', $attribute);
 
-                        dd($relationAttribute, $relationName);
+                        // ✅ Bug #7 Fix: Removed debug code (dd statement)
 
                         $query->orWhereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
                             $query->where($relationAttribute, 'LIKE', "%{$searchTerm}%");

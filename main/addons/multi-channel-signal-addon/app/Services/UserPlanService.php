@@ -69,9 +69,8 @@ class UserPlanService
                 $subscription = $this->subscription($data);
                 $payment = $this->makePayment($data);
 
-                $user->balance = $user->balance - $data['final_amount'];
-
-                $user->save();
+                // ✅ Bug #5 Fix: Use atomic decrement to prevent race conditions
+                $user->decrement('balance', $data['final_amount']);
 
                 $this->makeTransaction($data);
 

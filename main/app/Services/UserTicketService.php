@@ -47,9 +47,11 @@ class UserTicketService
 
     public function update($request, $id)
     {
-        $ticket = Ticket::find($id);
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', auth()->user()->id)
+            ->firstOrFail();
+        
         $ticket->support_id = $ticket->support_id;
-        $ticket->user_id =  auth()->user()->id;
         $ticket->subject = $request->subject;
         $ticket->status = 2;
         $ticket->save();
@@ -73,7 +75,10 @@ class UserTicketService
 
     public function delete($id)
     {
-        $ticket = Ticket::find($id);
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', auth()->user()->id)
+            ->firstOrFail();
+        
         if ($ticket) {
             $all_reply = TicketReply::whereTicketId($id)->get();
             if (count($all_reply) > 0) {
@@ -93,8 +98,14 @@ class UserTicketService
 
     public function reply($request)
     {
+        // Verify user owns the ticket
+        $ticket = Ticket::where('id', $request->ticket_id)
+            ->where('user_id', auth()->user()->id)
+            ->firstOrFail();
+        
         $reply = new TicketReply();
         $reply->ticket_id = $request->ticket_id;
+        $reply->user_id = auth()->user()->id;
         $reply->message = $request->message;
 
         if ($request->has('file')) {

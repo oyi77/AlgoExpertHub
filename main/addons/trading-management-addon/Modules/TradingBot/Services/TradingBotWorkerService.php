@@ -98,8 +98,44 @@ class TradingBotWorkerService
     protected function startQueueWorker(TradingBot $bot): bool
     {
         try {
-            // Dispatch job to queue
-            \Addons\TradingManagement\Modules\TradingBot\Jobs\TradingBotWorkerJob::dispatch($bot->id);
+            // Check queue connection before dispatching
+            $queueConnection = config('queue.default');
+            if (!$queueConnection || $queueConnection === 'sync') {
+                Log::warning('Queue connection is sync or not configured, falling back to legacy worker', [
+                    'bot_id' => $bot->id,
+                    'queue_connection' => $queueConnection,
+                ]);
+                // Fallback to legacy worker if queue is sync
+                return $this->startLegacyWorker($bot);
+            }
+
+            // Dispatch job to queue with error handling
+            try {
+                \Addons\TradingManagement\Modules\TradingBot\Jobs\TradingBotWorkerJob::dispatch($bot->id);
+            } catch (\Exception $e) {
+                // Check if it's a queue connection issue
+                $errorMessage = $e->getMessage();
+                $errorLower = strtolower($errorMessage);
+                
+                // Check for common queue-related errors
+                $isQueueError = (
+                    strpos($errorLower, 'queue') !== false || 
+                    strpos($errorLower, 'connection') !== false ||
+                    strpos($errorLower, 'redis') !== false ||
+                    strpos($errorLower, 'database') !== false ||
+                    strpos($errorLower, 'driver') !== false
+                );
+                
+                if ($isQueueError) {
+                    Log::warning('Queue connection issue detected, falling back to legacy worker', [
+                        'bot_id' => $bot->id,
+                        'error' => $errorMessage,
+                    ]);
+                    return $this->startLegacyWorker($bot);
+                }
+                // Re-throw if it's a different error
+                throw $e;
+            }
 
             // Update bot status
             $bot->update([
@@ -127,7 +163,9 @@ class TradingBotWorkerService
         } catch (\Exception $e) {
             Log::error('Failed to queue trading bot worker', [
                 'bot_id' => $bot->id,
+                'bot_name' => $bot->name ?? 'Unknown',
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             throw new \Exception('Failed to start worker: ' . $e->getMessage());
         }

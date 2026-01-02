@@ -78,9 +78,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($notifications as $notification)
+                                    @forelse ($notifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -90,15 +90,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No notifications yet in this category') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($notifications->hasPages())
                                         <div class="card">
@@ -123,9 +128,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($depositNotifications as $notification)
+                                    @forelse ($depositNotifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -135,15 +140,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No deposit notifications yet') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($depositNotifications->hasPages())
                                         <div class="card">
@@ -168,9 +178,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($subscriptionNotifications as $notification)
+                                    @forelse ($subscriptionNotifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -180,15 +190,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No subscription notifications yet') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($subscriptionNotifications->hasPages())
                                         <div class="card">
@@ -213,9 +228,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($withdrawNotifications as $notification)
+                                    @forelse ($withdrawNotifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -225,15 +240,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No withdraw notifications yet') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($withdrawNotifications->hasPages())
                                         <div class="card">
@@ -257,9 +277,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($ticketNotifications as $notification)
+                                    @forelse ($ticketNotifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -269,15 +289,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No support notifications yet') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($ticketNotifications->hasPages())
                                         <div class="card">
@@ -302,9 +327,9 @@
                             <div class="pt-4">
                                 <div class="notification-ui_dd-content">
 
-                                    @foreach ($kycNotifications as $notification)
+                                    @forelse ($kycNotifications as $notification)
                                         <div class="notification-list {{ $notification->read_at == null ? 'notification-list--unread' : 'notification-list--read' }}"
-                                            id="remove-{{ $notification->id }}">
+                                            id="notification-{{ $notification->id }}">
                                             <div class="notification-list_content">
                                                 <div class="notification-list_detail">
                                                     <p class="text-muted">{{ $notification->data['message'] }}</p>
@@ -314,15 +339,20 @@
                                                     </p>
                                                 </div>
                                             </div>
-                                            <label class="toggle">
+                                            <label class="toggle" title="{{ $notification->read_at == null ? 'Mark as read' : 'Mark as unread' }}">
                                                 <input type="checkbox"
                                                     data-url="{{ route('admin.markNotification.single', $notification->id) }}"
                                                     class="check" {{ $notification->read_at != null ? 'checked' : '' }}
-                                                    data-id="#remove-{{ $notification->id }}">
+                                                    data-id="notification-{{ $notification->id }}">
                                                 <span></span>
                                             </label>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="text-center py-5">
+                                            <i class="las la-bell-slash" style="font-size: 48px; color: #ccc;"></i>
+                                            <p class="text-muted mt-3">{{ __('No KYC notifications yet') }}</p>
+                                        </div>
+                                    @endforelse
 
                                     @if ($kycNotifications->hasPages())
                                         <div class="card">
@@ -450,61 +480,73 @@
 
 @push('scripts')
     <script>
+        // Helper function to show notifications consistently
+        function showNotification(success, message, title) {
+            if (typeof notify !== 'undefined') {
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title(title || 'Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title(title || 'Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
         $(function() {
             'use strict'
 
             $('.check').on('change', function() {
+                var $checkbox = $(this);
+                var $notification = $('#' + $checkbox.data('id'));
+                var isChecked = $checkbox.is(':checked');
+                
                 $.ajax({
-                    url: $(this).data('url'),
+                    url: $checkbox.data('url'),
                     method: "POST",
                     data: {
                         "_token": "{{ csrf_token() }}",
-                        "id": $(this).data('id')
+                        "id": $checkbox.data('id').replace('notification-', '')
                     },
                     success: function(response) {
                         if (response.success) {
-
-                            $(response.id).fadeOut(300, function() {
-                                $(this).remove();
-                            });
-
-                            @if (Config::config()->alert === 'izi')
-                                iziToast.success({
-                                    position: 'topRight',
-                                    message: "Notification Mark As Read",
-                                });
-                            @elseif (Config::config()->alert === 'toast')
-                                toastr.success("Notification Mark As Read", {
-                                    positionClass: "toast-top-right"
-
-                                })
-                            @else
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: "Notification Mark As Read"
-                                })
-                            @endif
-
-                            return
+                            // Update the notification border color based on read/unread status
+                            if (response.isRead) {
+                                $notification.removeClass('notification-list--unread').addClass('notification-list--read');
+                            } else {
+                                $notification.removeClass('notification-list--read').addClass('notification-list--unread');
+                            }
+                            
+                            // Update toggle title
+                            $checkbox.closest('label').attr('title', response.isRead ? 'Mark as unread' : 'Mark as read');
+                            
+                            showNotification(true, response.message || (response.isRead ? 'Notification marked as read' : 'Notification marked as unread'));
+                        } else {
+                            // Revert checkbox state on error
+                            $checkbox.prop('checked', !isChecked);
+                            showNotification(false, response.message || 'Something went wrong');
                         }
-
-
-                        @if (Config::config()->alert === 'izi')
-                            iziToast.error({
-                                position: 'topRight',
-                                message: "Something went wrong",
-                            });
-                        @elseif (Config::config()->alert === 'toast')
-                            toastr.error("Something went wrong", {
-                                positionClass: "toast-top-right"
-
-                            })
-                        @else
-                            Swal.fire({
-                                icon: 'error',
-                                title: "Something went wrong"
-                            })
-                        @endif
+                    },
+                    error: function(xhr) {
+                        // Revert checkbox state on error
+                        $checkbox.prop('checked', !isChecked);
+                        var errorMessage = xhr.responseJSON && xhr.responseJSON.message 
+                            ? xhr.responseJSON.message 
+                            : 'Something went wrong';
+                        showNotification(false, errorMessage);
                     }
                 })
             })

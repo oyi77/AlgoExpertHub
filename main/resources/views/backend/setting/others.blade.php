@@ -78,7 +78,7 @@
 
                 <div class="mb-4 col-md-12">
                     <label for="">{{ __('Seo Description') }}</label>
-                    <textarea name="seo_description" id="" cols="30" rows="10" class="form-control">{{ __($general->seo_description) }}</textarea>
+                    <textarea name="seo_description" id="seo_description" cols="30" rows="10" class="form-control">{{ __($general->seo_description) }}</textarea>
                 </div>
             </div>
         </div>

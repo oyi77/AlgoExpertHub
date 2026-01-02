@@ -115,18 +115,18 @@ class AdminController extends Controller
 
     public function notifications()
     {
-        $data['notifications'] = auth()->guard('admin')->user()->unreadNotifications()->paginate(Helper::pagination(), ['*'], 'notifications');
+        $data['notifications'] = auth()->guard('admin')->user()->notifications()->latest()->paginate(Helper::pagination(), ['*'], 'notifications');
 
-        $data['depositNotifications'] = auth()->guard('admin')->user()->unreadNotifications()->where('type', DepositNotification::class)->paginate(Helper::pagination(), ['*'], 'depositNotifications');
+        $data['depositNotifications'] = auth()->guard('admin')->user()->notifications()->where('type', DepositNotification::class)->latest()->paginate(Helper::pagination(), ['*'], 'depositNotifications');
 
-        $data['subscriptionNotifications'] = auth()->guard('admin')->user()->unreadNotifications()->where('type', PlanSubscriptionNotification::class)->paginate(Helper::pagination(), ['*'], 'subscriptionNotifications');
+        $data['subscriptionNotifications'] = auth()->guard('admin')->user()->notifications()->where('type', PlanSubscriptionNotification::class)->latest()->paginate(Helper::pagination(), ['*'], 'subscriptionNotifications');
 
-        $data['withdrawNotifications'] = auth()->guard('admin')->user()->unreadNotifications()->where('type', WithdrawNotification::class)->paginate(Helper::pagination(), ['*'], 'withdrawNotifications');
+        $data['withdrawNotifications'] = auth()->guard('admin')->user()->notifications()->where('type', WithdrawNotification::class)->latest()->paginate(Helper::pagination(), ['*'], 'withdrawNotifications');
 
 
-        $data['ticketNotifications'] = auth()->guard('admin')->user()->unreadNotifications()->where('type', TicketNotification::class)->paginate(Helper::pagination(), ['*'], 'ticketNotifications');
+        $data['ticketNotifications'] = auth()->guard('admin')->user()->notifications()->where('type', TicketNotification::class)->latest()->paginate(Helper::pagination(), ['*'], 'ticketNotifications');
 
-        $data['kycNotifications'] = auth()->guard('admin')->user()->unreadNotifications()->where('type', KycUpdateNotification::class)->paginate(Helper::pagination(), ['*'], 'kycNotifications');
+        $data['kycNotifications'] = auth()->guard('admin')->user()->notifications()->where('type', KycUpdateNotification::class)->latest()->paginate(Helper::pagination(), ['*'], 'kycNotifications');
 
         $data['title'] = 'Notications';
 
@@ -136,12 +136,31 @@ class AdminController extends Controller
     public function SignlemarkNotification(Request $request, $id)
     {
         $notification = auth()->guard('admin')->user()
-            ->unreadNotifications()
-            ->where('id', $id)->get();
+            ->notifications()
+            ->where('id', $id)
+            ->first();
 
-        $notification->markAsRead();
+        if (!$notification) {
+            return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+        }
 
-        return response()->json(['success' => true, 'id' => $request->id]);
+        // Toggle read/unread status
+        if ($notification->read_at) {
+            // Mark as unread
+            $notification->update(['read_at' => null]);
+            $isRead = false;
+        } else {
+            // Mark as read
+            $notification->markAsRead();
+            $isRead = true;
+        }
+
+        return response()->json([
+            'success' => true,
+            'id' => $notification->id,
+            'isRead' => $isRead,
+            'message' => $isRead ? 'Notification marked as read' : 'Notification marked as unread'
+        ]);
     }
 
     public function changeStatus($id)

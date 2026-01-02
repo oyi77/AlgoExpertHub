@@ -58,9 +58,8 @@ class UserMoneyTransferService
 
         $user = auth()->user();
 
-        $user->balance = $user->balance - $totalSendAmount;
-
-        $user->save();
+        // ✅ Bug #5 Fix: Use atomic decrement to prevent race conditions
+        $user->decrement('balance', $totalSendAmount);
 
 
         $trx = strtoupper(Str::random());
@@ -85,9 +84,8 @@ class UserMoneyTransferService
             'type' => '-'
         ]);
 
-        $receiver->balance = $receiver->balance + $request->amount;
-
-        $receiver->save();
+        // ✅ Bug #5 Fix: Use atomic increment to prevent race conditions
+        $receiver->increment('balance', $request->amount);
 
         $trx = strtoupper(Str::random());
 

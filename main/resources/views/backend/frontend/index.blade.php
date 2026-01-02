@@ -203,6 +203,32 @@
 
 @push('scripts')
     <script>
+        // Helper function to show notifications consistently
+        function showNotification(success, message, title) {
+            if (typeof notify !== 'undefined') {
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title(title || 'Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title(title || 'Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
+                }
+            } else {
+                alert(message);
+            }
+        }
+        
         // Wait for jQuery and then load repeater.js
         (function() {
             function loadRepeaterAndInit() {
@@ -366,22 +392,12 @@
                             },
                             success: function(response) {
                                 if (response.type === 'success') {
-                                    // Show success notification using Laravel Notify
-                                    if (typeof notify !== 'undefined') {
-                                        notify()->success()->title('Success')->message(response.message || 'Sections reordered successfully')->send();
-                                    } else if (typeof toastr !== 'undefined') {
-                                        toastr.success(response.message || 'Sections reordered successfully');
-                                    }
+                                    showNotification(true, response.message || 'Sections reordered successfully');
                                 }
                             },
                             error: function(xhr) {
                                 console.error('Failed to save section order');
-                                // Show error notification using Laravel Notify
-                                if (typeof notify !== 'undefined') {
-                                    notify()->error()->title('Error')->message('Failed to save section order. Please try again.')->send();
-                                } else if (typeof toastr !== 'undefined') {
-                                    toastr.error('Failed to save section order. Please try again.');
-                                }
+                                showNotification(false, 'Failed to save section order. Please try again.');
                                 // Revert on error
                                 location.reload();
                             }

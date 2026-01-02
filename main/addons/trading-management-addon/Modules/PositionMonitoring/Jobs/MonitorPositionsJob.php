@@ -337,6 +337,7 @@ class MonitorPositionsJob implements ShouldQueue
 
     /**
      * Track which connections we've already warned about (to avoid spam)
+     * Format: [connection_id => timestamp] - only warn once per hour per connection
      */
     protected static $warnedConnections = [];
 
@@ -350,15 +351,21 @@ class MonitorPositionsJob implements ShouldQueue
             $dataConnection = $executionConnection->dataConnection;
             
             if (!$dataConnection) {
-                // Only log warning once per connection to avoid log spam
+                // Only log warning once per hour per connection to avoid log spam
                 $connectionId = $executionConnection->id;
-                if (!isset(static::$warnedConnections[$connectionId])) {
+                $lastWarning = static::$warnedConnections[$connectionId] ?? null;
+                $shouldWarn = !$lastWarning || (now()->timestamp - $lastWarning) > 3600; // 1 hour
+                
+                if ($shouldWarn) {
                     Log::warning('No DataConnection linked to ExecutionConnection - skipping price updates', [
                         'execution_connection_id' => $connectionId,
                         'connection_name' => $executionConnection->name ?? 'Unknown',
-                        'note' => 'Positions with this connection will not have price updates until DataConnection is linked',
+                        'exchange_type' => $executionConnection->exchange_type ?? 'unknown',
+                        'exchange_name' => $executionConnection->exchange_name ?? 'unknown',
+                        'note' => 'Positions with this connection will not have price updates until DataConnection is linked. Please edit the ExecutionConnection and assign a DataConnection.',
+                        'help' => 'To fix: Go to Execution Connections, edit this connection, and assign a DataConnection for price updates.',
                     ]);
-                    static::$warnedConnections[$connectionId] = true;
+                    static::$warnedConnections[$connectionId] = now()->timestamp;
                 }
                 return null;
             }
@@ -368,8 +375,10 @@ class MonitorPositionsJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error('Failed to create adapter', [
                 'execution_connection_id' => $executionConnection->id ?? null,
+                'connection_name' => $executionConnection->name ?? 'Unknown',
                 'position_id' => $positionId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             return null;
         }

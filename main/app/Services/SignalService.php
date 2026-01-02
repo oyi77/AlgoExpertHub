@@ -481,6 +481,8 @@ class SignalService extends BaseService
 
             curl_exec($curl);
         }
+    }
+
     public function allSignals(array $params): array
     {
         return $this->cacheResult('signals-all-' . auth()->id() . '-' . md5(serialize($params)), function () use ($params) {

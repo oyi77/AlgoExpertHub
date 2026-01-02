@@ -52,8 +52,8 @@ class UserWithdrawService{
             return ['type' => 'error', 'message' => 'Invalid Amount'];
         }
 
-        auth()->user()->balance = auth()->user()->balance - $request->amount;
-        auth()->user()->save();
+        // ✅ Bug #5 Fix: Use atomic decrement to prevent race conditions
+        auth()->user()->decrement('balance', $request->amount);
 
 
         $data = [

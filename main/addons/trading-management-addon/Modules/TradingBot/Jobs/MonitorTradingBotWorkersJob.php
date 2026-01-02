@@ -42,18 +42,45 @@ class MonitorTradingBotWorkersJob implements ShouldQueue
             if (!$workerService->isWorkerRunning($bot)) {
                 // Worker is dead but bot status is running - restart it
                 try {
+                    // Check bot configuration before restarting
+                    if (!$bot->is_active) {
+                        Log::info('Skipping restart for inactive bot', [
+                            'bot_id' => $bot->id,
+                            'name' => $bot->name,
+                        ]);
+                        continue;
+                    }
+
                     $workerService->startWorker($bot);
                     $restarted++;
                     
                     Log::warning('Trading bot worker restarted', [
                         'bot_id' => $bot->id,
                         'name' => $bot->name,
+                        'trading_mode' => $bot->trading_mode ?? 'unknown',
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to restart trading bot worker', [
                         'bot_id' => $bot->id,
+                        'bot_name' => $bot->name ?? 'Unknown',
+                        'trading_mode' => $bot->trading_mode ?? 'unknown',
+                        'worker_status' => $bot->worker_status ?? 'unknown',
                         'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
                     ]);
+                    
+                    // Update bot status to indicate worker failure
+                    try {
+                        $bot->update([
+                            'worker_status' => 'failed',
+                            'worker_last_heartbeat' => now(),
+                        ]);
+                    } catch (\Exception $updateException) {
+                        Log::error('Failed to update bot status after worker restart failure', [
+                            'bot_id' => $bot->id,
+                            'error' => $updateException->getMessage(),
+                        ]);
+                    }
                 }
             }
         }

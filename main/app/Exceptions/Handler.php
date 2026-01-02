@@ -52,9 +52,15 @@ class Handler extends ExceptionHandler
     {
         // Skip logging 404s for common files (robots.txt, favicon.ico, etc.)
         if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
-            $path = request()->path();
-            if (in_array($path, ['robots.txt', 'favicon.ico', 'sitemap.xml', '.well-known'])) {
-                return; // Don't log these common 404s
+            try {
+                if (app()->bound('request')) {
+                    $path = request()->path();
+                    if (in_array($path, ['robots.txt', 'favicon.ico', 'sitemap.xml', '.well-known'])) {
+                        return; // Don't log these common 404s
+                    }
+                }
+            } catch (\Throwable $requestError) {
+                // No request available (console context), continue with normal reporting
             }
         }
         
@@ -67,8 +73,24 @@ class Handler extends ExceptionHandler
                 $userId = auth()->id() ?? 'guest';
                 $adminId = auth()->guard('admin')->id() ?? null;
             }
-        } catch (\Throwable $e) {
-            // ignore
+        } catch (\Throwable $authError) {
+            // ✅ Bug #3 Fix: Rename variable to avoid shadowing, log auth errors
+            \Log::warning('Failed to get user context in exception handler', [
+                'error' => $authError->getMessage(),
+            ]);
+            // Continue with default values
+        }
+
+        // Safely get request information (may not be available in console context)
+        $requestUrl = 'N/A';
+        $requestMethod = 'N/A';
+        try {
+            if (app()->bound('request')) {
+                $requestUrl = request()->fullUrl() ?? 'N/A';
+                $requestMethod = request()->method() ?? 'N/A';
+            }
+        } catch (\Throwable $requestError) {
+            // No request available (console context), use defaults
         }
 
         $errorDetails = [
@@ -78,8 +100,8 @@ class Handler extends ExceptionHandler
             'trace' => $e->getTraceAsString(),
             'code' => $e->getCode(),
             'class' => get_class($e),
-            'request_url' => request()->fullUrl() ?? 'N/A',
-            'request_method' => request()->method() ?? 'N/A',
+            'request_url' => $requestUrl,
+            'request_method' => $requestMethod,
             'user_id' => $userId,
             'admin_id' => $adminId,
         ];

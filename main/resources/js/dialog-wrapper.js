@@ -49,8 +49,20 @@
                 </div>
             `;
             jQuery('body').append(modalHtml);
-            jQuery('#' + modalId).modal('show');
-            jQuery('#' + modalId).on('hidden.bs.modal', function() {
+            const $modal = jQuery('#' + modalId);
+            
+            // Fix aria-hidden accessibility issue
+            // Bootstrap automatically sets aria-hidden="true" when modal is hidden
+            // We need to ensure it's removed when modal is shown
+            $modal.on('shown.bs.modal', function() {
+                // Remove aria-hidden when modal is fully shown
+                jQuery(this).removeAttr('aria-hidden');
+                // Set aria-modal for better accessibility
+                jQuery(this).attr('aria-modal', 'true');
+            });
+            
+            $modal.modal('show');
+            $modal.on('hidden.bs.modal', function() {
                 jQuery(this).remove();
             });
             return Promise.resolve();
@@ -104,6 +116,12 @@
                 `;
                 jQuery('body').append(modalHtml);
                 const $modal = jQuery('#' + modalId);
+                
+                // Fix aria-hidden accessibility issue
+                $modal.on('shown.bs.modal', function() {
+                    jQuery(this).removeAttr('aria-hidden');
+                    jQuery(this).attr('aria-modal', 'true');
+                });
                 
                 $modal.find('.dialog-confirm-yes').on('click', function() {
                     resolve(true);
@@ -177,6 +195,12 @@
                 jQuery('body').append(modalHtml);
                 const $modal = jQuery('#' + modalId);
                 const $input = $modal.find('.dialog-prompt-input');
+                
+                // Fix aria-hidden accessibility issue
+                $modal.on('shown.bs.modal', function() {
+                    jQuery(this).removeAttr('aria-hidden');
+                    jQuery(this).attr('aria-modal', 'true');
+                });
                 
                 $modal.find('.dialog-prompt-ok').on('click', function() {
                     const value = $input.val();

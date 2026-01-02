@@ -271,10 +271,10 @@ composer require ccxt/ccxt guzzlehttp/guzzle
 
 ## Documentation
 
-- [Full Analysis](../../../docs/trading-management-consolidation-analysis.md)
-- [Final Structure](../../../docs/trading-management-final-structure.md)
-- [UI Organization](../../../docs/trading-management-ui-organization.md)
-- [Changelog](../../../docs/CHANGELOG-trading-management.md)
+- [Full Analysis](../../../docs/archive/trading-refactor-2025/trading-management-consolidation-analysis.md)
+- [Final Structure](../../../docs/archive/trading-refactor-2025/trading-management-final-structure.md)
+- [UI Organization](../../../docs/archive/trading-refactor-2025/trading-management-ui-organization.md)
+- [Changelog](../../../docs/archive/trading-refactor-2025/CHANGELOG-trading-management.md)
 
 ---
 

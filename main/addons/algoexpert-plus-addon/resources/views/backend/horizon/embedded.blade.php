@@ -641,7 +641,8 @@
         });
     }
 
-    function clearFailedJobs() {
+    // Ensure function is in global scope
+    window.clearFailedJobs = function clearFailedJobs() {
         var count = {{ $queueStats['failed'] ?? 0 }};
         if (count === 0) {
             alert('ℹ️ No failed jobs to clear.');
@@ -688,7 +689,7 @@
                 btn.innerHTML = '<i class="las la-trash"></i> Clear All Failed Jobs (' + count + ')';
             }
         });
-    }
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
         var iframe = document.getElementById('horizon-iframe');

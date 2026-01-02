@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Configuration;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminUserService
@@ -12,6 +15,11 @@ class AdminUserService
     public function update($request)
     {
         $user = User::find($request->user);
+        
+        // ✅ Bug #8 Fix: Add null check
+        if (!$user) {
+            return ['type' => 'error', 'message' => 'User not found'];
+        }
 
         $data = [
             'country' => $request->country,
@@ -35,33 +43,36 @@ class AdminUserService
 
     public function updateBalance($request)
     {
-        $user = User::findOrFail($request->user_id);
+        // ✅ Bug #5 Fix: Use transaction wrapper and atomic updates
+        // ✅ Potential Issue #3 Fix: Wrap in transaction
+        return DB::transaction(function () use ($request) {
+            $user = User::findOrFail($request->user_id);
 
-        $general = Configuration::first();
+            $general = Configuration::first();
 
-        if ($request->type == 'add') {
-            $user->balance =  $user->balance + $request->balance;
-        } else {
-            if ($user->balance < $request->balance) {
-                return ['type' => 'error', 'message' => 'Insufficient balance'];
+            if ($request->type == 'add') {
+                // ✅ Bug #5 Fix: Use atomic increment
+                $user->increment('balance', $request->balance);
+            } else {
+                if ($user->balance < $request->balance) {
+                    return ['type' => 'error', 'message' => 'Insufficient balance'];
+                }
+                // ✅ Bug #5 Fix: Use atomic decrement
+                $user->decrement('balance', $request->balance);
             }
-            $user->balance =  $user->balance - $request->balance;
-        }
 
-        $user->save();
+            $trx = strtoupper(Str::random());
 
-        $trx = strtoupper(Str::random());
+            Transaction::create([
+                'trx' => $trx,
+                'user_id' => $user->id,
+                'amount' => $request->balance,
+                'charge' => 0,
+                'details' => $request->type === 'add' ? 'Balance Added By Admin' : 'Balance Subtruct By Admin',
+                'type' => $request->type === 'add' ? '+' : '-'
+            ]);
 
-        Transaction::create([
-            'trx' => $trx,
-            'user_id' => $user->id,
-            'amount' => $request->balance,
-            'charge' => 0,
-            'details' => $request->type === 'add' ? 'Balance Added By Admin' : 'Balance Subtruct By Admin',
-            'type' => $request->type === 'add' ? '+' : '-'
-        ]);
-
-
-        return ['type' => 'success', 'message' => 'Successfully ' . $request->type . ' balance'];
+            return ['type' => 'success', 'message' => 'Successfully ' . $request->type . ' balance'];
+        });
     }
 }

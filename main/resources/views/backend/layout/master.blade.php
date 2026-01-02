@@ -40,15 +40,6 @@
 
     {{-- Laravel Notify CSS --}}
     <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
-    
-    {{-- Legacy notification libraries (will be removed after migration) --}}
-    @if ($alertType === 'izi')
-        <link href="{{ Config::cssLib('backend', 'izitoast.min.css') }}" rel="stylesheet">
-    @elseif($alertType === 'toast')
-        <link href="{{ Config::cssLib('backend', 'toastr.min.css') }}" rel="stylesheet">
-    @elseif($alertType === 'sweetalert')
-        <link href="{{ Config::cssLib('backend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
 
     @stack('external-style')
 
@@ -165,30 +156,147 @@
 
     </div>
 
-    {{-- Load jQuery synchronously first to ensure it's available for inline scripts and repeater.js --}}
+    {{-- Load jQuery with blocking script tag first, fallback to CDN --}}
     <script src="{{ Config::jsLib('backend', 'global.min.js') }}"></script>
+    <script>
+        // Ensure jQuery and $ are available, fallback to CDN if local failed
+        // Check after a short delay to handle HTTP/2 protocol errors that return 200 but don't execute
+        (function() {
+            function checkAndLoadJQuery() {
+                if (typeof window.jQuery === 'undefined') {
+                    console.warn('jQuery: Local file failed or not loaded, loading from CDN');
+                    var script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js';
+                    script.async = false;
+                    script.defer = false;
+                    script.onload = function() {
+                        // Double-check after load
+                        setTimeout(function() {
+                            if (typeof window.jQuery !== 'undefined') {
+                                if (typeof window.$ === 'undefined') {
+                                    window.$ = window.jQuery;
+                                }
+                                console.log('jQuery: Successfully loaded from CDN');
+                                window.dispatchEvent(new Event('jquery-loaded'));
+                            } else {
+                                console.error('jQuery: CDN load failed, trying alternative');
+                                // Try alternative CDN
+                                var altScript = document.createElement('script');
+                                altScript.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+                                altScript.async = false;
+                                altScript.onload = function() {
+                                    if (typeof window.jQuery !== 'undefined') {
+                                        if (typeof window.$ === 'undefined') {
+                                            window.$ = window.jQuery;
+                                        }
+                                        window.dispatchEvent(new Event('jquery-loaded'));
+                                    }
+                                };
+                                document.head.appendChild(altScript);
+                            }
+                        }, 50);
+                    };
+                    script.onerror = function() {
+                        console.error('jQuery: CDN load error, trying alternative');
+                        var altScript = document.createElement('script');
+                        altScript.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+                        altScript.async = false;
+                        altScript.onload = function() {
+                            if (typeof window.jQuery !== 'undefined') {
+                                if (typeof window.$ === 'undefined') {
+                                    window.$ = window.jQuery;
+                                }
+                                window.dispatchEvent(new Event('jquery-loaded'));
+                            }
+                        };
+                        document.head.appendChild(altScript);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    // jQuery loaded successfully
+                    if (typeof window.$ === 'undefined') {
+                        window.$ = window.jQuery;
+                    }
+                    window.dispatchEvent(new Event('jquery-loaded'));
+                }
+            }
+            
+            // Check immediately, then again after a short delay to catch HTTP/2 errors
+            checkAndLoadJQuery();
+            setTimeout(checkAndLoadJQuery, 200);
+        })();
+    </script>
 
+    {{-- Non-jQuery scripts can load immediately --}}
     <script defer src="{{ Config::jsLib('backend', 'feather.min.js') }}"></script>
 
-    <script defer src="{{ Config::jsLib('backend', 'quixnav-init.js') }}"></script>
+    {{-- jQuery-dependent scripts - load after jQuery is ready --}}
+    <script>
+        (function() {
+            function loadScriptWhenJQueryReady(src, callback) {
+                function waitForJQuery() {
+                    if (typeof window.jQuery !== 'undefined') {
+                        var script = document.createElement('script');
+                        script.src = src;
+                        script.async = false;
+                        script.defer = false;
+                        if (callback) {
+                            script.onload = callback;
+                        }
+                        document.head.appendChild(script);
+                    } else {
+                        // Listen for jquery-loaded event or poll
+                        var handler = function() {
+                            window.removeEventListener('jquery-loaded', handler);
+                            var script = document.createElement('script');
+                            script.src = src;
+                            script.async = false;
+                            script.defer = false;
+                            if (callback) {
+                                script.onload = callback;
+                            }
+                            document.head.appendChild(script);
+                        };
+                        window.addEventListener('jquery-loaded', handler, { once: true });
+                        
+                        // Poll as fallback
+                        setTimeout(function() {
+                            if (typeof window.jQuery !== 'undefined') {
+                                window.removeEventListener('jquery-loaded', handler);
+                                var script = document.createElement('script');
+                                script.src = src;
+                                script.async = false;
+                                script.defer = false;
+                                if (callback) {
+                                    script.onload = callback;
+                                }
+                                document.head.appendChild(script);
+                            }
+                        }, 100);
+                    }
+                }
+                waitForJQuery();
+            }
+            
+            // Load jQuery-dependent scripts
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'quixnav-init.js') }}');
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'metismenu.min.js') }}');
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'perfectscroll.min.js') }}');
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'ui.js') }}');
+            
+            @hasSection('uses_datatable')
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'jquery.dataTables.min.js') }}');
+            @endif
 
-    <script defer src="{{ Config::jsLib('backend', 'metismenu.min.js') }}"></script>
+            @hasSection('uses_uploadpreview')
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'jquery.uploadPreview.min.js') }}');
+            @endif
 
-    <script defer src="{{ Config::jsLib('backend', 'perfectscroll.min.js') }}"></script>
-
-    @hasSection('uses_datatable')
-        <script defer src="{{ Config::jsLib('backend', 'jquery.dataTables.min.js') }}"></script>
-    @endif
-
-    @hasSection('uses_uploadpreview')
-        <script defer src="{{ Config::jsLib('backend', 'jquery.uploadPreview.min.js') }}"></script>
-    @endif
-
-    @hasSection('uses_summernote')
-        <script defer src="{{ Config::jsLib('backend', 'summernote-bs4.min.js') }}"></script>
-    @endif
-
-    <script defer src="{{ Config::jsLib('backend', 'ui.js') }}"></script>
+            @hasSection('uses_summernote')
+            loadScriptWhenJQueryReady('{{ Config::jsLib('backend', 'summernote-bs4.min.js') }}');
+            @endif
+        })();
+    </script>
 
     @hasSection('uses_apexchart')
         <script defer src="{{ Config::jsLib('backend', 'apex-chart.min.js') }}"></script>
@@ -198,49 +306,253 @@
         <script defer src="{{ Config::jsLib('backend', 'iconpicker.js') }}"></script>
     @endif
 
-    {{-- Laravel Notify JavaScript --}}
-    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
+    {{-- Laravel Notify JavaScript - load after jQuery is ready --}}
+    <script>
+        (function() {
+            function loadNotify() {
+                var script = document.createElement('script');
+                script.src = '{{ asset('vendor/notify/notify.js') }}';
+                script.async = false;
+                script.defer = false;
+                script.onload = function() {
+                    // Dispatch event when notify is loaded
+                    window.dispatchEvent(new Event('notify-loaded'));
+                };
+                script.onerror = function() {
+                    console.error('Failed to load notify.js');
+                    // Dispatch event anyway so alerts can try to show
+                    window.dispatchEvent(new Event('notify-loaded'));
+                };
+                document.head.appendChild(script);
+            }
+            
+            if (typeof window.jQuery !== 'undefined') {
+                loadNotify();
+            } else {
+                // Wait for jQuery
+                var handler = function() {
+                    window.removeEventListener('jquery-loaded', handler);
+                    loadNotify();
+                };
+                window.addEventListener('jquery-loaded', handler, { once: true });
+                
+                // Poll as fallback
+                var attempts = 0;
+                var checkInterval = setInterval(function() {
+                    attempts++;
+                    if (typeof window.jQuery !== 'undefined') {
+                        clearInterval(checkInterval);
+                        window.removeEventListener('jquery-loaded', handler);
+                        loadNotify();
+                    } else if (attempts >= 100) {
+                        clearInterval(checkInterval);
+                        window.removeEventListener('jquery-loaded', handler);
+                        console.error('jQuery not loaded, loading notify.js anyway');
+                        loadNotify();
+                    }
+                }, 50);
+            }
+        })();
+    </script>
     
-    {{-- Legacy notification libraries (will be removed after migration) --}}
-    @if ($alertType === 'izi')
-        <script defer src="{{ Config::jsLib('backend', 'izitoast.min.js') }}"></script>
-    @elseif($alertType === 'toast')
-        <script defer src="{{ Config::jsLib('backend', 'toastr.min.js') }}"></script>
-    @elseif($alertType === 'sweetalert')
-        <script defer src="{{ Config::jsLib('backend', 'sweetalert.min.js') }}"></script>
-    @endif
+    {{-- Alert notifications (waits for notify.js via the alert template itself) --}}
+    @include('backend.layout.alert')
 
+    {{-- External scripts - intercept and wrap to wait for jQuery --}}
+    <script>
+        (function() {
+            // Intercept script tags added to DOM and wrap jQuery-dependent ones
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.tagName === 'SCRIPT' && node.src) {
+                            // Check if this is a jQuery-dependent script
+                            var jqueryDependent = /(toogle|colorpicker|select2|jquery\.|\.min\.js)/i.test(node.src);
+                            
+                            if (jqueryDependent && typeof window.jQuery === 'undefined') {
+                                // Remove the script and queue it
+                                var src = node.src;
+                                node.remove();
+                                
+                                // Wait for jQuery then load
+                                function loadWhenReady() {
+                                    if (typeof window.jQuery !== 'undefined') {
+                                        var script = document.createElement('script');
+                                        script.src = src;
+                                        script.async = node.async;
+                                        script.defer = node.defer;
+                                        document.head.appendChild(script);
+                                    } else {
+                                        var handler = function() {
+                                            window.removeEventListener('jquery-loaded', handler);
+                                            var script = document.createElement('script');
+                                            script.src = src;
+                                            script.async = node.async;
+                                            script.defer = node.defer;
+                                            document.head.appendChild(script);
+                                        };
+                                        window.addEventListener('jquery-loaded', handler, { once: true });
+                                        setTimeout(function() {
+                                            if (typeof window.jQuery !== 'undefined') {
+                                                window.removeEventListener('jquery-loaded', handler);
+                                                var script = document.createElement('script');
+                                                script.src = src;
+                                                script.async = node.async;
+                                                script.defer = node.defer;
+                                                document.head.appendChild(script);
+                                            }
+                                        }, 100);
+                                    }
+                                }
+                                loadWhenReady();
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.head, { childList: true, subtree: true });
+        })();
+    </script>
     @stack('external-script')
 
     <!-- Dialog Wrapper - Replaces native alert/confirm/prompt with custom modals -->
     <script defer src="{{ asset('asset/backend/js/dialog-wrapper.js') }}"></script>
     <script defer src="{{ asset('asset/js/fix-onsubmit-confirm.js') }}"></script>
 
-    <script defer src="{{ Config::jsLib('backend', 'custom.js') }}"></script>
-
-    @stack('script')
-    @include('backend.layout.alert')
+    {{-- Custom.js - load after jQuery is ready --}}
+    <script>
+        (function() {
+            function loadCustomJs() {
+                if (typeof window.jQuery !== 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = '{{ Config::jsLib('backend', 'custom.js') }}';
+                    script.async = false;
+                    script.defer = false;
+                    document.head.appendChild(script);
+                } else {
+                    var handler = function() {
+                        window.removeEventListener('jquery-loaded', handler);
+                        loadCustomJs();
+                    };
+                    window.addEventListener('jquery-loaded', handler, { once: true });
+                    
+                    // Poll as fallback
+                    var attempts = 0;
+                    var checkInterval = setInterval(function() {
+                        attempts++;
+                        if (typeof window.jQuery !== 'undefined') {
+                            clearInterval(checkInterval);
+                            window.removeEventListener('jquery-loaded', handler);
+                            loadCustomJs();
+                        } else if (attempts >= 100) {
+                            clearInterval(checkInterval);
+                            window.removeEventListener('jquery-loaded', handler);
+                        }
+                    }, 50);
+                }
+            }
+            loadCustomJs();
+        })();
+    </script>
 
     @livewireScripts
     <script>
         // Ensure jQuery is available before executing any scripts
         (function() {
-            function waitForJQuery(callback) {
-                if (typeof jQuery !== 'undefined' && typeof $ !== 'undefined') {
-                    callback();
-                } else {
-                    setTimeout(function() { waitForJQuery(callback); }, 50);
+            function waitForJQuery(callback, maxAttempts) {
+                maxAttempts = maxAttempts || 200;
+                var attempts = 0;
+                var callbackExecuted = false;
+                
+                // Listen for jquery-loaded event (from fallback loader)
+                var eventHandler = function() {
+                    // jQuery loaded via event, verify and execute callback
+                    if (typeof window.jQuery !== 'undefined' && !callbackExecuted) {
+                        if (typeof window.$ === 'undefined') {
+                            window.$ = window.jQuery;
+                        }
+                        callbackExecuted = true;
+                        window.removeEventListener('jquery-loaded', eventHandler);
+                        callback();
+                    }
+                };
+                window.addEventListener('jquery-loaded', eventHandler, { once: true });
+                
+                function check() {
+                    attempts++;
+                    // Check for jQuery (required)
+                    if (typeof window.jQuery !== 'undefined') {
+                        // jQuery is available, ensure $ is also available
+                        if (typeof window.$ === 'undefined') {
+                            // jQuery is in no-conflict mode, assign $ to jQuery
+                            window.$ = window.jQuery;
+                        }
+                        // Remove event listener if it was set
+                        if (!callbackExecuted) {
+                            callbackExecuted = true;
+                            window.removeEventListener('jquery-loaded', eventHandler);
+                            callback();
+                        }
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(check, 50);
+                    } else {
+                        console.error('jQuery failed to load after ' + maxAttempts + ' attempts');
+                        // Remove event listener if still waiting
+                        if (!callbackExecuted) {
+                            window.removeEventListener('jquery-loaded', eventHandler);
+                        }
+                    }
                 }
+                
+                check();
+            }
+            
+            function waitForSummernote(callback, maxAttempts) {
+                maxAttempts = maxAttempts || 100;
+                var attempts = 0;
+                
+                function check() {
+                    attempts++;
+                    if (typeof jQuery !== 'undefined' && typeof jQuery.fn !== 'undefined' && typeof jQuery.fn.summernote !== 'undefined') {
+                        callback();
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(check, 50);
+                    } else {
+                        // Summernote not loaded, but continue anyway (it might not be needed on this page)
+                        callback();
+                    }
+                }
+                check();
             }
             
             waitForJQuery(function() {
+                // Use window.jQuery instead of $ to avoid conflicts
+                var $ = window.jQuery || window.$;
+                if (typeof $ === 'undefined') {
+                    console.error('jQuery not available');
+                    return;
+                }
+                
                 $(function() {
                     'use strict'
                     
-                    // Only initialize Summernote if it's loaded and elements exist
-                    if (typeof $.fn.summernote !== 'undefined' && $('.summernote').length > 0) {
-                        $('.summernote').summernote({
-                            height: 250,
+                    // Only initialize Summernote if elements exist AND Summernote is loaded
+                    var summernoteElements = $('.summernote');
+                    if (summernoteElements.length > 0) {
+                        waitForSummernote(function() {
+                            // Double-check that Summernote is available before using it
+                            if (typeof jQuery !== 'undefined' && typeof jQuery.fn !== 'undefined' && typeof jQuery.fn.summernote !== 'undefined') {
+                                try {
+                                    summernoteElements.summernote({
+                                        height: 250,
+                                    });
+                                } catch (e) {
+                                    console.warn('Failed to initialize Summernote:', e);
+                                }
+                            } else {
+                                console.warn('Summernote plugin not available, skipping initialization');
+                            }
                         });
                     }
 
@@ -256,6 +568,9 @@
             });
         })();
     </script>
+    
+    {{-- Stack scripts - should wrap jQuery-dependent code in waitForJQuery if needed --}}
+    @stack('scripts')
 
 </body>
 

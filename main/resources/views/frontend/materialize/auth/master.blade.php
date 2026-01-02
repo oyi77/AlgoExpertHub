@@ -25,13 +25,8 @@
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/slick.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/odometer.css') }}">
 
-    @if (Config::config()->alert === 'izi')
-        <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'izitoast.min.css') }}">
-    @elseif(Config::config()->alert === 'toast')
-        <link href="{{ Config::cssLib('frontend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
-        <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
 
     <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
@@ -117,16 +112,11 @@
     <script src="{{ Config::jsLib('frontend', 'lib/odometer.min.js') }}"></script>
     <script src="{{ Config::jsLib('frontend', 'lib/viewport.jquery.js') }}"></script>
 
-    @if (Config::config()->alert === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
-    @elseif(Config::config()->alert === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
-    @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
 
     <script src="{{ Config::jsLib('frontend', 'main.js') }}"></script>
-    @stack('script')
+    @stack('scripts')
 
 
     @include('alert')

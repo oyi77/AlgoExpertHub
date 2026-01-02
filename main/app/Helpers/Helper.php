@@ -918,6 +918,16 @@ class Helper
 
     public static function paymentSuccess($deposit, $fee_amount, $transaction)
     {
+        // ✅ Bug #4 Fix: Idempotency check - prevent duplicate processing
+        if ($deposit->status == 1) {
+            \Log::warning('Payment already processed, skipping duplicate callback', [
+                'trx' => $deposit->trx,
+                'status' => $deposit->status,
+                'transaction' => $transaction,
+            ]);
+            return; // Already processed, exit early
+        }
+
         $general = Configuration::first();
 
         $admin = Admin::where('type', 'super')->first();
@@ -925,9 +935,8 @@ class Helper
         $user = auth()->user();
 
         if (session('type') == 'deposit') {
-            $user->balance = $user->balance + $deposit->amount;
-
-            $user->save();
+            // ✅ Bug #5 Fix: Use atomic increment to prevent race conditions
+            $user->increment('balance', $deposit->amount);
 
             $admin->notify(new DepositNotification($deposit, 'online', 'deposit'));
         }
@@ -976,20 +985,25 @@ class Helper
 
     private static function subscription($data, $deposit)
     {
-        $subscription = auth()->user()->subscriptions;
+        // ✅ Bug #6 Fix: Use transaction with row locking to prevent race conditions
+        return \DB::transaction(function () use ($data, $deposit) {
+            $user = \App\Models\User::lockForUpdate()->find($data['user_id']);
+            
+            if (!$user) {
+                throw new \Exception('User not found');
+            }
+            
+            // Deactivate existing subscriptions atomically
+            $user->subscriptions()->where('is_current', 1)->update(['is_current' => 0]);
 
-        if ($subscription) {
-            DB::table('plan_subscriptions')->where('user_id', auth()->id())->update(['is_current' => 0]);
-        }
-
-        $id = PlanSubscription::create([
-            'plan_id' => $data['plan_id'],
-            'user_id' => $data['user_id'],
-            'is_current' => 1,
-            'plan_expired_at' => $deposit->plan_expired_at
-        ]);
-
-        return $id;
+            // Create new subscription
+            return PlanSubscription::create([
+                'plan_id' => $data['plan_id'],
+                'user_id' => $data['user_id'],
+                'is_current' => 1,
+                'plan_expired_at' => $deposit->plan_expired_at
+            ]);
+        });
     }
 
 
@@ -1009,8 +1023,8 @@ class Helper
             foreach ($commissions as $commission) {
                 if ($user) {
                     $commission_amount = ($amount * $commission->commission) / 100;
-                    $user->balance = $user->balance + $commission_amount;
-                    $user->save();
+                    // ✅ Bug #5 Fix: Use atomic increment to prevent race conditions
+                    $user->increment('balance', $commission_amount);
 
                     Transaction::create([
                         'trx' => Str::random(12),

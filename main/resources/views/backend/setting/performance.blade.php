@@ -825,34 +825,26 @@
         // Helper function to show Laravel Notify notification
         function showNotification(success, message) {
             if (typeof notify !== 'undefined') {
-                if (success) {
-                    notify()
-                        ->success()
-                        ->title('Success')
-                        ->message(message)
-                        ->send();
-                } else {
-                    notify()
-                        ->error()
-                        ->title('Error')
-                        ->message(message)
-                        ->send();
-                }
-            } else if (typeof toastr !== 'undefined') {
-                // Fallback to toastr if Laravel Notify not available
-                if (success) {
-                    toastr.success(message, '', {
-                        positionClass: "toast-top-right",
-                        timeOut: 5000
-                    });
-                } else {
-                    toastr.error(message, '', {
-                        positionClass: "toast-top-right",
-                        timeOut: 5000
-                    });
+                try {
+                    if (success) {
+                        notify()
+                            .success()
+                            .title('Success')
+                            .message(message)
+                            .send();
+                    } else {
+                        notify()
+                            .error()
+                            .title('Error')
+                            .message(message)
+                            .send();
+                    }
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                    alert(message);
                 }
             } else {
-                // Fallback to alert if toastr not available
+                // Fallback to alert if Laravel Notify not available
                 alert(message);
             }
         }

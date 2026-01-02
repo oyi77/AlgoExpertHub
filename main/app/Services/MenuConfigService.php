@@ -86,8 +86,14 @@ class MenuConfigService
                 // Allow addons to inject menu items
                 $menu = $this->injectAddonMenus($menu, $user);
                 
-                // Ensure support menu always has items (core feature)
-                if (isset($menu['support']) && (empty($menu['support']['items']) || !is_array($menu['support']['items']))) {
+                // Ensure support menu always exists and has items (core feature)
+                if (!isset($menu['support'])) {
+                    $menu['support'] = [
+                        'label' => __('SUPPORT'),
+                        'icon' => 'fas fa-life-ring',
+                        'items' => $this->getSupportMenuItems(),
+                    ];
+                } elseif (empty($menu['support']['items']) || !is_array($menu['support']['items']) || count($menu['support']['items']) === 0) {
                     $menu['support']['items'] = $this->getSupportMenuItems();
                 }
                 
@@ -258,19 +264,14 @@ class MenuConfigService
     {
         $items = [];
 
-        // Help Center
-        try {
-            if (Route::has('user.help.index')) {
-                $items[] = [
-                    'route' => 'user.help.index',
-                    'label' => __('Help Center'),
-                    'icon' => 'fas fa-book',
-                    'tooltip' => __('User guides and documentation'),
-                ];
-            }
-        } catch (\Exception $e) {
-            // Route check failed, skip help menu
-        }
+        // Help Center - Always include (route exists in trading.php)
+        // Route is: user.help.index (defined in routes/web/trading.php)
+        $items[] = [
+            'route' => 'user.help.index',
+            'label' => __('Help Center'),
+            'icon' => 'fas fa-book',
+            'tooltip' => __('User guides and documentation'),
+        ];
 
         // Support Tickets - Always include (core feature, resource route always exists)
         // Resource route 'ticket' creates 'user.ticket.index'

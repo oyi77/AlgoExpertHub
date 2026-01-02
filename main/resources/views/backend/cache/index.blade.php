@@ -170,6 +170,32 @@
 
 @push('scripts')
 <script>
+// Helper function to show notifications consistently
+function showNotification(success, message, title) {
+    if (typeof notify !== 'undefined') {
+        try {
+            if (success) {
+                notify()
+                    .success()
+                    .title(title || 'Success')
+                    .message(message)
+                    .send();
+            } else {
+                notify()
+                    .error()
+                    .title(title || 'Error')
+                    .message(message)
+                    .send();
+            }
+        } catch(e) {
+            console.error('Error showing notification:', e);
+            alert(message);
+        }
+    } else {
+        alert(message);
+    }
+}
+
 function warmCache() {
     $.ajax({
         url: '{{ route("admin.cache.warm") }}',
@@ -179,26 +205,14 @@ function warmCache() {
         },
         success: function(response) {
             if (response.type === 'success') {
-                if (typeof notify !== 'undefined') {
-                    notify()->success()->title('Success')->message(response.message)->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.success(response.message);
-                }
+                showNotification(true, response.message);
                 refreshStats();
             } else {
-                if (typeof notify !== 'undefined') {
-                    notify()->error()->title('Error')->message(response.message)->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.error(response.message);
-                }
+                showNotification(false, response.message || 'Operation failed');
             }
         },
         error: function(xhr) {
-            if (typeof notify !== 'undefined') {
-                notify()->error()->title('Error')->message('Failed to warm cache')->send();
-            } else if (typeof toastr !== 'undefined') {
-                toastr.error('Failed to warm cache');
-            }
+            showNotification(false, 'Failed to warm cache');
         }
     });
 }
@@ -213,26 +227,14 @@ function clearAllCache() {
             },
             success: function(response) {
                 if (response.type === 'success') {
-                    if (typeof notify !== 'undefined') {
-                        notify()->success()->title('Success')->message(response.message)->send();
-                    } else if (typeof toastr !== 'undefined') {
-                        toastr.success(response.message);
-                    }
+                    showNotification(true, response.message);
                     refreshStats();
                 } else {
-                    if (typeof notify !== 'undefined') {
-                        notify()->error()->title('Error')->message(response.message)->send();
-                    } else if (typeof toastr !== 'undefined') {
-                        toastr.error(response.message);
-                    }
+                    showNotification(false, response.message || 'Operation failed');
                 }
             },
             error: function(xhr) {
-                if (typeof notify !== 'undefined') {
-                    notify()->error()->title('Error')->message('Failed to clear cache')->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.error('Failed to clear cache');
-                }
+                showNotification(false, 'Failed to clear cache');
             }
         });
     }
@@ -248,26 +250,14 @@ function clearCacheByTag(tag) {
         },
         success: function(response) {
             if (response.type === 'success') {
-                if (typeof notify !== 'undefined') {
-                    notify()->success()->title('Success')->message(response.message)->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.success(response.message);
-                }
+                showNotification(true, response.message);
                 refreshStats();
             } else {
-                if (typeof notify !== 'undefined') {
-                    notify()->error()->title('Error')->message(response.message)->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.error(response.message);
-                }
+                showNotification(false, response.message || 'Operation failed');
             }
         },
         error: function(xhr) {
-            if (typeof notify !== 'undefined') {
-                notify()->error()->title('Error')->message('Failed to clear cache for tag: ' + tag)->send();
-            } else if (typeof toastr !== 'undefined') {
-                toastr.error('Failed to clear cache for tag: ' + tag);
-            }
+            showNotification(false, 'Failed to clear cache for tag: ' + tag);
         }
     });
 }
@@ -294,19 +284,11 @@ function refreshStats() {
                     $('#peak-memory').text(data.memory.used_memory_peak_human);
                 }
                 
-                if (typeof notify !== 'undefined') {
-                    notify()->success()->title('Success')->message('Statistics refreshed')->send();
-                } else if (typeof toastr !== 'undefined') {
-                    toastr.success('Statistics refreshed');
-                }
+                // Silently refresh stats - no notification needed
             }
         },
         error: function(xhr) {
-            if (typeof notify !== 'undefined') {
-                notify()->error()->title('Error')->message('Failed to refresh statistics')->send();
-            } else if (typeof toastr !== 'undefined') {
-                toastr.error('Failed to refresh statistics');
-            }
+            showNotification(false, 'Failed to refresh statistics');
         }
     });
 }

@@ -109,6 +109,7 @@ class AutoSignalService
             return $signal;
 
         } catch (\Exception $e) {
+            // ✅ Bug #2 Fix: Explicit rollback (already present, but ensuring it's clear)
             DB::rollBack();
             Log::error("Failed to create signal from parsed data: " . $e->getMessage(), [
                 'exception' => $e,

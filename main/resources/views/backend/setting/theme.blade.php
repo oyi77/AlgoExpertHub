@@ -490,7 +490,7 @@
 </div>
 @endsection
 
-@push('script')
+@push('scripts')
 <style>
     .nav-tabs {
         border-bottom: 2px solid #ddd;
