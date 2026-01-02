@@ -1,0 +1,15 @@
+#!/bin/bash
+# ADbS - AI Don't Be Stupid
+# Standalone wrapper for remote installations
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADBS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Point to the internal binary
+if [ -f "$ADBS_ROOT/internal/bin/workflow-enforcer" ]; then
+    exec "$ADBS_ROOT/internal/bin/workflow-enforcer" "$@"
+else
+    echo "Error: ADbS workflow-enforcer not found"
+    echo "Please reinstall ADbS"
+    exit 1
+fi
