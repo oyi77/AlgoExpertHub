@@ -22,15 +22,22 @@ class TicketController extends Controller
     public function index()
     {
         $data['title'] = "Support Ticket";
-        $data['tickets'] = Ticket::whereUserId(Auth::user()->id)->with('ticketReplies')->paginate();
-        $data['tickets_pending'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('2')->count();
-        $data['tickets_answered'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('3')->count();
-        $data['tickets_closed'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('1')->count();
-        $data['tickets_all'] = Ticket::whereUserId(Auth::user()->id)->count();
+        $userId = Auth::id();
+        
+        $data['tickets'] = Ticket::where('user_id', $userId)->with('ticketReplies')->latest()->paginate(Helper::pagination());
+        $data['tickets_pending'] = Ticket::where('user_id', $userId)->where('status', '2')->count();
+        $data['tickets_answered'] = Ticket::where('user_id', $userId)->where('status', '3')->count();
+        $data['tickets_closed'] = Ticket::where('user_id', $userId)->where('status', '1')->count();
+        $data['tickets_all'] = Ticket::where('user_id', $userId)->count();
 
         return view(Helper::themeView('user.ticket.list'))->with($data);
     }
 
+    public function create()
+    {
+        // Tickets are created via modal in the list view, redirect to index
+        return redirect()->route('user.ticket.index');
+    }
 
     public function store(TicketRequest $request)
     {
@@ -44,14 +51,17 @@ class TicketController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function show($id)
     {
         $data['title'] = "Support Ticket Discussion";
-        $data['ticket'] = Ticket::find($id);
-        $data['tickets'] =  $data['tickets'] = Ticket::whereUserId(Auth::user()->id)->with('ticketReplies')->get();
-        $data['ticket_reply'] = TicketReply::whereTicketId($data['ticket']->id)->latest()->get();
+        $data['ticket'] = Ticket::where('id', $id)
+            ->where('user_id', Auth::user()->id)
+            ->firstOrFail();
+        
+        $data['tickets'] = Ticket::where('user_id', Auth::user()->id)->with('ticketReplies')->get();
+        $data['ticket_reply'] = TicketReply::where('ticket_id', $data['ticket']->id)->latest()->get();
 
         return view(Helper::themeView('user.ticket.show'))->with($data);
     }
@@ -59,6 +69,10 @@ class TicketController extends Controller
 
     public function update(TicketRequest $request, $id)
     {
+        // Ensure user owns the ticket
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', Auth::user()->id)
+            ->firstOrFail();
 
         $isSuccess = $this->ticket->update($request, $id);
 
@@ -69,6 +83,11 @@ class TicketController extends Controller
 
     public function destroy($id)
     {
+        // Ensure user owns the ticket
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', Auth::user()->id)
+            ->firstOrFail();
+
         $isSuccess = $this->ticket->delete($id);
 
         if ($isSuccess['type'] === 'success')
@@ -77,16 +96,23 @@ class TicketController extends Controller
 
     public function reply(Request $request)
     {
+        // Ensure user owns the ticket
+        $ticket = Ticket::where('id', $request->ticket_id)
+            ->where('user_id', Auth::user()->id)
+            ->firstOrFail();
+
         $isSuccess = $this->ticket->reply($request);
 
         if ($isSuccess['type'] === 'success')
-
             return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     public function statusChange($id)
     {
-        $ticket = Ticket::find($id);
+        $ticket = Ticket::where('id', $id)
+            ->where('user_id', Auth::user()->id)
+            ->firstOrFail();
+        
         $ticket->status = 1;
         $ticket->save();
 
@@ -103,12 +129,12 @@ class TicketController extends Controller
 
         $data['title'] = "{$request->status} Support Ticket";
 
-        $data['tickets'] = Ticket::whereUserId(Auth::user()->id)->whereStatus($ticketStatus[$request->status])->with('ticketReplies')->paginate();
+        $data['tickets'] = Ticket::where('user_id', Auth::user()->id)->where('status', $ticketStatus[$request->status])->with('ticketReplies')->latest()->paginate(Helper::pagination());
 
-        $data['tickets_pending'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('2')->count();
-        $data['tickets_answered'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('3')->count();
-        $data['tickets_closed'] = Ticket::whereUserId(Auth::user()->id)->whereStatus('1')->count();
-        $data['tickets_all'] = Ticket::whereUserId(Auth::user()->id)->count();
+        $data['tickets_pending'] = Ticket::where('user_id', Auth::user()->id)->where('status', '2')->count();
+        $data['tickets_answered'] = Ticket::where('user_id', Auth::user()->id)->where('status', '3')->count();
+        $data['tickets_closed'] = Ticket::where('user_id', Auth::user()->id)->where('status', '1')->count();
+        $data['tickets_all'] = Ticket::where('user_id', Auth::user()->id)->count();
         return view(Helper::themeView('user.ticket.list'))->with($data);
     }
 
