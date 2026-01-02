@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SignalRequest;
 use App\Models\CurrencyPair;
@@ -53,7 +54,7 @@ class SignalController extends Controller
 
         if($isSuccess['type'] === 'success')
 
-        return redirect()->route('admin.signals.index')->with('success', $isSuccess['message']);
+        return redirect()->route('admin.signals.index')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
 
     }
 
@@ -76,10 +77,10 @@ class SignalController extends Controller
        $isSuccess = $this->signal->update($request, $id);
 
        if($isSuccess['type'] === 'error'){
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
        }
 
-       return redirect()->back()->with('success', $isSuccess['message']);
+       return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function destroy($id)
@@ -87,10 +88,10 @@ class SignalController extends Controller
        $isSuccess = $this->signal->destroy($id);
 
        if($isSuccess['type'] === 'error'){
-        return redirect()->back()->with('error', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 
@@ -106,6 +107,6 @@ class SignalController extends Controller
 
         $this->signal->sendSignalToUser($signal);
 
-        return redirect()->back()->with('success', 'Successfully sent to user');
+        return redirect()->back()->with('notify', NotificationHelper::success('Successfully sent to user', 'Success'));
     }
 }

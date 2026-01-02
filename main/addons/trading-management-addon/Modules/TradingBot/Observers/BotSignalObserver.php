@@ -91,19 +91,38 @@ class BotSignalObserver
                     }
                 }
 
-                // Check if already executed this signal
-                $existingPosition = DB::table('trading_bot_positions')
-                    ->where('bot_id', $bot->id)
-                    ->where('signal_id', $signal->id)
-                    ->where('status', 'open')
-                    ->first();
+                // Use database transaction with lock to prevent race condition
+                // Check if already executed this signal (with row lock)
+                $shouldExecute = DB::transaction(function () use ($bot, $signal) {
+                    $existingPosition = DB::table('trading_bot_positions')
+                        ->where('bot_id', $bot->id)
+                        ->where('signal_id', $signal->id)
+                        ->where('status', 'open')
+                        ->lockForUpdate()
+                        ->first();
 
-                if ($existingPosition) {
-                    Log::info('Bot already executed this signal', [
+                    if ($existingPosition) {
+                        Log::info('Bot already executed this signal', [
+                            'bot_id' => $bot->id,
+                            'signal_id' => $signal->id,
+                        ]);
+                        return false; // Already executed
+                    }
+
+                    // Create pending position record to claim this signal
+                    DB::table('trading_bot_positions')->insert([
                         'bot_id' => $bot->id,
                         'signal_id' => $signal->id,
+                        'status' => 'pending',
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
-                    continue; // Already executed
+
+                    return true; // Can execute
+                });
+
+                if (!$shouldExecute) {
+                    continue; // Skip this signal
                 }
 
                 // Determine direction
@@ -113,20 +132,50 @@ class BotSignalObserver
                 $preset = $bot->tradingPreset;
                 $quantity = $this->calculatePositionSize($preset, $signal);
 
+                // Validate signal data before execution
+                if (!$signal->relationLoaded('pair')) {
+                    $signal->load('pair');
+                }
+
+                if (!$signal->pair || !$signal->pair->name) {
+                    Log::error('Invalid signal: missing pair data', [
+                        'signal_id' => $signal->id,
+                        'bot_id' => $bot->id,
+                    ]);
+                    continue;
+                }
+
+                if (!$signal->open_price || $signal->open_price <= 0) {
+                    Log::error('Invalid signal: invalid open_price', [
+                        'signal_id' => $signal->id,
+                        'open_price' => $signal->open_price,
+                        'bot_id' => $bot->id,
+                    ]);
+                    continue;
+                }
+
+                if (!$bot->exchange_connection_id) {
+                    Log::error('Bot has no exchange connection', [
+                        'bot_id' => $bot->id,
+                        'signal_id' => $signal->id,
+                    ]);
+                    continue;
+                }
+
                 // Prepare execution data for new ExecutionJob
                 $executionData = [
                     'connection_id' => $bot->exchange_connection_id,
                     'bot_id' => $bot->id,
                     'signal_id' => $signal->id,
-                    'symbol' => $signal->pair->name ?? 'UNKNOWN',
+                    'symbol' => $signal->pair->name,
                     'direction' => $direction,
                     'quantity' => $quantity,
                     'entry_price' => $signal->open_price,
-                    'stop_loss' => $signal->sl,
-                    'take_profit' => $signal->tp,
+                    'stop_loss' => $signal->sl ?? null,
+                    'take_profit' => $signal->tp ?? null,
                 ];
 
-                // Dispatch new ExecutionJob (creates both ExecutionPosition and TradingBotPosition)
+                // Dispatch ExecutionJob (will update position from pending to open)
                 ExecutionJob::dispatch($executionData);
 
                 Log::info('Trading bot signal execution dispatched', [

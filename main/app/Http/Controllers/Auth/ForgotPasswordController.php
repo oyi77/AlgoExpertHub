@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Configuration;
 use App\Models\GeneralSetting;
@@ -40,7 +41,7 @@ class ForgotPasswordController extends Controller
 
 
         if (!$user) {
-            return back()->with('error', 'Please Provide a valid Email');
+            return back()->with('notify', NotificationHelper::error('Please Provide a valid Email', 'Error'));
         }
 
         $code = random_int(100000, 999999);
@@ -64,7 +65,7 @@ class ForgotPasswordController extends Controller
 
         session()->put('email',$user->email);
 
-        return redirect()->route('user.auth.verify')->with('success', 'Send verification code to your email');
+        return redirect()->route('user.auth.verify')->with('notify', NotificationHelper::success('Send verification code to your email', 'Success'));
     }
 
     public function verify()
@@ -104,7 +105,7 @@ class ForgotPasswordController extends Controller
 
             $user->save();
 
-            return back()->with('error','Invalid Code');
+            return back()->with('notify', NotificationHelper::error('Invalid Code', 'Error'));
         }
 
         $user->email_verification_code = null;
@@ -154,7 +155,7 @@ class ForgotPasswordController extends Controller
         $user->save();
 
 
-        return redirect()->route('user.login')->with('success', 'Successfully Reset Your Password');
+        return redirect()->route('user.login')->with('notify', NotificationHelper::success('Successfully Reset Your Password', 'Success'));
     }
 
 
@@ -175,7 +176,7 @@ class ForgotPasswordController extends Controller
         $request->validate(['code' => 'required']);
 
         if($user->email_verification_code != $request->code){
-            return redirect()->back()->with('error','Invalid Verification Code');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid Verification Code', 'Error'));
         }
 
         $user->email_verification_code = null;
@@ -195,7 +196,7 @@ class ForgotPasswordController extends Controller
         $request->validate(['code' => 'required']);
 
         if($user->sms_verification_code != $request->code){
-            return redirect()->back()->with('error','Invalid Verification Code');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid Verification Code', 'Error'));
         }
 
         $user->sms_verification_code = null;

@@ -9,6 +9,7 @@ use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringSer
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
 use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -161,12 +162,12 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->route('admin.trading-management.trading-bots.show', $bot->id)
-                ->with('success', 'Trading bot created successfully!');
+                ->with('notify', NotificationHelper::success('Trading bot created successfully!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to create trading bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create trading bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -304,12 +305,12 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->route('admin.trading-management.trading-bots.show', $bot->id)
-                ->with('success', 'Trading bot updated successfully!');
+                ->with('notify', NotificationHelper::success('Trading bot updated successfully!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to update trading bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update trading bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -332,7 +333,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->route('admin.trading-management.trading-bots.index')
-                ->with('success', "Trading bot '{$botName}' deleted successfully!");
+                ->with('notify', NotificationHelper::success("Trading bot '{$botName}' deleted successfully!", 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to delete trading bot', [
                 'bot_id' => $id,
@@ -342,7 +343,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('error', 'Failed to delete trading bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete trading bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -392,7 +393,7 @@ class TradingBotController extends Controller
 
             return redirect()
                 ->route('admin.trading-management.trading-bots.index')
-                ->with('success', "Trading bot '{$bot->name}' ownership transferred to {$user->username} ({$user->email}) successfully.");
+                ->with('notify', NotificationHelper::success("Trading bot '{$bot->name}' ownership transferred to {$user->username} ({$user->email}) successfully.", 'Success'));
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()
                 ->back()
@@ -408,7 +409,7 @@ class TradingBotController extends Controller
 
             return redirect()
                 ->back()
-                ->with('error', 'Failed to transfer ownership. Please try again.')
+                ->with('notify', NotificationHelper::error('Failed to transfer ownership. Please try again.', 'Error'))
                 ->withInput();
         }
     }
@@ -425,11 +426,11 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot status updated!');
+                ->with('notify', NotificationHelper::success('Trading bot status updated!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to update bot status: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update bot status: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -458,7 +459,7 @@ class TradingBotController extends Controller
                 ]);
                 return redirect()
                     ->back()
-                    ->with('error', 'Cannot start bot: ' . $validation['message']);
+                    ->with('notify', NotificationHelper::error('Cannot start bot: ' . $validation['message'], 'Error'));
             }
 
             $this->botService->start($bot, null, auth()->guard('admin')->id());
@@ -477,7 +478,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot started successfully! Worker PID: ' . $pid);
+                ->with('notify', NotificationHelper::success('Trading bot started successfully! Worker PID: ' . $pid, 'Success'));
         } catch (\Exception $e) {
             \Log::error('Failed to start trading bot', [
                 'bot_id' => $bot->id,
@@ -487,7 +488,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('error', 'Failed to start bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to start bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -507,11 +508,11 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot stopped successfully!');
+                ->with('notify', NotificationHelper::success('Trading bot stopped successfully!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to stop bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to stop bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -527,11 +528,11 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot paused successfully!');
+                ->with('notify', NotificationHelper::success('Trading bot paused successfully!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to pause bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to pause bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -567,7 +568,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot restarted successfully! Worker PID: ' . $pid);
+                ->with('notify', NotificationHelper::success('Trading bot restarted successfully! Worker PID: ' . $pid, 'Success'));
         } catch (\Exception $e) {
             \Log::error('Failed to restart trading bot', [
                 'bot_id' => $bot->id,
@@ -576,7 +577,7 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('error', 'Failed to restart bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to restart bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -595,11 +596,11 @@ class TradingBotController extends Controller
             
             return redirect()
                 ->back()
-                ->with('success', 'Trading bot resumed successfully!');
+                ->with('notify', NotificationHelper::success('Trading bot resumed successfully!', 'Success'));
         } catch (\Exception $e) {
             return redirect()
                 ->back()
-                ->with('error', 'Failed to resume bot: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to resume bot: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -946,7 +947,7 @@ class TradingBotController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to load monitoring dashboard: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to load monitoring dashboard: ' . $e->getMessage(), 'Error'));
         }
     }
 

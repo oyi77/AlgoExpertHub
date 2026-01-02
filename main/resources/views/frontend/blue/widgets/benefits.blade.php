@@ -4,7 +4,7 @@
             <div class="col-lg-8 text-center">
                 <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
                     <h2 class="sp_theme_top_title">
-                        <?= Config::trans($content->title) ?>
+                        <?= Config::trans(optional($content)->title ?? 'Section') ?>
                     </h2>
                 </div>
             </div>

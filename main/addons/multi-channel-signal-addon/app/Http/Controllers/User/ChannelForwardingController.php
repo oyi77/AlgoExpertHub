@@ -5,6 +5,7 @@ namespace Addons\MultiChannelSignalAddon\App\Http\Controllers\User;
 use Addons\MultiChannelSignalAddon\App\Http\Controllers\Controller;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramMtprotoService;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,7 +107,7 @@ class ChannelForwardingController extends Controller
         // Only Telegram MTProto sources can select channels
         if ($source->type !== 'telegram_mtproto') {
             return redirect()->route('user.signal-sources.index')
-                ->with('error', 'Channel selection is only available for Telegram MTProto sources.');
+                ->with('notify', NotificationHelper::error('Channel selection is only available for Telegram MTProto sources.', 'Error'));
         }
 
         // Verify actual authentication by trying to connect
@@ -115,7 +116,7 @@ class ChannelForwardingController extends Controller
 
         if ($dialogsResult['type'] === 'error') {
             return redirect()->route('user.signal-sources.authenticate', $source->id)
-                ->with('error', $dialogsResult['message']);
+                ->with('notify', NotificationHelper::error($dialogsResult['message'], 'Error'));
         }
         
         // If we got here, authentication is valid - update flag if missing
@@ -143,7 +144,7 @@ class ChannelForwardingController extends Controller
             }
 
             if (!$selectedChannel) {
-                return redirect()->back()->with('error', 'Selected channel not found.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Selected channel not found.', 'Error'));
             }
 
             $config = $source->config;
@@ -158,7 +159,7 @@ class ChannelForwardingController extends Controller
             ]);
 
             return redirect()->route('user.channel-forwarding.index')
-                ->with('success', 'Channel selected successfully!');
+                ->with('notify', NotificationHelper::success('Channel selected successfully!', 'Success'));
         }
 
         $data = [

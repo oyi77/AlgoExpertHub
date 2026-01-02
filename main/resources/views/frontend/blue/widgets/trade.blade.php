@@ -1,6 +1,6 @@
 <section class="trade-section sp_pt_120 sp_pb_120 sp_separator_bg">
     <div class="trading-el">
-        <img src="{{ Config::getFile('trade', $content->image_one) }}" alt="image">
+        <img src="{{ Config::getFile('trade', optional($content)->image_one ?? '') }}" alt="image">
     </div>
   <div class="sp_container">
     <div class="row justify-content-center">
@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <div>
-                    <a href="{{route('user.trade')}}" class="btn sp_theme_btn order">{{ Config::trans($content->button_text) }}</a>
+                    <a href="{{route('user.trade')}}" class="btn sp_theme_btn order">{{ Config::trans(optional($content)->button_text ?? 'Learn More') }}</a>
                 </div>
                 </div>
                 <div class="sp_card_body">

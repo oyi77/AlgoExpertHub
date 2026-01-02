@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Services\UserOnboardingService;
 use Illuminate\Http\Request;
@@ -90,7 +91,7 @@ class OnboardingController extends Controller
 
         if ($nextStep) {
             return redirect()->route('user.onboarding.step', ['step' => $nextStep])
-                ->with('success', __('Step completed successfully'));
+                ->with('notify', NotificationHelper::success(__('Step completed successfully')));
         }
 
         // All steps complete
@@ -106,7 +107,7 @@ class OnboardingController extends Controller
         $this->onboardingService->completeOnboarding($user);
 
         return redirect()->route('user.dashboard')
-            ->with('success', __('Onboarding skipped. You can complete it later from your dashboard.'));
+            ->with('notify', NotificationHelper::success(__('Onboarding skipped. You can complete it later from your dashboard.')));
     }
 
     /**

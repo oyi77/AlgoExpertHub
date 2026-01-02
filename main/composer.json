@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.1",
@@ -30,6 +33,7 @@
         "mews/purifier": "^3.3",
         "mollie/laravel-mollie": "^2.20",
         "nowpayments/nowpayments-api-php": "dev-main",
+        "opcodesio/log-viewer": "^3.21",
         "oyi77/metaapi-cloud-php-sdk": "^2.1",
         "pragmarx/google2fa-laravel": "^2.1",
         "predis/predis": "^3.3",
@@ -51,6 +55,7 @@
         "fakerphp/faker": "^1.9.1",
         "imanghafoori/laravel-microscope": "^1.0",
         "knuckleswtf/scribe": "^5.6",
+        "larastan/larastan": "*",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
@@ -81,6 +86,9 @@
         "classmap": [
             "app/Helpers/Helper.php",
             "app/Utility/FormBuilder.php"
+        ],
+        "files": [
+            "app/Helpers/TradingHelper.php"
         ]
     },
     "autoload-dev": {

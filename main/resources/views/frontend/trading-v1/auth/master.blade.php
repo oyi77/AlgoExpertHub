@@ -40,23 +40,14 @@
     <!-- jQuery -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     
-    <!-- Toastr -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
     
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <script>toastr.success("{{ session('success') }}");</script>
-    @endif
-    @if(session('error'))
-        <script>toastr.error("{{ session('error') }}");</script>
-    @endif
-    @if(session('warning'))
-        <script>toastr.warning("{{ session('warning') }}");</script>
-    @endif
-    @if(session('info'))
-        <script>toastr.info("{{ session('info') }}");</script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
+    
+    {{-- Flash Messages (Laravel Notify) --}}
+    @include('alert')
     
     @stack('scripts')
 </body>

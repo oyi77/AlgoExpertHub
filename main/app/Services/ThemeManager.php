@@ -58,7 +58,7 @@ class ThemeManager
                 ];
             })
             ->filter(function ($theme) {
-                return $theme['exists'];
+                return $theme['exists'] && $theme['name'] !== 'landings';
             })
             ->values();
     }

@@ -27,9 +27,12 @@
                             <a class="nav-link {{ $activeCategory === 'trading-presets' ? 'active' : '' }}" 
                                id="trading-presets-tab" 
                                data-bs-toggle="tab" 
-                               onclick="switchTab('trading-presets')"
+                               data-bs-target="#trading-presets"
+                               onclick="switchTab('trading-presets'); return false;"
                                href="#trading-presets" 
-                               role="tab">
+                               role="tab"
+                               aria-controls="trading-presets"
+                               aria-selected="{{ $activeCategory === 'trading-presets' ? 'true' : 'false' }}">
                                 <i class="las la-shield-alt me-1"></i> {{ __('Trading Presets') }}
                             </a>
                         </li>
@@ -50,9 +53,12 @@
                             <a class="nav-link {{ $activeCategory === 'ai-profiles' ? 'active' : '' }}" 
                                id="ai-profiles-tab" 
                                data-bs-toggle="tab" 
-                               onclick="switchTab('ai-profiles')"
+                               data-bs-target="#ai-profiles"
+                               onclick="switchTab('ai-profiles'); return false;"
                                href="#ai-profiles" 
-                               role="tab">
+                               role="tab"
+                               aria-controls="ai-profiles"
+                               aria-selected="{{ $activeCategory === 'ai-profiles' ? 'true' : 'false' }}">
                                 <i class="las la-robot me-1"></i> {{ __('AI Model Profiles') }}
                             </a>
                         </li>
@@ -60,9 +66,12 @@
                             <a class="nav-link {{ $activeCategory === 'copy-trading' ? 'active' : '' }}" 
                                id="copy-trading-tab" 
                                data-bs-toggle="tab" 
-                               onclick="switchTab('copy-trading')"
+                               data-bs-target="#copy-trading"
+                               onclick="switchTab('copy-trading'); return false;"
                                href="#copy-trading" 
-                               role="tab">
+                               role="tab"
+                               aria-controls="copy-trading"
+                               aria-selected="{{ $activeCategory === 'copy-trading' ? 'true' : 'false' }}">
                                 <i class="las la-copy me-1"></i> {{ __('Copy Trading') }}
                             </a>
                         </li>
@@ -70,9 +79,12 @@
                             <a class="nav-link {{ $activeCategory === 'bot-marketplace' ? 'active' : '' }}" 
                                id="bot-marketplace-tab" 
                                data-bs-toggle="tab" 
-                               onclick="switchTab('bot-marketplace')"
+                               data-bs-target="#bot-marketplace"
+                               onclick="switchTab('bot-marketplace'); return false;"
                                href="#bot-marketplace" 
-                               role="tab">
+                               role="tab"
+                               aria-controls="bot-marketplace"
+                               aria-selected="{{ $activeCategory === 'bot-marketplace' ? 'true' : 'false' }}">
                                 <i class="las la-store me-1"></i> {{ __('Bot Marketplace') }}
                             </a>
                         </li>
@@ -229,20 +241,50 @@
                                                             <h5 class="mb-1">{{ $item->name }}</h5>
                                                             <p class="text-muted small mb-0">{{ Str::limit($item->description ?? 'No description', 100) }}</p>
                                                         </div>
-                                                        <span class="badge bg-info ms-2 flex-shrink-0">{{ $item->model_provider ?? 'N/A' }}</span>
+                                                        <span class="badge bg-info ms-2 flex-shrink-0">
+                                                            @if($item->aiConnection && $item->aiConnection->name)
+                                                                {{ $item->aiConnection->name }}
+                                                            @elseif($item->provider)
+                                                                {{ ucfirst($item->provider) }}
+                                                            @else
+                                                                N/A
+                                                            @endif
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div class="card-body-section">
                                                     <div class="row g-2 mb-2">
                                                         <div class="col-6">
                                                             <small class="text-muted">{{ __('Model') }}:</small>
-                                                            <div>{{ $item->model_name ?? 'N/A' }}</div>
+                                                            <div>
+                                                                @if($item->aiConnection && $item->aiConnection->model_name)
+                                                                    {{ $item->aiConnection->model_name }}
+                                                                @elseif($item->model_name)
+                                                                    {{ $item->model_name }}
+                                                                @else
+                                                                    N/A
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                         <div class="col-6">
                                                             <small class="text-muted">{{ __('Temperature') }}:</small>
-                                                            <div>{{ $item->temperature ?? 'N/A' }}</div>
+                                                            <div>
+                                                                @php
+                                                                    $settings = is_array($item->settings) ? $item->settings : (is_object($item->settings) ? (array)$item->settings : []);
+                                                                    $temperature = $settings['temperature'] ?? null;
+                                                                @endphp
+                                                                {{ $temperature !== null ? number_format($temperature, 2) : 'N/A' }}
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    @if($item->mode)
+                                                    <div class="row g-2 mb-2">
+                                                        <div class="col-12">
+                                                            <small class="text-muted">{{ __('Mode') }}:</small>
+                                                            <div><span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $item->mode)) }}</span></div>
+                                                        </div>
+                                                    </div>
+                                                    @endif
                                                 </div>
                                                 <div class="card-footer-section">
                                                     <div class="d-flex gap-2">
@@ -494,64 +536,13 @@
         margin-bottom: 1rem;
     }
     
-    /* Force tab pane visibility - override Bootstrap defaults */
+    /* Tab pane visibility - Bootstrap defaults should work */
     .tab-content .tab-pane.show.active {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        display: block;
     }
     
-    /* Ensure tab content container is visible */
-    #marketplaceTabContent {
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* CRITICAL: Override Bootstrap's .fade:not(.show) which sets display:none */
     .tab-pane.fade:not(.show) {
-        display: none !important;
-    }
-    
-    /* Force filter-strategies tab pane to be visible - override ALL Bootstrap rules */
-    #filter-strategies.tab-pane.show.active,
-    #filter-strategies.tab-pane.fade.show.active {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative !important;
-        min-height: 500px !important;
-        padding: 1.5rem !important;
-        overflow: visible !important;
-        height: auto !important;
-        width: 100% !important;
-    }
-    
-    /* Force filter-strategies tab pane even without show/active classes - for debugging */
-    #filter-strategies.tab-pane,
-    #filter-strategies.tab-pane.fade {
-        min-height: 500px !important;
-        padding: 1.5rem !important;
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Ensure test alerts are visible */
-    #filter-strategies .alert,
-    #filter-strategies-test-alert {
-        display: block !important;
-        visibility: visible !important;
-        min-height: 100px !important;
-        margin-bottom: 1rem !important;
-        padding: 1rem !important;
-        opacity: 1 !important;
-    }
-    
-    /* Force test alert specifically */
-    #filter-strategies-test-alert {
-        background-color: #ffc107 !important;
-        border: 3px solid #ff9800 !important;
-        min-height: 120px !important;
-        font-size: 1.1rem !important;
+        display: none;
     }
     
     /* Responsive */
@@ -578,24 +569,8 @@
 
 @push('scripts')
 <script>
-    $(function() {
+    $(document).ready(function() {
         'use strict'
-        
-        // CRITICAL: Force filter-strategies tab pane visible IMMEDIATELY if it's the active category
-        const urlParams = new URLSearchParams(window.location.search);
-        const categoryParam = urlParams.get('category') || '{{ $activeCategory ?? "trading-presets" }}';
-        
-        if (categoryParam === 'filter-strategies') {
-            const filterStrategiesPane = document.getElementById('filter-strategies');
-            if (filterStrategiesPane) {
-                // Force visibility IMMEDIATELY before any other scripts run
-                filterStrategiesPane.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 500px !important; padding: 1.5rem !important; position: relative !important;';
-                console.log('Marketplace: CRITICAL - Forced filter-strategies pane visible immediately', {
-                    offsetHeight: filterStrategiesPane.offsetHeight,
-                    offsetWidth: filterStrategiesPane.offsetWidth
-                });
-            }
-        }
         
         // Function to switch tabs and update URL
         function switchTab(categoryName) {
@@ -607,174 +582,33 @@
         // Make switchTab available globally
         window.switchTab = switchTab;
         
-        // Debug: Log tab initialization
-        console.log('Marketplace: Initializing tabs', {
-            categoryParam: categoryParam,
-            activeCategory: '{{ $activeCategory ?? "unknown" }}'
-        });
+        // Get active category from URL or server-side variable
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category') || '{{ $activeCategory ?? "trading-presets" }}';
         
-        // Activate the correct tab - but don't override if already active from server-side
+        // Activate the correct tab on page load
         if (categoryParam) {
             const tabLink = $('#marketplaceTabs a[href="#' + categoryParam + '"]');
             const tabPane = $('#' + categoryParam);
             
-            console.log('Marketplace: Tab elements', {
-                tabLinkExists: tabLink.length > 0,
-                tabPaneExists: tabPane.length > 0,
-                tabPaneHasShow: tabPane.hasClass('show'),
-                tabPaneHasActive: tabPane.hasClass('active'),
-                tabPaneIsVisible: tabPane.is(':visible')
-            });
-            
             if (tabLink.length && tabPane.length) {
-                // Only activate if not already active (preserve server-side active state)
-                if (!tabLink.hasClass('active')) {
-                    // Remove active class from all tabs and panes
-                    $('#marketplaceTabs .nav-link').removeClass('active');
-                    $('.tab-pane').removeClass('show active');
-                    
-                    // Activate the correct tab link
-                    tabLink.addClass('active');
-                    tabPane.addClass('show active');
-                    
-                    // Also trigger Bootstrap tab if available
-                    if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-                        const tab = new bootstrap.Tab(tabLink[0]);
-                        tab.show();
-                    }
-                } else {
-                    // Already active from server-side, just ensure pane is visible
-                    if (!tabPane.hasClass('show')) {
-                        tabPane.addClass('show active');
-                    }
+                // Remove active class from all tabs and panes
+                $('#marketplaceTabs .nav-link').removeClass('active');
+                $('.tab-pane').removeClass('show active');
+                
+                // Activate the correct tab link and pane
+                tabLink.addClass('active');
+                tabPane.addClass('show active');
+                
+                // Trigger Bootstrap tab if available
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                    const tab = new bootstrap.Tab(tabLink[0]);
+                    tab.show();
                 }
-                
-                // Force visibility - use direct DOM manipulation with setProperty for !important
-                const paneElement = tabPane[0];
-                if (paneElement) {
-                    paneElement.style.setProperty('display', 'block', 'important');
-                    paneElement.style.setProperty('visibility', 'visible', 'important');
-                    paneElement.style.setProperty('opacity', '1', 'important');
-                    paneElement.style.setProperty('position', 'relative', 'important');
-                }
-                
-                // Also check and fix parent elements
-                const tabContent = tabPane.closest('.tab-content');
-                if (tabContent.length) {
-                    const contentElement = tabContent[0];
-                    if (contentElement) {
-                        contentElement.style.setProperty('display', 'block', 'important');
-                        contentElement.style.setProperty('visibility', 'visible', 'important');
-                    }
-                    console.log('Marketplace: Tab content parent', {
-                        exists: tabContent.length > 0,
-                        isVisible: tabContent.is(':visible'),
-                        display: tabContent.css('display'),
-                        computedDisplay: contentElement ? window.getComputedStyle(contentElement).display : 'N/A'
-                    });
-                }
-                
-                // Use setTimeout to ensure styles are applied after any other scripts
-                setTimeout(function() {
-                    if (paneElement) {
-                        paneElement.style.setProperty('display', 'block', 'important');
-                        paneElement.style.setProperty('visibility', 'visible', 'important');
-                    }
-                    
-                    // Check if test alert exists in DOM
-                    const testAlert = document.getElementById('filter-strategies-test-alert');
-                    const testAlertExists = testAlert !== null;
-                    const testAlertVisible = testAlert ? testAlert.offsetHeight > 0 : false;
-                    
-                    // Check all children of tab pane
-                    const children = paneElement ? Array.from(paneElement.children) : [];
-                    const childrenInfo = children.map(function(child, index) {
-                        return {
-                            index: index,
-                            tagName: child.tagName,
-                            className: child.className,
-                            id: child.id,
-                            offsetHeight: child.offsetHeight,
-                            offsetWidth: child.offsetWidth,
-                            display: window.getComputedStyle(child).display,
-                            visibility: window.getComputedStyle(child).visibility
-                        };
-                    });
-                    
-                    console.log('Marketplace: Tab pane after activation (delayed)', {
-                        hasShow: tabPane.hasClass('show'),
-                        hasActive: tabPane.hasClass('active'),
-                        isVisible: tabPane.is(':visible'),
-                        display: tabPane.css('display'),
-                        visibility: tabPane.css('visibility'),
-                        computedDisplay: paneElement ? window.getComputedStyle(paneElement).display : 'N/A',
-                        computedVisibility: paneElement ? window.getComputedStyle(paneElement).visibility : 'N/A',
-                        offsetHeight: paneElement ? paneElement.offsetHeight : 0,
-                        offsetWidth: paneElement ? paneElement.offsetWidth : 0,
-                        testAlertExists: testAlertExists,
-                        testAlertVisible: testAlertVisible,
-                        childrenCount: children.length,
-                        childrenInfo: childrenInfo
-                    });
-                    
-                    // If test alert exists but pane has no height, force it
-                    if (testAlertExists && paneElement && paneElement.offsetHeight === 0) {
-                        console.warn('Marketplace: Test alert exists but pane has no height! Forcing dimensions...');
-                        
-                        // Force pane dimensions
-                        paneElement.style.setProperty('min-height', '400px', 'important');
-                        paneElement.style.setProperty('padding', '1.5rem', 'important');
-                        paneElement.style.setProperty('display', 'block', 'important');
-                        paneElement.style.setProperty('visibility', 'visible', 'important');
-                        paneElement.style.setProperty('opacity', '1', 'important');
-                        paneElement.style.setProperty('position', 'relative', 'important');
-                        
-                        // Force test alert to be visible
-                        if (testAlert) {
-                            testAlert.style.setProperty('display', 'block', 'important');
-                            testAlert.style.setProperty('visibility', 'visible', 'important');
-                            testAlert.style.setProperty('min-height', '100px', 'important');
-                            testAlert.style.setProperty('padding', '1rem', 'important');
-                            testAlert.style.setProperty('margin-bottom', '1rem', 'important');
-                            console.log('Marketplace: Test alert forced visibility', {
-                                offsetHeight: testAlert.offsetHeight,
-                                offsetWidth: testAlert.offsetWidth,
-                                display: window.getComputedStyle(testAlert).display,
-                                visibility: window.getComputedStyle(testAlert).visibility
-                            });
-                        }
-                        
-                        // Force all children to be visible
-                        children.forEach(function(child) {
-                            child.style.setProperty('display', 'block', 'important');
-                            child.style.setProperty('visibility', 'visible', 'important');
-                        });
-                        
-                        // Re-check after forcing
-                        setTimeout(function() {
-                            console.log('Marketplace: After forcing dimensions', {
-                                paneOffsetHeight: paneElement.offsetHeight,
-                                paneOffsetWidth: paneElement.offsetWidth,
-                                testAlertOffsetHeight: testAlert ? testAlert.offsetHeight : 0,
-                                testAlertOffsetWidth: testAlert ? testAlert.offsetWidth : 0
-                            });
-                        }, 50);
-                    }
-                }, 100);
-                
-                console.log('Marketplace: Tab pane after activation', {
-                    hasShow: tabPane.hasClass('show'),
-                    hasActive: tabPane.hasClass('active'),
-                    isVisible: tabPane.is(':visible'),
-                    display: tabPane.css('display'),
-                    visibility: tabPane.css('visibility'),
-                    computedDisplay: window.getComputedStyle(tabPane[0]).display,
-                    computedVisibility: window.getComputedStyle(tabPane[0]).visibility
-                });
             }
         }
         
-        // Event handler for tab clicks
+        // Event handler for tab clicks (Bootstrap 5)
         $('#marketplaceTabs a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
             const targetId = $(e.target).attr('href').replace('#', '');
             const url = new URL(window.location);

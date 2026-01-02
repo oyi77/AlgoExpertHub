@@ -6,6 +6,7 @@ use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Services\ReportService;
 use Addons\MultiChannelSignalAddon\App\Services\SignalAnalyticsService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\Plan;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -69,7 +70,7 @@ class SignalAnalyticsController extends Controller
             ]);
             
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('error', 'An error occurred while loading analytics: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('An error occurred while loading analytics: ' . $e->getMessage(), 'Error'));
         }
     }
 

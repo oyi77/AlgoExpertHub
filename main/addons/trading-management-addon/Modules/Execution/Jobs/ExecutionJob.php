@@ -7,6 +7,8 @@ use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition
 use Addons\TradingManagement\Modules\Execution\Services\MarketStatusChecker;
 use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
 use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\SlippageProtectionService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\PositionLimitService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -90,6 +92,28 @@ class ExecutionJob implements ShouldQueue
                     'symbol' => $symbol,
                     'data_age_minutes' => $validation['freshness_check']['age_minutes'] ?? null,
                 ]);
+            }
+
+            // Check position limits
+            $positionLimitService = app(PositionLimitService::class);
+            $positionLimitCheck = $positionLimitService->shouldPreventTrade($connection, $symbol ?? '');
+            
+            if ($positionLimitCheck['should_prevent']) {
+                Log::warning('ExecutionJob: Position limit check failed', [
+                    'connection_id' => $connection->id,
+                    'symbol' => $symbol,
+                    'reason' => $positionLimitCheck['reason'],
+                ]);
+                
+                // Update execution log if it exists
+                if (isset($executionLog)) {
+                    $executionLog->update([
+                        'status' => 'failed',
+                        'error_message' => $positionLimitCheck['reason'],
+                    ]);
+                }
+                
+                return;
             }
 
             // Get adapter for connection - create directly based on connection type
@@ -291,43 +315,78 @@ class ExecutionJob implements ShouldQueue
                 $executionLogId = $executionLog->id;
             }
 
-            // Get entry price - for market orders, try to get from result or fetch current price
-            $entryPrice = $this->executionData['entry_price'];
+            // Get expected entry price (from signal or execution data)
+            $expectedEntryPrice = $this->executionData['entry_price'];
             
-            if ($entryPrice === null || $entryPrice === 0) {
-                // Try to get from order result
-                $entryPrice = $result['data']['price'] ?? $result['data']['openPrice'] ?? null;
-                
-                // If still null, try to fetch current price from account
-                if ($entryPrice === null) {
-                    try {
-                        $adapter = $this->createAdapter($connection);
-                        $accountInfo = $adapter->getAccountInfo();
-                        
-                        // Try to get current price from positions or use a default based on symbol
-                        if (isset($accountInfo['positions']) && !empty($accountInfo['positions'])) {
-                            foreach ($accountInfo['positions'] as $position) {
-                                if ($position['symbol'] === $this->executionData['symbol']) {
-                                    $entryPrice = $position['currentPrice'] ?? null;
-                                    break;
-                                }
+            // Get actual execution price from exchange response
+            $executionPrice = $result['data']['price'] ?? 
+                             $result['data']['openPrice'] ?? 
+                             $result['data']['average'] ?? 
+                             $result['price'] ?? 
+                             $result['average'] ?? 
+                             null;
+            
+            // If execution price not in result, try to fetch from exchange
+            if ($executionPrice === null) {
+                try {
+                    $adapter = $this->createAdapter($connection);
+                    $accountInfo = $adapter->getAccountInfo();
+                    
+                    // Try to get current price from positions
+                    if (isset($accountInfo['positions']) && !empty($accountInfo['positions'])) {
+                        foreach ($accountInfo['positions'] as $position) {
+                            if ($position['symbol'] === $this->executionData['symbol']) {
+                                $executionPrice = $position['currentPrice'] ?? $position['openPrice'] ?? null;
+                                break;
                             }
                         }
-                        
-                        // Last resort: use 0 and log warning
-                        if ($entryPrice === null) {
-                            $entryPrice = 0;
-                            Log::warning('ExecutionJob: Could not determine entry price for market order, using 0', [
-                                'symbol' => $this->executionData['symbol'],
-                                'connection_id' => $connection->id,
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        $entryPrice = 0;
-                        Log::warning('ExecutionJob: Failed to fetch current price', [
-                            'error' => $e->getMessage(),
-                        ]);
                     }
+                } catch (\Exception $e) {
+                    Log::warning('ExecutionJob: Failed to fetch execution price from exchange', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+            
+            // Use execution price as entry price, or fallback to expected price
+            $entryPrice = $executionPrice ?? $expectedEntryPrice;
+            
+            // If still null, use 0 and log warning
+            if ($entryPrice === null || $entryPrice === 0) {
+                $entryPrice = $expectedEntryPrice ?? 0;
+                if ($entryPrice === 0) {
+                    Log::warning('ExecutionJob: Could not determine entry price for market order, using 0', [
+                        'symbol' => $this->executionData['symbol'],
+                        'connection_id' => $connection->id,
+                    ]);
+                }
+            }
+            
+            // Calculate slippage if we have both expected and execution prices
+            $slippagePips = 0.0;
+            if ($expectedEntryPrice !== null && $expectedEntryPrice > 0 && 
+                $executionPrice !== null && $executionPrice > 0 && 
+                $expectedEntryPrice !== $executionPrice) {
+                $slippageService = app(SlippageProtectionService::class);
+                $slippagePips = $slippageService->calculateSlippage(
+                    $expectedEntryPrice,
+                    $executionPrice,
+                    $this->executionData['direction'],
+                    $this->executionData['symbol']
+                );
+                
+                // Validate slippage
+                $maxSlippage = $slippageService->getMaxAllowedSlippage([]);
+                $slippageValidation = $slippageService->validateSlippage($slippagePips, $maxSlippage);
+                
+                if (!$slippageValidation['acceptable']) {
+                    Log::warning('ExecutionJob: Slippage exceeded on entry', [
+                        'symbol' => $this->executionData['symbol'],
+                        'expected_price' => $expectedEntryPrice,
+                        'execution_price' => $executionPrice,
+                        'slippage_pips' => $slippagePips,
+                        'max_allowed' => $maxSlippage,
+                    ]);
                 }
             }
 
@@ -338,12 +397,14 @@ class ExecutionJob implements ShouldQueue
                 'symbol' => $this->executionData['symbol'],
                 'direction' => $this->executionData['direction'],
                 'entry_price' => $entryPrice,
+                'execution_price' => $executionPrice ?? $entryPrice, // Actual execution price from exchange
                 'current_price' => $entryPrice,
                 'sl_price' => $this->executionData['stop_loss'],
                 'tp_price' => $this->executionData['take_profit'],
                 'quantity' => $this->executionData['quantity'],
                 'status' => 'open',
                 'order_id' => $result['order_id'] ?? null,
+                'slippage_pips' => $slippagePips,
             ];
             
             // Only set signal_id if column is nullable OR if we have a signal_id value

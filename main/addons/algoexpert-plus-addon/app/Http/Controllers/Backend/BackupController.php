@@ -4,6 +4,7 @@ namespace Addons\AlgoExpertPlus\App\Http\Controllers\Backend;
 
 use Addons\AlgoExpertPlus\App\Http\Controllers\Controller;
 use Addons\AlgoExpertPlus\App\Services\BackupService;
+use App\Helpers\NotificationHelper;
 use App\Services\DatabaseBackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -193,14 +194,14 @@ class BackupController extends Controller
         $disk = $request->input('disk', 'local');
 
         if (!$path) {
-            return redirect()->back()->with('error', 'Backup path is required');
+            return redirect()->back()->with('notify', NotificationHelper::error('Backup path is required', 'Error'));
         }
 
         try {
             $storage = Storage::disk($disk);
             
             if (!$storage->exists($path)) {
-                return redirect()->back()->with('error', 'Backup file not found');
+                return redirect()->back()->with('notify', NotificationHelper::error('Backup file not found', 'Error'));
             }
 
             return $storage->download($path);
@@ -211,7 +212,7 @@ class BackupController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to download backup: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to download backup: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -228,7 +229,7 @@ class BackupController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
 
         try {
@@ -239,7 +240,7 @@ class BackupController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json(['success' => false, 'message' => $message], 404);
                 }
-                return redirect()->back()->with('error', $message);
+                return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
             }
 
             $storage->delete($path);
@@ -248,7 +249,7 @@ class BackupController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with('notify', NotificationHelper::success($message, 'Success'));
         } catch (\Throwable $e) {
             \Log::error('Failed to delete backup', [
                 'path' => $path,
@@ -260,7 +261,7 @@ class BackupController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -277,7 +278,7 @@ class BackupController extends Controller
             }
             
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('success', $result['message'] ?? 'Backup started successfully');
+                ->with('notify', NotificationHelper::success($result['message'] ?? 'Backup started successfully', 'Success'));
         } catch (\Throwable $e) {
             $message = 'Backup failed: ' . $e->getMessage();
             
@@ -286,7 +287,7 @@ class BackupController extends Controller
             }
             
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('error', $message);
+                ->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -306,7 +307,7 @@ class BackupController extends Controller
             }
             
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('success', $message);
+                ->with('notify', NotificationHelper::success($message, 'Success'));
         } catch (\Throwable $e) {
             $message = 'Backup cleanup failed: ' . $e->getMessage();
             
@@ -315,7 +316,7 @@ class BackupController extends Controller
             }
             
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('error', $message);
+                ->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -369,7 +370,11 @@ class BackupController extends Controller
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
         } catch (\Throwable $e) {
             $message = 'Backup failed: ' . $e->getMessage();
             
@@ -377,7 +382,7 @@ class BackupController extends Controller
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
             
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -392,7 +397,7 @@ class BackupController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json(['success' => false, 'message' => $message], 400);
                 }
-                return redirect()->back()->with('error', $message);
+                return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
             }
 
             set_time_limit(600);
@@ -408,7 +413,7 @@ class BackupController extends Controller
                         'redirect' => route('admin.login')
                     ]);
                 }
-                return redirect()->route('admin.login')->with('success', $message);
+                return redirect()->route('admin.login')->with('notify', NotificationHelper::success($message, 'Success'));
             }
             
             if ($request->expectsJson() || $request->ajax()) {
@@ -418,7 +423,11 @@ class BackupController extends Controller
                 ], 500);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
         } catch (\Throwable $e) {
             $message = 'Restore failed: ' . $e->getMessage();
             
@@ -426,7 +435,7 @@ class BackupController extends Controller
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
             
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -441,7 +450,7 @@ class BackupController extends Controller
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json(['success' => false, 'message' => $message], 400);
                 }
-                return redirect()->back()->with('error', $message);
+                return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
             }
 
             $result = $this->databaseBackupService->deleteBackup($request->input('backup_file'));
@@ -454,7 +463,11 @@ class BackupController extends Controller
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
         } catch (\Throwable $e) {
             $message = 'Delete failed: ' . $e->getMessage();
             
@@ -462,7 +475,7 @@ class BackupController extends Controller
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
             
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -474,14 +487,14 @@ class BackupController extends Controller
         $filename = $request->input('backup_file');
         
         if (!$filename) {
-            return redirect()->back()->with('error', 'Backup filename is required');
+            return redirect()->back()->with('notify', NotificationHelper::error('Backup filename is required', 'Error'));
         }
 
         try {
             $backupPath = storage_path('app/database-backups/' . $filename);
             
             if (!File::exists($backupPath)) {
-                return redirect()->back()->with('error', 'Backup file not found');
+                return redirect()->back()->with('notify', NotificationHelper::error('Backup file not found', 'Error'));
             }
 
             return response()->download($backupPath);
@@ -491,7 +504,7 @@ class BackupController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to download backup: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to download backup: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -511,7 +524,11 @@ class BackupController extends Controller
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
         } catch (\Throwable $e) {
             $message = 'Save failed: ' . $e->getMessage();
             
@@ -519,7 +536,7 @@ class BackupController extends Controller
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
             
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 
@@ -542,7 +559,7 @@ class BackupController extends Controller
                         'redirect' => route('admin.login')
                     ]);
                 }
-                return redirect()->route('admin.login')->with('success', $message);
+                return redirect()->route('admin.login')->with('notify', NotificationHelper::success($message, 'Success'));
             }
 
             if ($request->expectsJson() || $request->ajax()) {
@@ -552,7 +569,11 @@ class BackupController extends Controller
                 ], 500);
             }
 
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
         } catch (\Throwable $e) {
             $message = 'Factory restore failed: ' . $e->getMessage();
             
@@ -560,7 +581,7 @@ class BackupController extends Controller
                 return response()->json(['success' => false, 'message' => $message], 500);
             }
             
-            return redirect()->back()->with('error', $message);
+            return redirect()->back()->with('notify', NotificationHelper::error($message, 'Error'));
         }
     }
 

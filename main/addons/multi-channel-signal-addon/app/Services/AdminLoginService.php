@@ -3,6 +3,7 @@
 namespace Addons\MultiChannelSignalAddon\App\Services;
 
 use Addons\MultiChannelSignalAddon\App;
+use App\Helpers\NotificationHelper;
 
 class AdminLoginService
 {
@@ -16,7 +17,7 @@ class AdminLoginService
 
         if ($admin) {
             if (!$admin->status) {
-                return redirect()->route('admin.login')->with('error', 'Your account is currently disabled');
+                return redirect()->route('admin.login')->with('notify', NotificationHelper::error('Your account is currently disabled', 'Error'));
             }
         }
 

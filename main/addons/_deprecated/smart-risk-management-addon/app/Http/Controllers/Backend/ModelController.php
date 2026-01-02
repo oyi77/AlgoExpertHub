@@ -5,11 +5,11 @@ namespace Addons\SmartRiskManagement\App\Http\Controllers\Backend;
 use Addons\SmartRiskManagement\App\Http\Controllers\Controller;
 use Addons\SmartRiskManagement\App\Models\SrmModelVersion;
 use Addons\SmartRiskManagement\App\Services\ModelTrainingService;
-use App\Helpers\Helper\Helper;
-use Illuminate\Http\Request;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class ModelController extends Controller
 {
@@ -79,14 +79,14 @@ class ModelController extends Controller
             // Dispatch retraining job
             \Addons\SmartRiskManagement\App\Jobs\RetrainModelsJob::dispatch();
             
-            return redirect()->back()->with('success', 'Model retraining job has been queued. Check back in a few minutes.');
+            return redirect()->back()->with('notify', NotificationHelper::success('Model retraining job has been queued. Check back in a few minutes.', 'Success'));
         } catch (\Exception $e) {
             Log::error("ModelController: Failed to trigger retraining", [
                 'model_id' => $id,
                 'error' => $e->getMessage(),
             ]);
             
-            return redirect()->back()->with('error', 'Failed to trigger retraining: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to trigger retraining: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -99,15 +99,15 @@ class ModelController extends Controller
             $model = SrmModelVersion::findOrFail($id);
             
             if ($model->status !== 'testing' && $model->status !== 'training') {
-                return redirect()->back()->with('error', 'Only testing or training models can be deployed.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Only testing or training models can be deployed.', 'Error'));
             }
             
             $success = $this->trainingService->deployModel($model->model_type, $model->version);
             
             if ($success) {
-                return redirect()->back()->with('success', 'Model deployed successfully.');
+                return redirect()->back()->with('notify', NotificationHelper::success('Model deployed successfully.', 'Success'));
             } else {
-                return redirect()->back()->with('error', 'Failed to deploy model.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Failed to deploy model.', 'Error'));
             }
         } catch (\Exception $e) {
             Log::error("ModelController: Failed to deploy model", [
@@ -115,7 +115,7 @@ class ModelController extends Controller
                 'error' => $e->getMessage(),
             ]);
             
-            return redirect()->back()->with('error', 'Failed to deploy model: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to deploy model: ' . $e->getMessage(), 'Error'));
         }
     }
 }

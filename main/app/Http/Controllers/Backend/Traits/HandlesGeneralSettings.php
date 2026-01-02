@@ -56,15 +56,15 @@ trait HandlesGeneralSettings
             if ($isSuccess['type'] == 'success') {
                 // Clear cache and redirect explicitly to avoid stale data
                 Cache::forget('app_configuration');
-                return redirect()->route('admin.general.index')->with('success', $isSuccess['message']);
+                return redirect()->route('admin.general.index')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
             } else {
-                return redirect()->route('admin.general.index')->with('error', $isSuccess['message'] ?? 'Failed to update settings.');
+                return redirect()->route('admin.general.index')->with('notify', NotificationHelper::error($isSuccess['message'] ?? 'Failed to update settings.', 'Error'));
             }
         } catch (\Exception $e) {
             \Log::error('Configuration update error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             // Clear cache even on error to prevent stale data
             Cache::forget('app_configuration');
-            return redirect()->route('admin.general.index')->with('error', 'Failed to update settings: ' . $e->getMessage());
+            return redirect()->route('admin.general.index')->with('notify', NotificationHelper::error('Failed to update settings: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -77,7 +77,7 @@ trait HandlesGeneralSettings
         Artisan::call('config:clear');
         Artisan::call('optimize:clear');
 
-        return back()->with('success', 'Caches cleared successfully!');
+        return back()->with('notify', NotificationHelper::success('Caches cleared successfully!', 'Success'));
     }
 }
 

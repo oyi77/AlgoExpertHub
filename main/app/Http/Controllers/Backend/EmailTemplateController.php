@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Configuration;
 use App\Models\EmailTemplate;
@@ -66,7 +67,7 @@ class EmailTemplateController extends Controller
 
         Helper::setEnv($data);
 
-        return redirect()->back()->with('success', "Email Setting Updated Successfully");
+        return redirect()->back()->with('notify', NotificationHelper::success("Email Setting Updated Successfully", 'Success'));
     }
 
     public function emailTemplates()
@@ -96,6 +97,6 @@ class EmailTemplateController extends Controller
 
         $template->update($data);
 
-        return redirect()->back()->with('success', "Email Template Updated Successfully");
+        return redirect()->back()->with('notify', NotificationHelper::success("Email Template Updated Successfully", 'Success'));
     }
 }

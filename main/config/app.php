@@ -202,6 +202,7 @@ return [
         /*
          * Package Service Providers...
          */
+        Opcodes\LogViewer\LogViewerServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -212,6 +213,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\CacheServiceProvider::class,
+        App\Providers\RepositoryServiceProvider::class,
         
         // Addons are now conditionally registered in AppServiceProvider::register()
         // based on their active status to prevent errors when addons are disabled

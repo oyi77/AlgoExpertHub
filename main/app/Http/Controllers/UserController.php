@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\UserProfile;
 use App\Models\Payment;
 use App\Models\ReferralCommission;
@@ -59,7 +60,7 @@ class UserController extends Controller
         $isSuccess = $this->profile->update($request);
 
         if ($isSuccess['type'] === 'success')
-            return back()->with('success', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     public function changePassword()
@@ -78,13 +79,13 @@ class UserController extends Controller
         $user = User::find(auth()->id());
 
         if (!Hash::check($request->oldpassword, $user->password)) {
-            return redirect()->back()->with('error', 'Old password do not match');
+            return redirect()->back()->with('notify', NotificationHelper::error('Old password do not match'));
         } else {
             $user->password = bcrypt($request->password);
 
             $user->save();
 
-            return redirect()->back()->with('success', 'Password Updated');
+            return redirect()->back()->with('notify', NotificationHelper::success('Password Updated'));
         }
     }
 

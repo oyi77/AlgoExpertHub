@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Configuration;
 use App\Models\Content;
 use App\Models\Page;
@@ -68,7 +69,7 @@ class FrontendController extends Controller
 
         session()->put('locale', $request->lang);
 
-        return redirect()->back()->with('success', __('Successfully Changed Language'));
+        return redirect()->back()->with('notify', NotificationHelper::success(__('Successfully Changed Language'), 'Success'));
     }
 
     public function blogDetails($id)
@@ -111,7 +112,7 @@ class FrontendController extends Controller
 
         Helper::commonMail($data);
 
-        return back()->with('success', 'Contact With us successfully');
+        return back()->with('notify', NotificationHelper::success('Contact With us successfully', 'Success'));
     }
 
     public function subscribe(Request $request)

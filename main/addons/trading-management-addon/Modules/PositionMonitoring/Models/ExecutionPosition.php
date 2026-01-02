@@ -29,6 +29,8 @@ class ExecutionPosition extends Model
         'closed_at',
         'closed_reason',
         'last_price_update_at',
+        'slippage_pips',
+        'execution_price',
     ];
 
     protected $casts = [
@@ -41,6 +43,8 @@ class ExecutionPosition extends Model
         'pnl_percentage' => 'decimal:4',
         'closed_at' => 'datetime',
         'last_price_update_at' => 'datetime',
+        'slippage_pips' => 'decimal:4',
+        'execution_price' => 'decimal:8',
     ];
 
     public function signal()

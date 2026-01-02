@@ -52,6 +52,7 @@ class TradingPreset extends Model
         'created_by_user_id', 'is_default_template', 'clonable', 'visibility',
         'filter_strategy_id', 'ai_model_profile_id', 'ai_confirmation_mode', 'ai_min_safety_score', 'ai_position_mgmt_enabled',
         'smart_risk_enabled', 'smart_risk_min_score', 'smart_risk_slippage_buffer', 'smart_risk_dynamic_lot',
+        'max_correlation_exposure_pct', 'correlation_threshold',
     ];
 
     protected $casts = [
@@ -65,6 +66,8 @@ class TradingPreset extends Model
         'smart_risk_enabled' => 'boolean', // NEW
         'smart_risk_slippage_buffer' => 'boolean', // NEW
         'smart_risk_dynamic_lot' => 'boolean', // NEW
+        'max_correlation_exposure_pct' => 'decimal:2', // NEW
+        'correlation_threshold' => 'decimal:4', // NEW
     ];
 
     /**

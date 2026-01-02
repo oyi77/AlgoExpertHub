@@ -28,16 +28,8 @@
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/slick.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/odometer.css') }}">
 
-    @php
-        $alertType = optional(Config::config())->alert ?? 'sweetalert';
-    @endphp
-    @if ($alertType === 'izi')
-        <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'izitoast.min.css') }}">
-    @elseif($alertType === 'toast')
-        <link href="{{ Config::cssLib('frontend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
-        <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
 
     <link href="{{ asset('asset/css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
     <link href="{{ asset('asset/css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
@@ -100,7 +92,7 @@
         @if (request()->routeIs('home'))
             @php
                 $hasBannerInWidgets = false;
-                if (isset($page) && $page && $page->widgets) {
+                if (isset($page) && $page instanceof \App\Models\Page && $page->widgets()->exists()) {
                     $hasBannerInWidgets = $page->widgets->contains(function($widget) {
                         $sectionValue = $widget->sections;
                         // Handle JSON string
@@ -141,13 +133,8 @@
 
 
 
-    @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}"></script>
-    @elseif(optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}"></script>
-    @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}"></script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
 
     <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
@@ -197,22 +184,13 @@
                     },
                     error: () => {
 
-                        @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-                            iziToast.error({
-                                position: 'topRight',
-                                message: "Email is Required",
-                            });
-                        @elseif (optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-                            toastr.error("Email is Required", {
-                                positionClass: "toast-top-right"
-
-                            })
-                        @else
-                            Swal.fire({
-                                icon: 'error',
-                                title: "Email is Required"
-                            })
-                        @endif
+                        if (typeof notify !== 'undefined') {
+                            notify()
+                                ->error()
+                                ->title('Error')
+                                ->message("Email is Required")
+                                ->send();
+                        }
                     }
                 })
 

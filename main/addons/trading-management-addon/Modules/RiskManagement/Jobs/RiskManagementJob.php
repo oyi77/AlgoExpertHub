@@ -242,23 +242,31 @@ class RiskManagementJob implements ShouldQueue
             }
             
             // Get account info
+            $accountInfo = null;
             if (method_exists($adapter, 'getAccountInfo')) {
-                return $adapter->getAccountInfo();
+                $accountInfo = $adapter->getAccountInfo();
             } elseif (method_exists($adapter, 'fetchBalance')) {
-            return $adapter->fetchBalance();
+                $accountInfo = $adapter->fetchBalance();
             } else {
                 Log::warning('Adapter does not support account info retrieval', [
                     'connection_id' => $connection->id,
                     'provider' => $connection->provider,
                 ]);
                 // Return mock account info for testing
-                return [
+                $accountInfo = [
                     'balance' => 10000,
                     'equity' => 10000,
                     'margin' => 0,
                     'free_margin' => 10000,
                 ];
             }
+            
+            // Ensure connection_id is included for position fetching
+            if ($accountInfo && !isset($accountInfo['connection_id'])) {
+                $accountInfo['connection_id'] = $connection->id;
+            }
+            
+            return $accountInfo;
         } catch (\Exception $e) {
             Log::error('Failed to get account info', [
                 'connection_id' => $connection->id,
@@ -270,6 +278,7 @@ class RiskManagementJob implements ShouldQueue
                 'equity' => 10000,
                 'margin' => 0,
                 'free_margin' => 10000,
+                'connection_id' => $connection->id,
             ];
         }
     }

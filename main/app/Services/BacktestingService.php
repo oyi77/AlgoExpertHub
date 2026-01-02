@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Models\Backtest;
 use App\Models\BacktestTrade;
 use App\Models\Signal;
+use App\Services\Backtesting\BacktestSlippageModel;
 use Addons\TradingManagement\Modules\MarketData\Models\MarketData;
+use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
+use Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -36,8 +39,50 @@ class BacktestingService
                 ->orderBy('timestamp', 'asc')
                 ->get();
 
+            // If no historical data, try to fetch it from an active data connection
             if ($historicalData->isEmpty()) {
-                throw new \Exception('No historical data found for the specified symbol and timeframe');
+                Log::warning('No historical data found, attempting to fetch', [
+                    'symbol' => $backtest->symbol,
+                    'timeframe' => $backtest->timeframe,
+                    'start' => $backtest->start_date,
+                    'end' => $backtest->end_date,
+                ]);
+                
+                // Try to find an active data connection (check both DataConnection and ExchangeConnection)
+                $dataConnection = DataConnection::where('is_active', true)->first();
+                
+                // If no DataConnection, try ExchangeConnection with data fetching enabled
+                if (!$dataConnection) {
+                    $exchangeConnection = ExchangeConnection::where('is_active', true)
+                        ->where('data_fetching_enabled', true)
+                        ->where('status', 'active')
+                        ->first();
+                    
+                    if ($exchangeConnection) {
+                        // Use ExchangeConnection as data source
+                        // Note: BackfillHistoricalDataJob expects DataConnection, so we need to create a temporary one
+                        // or modify the job to accept ExchangeConnection. For now, we'll use the first available DataConnection
+                        // or create a fallback message
+                        Log::info('Found ExchangeConnection for data fetching, but BackfillHistoricalDataJob requires DataConnection', [
+                            'exchange_connection_id' => $exchangeConnection->id,
+                        ]);
+                    }
+                }
+                
+                if ($dataConnection) {
+                    // Dispatch backfill job to fetch historical data
+                    \Addons\TradingManagement\Modules\MarketData\Jobs\BackfillHistoricalDataJob::dispatch(
+                        $dataConnection->id,
+                        $backtest->symbol,
+                        $backtest->timeframe,
+                        $startTimestamp,
+                        $endTimestamp
+                    )->onQueue('high');
+                    
+                    throw new \Exception('No historical data found. Historical data fetch has been queued. Please wait a few minutes and try running the backtest again.');
+                } else {
+                    throw new \Exception('No historical data found and no active data connection available to fetch data. Please create a data connection or exchange connection with data fetching enabled first.');
+                }
             }
 
             // Get published signals in the date range
@@ -94,7 +139,10 @@ class BacktestingService
                 if ($currentEquity > $peakBalance) {
                     $peakBalance = $currentEquity;
                 }
-                $drawdown = (($peakBalance - $currentEquity) / $peakBalance) * 100;
+                // Prevent division by zero in drawdown calculation
+                $drawdown = $peakBalance > 0 
+                    ? (($peakBalance - $currentEquity) / $peakBalance) * 100 
+                    : 0;
                 if ($drawdown > $maxDrawdown) {
                     $maxDrawdown = $drawdown;
                 }
@@ -164,6 +212,15 @@ class BacktestingService
      */
     protected function openPosition(Backtest $backtest, Signal $signal, MarketData $candle, array &$openPositions, array &$trades, float &$balance): void
     {
+        // Validate signal has valid open price
+        if (!$signal->open_price || $signal->open_price <= 0) {
+            Log::warning('Invalid signal open_price, skipping position', [
+                'signal_id' => $signal->id,
+                'open_price' => $signal->open_price,
+            ]);
+            return;
+        }
+
         // Calculate position size (simple: 10% of balance)
         $positionSize = ($balance * 0.10) / $signal->open_price;
         
@@ -172,7 +229,28 @@ class BacktestingService
         }
 
         $direction = in_array($signal->direction, ['buy', 'long']) ? 'buy' : 'sell';
-        $entryPrice = $signal->open_price;
+        $expectedEntryPrice = $signal->open_price;
+        
+        // Apply slippage to entry price if enabled
+        $slippageModel = app(BacktestSlippageModel::class);
+        $slippageModelType = $backtest->slippage_model ?? 'fixed';
+        $slippagePips = $backtest->slippage_pips ?? 2.0;
+        $symbol = $backtest->symbol;
+        
+        $entryPrice = $expectedEntryPrice;
+        if ($slippageModelType !== 'none') {
+            $actualSlippage = $slippageModelType === 'fixed' 
+                ? $slippagePips 
+                : $slippageModel->calculateSlippage($symbol, $positionSize);
+            $entryPrice = $slippageModel->applySlippage($expectedEntryPrice, $direction, $actualSlippage, $symbol);
+        }
+        
+        // Apply spread cost on entry if enabled
+        $spreadCostEnabled = $backtest->spread_cost_enabled ?? true;
+        if ($spreadCostEnabled) {
+            $spreadCost = $slippageModel->calculateSpreadCost($symbol, $positionSize);
+            $balance -= $spreadCost; // Deduct spread cost from balance
+        }
 
         $position = [
             'signal_id' => $signal->id,
@@ -194,18 +272,46 @@ class BacktestingService
      */
     protected function checkPositions(MarketData $candle, array &$openPositions, array &$trades, float &$balance, Backtest $backtest): void
     {
+        $slippageModel = app(BacktestSlippageModel::class);
+        $symbol = $backtest->symbol;
+        
+        // Get slippage configuration from backtest
+        $slippageModelType = $backtest->slippage_model ?? 'fixed';
+        $slippagePips = $backtest->slippage_pips ?? 2.0;
+        $spreadCostEnabled = $backtest->spread_cost_enabled ?? true;
+        
         foreach ($openPositions as $signalId => $position) {
+            $lotSize = $position['quantity'] ?? 0.01;
             $shouldClose = false;
             $closeReason = '';
+            $executionPrice = null;
 
             // Check stop loss
             if ($position['stop_loss']) {
                 if ($position['direction'] === 'buy' && $candle->low <= $position['stop_loss']) {
                     $shouldClose = true;
                     $closeReason = 'stop_loss';
+                    // Apply slippage to SL execution price
+                    if ($slippageModelType !== 'none') {
+                        $actualSlippage = $slippageModelType === 'fixed' 
+                            ? $slippagePips 
+                            : $slippageModel->calculateSlippage($symbol, $lotSize);
+                        $executionPrice = $slippageModel->applySlippage($position['stop_loss'], 'sell', $actualSlippage, $symbol);
+                    } else {
+                        $executionPrice = $position['stop_loss'];
+                    }
                 } elseif ($position['direction'] === 'sell' && $candle->high >= $position['stop_loss']) {
                     $shouldClose = true;
                     $closeReason = 'stop_loss';
+                    // Apply slippage to SL execution price
+                    if ($slippageModelType !== 'none') {
+                        $actualSlippage = $slippageModelType === 'fixed' 
+                            ? $slippagePips 
+                            : $slippageModel->calculateSlippage($symbol, $lotSize);
+                        $executionPrice = $slippageModel->applySlippage($position['stop_loss'], 'buy', $actualSlippage, $symbol);
+                    } else {
+                        $executionPrice = $position['stop_loss'];
+                    }
                 }
             }
 
@@ -214,14 +320,32 @@ class BacktestingService
                 if ($position['direction'] === 'buy' && $candle->high >= $position['take_profit']) {
                     $shouldClose = true;
                     $closeReason = 'take_profit';
+                    // Apply slippage to TP execution price
+                    if ($slippageModelType !== 'none') {
+                        $actualSlippage = $slippageModelType === 'fixed' 
+                            ? $slippagePips 
+                            : $slippageModel->calculateSlippage($symbol, $lotSize);
+                        $executionPrice = $slippageModel->applySlippage($position['take_profit'], 'sell', $actualSlippage, $symbol);
+                    } else {
+                        $executionPrice = $position['take_profit'];
+                    }
                 } elseif ($position['direction'] === 'sell' && $candle->low <= $position['take_profit']) {
                     $shouldClose = true;
                     $closeReason = 'take_profit';
+                    // Apply slippage to TP execution price
+                    if ($slippageModelType !== 'none') {
+                        $actualSlippage = $slippageModelType === 'fixed' 
+                            ? $slippagePips 
+                            : $slippageModel->calculateSlippage($symbol, $lotSize);
+                        $executionPrice = $slippageModel->applySlippage($position['take_profit'], 'buy', $actualSlippage, $symbol);
+                    } else {
+                        $executionPrice = $position['take_profit'];
+                    }
                 }
             }
 
             if ($shouldClose) {
-                $this->closePosition($position, $candle, $trades, $balance, $backtest, $closeReason);
+                $this->closePosition($position, $candle, $trades, $balance, $backtest, $closeReason, $executionPrice, $slippageModel, $spreadCostEnabled);
                 unset($openPositions[$signalId]);
             }
         }
@@ -230,11 +354,12 @@ class BacktestingService
     /**
      * Close a position
      */
-    protected function closePosition(array $position, MarketData $candle, array &$trades, float &$balance, Backtest $backtest, string $closeReason = 'manual'): void
+    protected function closePosition(array $position, MarketData $candle, array &$trades, float &$balance, Backtest $backtest, string $closeReason = 'manual', ?float $executionPrice = null, ?BacktestSlippageModel $slippageModel = null, bool $spreadCostEnabled = true): void
     {
-        $exitPrice = $position['direction'] === 'buy' 
+        // Use execution price if provided (with slippage), otherwise use trigger price or candle close
+        $exitPrice = $executionPrice ?? ($position['direction'] === 'buy' 
             ? ($closeReason === 'stop_loss' ? $position['stop_loss'] : ($closeReason === 'take_profit' ? $position['take_profit'] : $candle->close))
-            : ($closeReason === 'stop_loss' ? $position['stop_loss'] : ($closeReason === 'take_profit' ? $position['take_profit'] : $candle->close));
+            : ($closeReason === 'stop_loss' ? $position['stop_loss'] : ($closeReason === 'take_profit' ? $position['take_profit'] : $candle->close)));
 
         // Calculate P&L
         if ($position['direction'] === 'buy') {
@@ -242,8 +367,19 @@ class BacktestingService
         } else {
             $profitLoss = ($position['entry_price'] - $exitPrice) * $position['quantity'];
         }
+        
+        // Apply spread cost if enabled
+        if ($spreadCostEnabled && $slippageModel) {
+            $symbol = $backtest->symbol;
+            $lotSize = $position['quantity'] ?? 0.01;
+            $spreadCost = $slippageModel->calculateSpreadCost($symbol, $lotSize);
+            $profitLoss -= $spreadCost; // Spread cost reduces profit
+        }
 
-        $profitLossPercent = (($exitPrice - $position['entry_price']) / $position['entry_price']) * 100;
+        // Prevent division by zero in profit/loss percentage calculation
+        $profitLossPercent = $position['entry_price'] > 0 
+            ? (($exitPrice - $position['entry_price']) / $position['entry_price']) * 100 
+            : 0;
         if ($position['direction'] === 'sell') {
             $profitLossPercent = -$profitLossPercent;
         }
@@ -285,7 +421,10 @@ class BacktestingService
      */
     protected function calculateMetrics(Backtest $backtest, array $trades, float $finalBalance, float $maxDrawdown): array
     {
-        $totalReturn = (($finalBalance - $backtest->initial_balance) / $backtest->initial_balance) * 100;
+        // Prevent division by zero in total return calculation
+        $totalReturn = $backtest->initial_balance > 0 
+            ? (($finalBalance - $backtest->initial_balance) / $backtest->initial_balance) * 100 
+            : 0;
         
         $winningTrades = array_filter($trades, fn($t) => $t['profit_loss'] > 0);
         $losingTrades = array_filter($trades, fn($t) => $t['profit_loss'] < 0);

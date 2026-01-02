@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Plan;
 use App\Services\UserPlanService;
 use Illuminate\Http\Request;
@@ -44,13 +45,13 @@ class PlanController extends Controller
         $result = $this->planService->subscribe($request);
 
         if ($result['type'] === 'error') {
-            return redirect()->back()->with('error', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
         }
 
         if ($result['type'] === 'redirect') {
             return redirect()->to($result['message']);
         }
         
-        return redirect()->back()->with('success', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
     }
 }

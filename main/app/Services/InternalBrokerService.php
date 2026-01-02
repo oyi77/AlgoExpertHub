@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\InternalTrade;
 use App\Models\User;
+use Addons\TradingManagement\Modules\RiskManagement\Services\MarginManagementService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\SlippageProtectionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -127,11 +129,41 @@ class InternalBrokerService
                             ($trade->direction === 'sell' && $currentPrice >= $trade->sl_price);
 
             if ($shouldCloseSL) {
-                $this->closePosition($trade, $currentPrice);
+                // Use execution price (with slippage) instead of trigger price
+                $slippageService = app(SlippageProtectionService::class);
+                $maxSlippage = $slippageService->getMaxAllowedSlippage([]);
+                
+                // Estimate slippage (in production, get from exchange)
+                $predictedSlippage = $slippageService->predictSlippage($trade->symbol, $trade->quantity);
+                $executionPrice = $slippageService->adjustStopLossForSlippage(
+                    $trade->sl_price,
+                    $predictedSlippage,
+                    $trade->direction === 'buy' ? 'sell' : 'buy',
+                    $trade->symbol
+                );
+                
+                // Validate slippage
+                $actualSlippage = $slippageService->calculateSlippage(
+                    $trade->sl_price,
+                    $executionPrice,
+                    $trade->direction === 'buy' ? 'sell' : 'buy',
+                    $trade->symbol
+                );
+                
+                if ($actualSlippage > $maxSlippage) {
+                    Log::warning('Slippage exceeded on SL execution', [
+                        'trade_id' => $trade->id,
+                        'slippage_pips' => $actualSlippage,
+                        'max_allowed' => $maxSlippage,
+                    ]);
+                }
+                
+                $this->closePosition($trade, $executionPrice);
                 Log::info('Position closed by stop-loss', [
                     'trade_id' => $trade->id,
                     'sl_price' => $trade->sl_price,
-                    'close_price' => $currentPrice,
+                    'execution_price' => $executionPrice,
+                    'slippage_pips' => $actualSlippage,
                 ]);
                 return;
             }
@@ -143,11 +175,41 @@ class InternalBrokerService
                             ($trade->direction === 'sell' && $currentPrice <= $trade->tp_price);
 
             if ($shouldCloseTP) {
-                $this->closePosition($trade, $currentPrice);
+                // Use execution price (with slippage) instead of trigger price
+                $slippageService = app(SlippageProtectionService::class);
+                $maxSlippage = $slippageService->getMaxAllowedSlippage([]);
+                
+                // Estimate slippage
+                $predictedSlippage = $slippageService->predictSlippage($trade->symbol, $trade->quantity);
+                $executionPrice = $slippageService->adjustStopLossForSlippage(
+                    $trade->tp_price,
+                    $predictedSlippage,
+                    $trade->direction === 'buy' ? 'sell' : 'buy',
+                    $trade->symbol
+                );
+                
+                // Validate slippage
+                $actualSlippage = $slippageService->calculateSlippage(
+                    $trade->tp_price,
+                    $executionPrice,
+                    $trade->direction === 'buy' ? 'sell' : 'buy',
+                    $trade->symbol
+                );
+                
+                if ($actualSlippage > $maxSlippage) {
+                    Log::warning('Slippage exceeded on TP execution', [
+                        'trade_id' => $trade->id,
+                        'slippage_pips' => $actualSlippage,
+                        'max_allowed' => $maxSlippage,
+                    ]);
+                }
+                
+                $this->closePosition($trade, $executionPrice);
                 Log::info('Position closed by take-profit', [
                     'trade_id' => $trade->id,
                     'tp_price' => $trade->tp_price,
-                    'close_price' => $currentPrice,
+                    'execution_price' => $executionPrice,
+                    'slippage_pips' => $actualSlippage,
                 ]);
                 return;
             }
@@ -157,11 +219,22 @@ class InternalBrokerService
     /**
      * Calculate required margin for a trade
      */
-    protected function calculateRequiredMargin(float $quantity, float $price): float
+    protected function calculateRequiredMargin(float $quantity, float $price, ?int $leverage = null, ?string $symbol = null): float
     {
-        // Simple calculation: quantity * price
-        // You can implement leverage here if needed
-        return $quantity * $price;
+        $leverage = $leverage ?? 100; // Default 1:100
+        
+        // Use MarginManagementService for proper calculation
+        $marginService = app(MarginManagementService::class);
+        
+        // For internal broker, treat quantity as lot size
+        // If symbol provided, use proper contract size calculation
+        if ($symbol) {
+            return $marginService->calculateRequiredMargin($quantity, $price, $leverage, $symbol);
+        }
+        
+        // Fallback: simple calculation with leverage
+        $notionalValue = $quantity * $price;
+        return $notionalValue / $leverage;
     }
 
     /**

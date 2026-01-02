@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PagesRequest;
 use App\Models\Page;
@@ -42,7 +43,7 @@ class PagesController extends Controller
         $isSuccess = $this->page->create($request);
 
         if ($isSuccess['type'] === 'success') {
-            return redirect()->route('admin.frontend.pages')->with('success', $isSuccess['message']);
+            return redirect()->route('admin.frontend.pages')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
         }
     }
 
@@ -63,19 +64,19 @@ class PagesController extends Controller
             abort($isSuccess['message']);
         }
     
-        return back()->with('success', 'Page Updated Successfully');
+        return back()->with('notify', NotificationHelper::success('Page Updated Successfully', 'Success'));
     }
 
     public function pageDelete(Request $request, Page $id)
     {
         if ($id->name == 'home') {
 
-            return back()->with('error', 'At least One page is Required');
+            return back()->with('notify', NotificationHelper::error('At least One page is Required', 'Error'));
         }
 
         $id->delete();
 
-        return back()->with('success', 'Page Deleted Successfully');
+        return back()->with('notify', NotificationHelper::success('Page Deleted Successfully', 'Success'));
     }
 
     /**

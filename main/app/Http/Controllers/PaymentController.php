@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\PaymentRequest;
 use App\Models\Deposit;
 use App\Models\Gateway;
@@ -39,7 +40,7 @@ class PaymentController extends Controller
         $isSuccess = $this->payment->payNow($request);
 
         if ($isSuccess['type'] === 'error') {
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
         return redirect()->to($isSuccess['message']);
     }
@@ -49,7 +50,7 @@ class PaymentController extends Controller
         $isSuccess = $this->payment->details($id);
 
         if ($isSuccess['type'] === 'error') {
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
         return view($isSuccess['view'])->with($isSuccess['data']);
@@ -81,7 +82,7 @@ class PaymentController extends Controller
         }
 
         if ($data['type'] === 'error') {
-            return redirect()->back()->with('error', $data['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($data['message'], 'Error'));
         }
 
 
@@ -131,11 +132,11 @@ class PaymentController extends Controller
 
 
         if ($is_manual) {
-            return redirect()->route('user.dashboard')->with('success', 'Your Payment is Successfully Processing');
+            return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success('Your Payment is Successfully Processing', 'Payment Processing'));
         }
 
 
-        return redirect()->route('user.dashboard')->with('success', 'Your Payment is Successfully Recieved');
+        return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success('Your Payment is Successfully Received', 'Payment Success'));
     }
 
     public function paymentSuccess(Request $request, $gateway)
@@ -154,9 +155,9 @@ class PaymentController extends Controller
         $isSuccess = $method::success($request);
 
         if ($isSuccess['type'] == 'error') {
-            return redirect()->route('user.dashboard')->with('error', $isSuccess['message']);
+            return redirect()->route('user.dashboard')->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->route('user.dashboard')->with('success', $isSuccess['message']);
+        return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 }

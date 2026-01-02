@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class ReferralController extends Controller
 
         $refferal->save();
 
-        return redirect()->back()->with('success', 'Refferal Level Updated Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Refferal Level Updated Successfully', 'Success'));
     }
 
 

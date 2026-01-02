@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendEmailJob;
 use App\Jobs\SendSubscriberEmail;
@@ -67,7 +68,7 @@ class AdminController extends Controller
 
         $admin->assignRole($request->roles);
 
-        return redirect()->back()->with('success', 'Admin created Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Admin created Successfully', 'Success'));
     }
 
     public function edit($id)
@@ -109,7 +110,7 @@ class AdminController extends Controller
         $admin->syncRoles($request->roles);
 
 
-        return redirect()->back()->with('success', 'Successfully updated Admins');
+        return redirect()->back()->with('notify', NotificationHelper::success('Successfully updated Admins', 'Success'));
     }
 
     public function notifications()
@@ -170,7 +171,7 @@ class AdminController extends Controller
 
         SendSubscriberMail::dispatch($data);
 
-        return redirect()->route('admin.subscribers')->with('success', 'Successfully Send Mail');
+        return redirect()->route('admin.subscribers')->with('notify', NotificationHelper::success('Successfully Send Mail', 'Success'));
     }
 
     public function singleMail(Request $request)
@@ -191,6 +192,6 @@ class AdminController extends Controller
 
         Helper::commonMail($data);
 
-        return redirect()->route('admin.subscribers')->with('success', 'Successfully Send Mail');
+        return redirect()->route('admin.subscribers')->with('notify', NotificationHelper::success('Successfully Send Mail', 'Success'));
     }
 }

@@ -19,7 +19,7 @@
             </p>
             
             <div data-aos="fade-up" data-aos-delay="300" class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <a href="{{ route('register') }}" class="btn-shimmer px-10 py-4 rounded-2xl text-lg font-bold shadow-2xl shadow-primary-500/40 w-full sm:w-auto">
+                <a href="{{ route('user.register') }}" class="btn-shimmer px-10 py-4 rounded-2xl text-lg font-bold shadow-2xl shadow-primary-500/40 w-full sm:w-auto">
                     {{ __('Start Free Trial') }}
                 </a>
                 <a href="#bots" class="px-10 py-4 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-lg font-bold w-full sm:w-auto">
@@ -276,7 +276,7 @@
                 <h2 data-aos="fade-up" class="text-4xl md:text-6xl font-black text-white mb-8">{{ __('Ready to Outperform?') }}</h2>
                 <p data-aos="fade-up" data-aos-delay="100" class="text-xl text-dark-300 mb-12 max-w-xl mx-auto">{{ __('Join 50,000+ traders already automating their wealth. Start your 14-day free trial today.') }}</p>
                 <div data-aos="fade-up" data-aos-delay="200" class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="{{ route('register') }}" class="btn-shimmer px-12 py-5 rounded-2xl text-xl font-bold shadow-2xl shadow-primary-500/40 w-full sm:w-auto">
+                    <a href="{{ route('user.register') }}" class="btn-shimmer px-12 py-5 rounded-2xl text-xl font-bold shadow-2xl shadow-primary-500/40 w-full sm:w-auto">
                         {{ __('Get Started Now') }}
                     </a>
                     <a href="#" class="px-12 py-5 rounded-2xl border border-white/10 hover:bg-white/5 transition-all text-xl font-bold w-full sm:w-auto">

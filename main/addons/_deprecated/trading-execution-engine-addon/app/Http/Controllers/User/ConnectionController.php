@@ -6,6 +6,7 @@ use Addons\TradingExecutionEngine\App\Http\Controllers\Controller;
 use Addons\TradingExecutionEngine\App\Models\ExecutionConnection;
 use Addons\TradingExecutionEngine\App\Services\ConnectionService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -107,7 +108,7 @@ class ConnectionController extends Controller
         if (json_last_error() !== JSON_ERROR_NONE) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Invalid JSON format for credentials');
+                ->with('notify', NotificationHelper::error('Invalid JSON format for credentials', 'Error'));
         }
 
         $data = $request->only(['name', 'type', 'exchange_name', 'settings']);
@@ -123,11 +124,11 @@ class ConnectionController extends Controller
 
         if ($test['success']) {
             return redirect()->route('user.execution-connections.index')
-                ->with('success', 'Connection created and tested successfully');
+                ->with('notify', NotificationHelper::success('Connection created and tested successfully', 'Success'));
         }
 
         return redirect()->route('user.execution-connections.edit', $connection->id)
-            ->with('warning', 'Connection created but test failed: ' . ($test['message'] ?? 'Unknown error'));
+            ->with('notify', NotificationHelper::error('Connection created but test failed: ' . ($test['message'] ?? 'Unknown error'), 'Error'));
     }
 
     /**
@@ -179,7 +180,7 @@ class ConnectionController extends Controller
         if (json_last_error() !== JSON_ERROR_NONE) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Invalid JSON format for credentials');
+                ->with('notify', NotificationHelper::error('Invalid JSON format for credentials', 'Error'));
         }
 
         $data = $request->only(['name', 'type', 'exchange_name', 'settings']);
@@ -188,7 +189,7 @@ class ConnectionController extends Controller
         $this->connectionService->update($connection, $data);
 
         return redirect()->route('user.execution-connections.index')
-            ->with('success', 'Connection updated successfully');
+            ->with('notify', NotificationHelper::success('Connection updated successfully', 'Success'));
     }
 
     /**
@@ -209,7 +210,7 @@ class ConnectionController extends Controller
         $this->connectionService->delete($connection);
 
         return redirect()->route('user.execution-connections.index')
-            ->with('success', 'Connection deleted successfully');
+                ->with('notify', NotificationHelper::success('Connection deleted successfully', 'Success'));
     }
 
     /**
@@ -230,10 +231,10 @@ class ConnectionController extends Controller
         $test = $this->connectionService->testConnection($connection);
 
         if ($test['success']) {
-            return redirect()->back()->with('success', 'Connection test successful');
+            return redirect()->back()->with('notify', NotificationHelper::success('Connection test successful', 'Success'));
         }
 
-        return redirect()->back()->with('error', 'Connection test failed: ' . ($test['message'] ?? 'Unknown error'));
+        return redirect()->back()->with('notify', NotificationHelper::error('Connection test failed: ' . ($test['message'] ?? 'Unknown error'), 'Error'));
     }
 
     /**
@@ -252,10 +253,10 @@ class ConnectionController extends Controller
             ->findOrFail($id);
 
         if ($this->connectionService->activate($connection)) {
-            return redirect()->back()->with('success', 'Connection activated successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Connection activated successfully', 'Success'));
         }
 
-        return redirect()->back()->with('error', 'Failed to activate connection. Please test it first.');
+        return redirect()->back()->with('notify', NotificationHelper::error('Failed to activate connection. Please test it first.', 'Error'));
     }
 
     /**
@@ -275,7 +276,7 @@ class ConnectionController extends Controller
 
         $this->connectionService->deactivate($connection);
 
-        return redirect()->back()->with('success', 'Connection deactivated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Connection deactivated successfully', 'Success'));
     }
 }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User\Trading;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,13 +93,13 @@ class BacktestingController extends Controller
             \App\Jobs\RunBacktestJob::dispatch($backtest);
 
             return redirect()->route('user.trading.backtesting.index', ['tab' => 'results'])
-                ->with('success', __('Backtest created successfully and is running in the background.'));
+                ->with('notify', NotificationHelper::success(__('Backtest created successfully and is running in the background.')));
         } catch (\Exception $e) {
             \Log::error('Backtest creation error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return back()->withInput()->with('error', __('Failed to create backtest: ') . $e->getMessage());
+            return back()->withInput()->with('notify', NotificationHelper::error(__('Failed to create backtest: ') . $e->getMessage()));
         }
     }
 
@@ -120,7 +121,7 @@ class BacktestingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Backtest show error', ['error' => $e->getMessage()]);
             return redirect()->route('user.trading.backtesting.index', ['tab' => 'results'])
-                ->with('error', __('Backtest not found.'));
+                ->with('notify', NotificationHelper::error(__('Backtest not found.')));
         }
     }
 
@@ -180,7 +181,7 @@ class BacktestingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Backtest export error', ['error' => $e->getMessage()]);
             return redirect()->route('user.trading.backtesting.show', $id)
-                ->with('error', __('Failed to export trades.'));
+                ->with('notify', NotificationHelper::error(__('Failed to export trades.')));
         }
     }
 }

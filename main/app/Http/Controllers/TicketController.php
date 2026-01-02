@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\TicketRequest;
 use App\Models\Ticket;
 use App\Models\TicketReply;
@@ -36,7 +37,7 @@ class TicketController extends Controller
         $isSuccess = $this->ticket->create($request);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->route('user.ticket.index')->with('success', $isSuccess['message']);
+            return redirect()->route('user.ticket.index')->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     /**
@@ -62,7 +63,7 @@ class TicketController extends Controller
         $isSuccess = $this->ticket->update($request, $id);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->route('user.ticket.index')->with('success', $isSuccess['message']);
+            return redirect()->route('user.ticket.index')->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
 
@@ -71,7 +72,7 @@ class TicketController extends Controller
         $isSuccess = $this->ticket->delete($id);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     public function reply(Request $request)
@@ -80,7 +81,7 @@ class TicketController extends Controller
 
         if ($isSuccess['type'] === 'success')
 
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     public function statusChange($id)
@@ -89,7 +90,7 @@ class TicketController extends Controller
         $ticket->status = 1;
         $ticket->save();
 
-        return redirect()->route('user.ticket.index')->with('success', 'Closed conversation Successfully');
+        return redirect()->route('user.ticket.index')->with('notify', NotificationHelper::success('Closed conversation Successfully'));
     }
 
     public function ticketStatus(Request $request)

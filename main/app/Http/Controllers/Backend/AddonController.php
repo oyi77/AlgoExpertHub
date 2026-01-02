@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Services\Addons\AddonManager;
 use Illuminate\Contracts\View\View;
@@ -35,13 +36,13 @@ class AddonController extends Controller
 
             return redirect()
                 ->route('admin.addons.index')
-                ->with('success', __('Addon :addon installed successfully.', [
+                ->with('notify', NotificationHelper::success(__('Addon :addon installed successfully.', [
                     'addon' => $result['title'] ?? $result['slug'],
-                ]));
+                ]), 'Addon Installed'));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.addons.index')
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 
@@ -56,11 +57,11 @@ class AddonController extends Controller
 
             return redirect()
                 ->route('admin.addons.index')
-                ->with('success', __('Addon status updated successfully.'));
+                ->with('notify', NotificationHelper::success(__('Addon status updated successfully.'), 'Success'));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.addons.index')
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 
@@ -89,11 +90,11 @@ class AddonController extends Controller
 
             return redirect()
                 ->route('admin.addons.modules', $addon)
-                ->with('success', __('Module status updated successfully.'));
+                ->with('notify', NotificationHelper::success(__('Module status updated successfully.'), 'Success'));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.addons.modules', $addon)
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 }

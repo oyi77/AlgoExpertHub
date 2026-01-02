@@ -33,6 +33,10 @@ class Backtest extends Model
         'error_message',
         'started_at',
         'completed_at',
+        'slippage_model',
+        'slippage_pips',
+        'spread_cost_enabled',
+        'partial_fills_enabled',
     ];
 
     protected $casts = [
@@ -48,6 +52,9 @@ class Backtest extends Model
         'average_loss' => 'decimal:8',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'slippage_pips' => 'decimal:4',
+        'spread_cost_enabled' => 'boolean',
+        'partial_fills_enabled' => 'boolean',
     ];
 
     public function user(): BelongsTo

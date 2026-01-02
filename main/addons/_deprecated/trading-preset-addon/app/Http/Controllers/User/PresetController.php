@@ -6,6 +6,7 @@ use Addons\TradingPresetAddon\App\Http\Controllers\Controller;
 use Addons\TradingPresetAddon\App\Models\TradingPreset;
 use Addons\TradingPresetAddon\App\Services\PresetService;
 use Addons\TradingPresetAddon\App\Services\PresetValidationService;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -168,12 +169,12 @@ class PresetController extends Controller
             }
 
             return redirect()->route('user.trading-presets.index')
-                ->with('success', $message)
+                ->with('notify', NotificationHelper::success($message, 'Success'))
                 ->with('warnings', $warnings);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -287,12 +288,12 @@ class PresetController extends Controller
             }
 
             return redirect()->route('user.trading-presets.index')
-                ->with('success', $message)
+                ->with('notify', NotificationHelper::success($message, 'Success'))
                 ->with('warnings', $warnings);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -308,10 +309,10 @@ class PresetController extends Controller
             $this->presetService->delete($preset, $user);
 
             return redirect()->route('user.trading-presets.index')
-                ->with('success', 'Preset deleted successfully.');
+                ->with('notify', NotificationHelper::success('Preset deleted successfully.', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to delete preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -329,10 +330,10 @@ class PresetController extends Controller
             $cloned = $this->presetService->clone($preset, $user, $newName);
 
             return redirect()->route('user.trading-presets.edit', $cloned->id)
-                ->with('success', 'Preset cloned successfully. You can now edit it.');
+                ->with('notify', NotificationHelper::success('Preset cloned successfully. You can now edit it.', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to clone preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to clone preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -347,7 +348,7 @@ class PresetController extends Controller
         // Check if user can use this preset
         if ($preset->isPrivate() && $preset->created_by_user_id !== $user->id) {
             return redirect()->back()
-                ->with('error', 'You cannot set this preset as default.');
+                ->with('notify', NotificationHelper::error('You cannot set this preset as default.', 'Error'));
         }
 
         try {
@@ -355,10 +356,10 @@ class PresetController extends Controller
             $user->save();
 
             return redirect()->back()
-                ->with('success', 'Default preset updated successfully.');
+                ->with('notify', NotificationHelper::success('Default preset updated successfully.', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to set default preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to set default preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -373,7 +374,7 @@ class PresetController extends Controller
         // Check permissions
         if (!$preset->canBeEditedBy($user)) {
             return redirect()->back()
-                ->with('error', 'You do not have permission to modify this preset.');
+                ->with('notify', NotificationHelper::error('You do not have permission to modify this preset.', 'Error'));
         }
 
         try {
@@ -383,10 +384,10 @@ class PresetController extends Controller
             $status = $preset->enabled ? 'enabled' : 'disabled';
 
             return redirect()->back()
-                ->with('success', "Preset {$status} successfully.");
+                ->with('notify', NotificationHelper::success("Preset {$status} successfully.", 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to toggle preset status: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to toggle preset status: ' . $e->getMessage(), 'Error'));
         }
     }
 }

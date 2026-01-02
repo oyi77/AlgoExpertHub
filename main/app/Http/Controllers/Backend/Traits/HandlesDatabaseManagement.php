@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Traits;
 
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 
@@ -39,7 +40,7 @@ trait HandlesDatabaseManagement
                 ]);
             }
             
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with('notify', NotificationHelper::success($message, 'Success'));
             
         } catch (\Exception $e) {
             $errorMessage = 'Failed to re-seed database: ' . $e->getMessage();
@@ -51,7 +52,7 @@ trait HandlesDatabaseManagement
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 
@@ -68,7 +69,7 @@ trait HandlesDatabaseManagement
                 if ($isAjax) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 400);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+                return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
             }
 
             set_time_limit(600); // 10 minutes timeout
@@ -95,7 +96,7 @@ trait HandlesDatabaseManagement
                 ]);
             }
 
-            return redirect()->route('admin.login')->with('success', $message);
+            return redirect()->route('admin.login')->with('notify', NotificationHelper::success($message, 'Success'));
             
         } catch (\Exception $e) {
             $errorMessage = 'Failed to reset database: ' . $e->getMessage();
@@ -107,7 +108,7 @@ trait HandlesDatabaseManagement
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 

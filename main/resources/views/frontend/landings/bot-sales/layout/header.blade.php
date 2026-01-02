@@ -22,10 +22,10 @@
                     {{ __('Dashboard') }}
                 </a>
             @else
-                <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl text-sm font-semibold hover:text-primary-400 transition-colors">
+                <a href="{{ route('user.login') }}" class="px-5 py-2.5 rounded-xl text-sm font-semibold hover:text-primary-400 transition-colors">
                     {{ __('Login') }}
                 </a>
-                <a href="{{ route('register') }}" class="btn-shimmer px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20">
+                <a href="{{ route('user.register') }}" class="btn-shimmer px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20">
                     {{ __('Get Started') }}
                 </a>
             @endauth

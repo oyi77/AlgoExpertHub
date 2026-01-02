@@ -3,6 +3,7 @@
 namespace Addons\PageBuilderAddon\App\Http\Controllers\Backend;
 
 use Addons\PageBuilderAddon\App\Services\MenuManagerService;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -48,11 +49,11 @@ class MenuController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.menus.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message']));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message']))
             ->withInput();
     }
 
@@ -65,11 +66,11 @@ class MenuController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.menus.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message']));
         }
 
         return redirect()->back()
-            ->with('error', $result['message']);
+            ->with('notify', NotificationHelper::error($result['message']));
     }
 
     /**
@@ -81,9 +82,9 @@ class MenuController extends Controller
             $menu = \Addons\PageBuilderAddon\App\Models\PageBuilderMenu::findOrFail($id);
             $menu->delete();
             
-            return redirect()->back()->with('success', 'Menu deleted successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Menu deleted successfully'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete menu: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to delete menu: ' . $e->getMessage()));
         }
     }
 

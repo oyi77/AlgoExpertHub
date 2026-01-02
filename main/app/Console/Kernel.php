@@ -79,6 +79,44 @@ class Kernel extends ConsoleKernel
                     ->everyFiveMinutes()
                     ->withoutOverlapping();
             }
+
+            // Marketplace Module - Scheduled Jobs
+            if (AddonRegistry::moduleEnabled('trading-management-addon', 'marketplace')) {
+                // Calculate leaderboard rankings - hourly
+                if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)) {
+                    $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)
+                        ->hourly()
+                        ->withoutOverlapping()
+                        ->onOneServer();
+                }
+
+                // Update trader statistics - daily at midnight
+                if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)) {
+                    $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)
+                        ->daily()
+                        ->at('00:00')
+                        ->withoutOverlapping()
+                        ->onOneServer();
+                }
+
+                // Cleanup unused market data - weekly Sunday 3AM
+                if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)) {
+                    $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)
+                        ->weekly()
+                        ->sundays()
+                        ->at('03:00')
+                        ->withoutOverlapping()
+                        ->onOneServer();
+                }
+
+                // Fetch market data coordinator - every 5 minutes
+                if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)) {
+                    $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)
+                        ->everyFiveMinutes()
+                        ->withoutOverlapping()
+                        ->onOneServer();
+                }
+            }
         }
 
         // AlgoExpert++ Addon - System Health

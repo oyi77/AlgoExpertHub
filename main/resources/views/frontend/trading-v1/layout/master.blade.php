@@ -9,13 +9,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', Config::config()->appname ?? 'AlgoExpertHub')</title>
+    <title>@yield('title', optional(Config::config())->appname ?? 'AlgoExpertHub')</title>
     
-    <meta name="description" content="@yield('description', Config::config()->meta_description ?? 'Professional Trading Signals Platform')">
-    <meta name="keywords" content="@yield('keywords', Config::config()->meta_keywords ?? 'trading, forex, crypto, signals')">
+    <meta name="description" content="@yield('description', optional(Config::config())->meta_description ?? 'Professional Trading Signals Platform')">
+    <meta name="keywords" content="@yield('keywords', optional(Config::config())->meta_keywords ?? 'trading, forex, crypto, signals')">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ Config::getFile('icon', Config::config()->icon ?? '') }}">
+    <link rel="icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->icon ?? '') }}">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -138,23 +138,14 @@
     <!-- Main JS -->
     <script src="{{ asset('asset/frontend/trading-v1/js/main.js') }}"></script>
     
-    <!-- Toastr for Notifications -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
     
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <script>toastr.success("{{ session('success') }}");</script>
-    @endif
-    @if(session('error'))
-        <script>toastr.error("{{ session('error') }}");</script>
-    @endif
-    @if(session('warning'))
-        <script>toastr.warning("{{ session('warning') }}");</script>
-    @endif
-    @if(session('info'))
-        <script>toastr.info("{{ session('info') }}");</script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
+    
+    {{-- Flash Messages (Laravel Notify) --}}
+    @include('alert')
     
     <!-- Additional Scripts -->
     @stack('scripts')

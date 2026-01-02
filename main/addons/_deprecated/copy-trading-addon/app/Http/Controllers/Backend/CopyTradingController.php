@@ -9,6 +9,7 @@ use App\Helpers\Helper\Helper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Helpers\NotificationHelper;
 
 class CopyTradingController extends Controller
 {
@@ -31,7 +32,7 @@ class CopyTradingController extends Controller
             if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
                 return view('copy-trading::backend.dashboard', [
                     'title' => 'Copy Trading Dashboard',
-                    'error' => 'Trading execution engine is required for copy trading. Please enable it first.',
+                    'notify' => NotificationHelper::error('Trading execution engine is required for copy trading. Please enable it first.', 'Error'),
                     'stats' => [
                         'total_traders' => 0,
                         'total_subscriptions' => 0,
@@ -51,7 +52,7 @@ class CopyTradingController extends Controller
             \Log::error('Fatal error in copy trading dashboard', ['error' => $e->getMessage()]);
             return view('copy-trading::backend.dashboard', [
                 'title' => 'Copy Trading Dashboard',
-                'error' => 'An error occurred while loading dashboard. Please check the logs.',
+                'notify' => NotificationHelper::error('An error occurred while loading dashboard. Please check the logs.', 'Error'),
                 'stats' => [
                     'total_traders' => 0,
                     'total_subscriptions' => 0,
@@ -233,7 +234,7 @@ class CopyTradingController extends Controller
         // Check if trading execution engine is required and available
         if (!\App\Support\AddonRegistry::active('trading-execution-engine-addon')) {
             return redirect()->route('admin.copy-trading.settings')
-                ->with('error', 'Trading execution engine is required for copy trading. Please enable it first.');
+                ->with('notify', NotificationHelper::error('Trading execution engine is required for copy trading. Please enable it first.', 'Error'));
         }
 
         $request->validate([
@@ -263,7 +264,7 @@ class CopyTradingController extends Controller
         }
 
         return redirect()->route('admin.copy-trading.settings')
-            ->with('success', 'Settings updated successfully');
+            ->with('notify', NotificationHelper::success('Settings updated successfully', 'Success'));
     }
 }
 

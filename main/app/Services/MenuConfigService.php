@@ -86,6 +86,11 @@ class MenuConfigService
                 // Allow addons to inject menu items
                 $menu = $this->injectAddonMenus($menu, $user);
                 
+                // Ensure support menu always has items (core feature)
+                if (isset($menu['support']) && (empty($menu['support']['items']) || !is_array($menu['support']['items']))) {
+                    $menu['support']['items'] = $this->getSupportMenuItems();
+                }
+                
                 // Filter out Trading Configuration menu if it exists (safety check)
                 if (isset($menu['trading_console']['items'])) {
                     $menu['trading_console']['items'] = array_filter($menu['trading_console']['items'], function($item) {
@@ -253,25 +258,28 @@ class MenuConfigService
     {
         $items = [];
 
-        // Help Docs (placeholder - to be implemented)
-        if (Route::has('user.help.docs')) {
-            $items[] = [
-                'route' => 'user.help.docs',
-                'label' => __('Help Docs'),
-                'icon' => 'fas fa-book',
-                'tooltip' => __('User guides'),
-            ];
+        // Help Center
+        try {
+            if (Route::has('user.help.index')) {
+                $items[] = [
+                    'route' => 'user.help.index',
+                    'label' => __('Help Center'),
+                    'icon' => 'fas fa-book',
+                    'tooltip' => __('User guides and documentation'),
+                ];
+            }
+        } catch (\Exception $e) {
+            // Route check failed, skip help menu
         }
 
-        // Support Tickets
-        if (Route::has('user.ticket.index')) {
-            $items[] = [
-                'route' => 'user.ticket.index',
-                'label' => __('Support Tickets'),
-                'icon' => 'fas fa-ticket-alt',
-                'tooltip' => __('Technical support'),
-            ];
-        }
+        // Support Tickets - Always include (core feature, resource route always exists)
+        // Resource route 'ticket' creates 'user.ticket.index'
+        $items[] = [
+            'route' => 'user.ticket.index',
+            'label' => __('Support Tickets'),
+            'icon' => 'fas fa-ticket-alt',
+            'tooltip' => __('Technical support'),
+        ];
 
         return $items;
     }

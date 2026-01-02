@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -35,7 +36,7 @@ class RoleController extends Controller
         $role->givePermissionTo($request->permission);
 
 
-        return redirect()->back()->with('success', 'Successfully Create Role');
+        return redirect()->back()->with('notify', NotificationHelper::success('Successfully Create Role', 'Success'));
     }
 
 
@@ -53,7 +54,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->permission);
 
-        return redirect()->back()->with('success', 'Successfully Updated Role');
+        return redirect()->back()->with('notify', NotificationHelper::success('Successfully Updated Role', 'Success'));
     }
 
     public function edit()

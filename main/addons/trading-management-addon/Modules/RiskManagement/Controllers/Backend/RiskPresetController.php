@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\RiskManagement\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Illuminate\Http\Request;
 
@@ -38,7 +39,7 @@ class RiskPresetController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.config.risk-presets.index')
-            ->with('success', 'Risk preset created successfully');
+            ->with('notify', NotificationHelper::success('Risk preset created successfully', 'Success'));
     }
 
     public function edit(TradingPreset $riskPreset)
@@ -65,14 +66,14 @@ class RiskPresetController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.config.risk-presets.index')
-            ->with('success', 'Risk preset updated successfully');
+            ->with('notify', NotificationHelper::success('Risk preset updated successfully', 'Success'));
     }
 
     public function destroy(TradingPreset $riskPreset)
     {
         $riskPreset->delete();
         return redirect()->route('admin.trading-management.config.risk-presets.index')
-            ->with('success', 'Risk preset deleted successfully');
+            ->with('notify', NotificationHelper::success('Risk preset deleted successfully', 'Success'));
     }
 }
 

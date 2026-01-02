@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Marketplace\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Marketplace\Services\{MarketplaceService, TemplateCloneService, BacktestDisplayService};
 use Addons\TradingManagement\Modules\Marketplace\Models\{BotTemplate, SignalSourceTemplate, CompleteBot, TemplateRating};
 use Illuminate\Http\Request;
@@ -77,10 +78,10 @@ class BotMarketplaceController extends Controller
         $result = $this->cloneService->clone($type, $id, auth()->id(), $request->all());
 
         if ($result['success']) {
-            return redirect()->route('user.marketplace.my-clones')->with('success', $result['message']);
+            return redirect()->route('user.marketplace.my-clones')->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 
     public function myClones()
@@ -112,7 +113,7 @@ class BotMarketplaceController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Rating submitted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Rating submitted successfully', 'Success'));
     }
 
     protected function hasUserCloned($type, $id): bool

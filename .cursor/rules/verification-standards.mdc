@@ -1,0 +1,363 @@
+---
+description: Verification Standards - Comprehensive testing and validation requirements before marking features as complete
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Verification Standards & Correctness Rules
+
+## 🐳 Docker Environment
+
+**IMPORTANT**: This project uses Docker for PHP execution. The container names are:
+- **PHP Container**: `1Panel-php8-mrTy`
+- **Database Container**: `1panel-mariadb`
+- **Soketi Container**: `soketi`
+
+**All PHP/Artisan commands MUST use `docker exec 1Panel-php8-mrTy` instead of direct `php` commands.**
+
+Example:
+```bash
+# ❌ WRONG
+php artisan route:list
+
+# ✅ CORRECT
+docker exec 1Panel-php8-mrTy php artisan route:list
+```
+
+## 🚨 CRITICAL: Never Mark as "Fully Implemented" Without Verification
+
+**RULE**: Before declaring any feature "fully implemented" or "complete", you MUST perform comprehensive verification checks. Code existence ≠ Working implementation.
+
+## Verification Checklist (MANDATORY)
+
+### Phase 1: Code Existence ✅
+- [ ] All required files exist
+- [ ] Controllers, Services, Models present
+- [ ] Routes registered
+- [ ] Views created
+- [ ] Migrations exist
+
+### Phase 2: Syntax & Static Analysis ✅
+- [ ] Run `read_lints` on all modified files
+- [ ] Check for PHP syntax errors: `php -l <file>`
+- [ ] Verify no missing imports/namespaces
+- [ ] Check for undefined classes/methods
+- [ ] Verify type hints are correct
+
+### Phase 3: Dependency Verification ✅
+- [ ] Check `composer.json` dependencies are installed
+- [ ] Verify PHP version compatibility (check `composer.json` requirements vs system PHP)
+- [ ] Check for missing npm packages (if frontend)
+- [ ] Verify addon dependencies are registered
+- [ ] Check service providers are registered
+
+### Phase 4: Database Verification ✅
+- [ ] Migrations exist and are properly structured
+- [ ] Check if migrations have been run: `php artisan migrate:status`
+- [ ] Verify foreign key relationships exist
+- [ ] Check for missing indexes
+- [ ] Verify model relationships are correct
+
+### Phase 5: Route & Configuration Verification ✅
+- [ ] Routes are registered: `php artisan route:list --name=<feature>`
+- [ ] Routes are accessible (no 404 errors)
+- [ ] Middleware is correctly applied
+- [ ] Configuration files exist and are loaded
+- [ ] Environment variables are documented
+
+### Phase 6: Integration Verification ✅
+- [ ] Services are properly injected
+- [ ] Event listeners are registered
+- [ ] Observers are registered
+- [ ] Jobs are dispatchable
+- [ ] Queue workers can process jobs
+
+### Phase 7: Runtime Verification (When Possible) ✅
+- [ ] Test basic CRUD operations
+- [ ] Test error handling
+- [ ] Test validation rules
+- [ ] Test permissions/authorization
+- [ ] Test queue job execution
+
+## Verification Commands
+
+**⚠️ IMPORTANT: This project uses Docker for PHP execution. All PHP/Artisan commands MUST use `docker exec`.**
+
+### Docker Container Setup
+```bash
+# Container names for this project:
+# - PHP: 1Panel-php8-mrTy
+# - Database: 1panel-mariadb
+# - Soketi: soketi
+
+# Find the PHP container name
+docker ps | grep php
+
+# Verify container is running
+docker ps | grep 1Panel-php8-mrTy
+```
+
+### Syntax Checking
+```bash
+# Check PHP syntax (Docker)
+docker exec 1Panel-php8-mrTy php -l app/Path/To/File.php
+
+# Check all PHP files in directory (Docker)
+docker exec 1Panel-php8-mrTy find app/Path -name "*.php" -exec php -l {} \;
+
+# Run linter (works directly, no Docker needed)
+read_lints paths=['app/Path']
+```
+
+### Dependency Checking
+```bash
+# Check PHP version compatibility (Docker)
+docker exec 1Panel-php8-mrTy php -v
+grep "php" composer.json
+
+# Check if dependencies installed (Docker)
+docker exec 1Panel-php8-mrTy composer show | grep <package>
+
+# Check addon registration (Docker)
+docker exec -it 1Panel-php8-mrTy php artisan tinker
+>>> \App\Support\AddonRegistry::active('addon-name')
+```
+
+### Route Verification
+```bash
+# List all routes for feature (Docker)
+docker exec 1Panel-php8-mrTy php artisan route:list --name=<feature>
+
+# Test route exists (Docker)
+docker exec 1Panel-php8-mrTy php artisan route:list | grep <route-name>
+```
+
+### Database Verification
+```bash
+# Check migration status (Docker)
+docker exec 1Panel-php8-mrTy php artisan migrate:status
+
+# Check if table exists (Docker)
+docker exec -it 1Panel-php8-mrTy php artisan tinker
+>>> Schema::hasTable('table_name')
+
+# Check model relationships (Docker)
+docker exec -it 1Panel-php8-mrTy php artisan tinker
+>>> $model = Model::first()
+>>> $model->relationship
+```
+
+### Service Verification
+```bash
+# Check service provider registration (Docker)
+docker exec -it 1Panel-php8-mrTy php artisan tinker
+>>> app()->getProviders()
+
+# Check service binding (Docker)
+docker exec -it 1Panel-php8-mrTy php artisan tinker
+>>> app(ServiceClass::class)
+```
+
+## Common Issues to Check
+
+### 1. PHP Version Mismatch
+**Symptom**: `Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= X.X.X". You are running Y.Y.Y.`
+
+**Check** (Docker):
+```bash
+docker exec 1Panel-php8-mrTy php -v
+grep '"php"' composer.json
+```
+
+**Fix**: Update PHP version in Dockerfile/docker-compose.yml or adjust composer.json requirements
+
+### 2. Missing Dependencies
+**Symptom**: `Class 'X' not found` or `Call to undefined method`
+
+**Check** (Docker):
+```bash
+docker exec 1Panel-php8-mrTy composer show | grep <package>
+docker exec 1Panel-php8-mrTy composer dump-autoload
+```
+
+**Fix**: Run `docker exec 1Panel-php8-mrTy composer install` or add missing dependency
+
+### 3. Routes Not Registered
+**Symptom**: 404 errors when accessing routes
+
+**Check** (Docker):
+```bash
+docker exec 1Panel-php8-mrTy php artisan route:list --name=<feature>
+```
+
+**Fix**: Verify route files are loaded in service provider
+
+### 4. Migrations Not Run
+**Symptom**: `SQLSTATE[42S02]: Base table or view not found`
+
+**Check** (Docker):
+```bash
+docker exec 1Panel-php8-mrTy php artisan migrate:status
+```
+
+**Fix**: Run `docker exec 1Panel-php8-mrTy php artisan migrate`
+
+### 5. Service Provider Not Registered
+**Symptom**: Routes/views/services not available
+
+**Check**:
+```bash
+# Check AppServiceProvider
+grep "AddonServiceProvider" app/Providers/AppServiceProvider.php
+
+# Check if addon is active
+php artisan tinker
+>>> \App\Support\AddonRegistry::active('addon-name')
+```
+
+**Fix**: Register service provider in AppServiceProvider
+
+### 6. Missing Environment Variables
+**Symptom**: `env()` returns null or errors
+
+**Check**:
+```bash
+grep "env(" config/<file>.php
+cat .env | grep <VARIABLE>
+```
+
+**Fix**: Add missing variables to `.env` file
+
+### 7. Queue Not Running
+**Symptom**: Jobs stuck in queue, not processing
+
+**Check** (Docker):
+```bash
+docker exec 1Panel-php8-mrTy php artisan queue:work --once
+docker exec 1Panel-php8-mrTy php artisan horizon:status  # if using Horizon
+```
+
+**Fix**: Start queue worker in Docker container or check queue configuration
+
+## Verification Report Template
+
+When marking a feature as complete, provide:
+
+```markdown
+## Verification Report: [Feature Name]
+
+### Code Existence ✅
+- [x] Files created: [list files]
+- [x] Controllers: [list]
+- [x] Services: [list]
+- [x] Models: [list]
+
+### Syntax & Static Analysis ✅
+- [x] Linter: No errors
+- [x] PHP syntax: Valid
+- [x] Imports: Complete
+
+### Dependencies ✅
+- [x] PHP version: Compatible (X.X.X)
+- [x] Composer packages: Installed
+- [x] Addon registration: Active
+
+### Database ✅
+- [x] Migrations: Created
+- [x] Migrations run: [status]
+- [x] Tables exist: Verified
+
+### Routes ✅
+- [x] Routes registered: [count] routes
+- [x] Route names: [list]
+- [x] Middleware: Applied
+
+### Integration ✅
+- [x] Services: Registered
+- [x] Events: Registered
+- [x] Observers: Registered
+
+### Runtime Verification ⚠️
+- [ ] Manual testing: [status]
+- [ ] Error handling: [status]
+- [ ] Edge cases: [status]
+
+### Known Issues
+- [List any issues found]
+
+### Recommendations
+- [List recommendations for improvement]
+```
+
+## Red Flags - DO NOT Mark Complete If:
+
+1. ❌ PHP version mismatch detected
+2. ❌ Missing dependencies (composer packages)
+3. ❌ Routes return 404
+4. ❌ Database tables don't exist
+5. ❌ Service providers not registered
+6. ❌ Syntax errors in code
+7. ❌ Missing environment variables
+8. ❌ Jobs fail to dispatch
+9. ❌ Controllers throw exceptions
+10. ❌ Models have broken relationships
+
+## When Manual Testing is Required
+
+Manual testing is REQUIRED for:
+- User-facing features (UI/UX)
+- Complex workflows (multi-step processes)
+- Integration with external services (APIs, exchanges)
+- Real-time features (WebSockets, live updates)
+- Performance-critical features
+
+**However**, you MUST still verify:
+- Code exists and is syntactically correct
+- Dependencies are installed
+- Routes are registered
+- Database structure is correct
+- Services are registered
+
+## Best Practices
+
+1. **Always run linter** before marking complete
+2. **Check PHP version** compatibility
+3. **Verify routes** are registered
+4. **Test database** migrations
+5. **Check service registration**
+6. **Document known issues** if manual testing is pending
+7. **Be honest** about what's verified vs. what needs testing
+
+## Example: Correct Verification Statement
+
+❌ **WRONG**: "Feature is fully implemented"
+
+✅ **CORRECT**: 
+```
+## Implementation Status: Code Complete, Manual Testing Required
+
+### Verified ✅
+- All code files exist and are syntactically correct
+- Routes registered (verified via `php artisan route:list`)
+- Database migrations created
+- Services registered in service providers
+- No linter errors
+
+### Requires Manual Testing ⚠️
+- User interface functionality
+- End-to-end workflow
+- Error handling in production scenarios
+- Performance under load
+
+### Known Issues
+- None detected in code review
+```
+
+## Enforcement
+
+**This rule is ALWAYS APPLIED**. Before declaring any feature complete:
+1. Run through the verification checklist
+2. Document what's verified
+3. Clearly state what requires manual testing
+4. List any known issues
+5. Never claim "fully working" without runtime verification

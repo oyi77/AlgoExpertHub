@@ -25,7 +25,7 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <img src="{{ Config::getFile('overview', $content->image_one) }}" alt="image">
+                <img src="{{ Config::getFile('overview', optional($content)->image_one ?? '') }}" alt="image">
             </div>
         </div>
     </div>

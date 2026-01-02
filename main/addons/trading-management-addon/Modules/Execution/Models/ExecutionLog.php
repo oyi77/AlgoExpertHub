@@ -24,6 +24,8 @@ class ExecutionLog extends Model
         'response_data', // Database column name (not 'order_data')
         'execution_type',
         'executed_at',
+        'execution_price',
+        'slippage_pips',
     ];
 
     protected $casts = [
@@ -33,6 +35,8 @@ class ExecutionLog extends Model
         'tp_price' => 'decimal:8',
         'response_data' => 'array',
         'executed_at' => 'datetime',
+        'execution_price' => 'decimal:8',
+        'slippage_pips' => 'decimal:4',
     ];
 
     public function executionConnection()

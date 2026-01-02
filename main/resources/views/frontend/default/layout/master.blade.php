@@ -8,14 +8,14 @@
 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <meta name="description" content="{{ optional($page)->seo_description ?? Config::config()->seo_description }}" />
+    <meta name="description" content="{{ optional($page)->seo_description ?? optional(Config::config())->seo_description ?? 'AlgoExpertHub Trading Signal Platform' }}" />
     @php
-        $keywords = optional($page)->seo_keywords ?? Config::config()->seo_tags ?? [];
+        $keywords = optional($page)->seo_keywords ?? optional(Config::config())->seo_tags ?? [];
         $keywordsString = is_array($keywords) ? implode(',', $keywords) : $keywords;
     @endphp
     <meta name="keywords" content="{{ $keywordsString }}" />
 
-    <title>{{ Config::config()->appname }}</title>
+    <title>{{ optional(Config::config())->appname ?? config('app.name', 'AlgoExpertHub') }}</title>
 
     {{-- Resource hints for external domains --}}
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
@@ -38,16 +38,8 @@
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/slick.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/odometer.css') }}">
 
-    @php
-        $alertType = optional(Config::config())->alert ?? 'sweetalert';
-    @endphp
-    @if ($alertType === 'izi')
-        <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'izitoast.min.css') }}">
-    @elseif($alertType === 'toast')
-        <link href="{{ Config::cssLib('frontend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
-        <link href="{{ Config::cssLib('frontend', 'sweetalert.min.css') }}" rel="stylesheet">
-    @endif
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
 
     <link href="{{ asset('asset/css/tokens.css') }}?v={{ time() }}" rel="stylesheet">
     <link href="{{ asset('asset/css/utilities.css') }}?v={{ time() }}" rel="stylesheet">
@@ -80,7 +72,7 @@
 <body>
 
 
-    @if (Config::config()->preloader_status)
+    @if (optional(Config::config())->preloader_status)
         <div class="preloader-holder">
             <div class="preloader">
                 <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
@@ -89,8 +81,8 @@
     @endif
 
 
-    @if (Config::config()->analytics_status)
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ Config::config()->analytics_key }}"></script>
+    @if (optional(Config::config())->analytics_status)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ optional(Config::config())->analytics_key }}"></script>
         <script>
             'use strict'
             window.dataLayer = window.dataLayer || [];
@@ -99,11 +91,11 @@
                 dataLayer.push(arguments);
             }
             gtag("js", new Date());
-            gtag("config", "{{ Config::config()->analytics_key }}");
+            gtag("config", "{{ optional(Config::config())->analytics_key }}");
         </script>
     @endif
 
-    @if (Config::config()->allow_modal)
+    @if (optional(Config::config())->allow_modal)
         @include('cookie-consent::index')
     @endif
 
@@ -157,20 +149,15 @@
 
 
 
-    @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-        <script src="{{ Config::jsLib('frontend', 'izitoast.min.js') }}" defer></script>
-    @elseif(optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-        <script src="{{ Config::jsLib('frontend', 'toastr.min.js') }}" defer></script>
-    @else
-        <script src="{{ Config::jsLib('frontend', 'sweetalert.min.js') }}" defer></script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
 
     <script src="{{ Config::jsLib('frontend', 'main-optimized.js') }}" defer></script>
 
     @stack('script')
 
 
-    @if (Config::config()->twak_allow)
+    @if (optional(Config::config())->twak_allow)
         <script type="text/javascript">
             var Tawk_API = Tawk_API || {},
                 Tawk_LoadStart = new Date();
@@ -178,7 +165,7 @@
                 var s1 = document.createElement("script"),
                     s0 = document.getElementsByTagName("script")[0];
                 s1.async = true;
-                s1.src = "{{ Config::config()->twak_key }}";
+                s1.src = "{{ optional(Config::config())->twak_key }}";
                 s1.charset = 'UTF-8';
                 s1.setAttribute('crossorigin', '*');
                 s0.parentNode.insertBefore(s1, s0);
@@ -213,22 +200,13 @@
                     },
                     error: () => {
 
-                        @if (optional(Config::config())->alert ?? 'sweetalert' === 'izi')
-                            iziToast.error({
-                                position: 'topRight',
-                                message: "Email is Required",
-                            });
-                        @elseif (optional(Config::config())->alert ?? 'sweetalert' === 'toast')
-                            toastr.error("Email is Required", {
-                                positionClass: "toast-top-right"
-
-                            })
-                        @else
-                            Swal.fire({
-                                icon: 'error',
-                                title: "Email is Required"
-                            })
-                        @endif
+                        if (typeof notify !== 'undefined') {
+                            notify()
+                                ->error()
+                                ->title('Error')
+                                ->message("Email is Required")
+                                ->send();
+                        }
                     }
                 })
 

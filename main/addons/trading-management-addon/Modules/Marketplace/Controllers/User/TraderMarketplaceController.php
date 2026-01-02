@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Marketplace\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Marketplace\Services\LeaderboardService;
 use Addons\TradingManagement\Modules\Marketplace\Models\{TraderProfile, TraderRating};
 use Illuminate\Http\Request;
@@ -61,7 +62,7 @@ class TraderMarketplaceController extends Controller
         $trader = TraderProfile::findOrFail($id);
 
         if (!$trader->canAcceptFollower()) {
-            return redirect()->back()->with('error', 'Trader is not accepting followers');
+            return redirect()->back()->with('notify', NotificationHelper::error('Trader is not accepting followers', 'Error'));
         }
 
         // Create copy trading subscription
@@ -78,10 +79,10 @@ class TraderMarketplaceController extends Controller
 
             $trader->increment('total_followers');
 
-            return redirect()->back()->with('success', 'You are now following this trader');
+            return redirect()->back()->with('notify', NotificationHelper::success('You are now following this trader', 'Success'));
         }
 
-        return redirect()->back()->with('error', 'Copy trading addon not available');
+        return redirect()->back()->with('notify', NotificationHelper::error('Copy trading addon not available', 'Error'));
     }
 
     public function unfollow($id)
@@ -97,10 +98,10 @@ class TraderMarketplaceController extends Controller
 
             $trader->decrement('total_followers');
 
-            return redirect()->back()->with('success', 'You have unfollowed this trader');
+            return redirect()->back()->with('notify', NotificationHelper::success('You have unfollowed this trader', 'Success'));
         }
 
-        return redirect()->back()->with('error', 'Copy trading addon not available');
+        return redirect()->back()->with('notify', NotificationHelper::error('Copy trading addon not available', 'Error'));
     }
 
     public function rate($id, Request $request)
@@ -124,7 +125,7 @@ class TraderMarketplaceController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Rating submitted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Rating submitted successfully', 'Success'));
     }
 
     protected function isVerifiedFollower($trader): bool

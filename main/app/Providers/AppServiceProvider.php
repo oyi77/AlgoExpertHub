@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Opcodes\LogViewer\Facades\LogViewer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
 
         Paginator::useBootstrap();
+
+        // Load helper files
+        if (file_exists($helperFile = app_path('Helpers/TradingHelper.php'))) {
+            require_once $helperFile;
+        }
 
         // Enable database query logging
         if (env('LOG_QUERIES', false)) {
@@ -104,6 +110,15 @@ class AppServiceProvider extends ServiceProvider
             if (function_exists('pcntl_signal')) {
                 pcntl_signal(SIGPIPE, SIG_IGN);
             }
+        }
+
+        // Configure Log Viewer authentication for admin access
+        if (class_exists(LogViewer::class)) {
+            LogViewer::auth(function ($request) {
+                // Only allow authenticated admin users
+                $admin = auth()->guard('admin')->user();
+                return $admin !== null;
+            });
         }
     }
 

@@ -34,6 +34,8 @@
                         @include(Config::themeView('user.onboarding.partials._step_trading_connection')
                     @elseif($step === 'trading_preset')
                         @include(Config::themeView('user.onboarding.partials._step_preset')
+                    @elseif($step === 'trading_bot')
+                        @include(Config::themeView('user.onboarding.partials._step_trading_bot')
                     @elseif($step === 'first_deposit')
                         @include(Config::themeView('user.onboarding.partials._step_deposit')
                     @endif

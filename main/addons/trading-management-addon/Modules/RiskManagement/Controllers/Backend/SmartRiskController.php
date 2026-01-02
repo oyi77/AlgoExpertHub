@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\RiskManagement\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -39,7 +40,7 @@ class SmartRiskController extends Controller
         Cache::put('smart_risk_settings', $validated, now()->addYear());
 
         return redirect()->route('admin.trading-management.config.smart-risk.index')
-            ->with('success', 'Smart Risk settings updated successfully');
+            ->with('notify', NotificationHelper::success('Smart Risk settings updated successfully', 'Success'));
     }
 }
 

@@ -123,7 +123,7 @@ trait HandlesCrudOperations
         $connection = ExchangeConnection::create($connectionData);
 
         return redirect()->route('admin.trading-management.config.exchange-connections.show', $connection)
-            ->with('success', 'Exchange connection created. Test it below.');
+            ->with('notify', \App\Helpers\NotificationHelper::success('Exchange connection created. Test it below.', 'Success'));
     }
 
     public function show(ExchangeConnection $exchangeConnection)
@@ -249,7 +249,7 @@ trait HandlesCrudOperations
         $exchangeConnection->update($updateData);
 
         return redirect()->route('admin.trading-management.config.exchange-connections.show', $exchangeConnection)
-            ->with('success', 'Exchange connection updated successfully.');
+            ->with('notify', \App\Helpers\NotificationHelper::success('Exchange connection updated successfully.', 'Success'));
     }
 
     /**
@@ -262,7 +262,7 @@ trait HandlesCrudOperations
             $exchangeConnection->delete();
 
             return redirect()->route('admin.trading-management.config.exchange-connections.index')
-                ->with('success', "Exchange connection '{$connectionName}' deleted successfully.");
+                ->with('notify', \App\Helpers\NotificationHelper::success("Exchange connection '{$connectionName}' deleted successfully.", 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to delete exchange connection', [
                 'connection_id' => $exchangeConnection->id,
@@ -270,7 +270,7 @@ trait HandlesCrudOperations
             ]);
 
             return redirect()->route('admin.trading-management.config.exchange-connections.index')
-                ->with('error', 'Failed to delete connection. Please try again.');
+                ->with('notify', \App\Helpers\NotificationHelper::error('Failed to delete connection. Please try again.', 'Error'));
         }
     }
 
@@ -301,7 +301,7 @@ trait HandlesCrudOperations
             ]);
 
             return redirect()->route('admin.trading-management.config.exchange-connections.index')
-                ->with('success', "Connection '{$exchangeConnection->name}' ownership transferred to {$user->username} ({$user->email}) successfully.");
+                ->with('notify', \App\Helpers\NotificationHelper::success("Connection '{$exchangeConnection->name}' ownership transferred to {$user->username} ({$user->email}) successfully.", 'Success'));
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->errors())
@@ -314,7 +314,7 @@ trait HandlesCrudOperations
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to transfer ownership. Please try again.')
+                ->with('notify', \App\Helpers\NotificationHelper::error('Failed to transfer ownership. Please try again.', 'Error'))
                 ->withInput();
         }
     }

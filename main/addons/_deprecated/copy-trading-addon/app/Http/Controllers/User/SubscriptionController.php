@@ -5,7 +5,7 @@ namespace Addons\CopyTrading\App\Http\Controllers\User;
 use Addons\CopyTrading\App\Http\Controllers\Controller;
 use Addons\CopyTrading\App\Models\CopyTradingSubscription;
 use Addons\CopyTrading\App\Services\CopyTradingService;
-use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Support\AddonRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,7 +45,7 @@ class SubscriptionController extends Controller
         if (!AddonRegistry::active('trading-execution-engine-addon') 
             || !class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class)) {
             return redirect()->route('user.copy-trading.traders.index')
-                ->with('error', 'Trading execution engine is required for copy trading');
+                ->with('notify', NotificationHelper::error('Trading execution engine is required for copy trading', 'Error'));
         }
 
         // Get user's active connections
@@ -56,7 +56,7 @@ class SubscriptionController extends Controller
 
         if ($connections->isEmpty()) {
             return redirect()->route('user.execution-connections.index')
-                ->with('error', 'You need at least one active connection to copy trades');
+                ->with('notify', NotificationHelper::error('You need at least one active connection to copy trades', 'Error'));
         }
 
         $trader = \App\Models\User::findOrFail($traderId);
@@ -97,7 +97,7 @@ class SubscriptionController extends Controller
             || !class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Trading execution engine is required for copy trading');
+                ->with('notify', NotificationHelper::error('Trading execution engine is required for copy trading', 'Error'));
         }
 
         // Validate connection belongs to user
@@ -105,7 +105,7 @@ class SubscriptionController extends Controller
         if ($connection->user_id !== $user->id) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Invalid connection');
+                ->with('notify', NotificationHelper::error('Invalid connection', 'Error'));
         }
 
         try {
@@ -134,11 +134,11 @@ class SubscriptionController extends Controller
             );
 
             return redirect()->route('user.copy-trading.subscriptions.index')
-                ->with('success', 'Successfully subscribed to trader');
+                ->with('notify', NotificationHelper::success('Successfully subscribed to trader', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', $e->getMessage());
+                ->with('notify', NotificationHelper::error($e->getMessage(), 'Error'));
         }
     }
 
@@ -157,7 +157,7 @@ class SubscriptionController extends Controller
         if (!AddonRegistry::active('trading-execution-engine-addon') 
             || !class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class)) {
             return redirect()->route('user.copy-trading.subscriptions.index')
-                ->with('error', 'Trading execution engine is required for copy trading');
+                ->with('notify', NotificationHelper::error('Trading execution engine is required for copy trading', 'Error'));
         }
 
         $connections = \Addons\TradingExecutionEngine\App\Models\ExecutionConnection::userOwned()
@@ -196,7 +196,7 @@ class SubscriptionController extends Controller
             || !class_exists(\Addons\TradingExecutionEngine\App\Models\ExecutionConnection::class)) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Trading execution engine is required for copy trading');
+                ->with('notify', NotificationHelper::error('Trading execution engine is required for copy trading', 'Error'));
         }
 
         // Validate connection belongs to user
@@ -204,7 +204,7 @@ class SubscriptionController extends Controller
         if ($connection->user_id !== $user->id) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Invalid connection');
+                ->with('notify', NotificationHelper::error('Invalid connection', 'Error'));
         }
 
         $data = [
@@ -228,7 +228,7 @@ class SubscriptionController extends Controller
         $this->copyTradingService->updateSubscription($id, $user->id, $data);
 
         return redirect()->route('user.copy-trading.subscriptions.index')
-            ->with('success', 'Subscription updated successfully');
+            ->with('notify', NotificationHelper::success('Subscription updated successfully', 'Success'));
     }
 
     /**
@@ -245,7 +245,7 @@ class SubscriptionController extends Controller
         $this->copyTradingService->unsubscribe($user->id, $traderId);
 
         return redirect()->route('user.copy-trading.subscriptions.index')
-            ->with('success', 'Unsubscribed successfully');
+            ->with('notify', NotificationHelper::success('Unsubscribed successfully', 'Success'));
     }
 }
 

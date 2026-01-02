@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use App\Helpers\NotificationHelper;
 
 class DemoMiddleware
 {
@@ -52,6 +53,6 @@ class DemoMiddleware
             ], 403);
         }
         
-        return redirect()->back()->with('error','You are not allowed this action in demo');
+        return redirect()->back()->with('notify', NotificationHelper::error('You are not allowed this action in demo', 'Error'));
     }
 }

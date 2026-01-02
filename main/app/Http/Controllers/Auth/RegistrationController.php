@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Services\UserRegistration;
@@ -30,10 +31,10 @@ class RegistrationController extends Controller
         $isSuccess = $this->register->register($request);
 
         if($isSuccess['type'] === 'error'){
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->route('user.dashboard')->with('success', $isSuccess['message']);
+        return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
 
     }
 }

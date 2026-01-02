@@ -1,0 +1,45 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app
+        - addons
+
+    # Rule level: 0 is the loosest and 9 is the strictest
+    level: 5
+
+    ignoreErrors:
+        # Ignore errors for addon namespaces that may not be fully typed
+        - '#Call to an undefined method Addons\\\w+\\\w+::.*#'
+        - '#Access to an undefined property Addons\\\w+\\\w+::\$.*#'
+        
+        # Ignore errors for dynamic properties (Laravel models, etc.)
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+#'
+        
+        # Ignore errors for magic methods
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\)#'
+        
+        # Ignore errors for config() helper with dynamic keys
+        - '#Parameter \#1 \$key of function config expects string, mixed given\.#'
+        
+        # Ignore errors for optional() helper
+        - '#Call to function optional\(\) with parameter \#1 expects [a-zA-Z0-9\\_]+|null, mixed given\.#'
+        
+        # Ignore errors for Helper class methods (may have dynamic signatures)
+        - '#Call to an undefined method App\\Helpers\\Helper\\Helper::.*#'
+        
+        # Ignore errors for Livewire components
+        - '#Call to an undefined method Livewire\\Component::.*#'
+
+    excludePaths:
+        - ./*/*/vendor
+        - ./node_modules
+        - ./storage
+        - ./bootstrap/cache
+        - ./tests
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+

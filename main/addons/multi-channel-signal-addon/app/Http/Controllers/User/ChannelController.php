@@ -11,6 +11,7 @@ use Addons\MultiChannelSignalAddon\App\Http\Controllers\Controller;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramChannelService;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramMtprotoService;
+use App\Helpers\NotificationHelper;
 use App\Models\Market;
 use App\Models\Plan;
 use App\Models\TimeFrame;
@@ -94,19 +95,19 @@ class ChannelController extends Controller
 
             if (in_array($result['type'], ['success', 'warning'], true)) {
                 return redirect()->route('user.channels.index')
-                    ->with('success', $result['message']);
+                    ->with('notify', NotificationHelper::success($result['message'], 'Success'));
             }
 
             if (in_array($result['type'], ['phone_required', 'code_required'], true)) {
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $result['channel_source']->id,
                     'step' => $result['step'] ?? 'phone',
-                ])->with('info', $result['message']);
+                ])->with('notify', NotificationHelper::info($result['message'], 'Info'));
             }
 
-            return redirect()->back()->with('error', $result['message'] ?? 'Failed to create channel');
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to create channel', 'Error'));
         } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Error: ' . $th->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Error: ' . $th->getMessage(), 'Error'));
         }
     }
 
@@ -340,7 +341,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Authentication error: ' . $e->getMessage());
+                ])->with('notify', NotificationHelper::error('Authentication error: ' . $e->getMessage(), 'Error'));
             }
             
             // Get any captured output
@@ -361,7 +362,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid authentication response. Please try again.');
+                ])->with('notify', NotificationHelper::error('Invalid authentication response. Please try again.', 'Error'));
             }
 
             if ($authResult['type'] === 'code_required') {
@@ -373,7 +374,7 @@ class ChannelController extends Controller
                     return redirect()->route('user.channels.authenticate', [
                         'id' => $channel->id,
                         'step' => 'phone',
-                    ])->with('error', 'Failed to get verification code hash. Please try again.');
+                    ])->with('notify', NotificationHelper::error('Failed to get verification code hash. Please try again.', 'Error'));
                 }
                 
                 $request->session()->put('phone_code_hash', $phoneCodeHash);
@@ -382,7 +383,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'code',
-                ])->with('info', $authResult['message'] ?? 'Verification code sent. Please check your Telegram app.');
+                ])->with('notify', NotificationHelper::info($authResult['message'] ?? 'Verification code sent. Please check your Telegram app.', 'Info'));
             }
 
             if ($authResult['type'] === 'password_required') {
@@ -397,7 +398,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'password',
-                ])->with('info', $authResult['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+                ])->with('notify', NotificationHelper::info($authResult['message'] ?? 'Two-factor authentication is enabled. Please enter your password.', 'Info'));
             }
 
             if ($authResult['type'] === 'error') {
@@ -405,20 +406,20 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', $authResult['message'] ?? 'Failed to send verification code.');
+                ])->with('notify', NotificationHelper::error($authResult['message'] ?? 'Failed to send verification code.', 'Error'));
             }
 
             if ($authResult['type'] === 'success') {
                 $_POST = $originalPost;
                 return redirect()->route('user.channels.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
             
             $_POST = $originalPost;
             return redirect()->route('user.channels.authenticate', [
                 'id' => $channel->id,
                 'step' => 'phone',
-            ])->with('error', 'Unexpected authentication response. Please try again.');
+            ])->with('notify', NotificationHelper::error('Unexpected authentication response. Please try again.', 'Error'));
         }
 
         if ($request->isMethod('post') && $step === 'code') {
@@ -433,7 +434,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid session. Please start over.');
+                ])->with('notify', NotificationHelper::error('Invalid session. Please start over.', 'Error'));
             }
 
             // CRITICAL: Refresh channel from database
@@ -448,7 +449,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Phone number not found. Please re-enter your phone number.');
+                ])->with('notify', NotificationHelper::error('Phone number not found. Please re-enter your phone number.', 'Error'));
             }
 
             // Prevent MadelineProto web UI
@@ -477,7 +478,7 @@ class ChannelController extends Controller
                 $request->session()->regenerateToken();
 
                 return redirect()->route('user.channels.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
 
             if ($result['type'] === 'password_required') {
@@ -492,7 +493,7 @@ class ChannelController extends Controller
                 return redirect()->route('user.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'password',
-                ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+                ])->with('notify', NotificationHelper::info($result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.', 'Info'));
             }
 
             while (ob_get_level() > 0) {
@@ -500,7 +501,7 @@ class ChannelController extends Controller
             }
             $_POST = $originalPost;
             
-            return redirect()->back()->with('error', $result['message'] ?? 'Verification failed. Please try again.');
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'] ?? 'Verification failed. Please try again.', 'Error'));
         }
 
         // Handle password step (2FA)
@@ -540,7 +541,7 @@ class ChannelController extends Controller
                 $request->session()->regenerateToken();
 
                 return redirect()->route('user.channels.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
 
             $_POST = $originalPost;
@@ -550,7 +551,7 @@ class ChannelController extends Controller
                 $errorMessage .= ' Hint: ' . $channel->config['password_hint'];
             }
             
-            return redirect()->back()->with('error', $errorMessage)->withInput();
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'))->withInput();
         }
 
         return view('multi-channel-signal-addon::user.channel.authenticate', $data);
@@ -571,13 +572,13 @@ class ChannelController extends Controller
 
         $status = $request->input('status');
         if (!in_array($status, ['active', 'paused'], true)) {
-            return redirect()->back()->with('error', 'Invalid status');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid status', 'Error'));
         }
 
         $channel->update(['status' => $status]);
 
         $message = $status === 'active' ? 'Channel resumed' : 'Channel paused';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('notify', NotificationHelper::success($message, 'Success'));
     }
 
     public function destroy(int $id): RedirectResponse
@@ -597,6 +598,6 @@ class ChannelController extends Controller
         $channel->delete();
 
         return redirect()->route('user.channels.index')
-            ->with('success', 'Channel deleted successfully');
+            ->with('notify', NotificationHelper::success('Channel deleted successfully', 'Success'));
     }
 }

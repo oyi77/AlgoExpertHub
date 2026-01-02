@@ -5,6 +5,7 @@ namespace Addons\OpenRouterIntegration\App\Http\Controllers\Backend;
 use Addons\OpenRouterIntegration\App\Models\OpenRouterModel;
 use Addons\OpenRouterIntegration\App\Services\OpenRouterService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 
 class OpenRouterModelController extends Controller
@@ -70,17 +71,17 @@ class OpenRouterModelController extends Controller
 
             if ($models->isEmpty()) {
                 return redirect()->back()
-                    ->with('warning', 'No models were synced. Please check your API configuration.');
+                    ->with('notify', NotificationHelper::warning('No models were synced. Please check your API configuration.', 'Warning'));
             }
 
             $this->service->clearModelsCache();
 
             return redirect()->back()
-                ->with('success', "Successfully synced {$models->count()} models from OpenRouter");
+                ->with('notify', NotificationHelper::success("Successfully synced {$models->count()} models from OpenRouter", 'Success'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to sync models: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to sync models: ' . $e->getMessage(), 'Error'));
         }
     }
 

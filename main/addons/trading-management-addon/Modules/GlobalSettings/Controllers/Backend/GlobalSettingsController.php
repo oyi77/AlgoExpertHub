@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\GlobalSettings\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Services\GlobalConfigurationService;
 use Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter;
 use Illuminate\Http\Request;
@@ -144,7 +145,7 @@ class GlobalSettingsController extends Controller
         );
 
         return redirect()->route('admin.trading-management.config.global-settings.index')
-            ->with('success', 'Global settings updated successfully');
+            ->with('notify', NotificationHelper::success('Global settings updated successfully', 'Success'));
     }
 
     /**

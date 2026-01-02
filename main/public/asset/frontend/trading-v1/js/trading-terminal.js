@@ -46,9 +46,11 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function () {
         initializeSidebarToggle();
-        initChart();
+        // Don't initialize chart here - it will be initialized by Golden Layout when component is created
+        // initChart(); // Moved to Golden Layout component initialization
         initializeOrderForm();
-        initDepthChart();
+        // Don't initialize depth chart here - it will be initialized by Golden Layout
+        // initDepthChart(); // Moved to Golden Layout component initialization
         initializeTabSwitching();
         initializeTimeframeSelector();
         initializeSymbolSelector();
@@ -559,10 +561,17 @@
             return;
         }
 
-        // Check if container exists
+        // Check if container exists - try multiple times as it might be created by Golden Layout
         const container = document.getElementById('tradingview_chart');
         if (!container) {
-            console.warn('Chart container not found');
+            console.warn('Chart container not found - will retry when Golden Layout creates it');
+            // Retry after a short delay in case Golden Layout hasn't created it yet
+            setTimeout(function() {
+                const retryContainer = document.getElementById('tradingview_chart');
+                if (retryContainer) {
+                    initChart();
+                }
+            }, 500);
             return;
         }
 
@@ -773,7 +782,16 @@
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 console.log('Connecting to Binance WebSocket:', wsUrl);
             }
-            ws = new WebSocket(wsUrl);
+            
+            try {
+                ws = new WebSocket(wsUrl);
+            } catch (e) {
+                // CSP violation or other error - fall back to polling
+                console.warn('WebSocket connection blocked or failed, using REST polling:', e.message);
+                wsUsePolling = true;
+                startOrderbookPolling();
+                return;
+            }
 
             // Set connection timeout (10 seconds)
             wsConnectionTimeout = setTimeout(() => {
@@ -1931,7 +1949,21 @@
     function initDepthChart() {
         const chartDom = document.getElementById('depthChart');
         if (!chartDom) {
-            console.warn('Depth chart element not found');
+            console.warn('Depth chart element not found - will retry when container is created');
+            // Retry after a short delay in case container hasn't been created yet
+            setTimeout(function() {
+                const retryContainer = document.getElementById('depthChart');
+                if (retryContainer && typeof echarts !== 'undefined') {
+                    initDepthChart();
+                }
+            }, 500);
+            return;
+        }
+        
+        // Check if ECharts is loaded
+        if (typeof echarts === 'undefined') {
+            console.warn('ECharts not loaded yet, retrying...');
+            setTimeout(initDepthChart, 100);
             return;
         }
 

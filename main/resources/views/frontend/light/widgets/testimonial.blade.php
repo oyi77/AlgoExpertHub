@@ -1,9 +1,9 @@
-<section class="testimonial-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('testimonial', $content->image_two) }}');">
+<section class="testimonial-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('testimonial', optional($content)->image_two ?? '') }}');">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6 text-center">
                 <div class="sp_theme_top  wow fadeInUp" data-wow-duration="0.3s" data-wow-delay="0.3s">
-                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans($content->section_header) }}</div>
+                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans(optional($content)->section_header ?? 'Section') }}</div>
                     <h2 class="sp_theme_top_title">
                         <?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?></span></h2>
                 </div>

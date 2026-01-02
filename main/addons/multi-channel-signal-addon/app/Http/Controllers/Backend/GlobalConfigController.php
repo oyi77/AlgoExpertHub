@@ -3,6 +3,7 @@
 namespace Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -52,7 +53,7 @@ class GlobalConfigController extends Controller
         Cache::put('multi_channel_global_config', $validated, now()->addYear());
 
         return redirect()->route('admin.multi-channel.global-config.index')
-            ->with('success', 'Global configuration updated successfully');
+            ->with('notify', NotificationHelper::success('Global configuration updated successfully', 'Success'));
     }
 
     /**

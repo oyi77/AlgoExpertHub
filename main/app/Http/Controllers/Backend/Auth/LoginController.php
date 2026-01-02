@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Auth;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminLoginRequest;
 use App\Models\Admin;
@@ -34,16 +35,16 @@ class LoginController extends Controller
         [$data, $remember] = $this->login->validateData($request);
 
         if(auth()->guard('admin')->attempt($data, $remember)){
-            return redirect()->route('admin.home')->with('success','Login Successful');
+            return redirect()->route('admin.home')->with('notify', NotificationHelper::success('Login Successful', 'Success'));
         }
 
-        return redirect()->route('admin.login')->with('error','Invalid Credentials');
+        return redirect()->route('admin.login')->with('notify', NotificationHelper::error('Invalid Credentials', 'Error'));
     }
 
     public function logout()
     {
         auth()->guard('admin')->logout();
 
-        return redirect()->route('admin.login')->with('success','Logout Successful');
+        return redirect()->route('admin.login')->with('notify', NotificationHelper::success('Logout Successful', 'Success'));
     }
 }

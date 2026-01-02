@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\FilterStrategy\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Illuminate\Http\Request;
 
@@ -37,7 +38,7 @@ class FilterStrategyController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.strategy.filters.index')
-            ->with('success', 'Filter strategy created successfully');
+            ->with('notify', NotificationHelper::success('Filter strategy created successfully', 'Success'));
     }
 
     public function edit(FilterStrategy $filter)
@@ -63,13 +64,13 @@ class FilterStrategyController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.strategy.filters.index')
-            ->with('success', 'Filter strategy updated successfully');
+            ->with('notify', NotificationHelper::success('Filter strategy updated successfully', 'Success'));
     }
 
     public function destroy(FilterStrategy $filter)
     {
         $filter->delete();
         return redirect()->route('admin.trading-management.strategy.filters.index')
-            ->with('success', 'Filter strategy deleted successfully');
+            ->with('notify', NotificationHelper::success('Filter strategy deleted successfully', 'Success'));
     }
 }

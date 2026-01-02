@@ -6,6 +6,7 @@ use Addons\OpenRouterIntegration\App\Models\OpenRouterConfiguration;
 use Addons\OpenRouterIntegration\App\Models\OpenRouterModel;
 use Addons\OpenRouterIntegration\App\Services\OpenRouterService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -66,11 +67,11 @@ class OpenRouterConfigController extends Controller
             $config = OpenRouterConfiguration::create($request->all());
 
             return redirect()->route('admin.openrouter.configurations.index')
-                ->with('success', 'Configuration created successfully');
+                ->with('notify', NotificationHelper::success('Configuration created successfully', 'Success'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to create configuration: ' . $e->getMessage())
+                ->with('notify', NotificationHelper::error('Failed to create configuration: ' . $e->getMessage(), 'Error'))
                 ->withInput();
         }
     }
@@ -106,11 +107,11 @@ class OpenRouterConfigController extends Controller
             $configuration->update($request->all());
 
             return redirect()->route('admin.openrouter.configurations.index')
-                ->with('success', 'Configuration updated successfully');
+                ->with('notify', NotificationHelper::success('Configuration updated successfully', 'Success'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to update configuration: ' . $e->getMessage())
+                ->with('notify', NotificationHelper::error('Failed to update configuration: ' . $e->getMessage(), 'Error'))
                 ->withInput();
         }
     }
@@ -125,11 +126,11 @@ class OpenRouterConfigController extends Controller
             $configuration->delete();
 
             return redirect()->route('admin.openrouter.configurations.index')
-                ->with('success', 'Configuration deleted successfully');
+                ->with('notify', NotificationHelper::success('Configuration deleted successfully', 'Success'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to delete configuration: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete configuration: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -174,11 +175,11 @@ class OpenRouterConfigController extends Controller
             $configuration->save();
 
             return redirect()->back()
-                ->with('success', 'Configuration status updated successfully');
+                ->with('notify', NotificationHelper::success('Configuration status updated successfully', 'Success'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to update status: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update status: ' . $e->getMessage(), 'Error'));
         }
     }
 

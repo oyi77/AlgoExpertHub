@@ -31,7 +31,7 @@
 @endif
 
 <!-- footer section start -->
-@if($content && $content->content)
+@if($content && optional($content)->content ?? '')
 <footer class="footer-section" role="contentinfo">
     <div class="sp_footer_menu_area">
         <a href="#top" class="back-to-top focus-ring" aria-label="{{ __('Back to top') }}">
@@ -45,9 +45,9 @@
                 <div class="col-lg-4 pe-xl-5">
                     <div class="sp_footer_item">
                         <a href="{{ route('home') }}" class="site-logo" aria-label="{{ __('Home') }}">
-                            <img src="{{ Config::getFile('footer', $content->content->image_one ?? '') }}" alt="{{ Config::config()->appname ?? 'Logo' }}" loading="lazy">
+                            <img src="{{ Config::getFile('footer', optional($content)->content ?? ''->image_one ?? '') }}" alt="{{ Config::config()->appname ?? 'Logo' }}" loading="lazy">
                         </a>
-                        <p class="mt-4">{{ Config::trans($content->content->footer_short_details ?? '') }}</p>
+                        <p class="mt-4">{{ Config::trans(optional($content)->content ?? ''->footer_short_details ?? '') }}</p>
                         
                         {{-- Trust Indicators --}}
                         <div class="mt-4">

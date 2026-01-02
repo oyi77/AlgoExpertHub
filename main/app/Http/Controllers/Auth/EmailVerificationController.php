@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EmailVerificationRequest;
 use App\Services\EmailVerification;
@@ -29,9 +30,9 @@ class EmailVerificationController extends Controller
         $isSucces = $this->verify->verify($request);
 
         if ($isSucces['type'] === 'success') {
-            return  redirect()->route('user.dashboard')->with('success', $isSucces['message']);
+            return  redirect()->route('user.dashboard')->with('notify', NotificationHelper::success($isSucces['message'], 'Success'));
         }
 
-        return  redirect()->back()->with('error', $isSucces['message']);
+        return  redirect()->back()->with('notify', NotificationHelper::error($isSucces['message'], 'Error'));
     }
 }

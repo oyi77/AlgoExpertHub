@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketReply;
@@ -84,7 +85,7 @@ class TicketController extends Controller
             $ticket->delete();
         }
 
-        return redirect()->back()->with('success', 'Ticket Deleted Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Ticket Deleted Successfully', 'Success'));
     }
 
     public function reply(Request $request)
@@ -114,6 +115,6 @@ class TicketController extends Controller
 
         Ticket::findOrFail($request->ticket_id)->update(['status' => 3]);
 
-        return redirect()->back()->with('success', 'Reply Created Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Reply Created Successfully', 'Success'));
     }
 }

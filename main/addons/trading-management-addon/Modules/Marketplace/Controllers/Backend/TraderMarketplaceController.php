@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Marketplace\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Marketplace\Services\LeaderboardService;
 use Addons\TradingManagement\Modules\Marketplace\Models\TraderProfile;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class TraderMarketplaceController extends Controller
         $trader = TraderProfile::findOrFail($id);
         $trader->update(['verified' => !$trader->verified]);
 
-        return redirect()->back()->with('success', 'Trader verification status updated');
+        return redirect()->back()->with('notify', NotificationHelper::success('Trader verification status updated', 'Success'));
     }
 
     public function destroy($id)
@@ -49,14 +50,14 @@ class TraderMarketplaceController extends Controller
         $trader = TraderProfile::findOrFail($id);
         $trader->delete();
 
-        return redirect()->route('admin.trading-management.marketplace.traders.index')->with('success', 'Trader profile deleted');
+        return redirect()->route('admin.trading-management.marketplace.traders.index')->with('notify', NotificationHelper::success('Trader profile deleted', 'Success'));
     }
 
     public function recalculateLeaderboard()
     {
         $results = $this->leaderboardService->updateAllTimeframes();
 
-        return redirect()->back()->with('success', 'Leaderboard recalculated: ' . json_encode($results));
+        return redirect()->back()->with('notify', NotificationHelper::success('Leaderboard recalculated: ' . json_encode($results), 'Success'));
     }
 }
 

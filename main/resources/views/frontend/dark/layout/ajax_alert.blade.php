@@ -1,10 +1,18 @@
 if (response.success) {
-    toastr.success("{{$message}}", {
-        positionClass: "toast-top-right"
-    })
+    if (typeof notify !== 'undefined') {
+        notify()
+            ->success()
+            ->title('Success')
+            ->message("{{$message}}")
+            ->send();
+    }
     return
 }
 
-toastr.error("{{$message_error}}", {
-    positionClass: "toast-top-right"
-})
+if (typeof notify !== 'undefined') {
+    notify()
+        ->error()
+        ->title('Error')
+        ->message("{{$message_error}}")
+        ->send();
+}

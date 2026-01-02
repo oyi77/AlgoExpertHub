@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LanguageRequest;
 use App\Models\Content;
@@ -38,17 +39,17 @@ class LanguageController extends Controller
 
         if ($isSuccess['type'] === 'success')
 
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function update(Request $request)
     {
         $isSuccess = $this->language->update($request);
         if ($isSuccess['type'] === 'error') {
-            return back()->with('error', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return back()->with('success', $isSuccess['message']);
+        return back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function delete(Request $request)
@@ -58,10 +59,10 @@ class LanguageController extends Controller
 
         if ($isSuccess['type'] === 'error') {
 
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 
@@ -137,7 +138,7 @@ class LanguageController extends Controller
 
 
 
-        return redirect()->back()->with('success', 'Language Key value update successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Language Key value update successfully', 'Success'));
     }
 
     public function deleteKey(Request $request)
@@ -161,7 +162,7 @@ class LanguageController extends Controller
             file_put_contents(resource_path() . "/lang/$language->code.json", json_encode($previous));
         }
 
-        return redirect()->back()->with('success', 'Language Key value Deleted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Language Key value Deleted successfully', 'Success'));
     }
 
     public function changeLang(Request $request)
@@ -170,7 +171,7 @@ class LanguageController extends Controller
 
         session()->put('locale', $request->lang);
 
-        return redirect()->back()->with('success', __('Successfully Changed Language'));
+        return redirect()->back()->with('notify', NotificationHelper::success(__('Successfully Changed Language'), 'Success'));
     }
 
     public function autoTranslate(Request $request)
@@ -183,18 +184,18 @@ class LanguageController extends Controller
         $language = Language::where('code', $request->lang)->first();
 
         if (!$language) {
-            return redirect()->back()->with('error', 'Language not found');
+            return redirect()->back()->with('notify', NotificationHelper::error('Language not found', 'Error'));
         }
 
         // Check if AI translation is configured
         if (!\App\Models\TranslationSetting::isConfigured()) {
             return redirect()->route('admin.language.translation-settings.index')
-                ->with('error', 'AI translation not configured. Please configure AI connection for translations first.');
+                ->with('notify', NotificationHelper::error('AI translation not configured. Please configure AI connection for translations first.', 'Error'));
         }
 
         // Dispatch translation job
         \App\Jobs\TranslateLanguageJob::dispatch($language->id, $request->type);
 
-        return redirect()->back()->with('success', 'Auto-translation started. This may take a few minutes. Please refresh the page to see the results.');
+        return redirect()->back()->with('notify', NotificationHelper::success('Auto-translation started. This may take a few minutes. Please refresh the page to see the results.', 'Translation Started'));
     }
 }

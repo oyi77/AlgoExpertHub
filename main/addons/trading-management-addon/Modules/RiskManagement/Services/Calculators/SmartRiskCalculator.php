@@ -3,7 +3,12 @@
 namespace Addons\TradingManagement\Modules\RiskManagement\Services\Calculators;
 
 use Addons\TradingManagement\Shared\Contracts\RiskCalculatorInterface;
+use Addons\TradingManagement\Modules\RiskManagement\Services\SymbolSpecService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\MarginManagementService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\CorrelationRiskService;
+use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
 use App\Models\Signal;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Smart Risk Calculator
@@ -37,9 +42,9 @@ class SmartRiskCalculator implements RiskCalculatorInterface
         // Calculate risk amount
         $riskAmount = $equity * ($adjustedRiskPercent / 100);
 
-        // Calculate lot size (simplified - same as preset calculator)
+        // Calculate lot size using proper pip value calculation
         $slDistance = $this->calculateSLDistance($signal);
-        $pipValue = 10.0; // Simplified
+        $pipValue = $this->getPipValue($signal, $accountInfo);
         
         $lotSize = $slDistance > 0 
             ? $riskAmount / ($slDistance * $pipValue)
@@ -111,6 +116,57 @@ class SmartRiskCalculator implements RiskCalculatorInterface
                 return [
                     'valid' => false,
                     'reason' => "Provider score too low: {$providerScore} < {$minScore}",
+                ];
+            }
+        }
+
+        // Check margin requirements
+        $marginService = app(MarginManagementService::class);
+        $positionData = $this->calculatePositionSize($signal, $accountInfo, $config);
+        $symbol = $signal->pair->name ?? '';
+        $entryPrice = (float) $signal->open_price;
+        $leverage = (int) ($config['leverage'] ?? $accountInfo['leverage'] ?? 100);
+        
+        if ($entryPrice > 0 && !empty($symbol)) {
+            $requiredMargin = $marginService->calculateRequiredMargin(
+                $positionData['lot_size'],
+                $entryPrice,
+                $leverage,
+                $symbol
+            );
+            
+            $marginCheck = $marginService->shouldPreventTrade($accountInfo, $requiredMargin, $config);
+            
+            if ($marginCheck['should_prevent']) {
+                return [
+                    'valid' => false,
+                    'reason' => $marginCheck['reason'] ?? 'Insufficient margin for trade',
+                ];
+            }
+        }
+
+        // Check correlation risk
+        $correlationService = app(CorrelationRiskService::class);
+        $maxCorrelationExposurePct = (float) ($config['max_correlation_exposure_pct'] ?? 50.0);
+        
+        // Get existing open positions for this connection (if available)
+        $existingPositions = $this->getExistingPositions($accountInfo, $symbol);
+        $newPositionValue = $positionData['lot_size'] * $entryPrice;
+        $equity = (float) ($accountInfo['equity'] ?? $accountInfo['balance'] ?? 0);
+        
+        if (!empty($symbol) && $equity > 0 && $newPositionValue > 0) {
+            $correlationCheck = $correlationService->shouldPreventTrade(
+                $symbol,
+                $existingPositions,
+                $newPositionValue,
+                $equity,
+                $maxCorrelationExposurePct
+            );
+            
+            if ($correlationCheck['should_prevent']) {
+                return [
+                    'valid' => false,
+                    'reason' => $correlationCheck['reason'] ?? 'Correlation risk exceeds limit',
                 ];
             }
         }
@@ -235,12 +291,73 @@ class SmartRiskCalculator implements RiskCalculatorInterface
      */
     protected function getPipSize(Signal $signal): float
     {
+        $symbolSpecService = app(SymbolSpecService::class);
         $symbol = $signal->pair->name ?? '';
+        $accountCurrency = 'USD'; // Default, should come from accountInfo in future
         
-        if (str_contains($symbol, 'JPY')) return 0.01;
-        if (str_contains($symbol, 'XAU') || str_contains($symbol, 'GOLD')) return 0.10;
+        return $symbolSpecService->getPipSize($symbol, $accountCurrency);
+    }
+
+    /**
+     * Get pip value (how much 1 pip is worth in account currency)
+     */
+    protected function getPipValue(Signal $signal, array $accountInfo): float
+    {
+        $symbolSpecService = app(SymbolSpecService::class);
+        $symbol = $signal->pair->name ?? '';
+        $accountCurrency = $accountInfo['currency'] ?? 'USD';
+        $entryPrice = (float) $signal->open_price;
         
-        return 0.0001;
+        if (empty($symbol) || $entryPrice <= 0) {
+            Log::warning('SmartRiskCalculator: Invalid symbol or entry price for pip value calculation', [
+                'symbol' => $symbol,
+                'entry_price' => $entryPrice,
+            ]);
+            // Fallback to standard $10 per pip for 1.0 lot
+            return 10.0;
+        }
+        
+        return $symbolSpecService->getPipValue($symbol, 1.0, $accountCurrency, $entryPrice);
+    }
+
+    /**
+     * Get existing open positions for correlation check
+     * 
+     * @param array $accountInfo Account information
+     * @param string $symbol Current symbol (to exclude from check)
+     * @return array Array of existing positions
+     */
+    protected function getExistingPositions(array $accountInfo, string $symbol): array
+    {
+        $connectionId = $accountInfo['connection_id'] ?? null;
+        
+        if (!$connectionId) {
+            Log::warning('SmartRiskCalculator: No connection_id in accountInfo, cannot fetch existing positions', [
+                'accountInfo_keys' => array_keys($accountInfo),
+            ]);
+            return [];
+        }
+
+        try {
+            $positions = ExecutionPosition::where('connection_id', $connectionId)
+                ->where('status', 'open')
+                ->get();
+
+            return $positions->map(function ($position) {
+                return [
+                    'symbol' => $position->symbol ?? '',
+                    'quantity' => (float) ($position->quantity ?? 0),
+                    'entry_price' => (float) ($position->entry_price ?? 0),
+                    'direction' => $position->direction ?? 'buy',
+                ];
+            })->toArray();
+        } catch (\Exception $e) {
+            Log::error('SmartRiskCalculator: Failed to fetch existing positions', [
+                'connection_id' => $connectionId,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
     }
 }
 

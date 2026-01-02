@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Plan;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -38,7 +39,7 @@ class PlanController extends Controller
     {
         $this->plan->createPlan($request);
 
-        return redirect()->route('admin.plan.index')->with('success', 'Plan Created Successfully');
+        return redirect()->route('admin.plan.index')->with('notify', NotificationHelper::success('Plan Created Successfully', 'Success'));
     }
 
 
@@ -54,10 +55,10 @@ class PlanController extends Controller
         $isSuccess = $this->plan->updatePlan($request);
 
         if ($isSuccess['type'] === 'error') {
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->route('admin.plan.index')->with('success', 'Plan Updated Successfully');
+        return redirect()->route('admin.plan.index')->with('notify', NotificationHelper::success('Plan Updated Successfully', 'Success'));
     }
 
 

@@ -7,6 +7,7 @@ use Addons\CopyTrading\App\Models\CopyTradingSetting;
 use Addons\CopyTrading\App\Models\CopyTradingSubscription;
 use Addons\CopyTrading\App\Services\CopyTradingAnalyticsService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -176,7 +177,7 @@ class TraderController extends Controller
 
         $status = $setting->is_enabled ? 'enabled' : 'disabled';
         return redirect()->back()
-            ->with('success', "Trader {$status} successfully");
+            ->with('notify', NotificationHelper::success("Trader {$status} successfully", 'Success'));
     }
 }
 

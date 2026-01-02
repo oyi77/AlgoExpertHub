@@ -4,6 +4,7 @@ namespace Addons\MultiChannelSignalAddon\App\Http\Controllers\Backend;
 
 use Addons\MultiChannelSignalAddon\App\Models\AiConfiguration;
 use Addons\MultiChannelSignalAddon\App\Services\AiProviderFactory;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -76,12 +77,12 @@ class AiConfigurationController
             ]);
 
             return redirect()->route('admin.ai-configuration.index')
-                ->with('success', 'AI configuration created successfully.');
+                ->with('notify', NotificationHelper::success('AI configuration created successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to create AI configuration', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create AI configuration: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create AI configuration: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -140,12 +141,12 @@ class AiConfigurationController
             $config->update($updateData);
 
             return redirect()->route('admin.ai-configuration.index')
-                ->with('success', 'AI configuration updated successfully.');
+                ->with('notify', NotificationHelper::success('AI configuration updated successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to update AI configuration', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update AI configuration: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update AI configuration: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -159,11 +160,11 @@ class AiConfigurationController
             $config->delete();
 
             return redirect()->route('admin.ai-configuration.index')
-                ->with('success', 'AI configuration deleted successfully.');
+                ->with('notify', NotificationHelper::success('AI configuration deleted successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to delete AI configuration', ['error' => $e->getMessage()]);
             return redirect()->back()
-                ->with('error', 'Failed to delete AI configuration: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete AI configuration: ' . $e->getMessage(), 'Error'));
         }
     }
 

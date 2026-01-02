@@ -557,15 +557,19 @@
         });
 
         // Activate Landing Page
-        $('.active-landing-btn').on('click', function(e) {
+        $(document).off('click', '.active-landing-btn').on('click', '.active-landing-btn', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             const modal = $('#activeLanding');
             const landingName = $(this).data('landing');
             const displayName = $(this).closest('tr').find('h5').text().trim();
 
-            modal.find('#activeLandingName').val(landingName);
-            modal.find('#activeLandingDisplayName').text(displayName);
+            // Set form values
+            const form = modal.find('form');
+            form.find('#activeLandingName').val(landingName);
+            form.find('#activeLandingDisplayName').text(displayName);
 
+            // Show modal
             modal.modal('show');
         });
 

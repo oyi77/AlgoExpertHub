@@ -20,10 +20,14 @@ use NotificationChannels\Telegram\TelegramUpdates;
 class SignalService extends BaseService
 {
     protected $cacheManager;
+    protected $signalRepository;
 
-    public function __construct(CacheManager $cacheManager)
-    {
+    public function __construct(
+        CacheManager $cacheManager,
+        \App\Repositories\Contracts\SignalRepositoryInterface $signalRepository
+    ) {
         $this->cacheManager = $cacheManager;
+        $this->signalRepository = $signalRepository;
     }
     public function create($request)
     {
@@ -481,30 +485,7 @@ class SignalService extends BaseService
     {
         return $this->cacheResult('signals-all-' . auth()->id() . '-' . md5(serialize($params)), function () use ($params) {
             $user = auth()->user();
-            $currentPlan = $user->currentplan()->first();
-            
-            if ($currentPlan) {
-                $signals = Signal::where('is_published', 1)
-                    ->when($params['search'] ?? null, function ($query, $search) {
-                        $query->where(function ($q) use ($search) {
-                            $q->where('id', $search)
-                                ->orWhere('title', 'LIKE', '%' . $search . '%');
-                        });
-                    })
-                    ->whereHas('plans', function ($query) use ($currentPlan) {
-                        $query->where('plans.id', $currentPlan->plan_id);
-                    })
-                    ->latest('published_date')
-                    ->with('plans', 'pair', 'time', 'market')
-                    ->paginate(Helper::pagination());
-            } else {
-                $signals = new LengthAwarePaginator(
-                    collect([]), 
-                    0, 
-                    Helper::pagination(), 
-                    1
-                );
-            }
+            $signals = $this->signalRepository->getSignalsForUser($user, $params);
 
             return $this->successResponse('Signals retrieved successfully', ['signals' => $signals]);
         });
@@ -514,7 +495,10 @@ class SignalService extends BaseService
     {
         return $this->cacheResult('signal-details-' . $id, function () use ($id) {
             try {
-                $signal = Signal::findOrFail($id);
+                $signal = $this->signalRepository->find($id);
+                if (!$signal) {
+                   return $this->errorResponse('Signal not found', [], 404); 
+                }
                 return $this->successResponse('Signal details retrieved successfully', ['signal' => $signal]);
             } catch (\Exception $e) {
                 return $this->errorResponse('Signal not found', [], 404);

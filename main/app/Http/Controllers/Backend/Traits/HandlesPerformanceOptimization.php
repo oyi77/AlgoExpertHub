@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Traits;
 
+use App\Helpers\NotificationHelper;
 use App\Models\GlobalConfiguration;
 use App\Services\PerformanceOptimizationService;
 use Illuminate\Http\Request;
@@ -502,7 +503,7 @@ trait HandlesPerformanceOptimization
                     if ($isAjax) {
                         return response()->json(['success' => false, 'message' => __('Invalid action specified.')], 400);
                     }
-                    return back()->with('error', __('Invalid action specified.'));
+                    return back()->with('notify', NotificationHelper::error(__('Invalid action specified.'), 'Error'));
             }
 
             // Format results for display
@@ -521,7 +522,11 @@ trait HandlesPerformanceOptimization
                 ]);
             }
 
-            return back()->with($type, $message);
+            if ($type === 'success') {
+                return back()->with('notify', NotificationHelper::success($message, 'Success'));
+            } else {
+                return back()->with('notify', NotificationHelper::error($message, 'Error'));
+            }
         } catch (\Exception $e) {
             if ($isAjax) {
                 return response()->json([
@@ -529,7 +534,7 @@ trait HandlesPerformanceOptimization
                     'message' => __('Optimization failed: :error', ['error' => $e->getMessage()])
                 ], 500);
             }
-            return back()->with('error', __('Optimization failed: :error', ['error' => $e->getMessage()]));
+            return back()->with('notify', NotificationHelper::error(__('Optimization failed: :error', ['error' => $e->getMessage()]), 'Error'));
         }
     }
 
@@ -560,14 +565,14 @@ trait HandlesPerformanceOptimization
                     if ($isAjax) {
                         return response()->json(['success' => false, 'message' => __('Invalid action specified.')], 400);
                     }
-                    return back()->with('error', __('Invalid action specified.'));
+                    return back()->with('notify', NotificationHelper::error(__('Invalid action specified.'), 'Error'));
             }
 
             if ($isAjax) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
 
-            return back()->with('success', $message);
+            return back()->with('notify', NotificationHelper::success($message, 'Success'));
         } catch (\Exception $e) {
             if ($isAjax) {
                 return response()->json([
@@ -575,7 +580,7 @@ trait HandlesPerformanceOptimization
                     'message' => __('Cache clearing failed: :error', ['error' => $e->getMessage()])
                 ], 500);
             }
-            return back()->with('error', __('Cache clearing failed: :error', ['error' => $e->getMessage()]));
+            return back()->with('notify', NotificationHelper::error(__('Cache clearing failed: :error', ['error' => $e->getMessage()]), 'Error'));
         }
     }
 

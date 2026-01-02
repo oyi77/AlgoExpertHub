@@ -6,6 +6,7 @@ use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Models\MessageParsingPattern;
 use Addons\MultiChannelSignalAddon\App\Services\PatternTemplateService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -57,7 +58,7 @@ class PatternTemplateController extends Controller
             ]);
             
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('error', 'An error occurred while loading pattern templates: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('An error occurred while loading pattern templates: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -113,7 +114,7 @@ class PatternTemplateController extends Controller
 
             return redirect()
                 ->route('admin.pattern-templates.index', ['channel_source_id' => $pattern->channel_source_id])
-                ->with('success', 'Pattern template created successfully');
+                ->with('notify', NotificationHelper::success('Pattern template created successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error("Failed to create pattern template: " . $e->getMessage());
             
@@ -156,7 +157,7 @@ class PatternTemplateController extends Controller
 
             return redirect()
                 ->route('admin.pattern-templates.index', ['channel_source_id' => $pattern->channel_source_id])
-                ->with('success', 'Pattern template updated successfully');
+                ->with('notify', NotificationHelper::success('Pattern template updated successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error("Failed to update pattern template: " . $e->getMessage());
             
@@ -177,7 +178,7 @@ class PatternTemplateController extends Controller
 
             return redirect()
                 ->route('admin.pattern-templates.index', ['channel_source_id' => $channelSourceId])
-                ->with('success', 'Pattern template deleted successfully');
+                ->with('notify', NotificationHelper::success('Pattern template deleted successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error("Failed to delete pattern template: " . $e->getMessage());
             

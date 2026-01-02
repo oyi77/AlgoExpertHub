@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Configuration;
@@ -110,7 +111,7 @@ class PaymentController extends Controller
             ], $templete);
         }
 
-        return redirect()->back()->with('success', "Payment Confirmed Successfully");
+        return redirect()->back()->with('notify', NotificationHelper::success("Payment Confirmed Successfully", 'Success'));
     }
 
     public function reject(Request $request)
@@ -142,7 +143,7 @@ class PaymentController extends Controller
             ], $templete);
         }
 
-        return back()->with('success', "Payment Rejected Successfully");
+        return back()->with('notify', NotificationHelper::success("Payment Rejected Successfully", 'Success'));
     }
 
     private function subscription($data, $user)

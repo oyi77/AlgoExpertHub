@@ -50,6 +50,16 @@ class ExecutionConnection extends Model
         'settings',
         'preset_id',
         'data_connection_id', // NEW: Link to data connection
+        // Margin and risk management fields
+        'leverage',
+        'margin_call_threshold',
+        'liquidation_threshold',
+        'max_margin_usage_pct',
+        'max_open_positions',
+        'max_positions_per_symbol',
+        // Circuit breaker fields
+        'circuit_breaker_enabled',
+        'max_consecutive_failures',
     ];
 
     protected $casts = [
@@ -58,6 +68,10 @@ class ExecutionConnection extends Model
         'last_tested_at' => 'datetime',
         'last_used_at' => 'datetime',
         'settings' => 'array',
+        'margin_call_threshold' => 'decimal:2',
+        'liquidation_threshold' => 'decimal:2',
+        'max_margin_usage_pct' => 'decimal:2',
+        'circuit_breaker_enabled' => 'boolean',
     ];
 
     /**

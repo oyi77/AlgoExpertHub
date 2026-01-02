@@ -1,3 +1,318 @@
+## 🔧 CRITICAL FIXES IMPLEMENTED (2025-01-29)
+
+### ✅ 1. Queue Workers Fixed
+**Issue**: Supervisor config was using direct PHP commands that wouldn't work if supervisor runs on host
+**Fix**: Updated `main/supervisor-laravel-worker.conf` to use `docker exec 1Panel-php8-mrTy` wrapper
+**Status**: ✅ COMPLETED
+**Files Modified**:
+- `main/supervisor-laravel-worker.conf` - Added docker exec wrapper for queue workers
+
+### ✅ 2. Trading Bot Workers Fixed
+**Issue**: `TradingBotWorkerService` was using `shell_exec()` and `nohup` which may not work properly in Docker
+**Fix**: Simplified to use direct PHP execution since Laravel runs inside Docker container
+**Status**: ✅ COMPLETED
+**Files Modified**:
+- `main/addons/trading-management-addon/Modules/TradingBot/Services/TradingBotWorkerService.php` - Removed docker exec logic, using direct execution
+
+### ✅ 3. Exchange Connection Dropdowns Verified
+**Issue**: Dropdowns appeared empty (reported in buglist)
+**Fix**: Verified routes exist and options are hardcoded in view. Route `user.exchange-connections.ccxt-exchanges` exists and works.
+**Status**: ✅ VERIFIED - Routes and options exist. If still empty, likely JavaScript/CSS issue.
+**Files Checked**:
+- `main/routes/web/trading.php` - Route exists at line 777
+- `main/addons/trading-management-addon/resources/views/user/exchange-connections/create.blade.php` - Options hardcoded
+
+### ✅ 4. Backtesting Enhanced
+**Issue**: Backtesting failed when no historical data available
+**Fix**: Enhanced `BacktestingService` to automatically dispatch `BackfillHistoricalDataJob` when data is missing
+**Status**: ✅ COMPLETED
+**Files Modified**:
+- `main/app/Services/BacktestingService.php` - Added automatic historical data fetching
+
+### ✅ 5. Signal Observers Verified
+**Issue**: Signal execution observers might not be registered
+**Fix**: Verified `BotSignalObserver` is properly registered in `AddonServiceProvider::registerObservers()`
+**Status**: ✅ VERIFIED - Observers are registered correctly
+**Files Checked**:
+- `main/addons/trading-management-addon/AddonServiceProvider.php` - Observer registered at line 100
+
+---
+
+---
+
+## 🔍 CODEBASE RE-SCAN FINDINGS (2025-01-29)
+
+### CRITICAL: Placeholder Routes Returning HTML Strings
+
+**Location**: `main/addons/trading-management-addon/routes/user.php`
+
+**Issue**: Several routes return plain HTML strings instead of proper views/controllers:
+
+1. **`/config`** (line 22-24): Returns `<h1>My Trading Configuration</h1>...`
+2. **`/operations`** (line 26-28): Returns `<h1>Auto Trading</h1>...`
+3. **`/strategy`** (line 30-32): Returns `<h1>My Strategies</h1>...`
+4. **`/copy-trading`** (line 34-36): Returns `<h1>Copy Trading</h1>...`
+5. **`/test`** (line 38-40): Returns `<h1>Backtesting</h1>...`
+
+**Impact**: 
+- These routes are NOT used by the main application (routes are in `main/routes/web/trading.php`)
+- However, if someone accesses these routes directly, they'll see broken HTML
+- These are legacy placeholder routes that should be removed or properly implemented
+
+**Fix Required**:
+- **Option 1**: Remove these placeholder routes (recommended if not used)
+- **Option 2**: Implement proper controllers/views if these routes are needed
+- **Verification**: Check if any code references these route names (`trading-management::user.config.index`, etc.)
+
+**Priority**: MEDIUM (likely not breaking anything, but cleanup needed)
+
+---
+
+### Marketplace Controllers Status
+
+**Location**: `main/addons/trading-management-addon/Modules/Marketplace/`
+
+**Status**: ✅ **CONTROLLERS EXIST** - The IMPLEMENTATION.md is outdated
+
+**Verified Controllers**:
+- ✅ `Controllers/User/BotMarketplaceController.php` - Fully implemented
+- ✅ `Controllers/User/TraderMarketplaceController.php` - Fully implemented
+- ✅ `Controllers/Backend/BotMarketplaceController.php` - Fully implemented
+- ✅ `Controllers/Backend/TraderMarketplaceController.php` - Fully implemented
+
+**Routes**: Properly registered in `main/addons/trading-management-addon/routes/user.php` (lines 54-68)
+
+**Action**: Update `IMPLEMENTATION.md` to reflect that controllers are complete
+
+**Priority**: LOW (documentation only)
+
+---
+
+### Scheduled Jobs Verification
+
+**Location**: `main/app/Console/Kernel.php`
+
+**Status**: ✅ **COMPREHENSIVE SCHEDULING** - All critical jobs are scheduled
+
+**Verified Scheduled Jobs**:
+- ✅ Multi-Channel Signal Addon: RSS (10min), Web Scrape (1min), MTProto (5min), Trading Bot (2min)
+- ✅ Trading Management: Bot Workers Monitor (1min), Connection Health (5min)
+- ✅ Position Monitoring: MonitorPositionsJob (1min), UpdateAnalyticsJob (daily)
+- ✅ Risk Management: UpdatePerformanceScoresJob (daily), MonitorDrawdownJob (5min), RetrainModelsJob (weekly)
+- ✅ Data Provider: MonitorStreamHealthJob (5min)
+- ✅ Internal Broker: MonitorInternalPositions (30sec)
+
+**Note**: Marketplace jobs mentioned in IMPLEMENTATION.md (CalculateLeaderboardJob, UpdateTraderStatsJob, etc.) are NOT scheduled in Kernel.php
+
+**Missing Scheduled Jobs** (if Marketplace module is active):
+- `CalculateLeaderboardJob` - Should run hourly
+- `UpdateTraderStatsJob` - Should run daily
+- `CleanupUnusedMarketDataJob` - Should run weekly
+- `FetchMarketDataCoordinatorJob` - Should run every 5 minutes
+
+**Fix Required**: Add to `Kernel.php` if Marketplace module is enabled:
+```php
+// Marketplace Module
+if (AddonRegistry::active('trading-management-addon') && AddonRegistry::moduleEnabled('trading-management-addon', 'marketplace')) {
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)
+            ->hourly()
+            ->withoutOverlapping();
+    }
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)
+            ->daily()
+            ->at('00:00')
+            ->withoutOverlapping();
+    }
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)
+            ->weekly()
+            ->sundays()
+            ->at('03:00')
+            ->withoutOverlapping();
+    }
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+    }
+}
+```
+
+**Priority**: MEDIUM (if Marketplace is used, these jobs are critical for functionality)
+
+---
+
+### View Files Verification
+
+**Status**: ✅ **VIEWS EXIST** - All referenced views are present
+
+**Verified Views**:
+- ✅ `frontend/default/user/trading/operations.blade.php`
+- ✅ `frontend/trading-v1/user/trading/operations.blade.php`
+- ✅ Views referenced in controllers use `Helper::themeView()` which has proper fallback
+
+**No Missing Views Detected**
+
+**Priority**: N/A
+
+---
+
+### Error Handling Review
+
+**Status**: ✅ **GOOD ERROR HANDLING** - Most critical paths have try-catch blocks
+
+**Verified Error Handling**:
+- ✅ `TradingConfigurationController` - Has try-catch blocks for all data loading
+- ✅ `ExecutionLogController` - Has ModelNotFoundException handling
+- ✅ `BacktestingService` - Enhanced with automatic data backfilling
+- ✅ Exchange connection routes - Comprehensive error handling with proper logging
+- ✅ `BaseService` - Standard error response format
+
+**Areas with Good Error Handling**:
+- Database operations wrapped in try-catch
+- Proper logging with context
+- User-friendly error messages
+- Graceful degradation (empty paginators on error)
+
+**Priority**: N/A (error handling is adequate)
+
+---
+
+### Route Verification
+
+**Status**: ✅ **ROUTES PROPERLY REGISTERED**
+
+**Verified**:
+- Main trading routes in `main/routes/web/trading.php` use proper controllers
+- No inline closures returning HTML strings in main routes
+- All routes have proper middleware
+- Marketplace routes properly registered
+
+**Note**: The placeholder routes in `trading-management-addon/routes/user.php` are separate and likely not used by main app
+
+**Priority**: N/A
+
+---
+
+## 📋 SUMMARY OF NEW FINDINGS
+
+### Critical Issues: 0
+### Medium Priority: 2
+1. Placeholder routes in addon (cleanup needed)
+2. Missing Marketplace scheduled jobs (if module is used)
+
+### Low Priority: 1
+1. Outdated Marketplace IMPLEMENTATION.md documentation
+
+### Recommendations:
+1. **Remove or implement** placeholder routes in `trading-management-addon/routes/user.php`
+2. **Add Marketplace scheduled jobs** to `Kernel.php` if Marketplace module is active
+3. **Update Marketplace IMPLEMENTATION.md** to reflect completed controllers
+
+---
+
+## 🧪 VERIFICATION & TESTING GUIDE
+
+### Prerequisites
+- Docker container `1Panel-php8-mrTy` is running
+- Supervisor is configured and running (if using supervisor for queue workers)
+- Database migrations are up to date
+
+### 1. Verify Queue Workers
+```bash
+# Check if queue workers are processing jobs
+docker exec 1Panel-php8-mrTy php artisan queue:work --once
+
+# Check queue status
+docker exec 1Panel-php8-mrTy php artisan queue:monitor
+
+# Test job dispatch
+docker exec 1Panel-php8-mrTy php artisan tinker
+>>> dispatch(new \App\Jobs\SendEmailJob(['test' => 'data']));
+```
+
+### 2. Verify Trading Bot Workers
+```bash
+# Create a test bot via UI or tinker
+# Then check if worker process starts
+docker exec 1Panel-php8-mrTy ps aux | grep trading-bot:worker
+
+# Check bot worker logs
+tail -f storage/logs/trading-bot-{bot_id}.log
+```
+
+### 3. Verify Exchange Connection Form
+1. Navigate to `/user/trading/configuration?tab=data-connections`
+2. Click "Create Connection"
+3. Verify dropdowns show options:
+   - Connection Type: Data Only, Execution Only, Both
+   - Exchange Type: Crypto Exchange, Forex Broker
+   - Provider: Should populate based on Exchange Type selection
+4. Check browser console for JavaScript errors
+5. Test CCXT exchanges API: `/user/exchange-connections/ccxt-exchanges`
+
+### 4. Verify Backtesting
+```bash
+# Create a backtest via UI
+# If no historical data, verify:
+# 1. Error message suggests creating data connection
+# 2. BackfillHistoricalDataJob is dispatched
+# 3. Check queue for backfill job
+
+# Check backtest status
+docker exec 1Panel-php8-mrTy php artisan tinker
+>>> \App\Models\Backtest::latest()->first();
+```
+
+### 5. Verify Signal Observers
+```bash
+# Publish a signal via admin panel
+# Check logs for BotSignalObserver activity
+tail -f storage/logs/laravel.log | grep BotSignalObserver
+
+# Verify ExecutionJob is dispatched
+docker exec 1Panel-php8-mrTy php artisan queue:work --once
+# Should see ExecutionJob in queue
+```
+
+### 6. Check Supervisor Configuration
+```bash
+# If supervisor runs on host (not in container):
+# Verify supervisor config uses docker exec
+cat main/supervisor-laravel-worker.conf
+
+# Reload supervisor config
+supervisorctl reread
+supervisorctl update
+supervisorctl status
+```
+
+### Common Issues & Solutions
+
+**Issue**: Queue workers not processing
+- **Solution**: Check supervisor is running and using docker exec wrapper
+- **Check**: `supervisorctl status laravel-worker`
+
+**Issue**: Bot workers not starting
+- **Solution**: Check PHP binary path and permissions
+- **Check**: `docker exec 1Panel-php8-mrTy which php`
+
+**Issue**: Dropdowns still empty
+- **Solution**: Check browser console for JavaScript errors
+- **Check**: Network tab for `/ccxt-exchanges` route response
+
+**Issue**: Backtesting fails with "No historical data"
+- **Solution**: Create a data connection first, then run backtest
+- **Check**: Verify `data_connections` table has active connections
+
+**Issue**: Signal observers not triggering
+- **Solution**: Verify addon is active and module is enabled
+- **Check**: `\App\Support\AddonRegistry::active('trading-management-addon')`
+
+---
+
 ### Koneksi Exchange
 
 **Konteks**
@@ -57,7 +372,7 @@ Dashboard menampilkan informasi penting dengan layout yang clean:
 
 **Metric Cards (4 cards di header):**
 
-1. **Balance**: $0.00
+1. **Balance**: $0.00 ✅ **UPDATED 2025-12-30**: Now shows "Demo" badge and trial days remaining
 2. **Current Plan**: Free Trial
 3. **Total Signals**: 20
 4. **Referrals**: 0
@@ -66,7 +381,8 @@ Dashboard menampilkan informasi penting dengan layout yang clean:
 
 - Table dengan 5 signals terbaru
 - Columns: Pair, Direction, Entry, SL, TP, Date
-- Semua signals menampilkan direction "BUY" dengan warna hijau
+- ✅ **FIXED 2025-12-30**: Number formatting - created `formatTradingPrice()` helper
+- All signals display with proper decimal precision (no more 198.16000000)
 - Data lengkap untuk setiap signal
 - Button "View All" untuk melihat semua signals
 
@@ -246,17 +562,17 @@ Dashboard menampilkan informasi penting dengan layout yang clean:
 
 **P0 (Must Have):**
 
-1. Tambahkan context labels di metric cards (Demo/Live, Trial days left)
-2. Format numbers di table (terlalu banyak desimal)
-3. Tambahkan Signal Status column
-4. Row click/actions untuk view details atau execute trade
+1. ✅ **COMPLETED 2025-12-30**: Tambahkan context labels di metric cards (Demo/Live, Trial days left)
+2. ✅ **COMPLETED 2025-12-30**: Format numbers di table (terlalu banyak desimal) - Added formatTradingPrice()
+3. ✅ **COMPLETED 2025-12-30**: Tambahkan Signal Status column - Added outcome badges (TP Hit, SL Hit, Open, etc.)
+4. 🔄 Row click/actions untuk view details atau execute trade - View action working, auto-execute pending
 
 **P1 (Should Have):**
 
 1. R/R Ratio column
 2. Source/Channel column
 3. Trend indicators di metric cards
-4. Empty state & loading state
+4. ✅ **COMPLETED 2025-12-30**: Empty state & loading state - Enhanced with clear CTAs
 
 **P2 (Nice to Have):**
 

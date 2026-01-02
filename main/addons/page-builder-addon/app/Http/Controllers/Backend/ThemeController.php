@@ -6,6 +6,7 @@ use Addons\PageBuilderAddon\App\Services\ThemeIntegrationService;
 use Addons\PageBuilderAddon\App\Services\ThemeTemplateService;
 use App\Http\Controllers\Controller;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 
 class ThemeController extends Controller
@@ -29,7 +30,7 @@ class ThemeController extends Controller
         $result = $this->themeIntegrationService->listThemes();
         
         if ($result['type'] === 'error') {
-            return redirect()->back()->with('error', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
         }
 
         $data['title'] = 'Theme Builder';
@@ -50,7 +51,7 @@ class ThemeController extends Controller
         $result = $this->themeTemplateService->loadThemeTemplate($themeName, $templatePath);
 
         if ($result['type'] === 'error') {
-            return redirect()->back()->with('error', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
         }
 
         $data['title'] = 'Edit Theme Template';
@@ -73,10 +74,10 @@ class ThemeController extends Controller
         $result = $this->themeIntegrationService->activateTheme($request->input('name'));
 
         if ($result['type'] === 'success') {
-            return redirect()->back()->with('success', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 
     /**
@@ -87,10 +88,10 @@ class ThemeController extends Controller
         $result = $this->themeIntegrationService->uploadTheme($request->file('theme_package'));
 
         if ($result['type'] === 'success') {
-            return redirect()->back()->with('success', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 
     /**
@@ -178,12 +179,12 @@ class ThemeController extends Controller
             }
 
             return redirect()->route('admin.page-builder.themes.index')
-                ->with('success', 'Theme created successfully');
+                ->with('notify', NotificationHelper::success('Theme created successfully', 'Success'));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('ThemeController::store failed', ['error' => $e->getMessage()]);
             
             return redirect()->back()
-                ->with('error', 'Failed to create theme: ' . $e->getMessage())
+                ->with('notify', NotificationHelper::error('Failed to create theme: ' . $e->getMessage(), 'Error'))
                 ->withInput();
         }
     }
@@ -227,9 +228,9 @@ class ThemeController extends Controller
         $result = $this->themeTemplateService->saveThemeTemplate($themeName, $templatePath, $content);
 
         if ($result['type'] === 'success') {
-            return redirect()->back()->with('success', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 }

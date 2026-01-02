@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ManualGatewayRequest;
 use App\Models\{
@@ -105,7 +106,7 @@ class ManageGatewayController extends Controller
         $isSuccess = $this->gateway->updateOnlineGateway($request, $gateway);
 
         if ($isSuccess['type'] == 'success')
-            return redirect()->back()->with('success', 'Gateway Updated Successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Gateway Updated Successfully', 'Success'));
     }
 
     public function gourlUpdate(Request $request)
@@ -175,7 +176,7 @@ class ManageGatewayController extends Controller
                 strtoupper($gatewayName) . '_PRIVATE_KEY' => $gatewayParameters['private_key'],
             ]);
         }
-        return redirect()->back()->with('success', 'Gateway Updated Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Gateway Updated Successfully'));
     }
 
 
@@ -193,7 +194,7 @@ class ManageGatewayController extends Controller
         $isSuccess = $this->gateway->createMethod($request);
 
         if ($isSuccess['type'] == 'success') {
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
         }
     }
 
@@ -213,6 +214,6 @@ class ManageGatewayController extends Controller
         $gateway = Gateway::findOrFail($id);
 
         if ($this->gateway->updateMethod($request, $gateway)['type'] == 'success')
-            return redirect()->back()->with('success', "Payment Gateway Setting Updated Successfully");
+            return redirect()->back()->with('notify', NotificationHelper::success("Payment Gateway Setting Updated Successfully", 'Success'));
     }
 }

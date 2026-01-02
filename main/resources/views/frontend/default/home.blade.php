@@ -1,7 +1,7 @@
 @extends(Config::themeView('layout.master'))
 
 @section('content')
-    @if (isset($page) && $page && $page->widgets)
+    @if (isset($page) && $page instanceof \App\Models\Page && $page->widgets()->exists())
         @foreach ($page->widgets as $section)
             @php
                 $renderedSection = Section::render($section->sections);

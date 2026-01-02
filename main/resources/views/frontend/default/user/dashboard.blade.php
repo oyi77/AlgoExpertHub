@@ -69,8 +69,19 @@
                         <div class="col-xl-12 col-lg-6">
                             <div class="d-card user-card not-hover"> 
                                 <div class="text-center">
-                                    <h5 class="user-card-title">{{ __('Total Balance') }}</h5>
+                                    <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+                                        <h5 class="user-card-title mb-0">{{ __('Total Balance') }}</h5>
+                                        <span class="badge bg-info">{{ __('Demo') }}</span>
+                                    </div>
                                     <h4 class="d-card-balance mt-xxl-3 mt-2">{{ Config::formatter($totalbalance) }}</h4>
+                                    @if($currentPlan)
+                                        <small class="text-muted">
+                                            {{ $currentPlan->plan->plan_name ?? 'Free Trial' }}
+                                            @if($plan_expired_at && $plan_expired_at->isFuture())
+                                                - {{ $plan_expired_at->diffInDays(now()) }} {{ __('days left') }}
+                                            @endif
+                                        </small>
+                                    @endif
                                     <div class="mt-4">
                                         <a href="{{ route('user.withdraw') }}" class="btn btn-md sp_btn_danger me-xxl-3 me-2"><i class="las la-minus-circle fs-lg"></i> {{ __('Withdraw') }}</a>
                                         <a href="{{ route('user.deposit') }}" class="btn btn-md sp_btn_success ms-xxl-3 ms-2"><i class="las la-plus-circle fs-lg"></i> {{ __('Deposit') }}</a>
@@ -129,37 +140,64 @@
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table sp_site_table">
-                                <thead>
-                                    <tr>
-                                        <th>{{ __('Signal Date') }}</th>
-                                        <th>{{ __('Title') }}</th>
-                                        <th>{{ __('Action') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-
-                                    @forelse ($signals as $signal)
-                                        <tr>
-                                            <td data-caption="{{ __('Signal Date') }}">
-                                                {{ $signal->created_at->format('dS M, Y -') }}
-
-                                                <span class="table-date">{{ $signal->created_at->format('h:i:s A') }}</span>
-                                            </td>
-                                            <td data-caption="{{ __('Title') }}">{{ $signal->signal->title }}</td>
-                                            <td data-caption="{{ __('Action') }}">
-                                                <a href="{{ route('user.signal.details', ['id' => $signal->signal->id, 'slug' => Str::slug($signal->signal->title)]) }}"
-                                                    class="btn btn-sm btn-outline-primary focus-ring" aria-label="{{ __('View signal') }} {{ $signal->signal->title }}">
-                                                    <i class="far fa-eye me-1"></i> {{ __('View') }}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td class="text-center" colspan="100%">{{ __('No Signals Found') }}</td>
-                                        </tr>
-                                    @endforelse
-
-                                </tbody>
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">{{ __('Signal Date') }}</th>
+                                                    <th scope="col">{{ __('Title') }}</th>
+                                                    <th scope="col">{{ __('Status') }}</th>
+                                                    <th scope="col">{{ __('Action') }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse ($signals as $signal)
+                                                    <tr>
+                                                        <td data-caption="{{ __('Signal Date') }}">
+                                                            {{ $signal->created_at->format('dS M, Y -') }}
+                                                            <span class="table-date">{{ $signal->created_at->format('h:i:s A') }}</span>
+                                                        </td>
+                                                        <td data-caption="{{ __('Title') }}">{{ $signal->signal->title }}</td>
+                                                        <td data-caption="{{ __('Status') }}">
+                                                            @php
+                                                                $outcome = $signal->signal->outcome ?? 'open';
+                                                                $badgeClass = match($outcome) {
+                                                                    'tp_hit' => 'bg-success',
+                                                                    'sl_hit' => 'bg-danger',
+                                                                    'manual_close' => 'bg-warning',
+                                                                    'cancelled' => 'bg-secondary',
+                                                                    'expired' => 'bg-dark',
+                                                                    default => 'bg-info'
+                                                                };
+                                                                $badgeText = match($outcome) {
+                                                                    'tp_hit' => 'TP Hit',
+                                                                    'sl_hit' => 'SL Hit',
+                                                                    'manual_close' => 'Closed',
+                                                                    'cancelled' => 'Cancelled',
+                                                                    'expired' => 'Expired',
+                                                                    default => 'Open'
+                                                                };
+                                                            @endphp
+                                                            <span class="badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                                                        </td>
+                                                        <td data-caption="{{ __('Action') }}">
+                                                            <a href="{{ route('user.signal.details', ['id' => $signal->signal->id, 'slug' => Str::slug($signal->signal->title)]) }}"
+                                                                class="btn btn-sm btn-outline-primary focus-ring" aria-label="{{ __('View signal') }} {{ $signal->signal->title }}">
+                                                                <i class="far fa-eye me-1"></i> {{ __('View') }}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td class="text-center py-5" colspan="4">
+                                                            <i class="fas fa-signal fa-3x text-muted mb-3 d-block"></i>
+                                                            <h6 class="mb-2">{{ __('No Signals Yet') }}</h6>
+                                                            <p class="text-muted small mb-3">{{ __('Subscribe to a plan or add a custom signal source to get started') }}</p>
+                                                            <a href="{{ route('user.plan') }}" class="btn btn-sm sp_theme_btn">
+                                                                <i class="fas fa-rocket me-1"></i>{{ __('View Plans') }}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
                             </table>
                         </div>
                     </div>
@@ -181,8 +219,19 @@
                         <div class="col-xl-12 col-lg-6">
                             <div class="d-card user-card card-modern"> 
                                 <div class="text-center">
-                                    <h5 class="user-card-title mb-3">{{ __('Total Balance') }}</h5>
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                        <h5 class="user-card-title mb-0">{{ __('Total Balance') }}</h5>
+                                        <span class="badge bg-info">{{ __('Demo') }}</span>
+                                    </div>
                                     <h4 class="d-card-balance mt-xxl-3 mt-2 mb-4">{{ Config::formatter($totalbalance) }}</h4>
+                                    @if($currentPlan)
+                                        <small class="text-muted mb-3 d-block">
+                                            {{ $currentPlan->plan->plan_name ?? 'Free Trial' }}
+                                            @if($plan_expired_at && $plan_expired_at->isFuture())
+                                                - {{ $plan_expired_at->diffInDays(now()) }} {{ __('days left') }}
+                                            @endif
+                                        </small>
+                                    @endif
                                     <div class="mt-4 d-flex gap-2 justify-content-center">
                                         <a href="{{ route('user.withdraw') }}" class="btn btn-danger btn-md focus-ring"><i class="las la-minus-circle me-1"></i> {{ __('Withdraw') }}</a>
                                         <a href="{{ route('user.deposit') }}" class="btn btn-success btn-md focus-ring"><i class="las la-plus-circle me-1"></i> {{ __('Deposit') }}</a>

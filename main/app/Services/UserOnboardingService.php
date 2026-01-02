@@ -56,6 +56,12 @@ class UserOnboardingService
                 'route' => 'user.trading.configuration.index',
                 'condition' => 'trading-management-addon',
             ],
+            'trading_bot' => [
+                'completed' => $this->hasTradingBot($user),
+                'required' => false,
+                'route' => 'user.trading-management.trading-bots.wizard.index',
+                'condition' => 'trading-management-addon',
+            ],
             'first_deposit' => [
                 'completed' => $this->hasMadeDeposit($user),
                 'required' => false,
@@ -113,6 +119,7 @@ class UserOnboardingService
             'signal_source' => __('Connect Signal Source'),
             'trading_connection' => __('Setup Auto Trading'),
             'trading_preset' => __('Create Trading Preset'),
+            'trading_bot' => __('Create Trading Bot'),
             'first_deposit' => __('Make First Deposit'),
         ];
 
@@ -189,6 +196,7 @@ class UserOnboardingService
             'signal_source' => 'signal_source_added',
             'trading_connection' => 'trading_connection_setup',
             'trading_preset' => 'trading_preset_created',
+            'trading_bot' => 'trading_bot_created',
             'first_deposit' => 'first_deposit_made',
         ];
 
@@ -262,6 +270,7 @@ class UserOnboardingService
             'signal_source_added' => $this->hasSignalSource($user),
             'trading_connection_setup' => $this->hasTradingConnection($user),
             'trading_preset_created' => $this->hasTradingPreset($user),
+            'trading_bot_created' => $this->hasTradingBot($user),
             'first_deposit_made' => $this->hasMadeDeposit($user),
         ]);
 
@@ -292,6 +301,7 @@ class UserOnboardingService
                 'signal_source_added' => false,
                 'trading_connection_setup' => false,
                 'trading_preset_created' => false,
+                'trading_bot_created' => false,
                 'first_deposit_made' => false,
                 'onboarding_completed' => false,
             ]
@@ -438,6 +448,34 @@ class UserOnboardingService
         }
 
         return false;
+    }
+
+    /**
+     * Check if user has created a trading bot
+     * 
+     * @param User $user
+     * @return bool
+     */
+    public function hasTradingBot(User $user): bool
+    {
+        if (!\App\Support\AddonRegistry::active('trading-management-addon')) {
+            return false;
+        }
+
+        if (!class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {
+            return false;
+        }
+
+        try {
+            return \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::where('user_id', $user->id)
+                ->exists();
+        } catch (\Exception $e) {
+            \Log::warning('Error checking trading bot', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**

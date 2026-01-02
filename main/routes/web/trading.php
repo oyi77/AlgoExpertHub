@@ -6,7 +6,7 @@ use App\Http\Controllers\SignalController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
-
+use App\Helpers\NotificationHelper;
 /*
 |--------------------------------------------------------------------------
 | Trading Routes
@@ -164,14 +164,14 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $preset = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::findOrFail($id);
                             
                             if ($preset->created_by_user_id !== auth()->id() && !is_null($preset->created_by_user_id)) {
-                                return back()->with('error', __('You can only edit your own presets.'));
+                                return back()->with('notify', NotificationHelper::error('You can only edit your own presets.', 'Error'));
                             }
                             
                             $title = 'Edit Trading Preset';
                             return view('trading-management::user.risk-management.presets.edit', compact('preset', 'title'));
                         } catch (\Exception $e) {
                             \Log::error('Trading preset edit error: ' . $e->getMessage());
-                            return back()->with('error', __('Preset not found.'));
+                            return back()->with('notify', NotificationHelper::error('Preset not found.', 'Error'));
                         }
                     })->name('edit');
                     
@@ -180,7 +180,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $preset = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::findOrFail($id);
                             
                             if (!$preset->isPublic() || !$preset->isClonable()) {
-                                return back()->with('error', __('This preset cannot be cloned.'));
+                                return back()->with('notify', NotificationHelper::error('This preset cannot be cloned.', 'Error'));
                             }
                             
                             if (method_exists($preset, 'cloneFor')) {
@@ -194,12 +194,12 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 $clonedPreset->save();
                             }
                             
-                            return back()->with('success', __('Preset cloned successfully!'));
+                            return back()->with('notify', NotificationHelper::success('Preset cloned successfully!', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('Trading preset clone error: ' . $e->getMessage(), [
                                 'trace' => $e->getTraceAsString()
                             ]);
-                            return back()->with('error', __('Failed to clone preset. Please try again.'));
+                            return back()->with('notify', NotificationHelper::error('Failed to clone preset. Please try again.', 'Error'));
                         }
                     })->name('clone');
                 });
@@ -277,15 +277,15 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $strategy = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::findOrFail($id);
                             
                             if (!$strategy->canBeClonedBy(auth()->id())) {
-                                return back()->with('error', __('This strategy cannot be cloned.'));
+                                return back()->with('notify', NotificationHelper::error('This strategy cannot be cloned.', 'Error'));
                             }
                             
                             $clonedStrategy = $strategy->cloneForUser(auth()->id());
                             
-                            return back()->with('success', __('Strategy cloned successfully!'));
+                            return back()->with('notify', NotificationHelper::success('Strategy cloned successfully!', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('Filter strategy clone error: ' . $e->getMessage());
-                            return back()->with('error', __('Failed to clone strategy. Please try again.'));
+                            return back()->with('notify', NotificationHelper::error('Failed to clone strategy. Please try again.', 'Error'));
                         }
                     })->name('clone');
                 });
@@ -363,7 +363,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $profile = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::findOrFail($id);
                             
                             if (!$profile->canBeClonedBy(auth()->id())) {
-                                return back()->with('error', __('This AI profile cannot be cloned.'));
+                                return back()->with('notify', NotificationHelper::error('This AI profile cannot be cloned.', 'Error'));
                             }
                             
                             $clonedProfile = $profile->replicate();
@@ -372,10 +372,10 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $clonedProfile->name = $profile->name . ' (Copy)';
                             $clonedProfile->save();
                             
-                            return back()->with('success', __('AI profile cloned successfully!'));
+                            return back()->with('notify', NotificationHelper::success('AI profile cloned successfully!', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('AI model profile clone error: ' . $e->getMessage());
-                            return back()->with('error', __('Failed to clone AI profile. Please try again.'));
+                            return back()->with('notify', NotificationHelper::error('Failed to clone AI profile. Please try again.', 'Error'));
                         }
                     })->name('clone');
                 });
@@ -649,10 +649,10 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             $settings = array_merge($settings, $validated);
                             \Illuminate\Support\Facades\Cache::put('smart_risk_settings_' . auth()->id(), $settings, now()->addYear());
                             
-                            return back()->with('success', __('Smart Risk settings updated successfully.'));
+                            return back()->with('notify', NotificationHelper::success('Smart Risk settings updated successfully.', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('SRM settings update error: ' . $e->getMessage());
-                            return back()->with('error', __('Failed to update settings. Please try again.'));
+                            return back()->with('notify', NotificationHelper::error('Failed to update settings. Please try again.', 'Error'));
                         }
                     })->name('settings.update');
                 });
@@ -672,7 +672,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             return view('trading-management::user.exchange-connections.create', compact('title', 'presets'));
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection create error: ' . $e->getMessage());
-                            return back()->with('error', __('Failed to load create form.'));
+                            return back()->with('notify', NotificationHelper::error('Failed to load create form.', 'Error'));
                         }
                     })->name('create');
 
@@ -693,7 +693,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection edit error: ' . $e->getMessage());
                             return redirect()->route('user.trading.configuration.index', ['tab' => 'data-connections'])
-                                ->with('error', __('Failed to load edit form.'));
+                                ->with('notify', NotificationHelper::error('Failed to load edit form.', 'Error'));
                         }
                     })->name('edit');
 
@@ -731,21 +731,21 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($request->ajax() || $request->wantsJson()) {
                                 return response()->json([
                                     'success' => true,
-                                    'message' => __('Connection updated successfully'),
+                                    'message' => NotificationHelper::success('Connection updated successfully', 'Success'),
                                     'redirect' => route('user.exchange-connections.show', $connection->id)
                                 ]);
                             }
                             
                             return redirect()->route('user.exchange-connections.show', $connection->id)
-                                ->with('success', __('Connection updated successfully'));
+                                ->with('notify', NotificationHelper::success('Connection updated successfully', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection update error: ' . $e->getMessage());
                             
                             if ($request->ajax() || $request->wantsJson()) {
-                                return response()->json(['success' => false, 'message' => __('Failed to update connection: ') . $e->getMessage()], 500);
+                                return response()->json(['success' => false, 'message' => NotificationHelper::error('Failed to update connection: ' . $e->getMessage(), 'Error')], 500);
                             }
                             
-                            return back()->with('error', __('Failed to update connection.'))->withInput();
+                            return back()->with('notify', NotificationHelper::error('Failed to update connection.', 'Error'))->withInput();
                         }
                     })->name('update');
 
@@ -761,16 +761,16 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($request->ajax() || $request->wantsJson()) {
                                 return response()->json([
                                     'success' => true,
-                                    'message' => __('Connection deleted successfully'),
+                                    'message' => NotificationHelper::success('Connection deleted successfully', 'Success'),
                                     'redirect' => route('user.trading.configuration.index', ['tab' => 'data-connections'])
                                 ]);
                             }
                             
                             return redirect()->route('user.trading.configuration.index', ['tab' => 'data-connections'])
-                                ->with('success', __('Connection deleted successfully'));
+                                ->with('notify', NotificationHelper::success('Connection deleted successfully', 'Success'));
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection delete error: ' . $e->getMessage());
-                            return response()->json(['success' => false, 'message' => __('Failed to delete connection.')], 500);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Failed to delete connection.', 'Error')], 500);
                         }
                     })->name('destroy');
 
@@ -823,7 +823,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if (!$adapter) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => __('Unsupported exchange or provider')
+                                    'message' => NotificationHelper::error('Unsupported exchange or provider', 'Error')
                                 ], 400);
                             }
 
@@ -832,7 +832,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 if (empty($validated['credentials']['account_id'])) {
                                     return response()->json([
                                         'success' => false,
-                                        'message' => __('MetaApi Account ID is required')
+                                        'message' => NotificationHelper::error('MetaApi Account ID is required', 'Error')
                                     ], 400);
                                 }
                                 
@@ -845,7 +845,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                     $accountInfo = $adapter->getAccountInfo();
                                     return response()->json([
                                         'success' => true,
-                                        'message' => __('Connection test successful'),
+                                        'message' => NotificationHelper::success('Connection test successful', 'Success'),
                                         'data' => ['account_info' => $accountInfo]
                                     ]);
                                 }
@@ -856,13 +856,13 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                         $balance = $adapter->fetchBalance();
                                         return response()->json([
                                             'success' => true,
-                                            'message' => __('Connection test successful'),
+                                            'message' => NotificationHelper::success('Connection test successful', 'Success'),
                                             'data' => ['balance' => $balance]
                                         ]);
                                     } catch (\Exception $e) {
                                         return response()->json([
                                             'success' => false,
-                                            'message' => __('Failed to connect: ') . $e->getMessage()
+                                            'message' => NotificationHelper::error('Failed to connect: ' . $e->getMessage(), 'Error')
                                         ], 400);
                                     }
                                 }
@@ -870,19 +870,19 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 // Fallback: just verify adapter was created
                                 return response()->json([
                                     'success' => true,
-                                    'message' => __('Connection test completed (credentials accepted)')
+                                    'message' => NotificationHelper::success('Connection test completed (credentials accepted)', 'Success')
                                 ]);
                             }
 
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Connection test method not available for this provider')
+                                'message' => NotificationHelper::error('Connection test method not available for this provider', 'Error')
                             ], 400);
 
                         } catch (\Illuminate\Validation\ValidationException $e) {
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Validation failed'),
+                                'message' => NotificationHelper::error('Validation failed', 'Error'),
                                 'errors' => $e->errors()
                             ], 422);
                         } catch (\Exception $e) {
@@ -892,7 +892,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             ]);
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Connection test failed: ') . $e->getMessage()
+                                'message' => NotificationHelper::error('Connection test failed: ' . $e->getMessage(), 'Error')
                             ], 500);
                         }
                     })->name('test-connection');
@@ -910,15 +910,15 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 return view('trading-management::user.exchange-connections.show', compact('title', 'connection'));
                             } else {
                                 return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
-                                    ->with('info', __('Connection details: ') . $connection->name);
+                                    ->with('info', NotificationHelper::info('Connection details: ' . $connection->name, 'Info'));
                             }
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                             return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
-                                ->with('error', __('Connection not found or you do not have permission to view it.'));
+                                ->with('notify', NotificationHelper::error('Connection not found or you do not have permission to view it.', 'Error'));
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection show error: ' . $e->getMessage());
                             return redirect()->route('user.trading.operations.index', ['tab' => 'connections'])
-                                ->with('error', __('Failed to load connection details.'));
+                                ->with('notify', NotificationHelper::error('Failed to load connection details.', 'Error'));
                         }
                     })->name('show');
                     
@@ -934,7 +934,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Connection not found or you do not have permission to test it.')
+                                'message' => NotificationHelper::error('Connection not found or you do not have permission to test it.', 'Error')
                             ], 404);
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection test error: ' . $e->getMessage(), [
@@ -942,7 +942,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             ]);
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Failed to test connection: ') . $e->getMessage()
+                                'message' => NotificationHelper::error('Failed to test connection: ' . $e->getMessage(), 'Error')
                             ], 500);
                         }
                     })->name('test');
@@ -962,14 +962,14 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 'success' => true,
                                 'is_active' => $connection->is_active,
                                 'message' => $connection->is_active 
-                                    ? __('Connection activated successfully') 
+                                    ? NotificationHelper::success('Connection activated successfully', 'Success') 
                                     : __('Connection deactivated successfully')
                             ]);
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                            return response()->json(['success' => false, 'message' => __('Connection not found.')], 404);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Connection not found.', 'Error')], 404);
                         } catch (\Exception $e) {
                             \Log::error('Connection activation toggle error: ' . $e->getMessage());
-                            return response()->json(['success' => false, 'message' => __('Failed to toggle activation.')], 500);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Failed to toggle activation.', 'Error')], 500);
                         }
                     })->name('toggle-activation');
                     
@@ -983,7 +983,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             
                             $hasSubscription = auth()->user()->currentplan()->exists();
                             if (!$hasSubscription) {
-                                return response()->json(['success' => false, 'message' => __('Active subscription required.')], 403);
+                                return response()->json(['success' => false, 'message' => NotificationHelper::error('Active subscription required.', 'Error')], 403);
                             }
                             
                             $connection->copy_trading_enabled = !$connection->copy_trading_enabled;
@@ -993,14 +993,14 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 'success' => true,
                                 'copy_trading_enabled' => $connection->copy_trading_enabled,
                                 'message' => $connection->copy_trading_enabled 
-                                    ? __('Copy trading enabled') 
-                                    : __('Copy trading disabled')
+                                    ? NotificationHelper::success('Copy trading enabled', 'Success') 
+                                    : NotificationHelper::success('Copy trading disabled', 'Success')
                             ]);
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                            return response()->json(['success' => false, 'message' => __('Connection not found.')], 404);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Connection not found.', 'Error')], 404);
                         } catch (\Exception $e) {
                             \Log::error('Copy trading toggle error: ' . $e->getMessage());
-                            return response()->json(['success' => false, 'message' => __('Failed to toggle copy trading.')], 500);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Failed to toggle copy trading.', 'Error')], 500);
                         }
                     })->name('toggle-copy-trading');
                     
@@ -1030,13 +1030,13 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 'success' => true,
                                 'data_fetching_enabled' => $connection->data_fetching_enabled,
                                 'trade_execution_enabled' => $connection->trade_execution_enabled,
-                                'message' => __('Purpose updated successfully')
+                                'message' => NotificationHelper::success('Purpose updated successfully', 'Success')
                             ]);
                         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-                            return response()->json(['success' => false, 'message' => __('Connection not found.')], 404);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Connection not found.', 'Error')], 404);
                         } catch (\Exception $e) {
                             \Log::error('Purpose update error: ' . $e->getMessage());
-                            return response()->json(['success' => false, 'message' => __('Failed to update purpose.')], 500);
+                            return response()->json(['success' => false, 'message' => NotificationHelper::error('Failed to update purpose.', 'Error')], 500);
                         }
                     })->name('update-purpose');
                     
@@ -1049,7 +1049,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             \Log::error('MetaApi add account error: ' . $e->getMessage());
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Failed to add account: ') . $e->getMessage()
+                                'message' => NotificationHelper::error('Failed to add account: ' . $e->getMessage(), 'Error')
                             ], 500);
                         }
                     })->name('add-metaapi-account');
@@ -1062,7 +1062,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             \Log::error('MetaApi account status error: ' . $e->getMessage());
                             return response()->json([
                                 'success' => false,
-                                'message' => __('Failed to get account status: ') . $e->getMessage()
+                                'message' => NotificationHelper::error('Failed to get account status: ' . $e->getMessage(), 'Error')
                             ], 500);
                         }
                     })->name('metaapi-account-status');
@@ -1081,13 +1081,13 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($isAjax) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => __('Your session has expired. Please log in again.'),
+                                    'message' => NotificationHelper::error('Your session has expired. Please log in again.', 'Error'),
                                     'redirect' => route('user.login')
                                 ], 401);
                             }
                             
                             return redirect()->route('user.login')
-                                ->with('error', __('Your session has expired. Please log in again.'));
+                                ->with('notify', NotificationHelper::error('Your session has expired. Please log in again.', 'Error'));
                         }
 
                         // Check if user is active
@@ -1099,12 +1099,12 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($isAjax) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => __('Your account is inactive. Please contact support.')
+                                    'message' => NotificationHelper::error('Your account is inactive. Please contact support.', 'Error')
                                 ], 403);
                             }
                             
                             return redirect()->back()
-                                ->with('error', __('Your account is inactive. Please contact support.'));
+                                ->with('notify', NotificationHelper::error('Your account is inactive. Please contact support.', 'Error'));
                         }
 
                         try {
@@ -1120,7 +1120,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             // Validate credentials based on provider
                             if ($validated['exchange_name'] === 'metaapi') {
                                 if (empty($validated['credentials']['account_id'])) {
-                                    $errorMessage = __('MetaApi Account ID is required. Add your MT account to MetaApi first, then copy the Account ID from your MetaApi dashboard.');
+                                    $errorMessage = NotificationHelper::error('MetaApi Account ID is required. Add your MT account to MetaApi first, then copy the Account ID from your MetaApi dashboard.', 'Error');
                                     
                                     if ($isAjax) {
                                         return response()->json([
@@ -1172,13 +1172,13 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($isAjax) {
                                 return response()->json([
                                     'success' => true,
-                                    'message' => __('Data connection created successfully.'),
+                                    'message' => NotificationHelper::success('Data connection created successfully.', 'Success'),
                                     'redirect' => route('user.trading.configuration.index', ['tab' => 'data-connections'])
                                 ], 201);
                             }
                             
                             return redirect()->route('user.trading.configuration.index', ['tab' => 'data-connections'])
-                                ->with('success', __('Data connection created successfully.'));
+                                ->with('notify', NotificationHelper::success('Data connection created successfully.', 'Success'));
                         } catch (\Illuminate\Validation\ValidationException $e) {
                             \Log::warning('Exchange connection store: Validation failed', [
                                 'user_id' => auth()->id(),
@@ -1188,7 +1188,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             if ($isAjax) {
                                 return response()->json([
                                     'success' => false,
-                                    'message' => __('Validation failed. Please check your input.'),
+                                    'message' => NotificationHelper::error('Validation failed. Please check your input.', 'Error'),
                                     'errors' => $e->errors()
                                 ], 422);
                             }
@@ -1201,7 +1201,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 'code' => $e->getCode()
                             ]);
                             
-                            $errorMessage = __('Database error occurred. Please try again or contact support if the problem persists.');
+                            $errorMessage = NotificationHelper::error('Database error occurred. Please try again or contact support if the problem persists.', 'Error');
                             
                             if ($isAjax) {
                                 return response()->json([
@@ -1211,7 +1211,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             }
                             
                             return back()
-                                ->with('error', $errorMessage)
+                                ->with('notify', NotificationHelper::error('Database error occurred. Please try again or contact support if the problem persists.', 'Error'))
                                 ->withInput();
                         } catch (\Exception $e) {
                             \Log::error('Exchange connection store error', [
@@ -1222,7 +1222,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                                 'trace' => $e->getTraceAsString()
                             ]);
                             
-                            $errorMessage = __('Failed to create connection. Please try again. If the problem persists, contact support.');
+                            $errorMessage = NotificationHelper::error('Failed to create connection. Please try again. If the problem persists, contact support.', 'Error')->withInput();
                             
                             if ($isAjax) {
                                 return response()->json([
@@ -1232,7 +1232,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
                             }
                             
                             return back()
-                                ->with('error', $errorMessage)
+                                ->with('notify', $errorMessage)
                                 ->withInput();
                         }
                     })->name('store');

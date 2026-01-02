@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Configuration;
 use App\Models\LoginSecurity;
 use Auth;
-use Hash;use Illuminate\Http\Request;
+use Hash;
+use Illuminate\Http\Request;
 
 class LoginSecurityController extends Controller
 {
@@ -55,7 +57,7 @@ class LoginSecurityController extends Controller
         $login_security->google2fa_secret = $google2fa->generateSecretKey();
         $login_security->save();
 
-        return redirect()->route('user.2fa')->with('success', "Secret key is generated.");
+        return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("Secret key is generated."));
     }
 
     /**
@@ -72,9 +74,9 @@ class LoginSecurityController extends Controller
         if ($valid) {
             $user->loginSecurity->google2fa_enable = 1;
             $user->loginSecurity->save();
-            return redirect()->route('user.2fa')->with('success', "2FA is enabled successfully.");
+            return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("2FA is enabled successfully."));
         } else {
-            return redirect()->route('user.2fa')->with('error', "Invalid verification Code, Please try again.");
+            return redirect()->route('user.2fa')->with('notify', NotificationHelper::error("Invalid verification Code, Please try again."));
         }
     }
 
@@ -85,7 +87,7 @@ class LoginSecurityController extends Controller
     {
         if (!(Hash::check($request->get('current-password'), Auth::user()->password))) {
 
-            return redirect()->back()->with("error", "Your password does not matches with your account password. Please try again.");
+            return redirect()->back()->with("notify", NotificationHelper::error("Your password does not matches with your account password. Please try again."));
         }
 
         $validatedData = $request->validate([
@@ -94,6 +96,6 @@ class LoginSecurityController extends Controller
         $user = Auth::user();
         $user->loginSecurity->google2fa_enable = 0;
         $user->loginSecurity->save();
-        return redirect()->route('user.2fa')->with('success', "2FA is now disabled.");
+        return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("2FA is now disabled."));
     }
 }

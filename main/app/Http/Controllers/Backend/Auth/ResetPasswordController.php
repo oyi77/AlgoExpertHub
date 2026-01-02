@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend\Auth;
 
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminResetPasswordRequest;
 use App\Models\AdminPasswordReset;
@@ -33,7 +34,7 @@ class ResetPasswordController extends Controller
 
         if (!$resetToken) {
 
-            return redirect()->route('admin.password.reset')->with(['error', 'Token not found!']);
+            return redirect()->route('admin.password.reset')->with('notify', NotificationHelper::error('Token not found!', 'Error'));
         }
         $email = $resetToken->email;
 
@@ -46,10 +47,10 @@ class ResetPasswordController extends Controller
         $isSuccess = $this->password->sendAgain();
 
         if ($isSuccess['type'] === 'error') {
-            return back()->with('error', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return back()->with('success', $isSuccess['message']);
+        return back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 
@@ -59,11 +60,11 @@ class ResetPasswordController extends Controller
         $isSuccess = $this->password->reset($request);
 
         if ($isSuccess['type'] === 'error') {
-            return redirect()->route('admin.login')->with('error', $isSuccess['message']);
+            return redirect()->route('admin.login')->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
 
-        return redirect()->route('admin.login')->with('success', $isSuccess['message']);
+        return redirect()->route('admin.login')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 

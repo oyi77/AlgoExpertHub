@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Backtesting\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Backtesting\Models\Backtest;
 use Addons\TradingManagement\Modules\Backtesting\Jobs\RunBacktestJob;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
@@ -33,7 +34,7 @@ class BacktestController extends Controller
         $data['backtests'] = $query->paginate(20);
         $data['activeFilter'] = $request->get('status', 'all');
         
-        return view('user.backtesting.index', $data);
+        return view('trading-management::user.backtesting.index', $data);
     }
 
     /**
@@ -75,7 +76,7 @@ class BacktestController extends Controller
             '1d' => '1 Day',
         ];
         
-        return view('user.backtesting.create', $data);
+        return view('trading-management::user.backtesting.create', $data);
     }
 
     /**
@@ -141,7 +142,7 @@ class BacktestController extends Controller
             }
 
             return redirect()->route('user.backtesting.show', $backtest->id)
-                ->with('success', 'Backtest created successfully. Click "Run Backtest" to start.');
+                ->with('notify', NotificationHelper::success('Backtest created successfully. Click "Run Backtest" to start.', 'Success'));
                 
         } catch (\Exception $e) {
             \Log::error('Backtest creation failed', [
@@ -157,7 +158,7 @@ class BacktestController extends Controller
             }
 
             return redirect()->back()
-                ->with('error', 'Failed to create backtest: ' . $e->getMessage())
+                ->with('notify', NotificationHelper::error('Failed to create backtest: ' . $e->getMessage(), 'Error'))
                 ->withInput();
         }
     }
@@ -174,7 +175,7 @@ class BacktestController extends Controller
         $data['title'] = $backtest->name;
         $data['backtest'] = $backtest;
         
-        return view('user.backtesting.show', $data);
+        return view('trading-management::user.backtesting.show', $data);
     }
 
     /**

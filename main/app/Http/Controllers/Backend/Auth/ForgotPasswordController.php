@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Auth;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminForgotPasswordRequest;
 use App\Models\Admin;
@@ -44,10 +45,10 @@ class ForgotPasswordController extends Controller
         $isFired = $this->forgotPassword->forgot($request);
 
         if($isFired['type'] === 'error'){
-            return back()->with('error', $isFired['message']);
+            return back()->with('notify', NotificationHelper::error($isFired['message'], 'Error'));
         }
 
-        return redirect()->route('admin.password.verify.code')->with('success', $isFired['message']);
+        return redirect()->route('admin.password.verify.code')->with('notify', NotificationHelper::success($isFired['message'], 'Success'));
     }
 
     public function verifyCodeForm(Request $request)
@@ -56,7 +57,7 @@ class ForgotPasswordController extends Controller
 
         // Check if session code exists, if not redirect back to reset form
         if (!session()->has('code')) {
-            return redirect()->route('admin.password.reset')->with('error', 'Session expired. Please request a new verification code.');
+            return redirect()->route('admin.password.reset')->with('notify', NotificationHelper::error('Session expired. Please request a new verification code.', 'Error'));
         }
 
         return view('backend.auth.code_verify')->with($data);
@@ -70,7 +71,7 @@ class ForgotPasswordController extends Controller
             
             // Check if session code exists
             if (!$sessionCode) {
-                return redirect()->route('admin.password.reset')->with('error', 'Session expired. Please request a new verification code.');
+                return redirect()->route('admin.password.reset')->with('notify', NotificationHelper::error('Session expired. Please request a new verification code.', 'Error'));
             }
 
             // Verify code from session
@@ -81,16 +82,16 @@ class ForgotPasswordController extends Controller
                     ->first();
 
                 if (!$resetToken) {
-                    return back()->with('error', 'Invalid or expired verification code. Please request a new code.');
+                    return back()->with('notify', NotificationHelper::error('Invalid or expired verification code. Please request a new code.', 'Error'));
                 }
 
-                return redirect()->route('admin.password.reset.form', $request->code)->with('success', 'Now you can reset your Password');
+                return redirect()->route('admin.password.reset.form', $request->code)->with('notify', NotificationHelper::success('Now you can reset your Password', 'Success'));
             }
 
-            return back()->with('error', 'Verification Code did not match');
+            return back()->with('notify', NotificationHelper::error('Verification Code did not match', 'Error'));
         } catch (\Exception $e) {
             \Log::error('Password verification error: ' . $e->getMessage());
-            return back()->with('error', 'An error occurred. Please try again.');
+            return back()->with('notify', NotificationHelper::error('An error occurred. Please try again.', 'Error'));
         }
     }
 }

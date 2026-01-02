@@ -18,9 +18,15 @@ class Manual extends BaseAdapter
         $validation = [];
         if ($gateway->parameter->user_proof_param != null) {
             foreach ($gateway->parameter->user_proof_param as $params) {
-                $params = (array) $params;
-                $key = strtolower(str_replace(' ', '_', $params['field_name']));
-                $validationRules = $params['validation'] == 'required' ? 'required' : 'sometimes';
+                // Safely convert object to array for PHP 8.4 compatibility
+                if (is_object($params)) {
+                    $params = get_object_vars($params);
+                }
+                if (!is_array($params)) {
+                    continue; // Skip invalid entries
+                }
+                $key = strtolower(str_replace(' ', '_', $params['field_name'] ?? ''));
+                $validationRules = ($params['validation'] ?? '') == 'required' ? 'required' : 'sometimes';
 
                 if ($params['type'] == 'text' || $params['type'] == 'textarea') {
                     $validation[$key] = $validationRules;

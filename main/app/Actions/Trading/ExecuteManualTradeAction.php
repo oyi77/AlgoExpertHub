@@ -47,6 +47,9 @@ class ExecuteManualTradeAction
             throw new \Exception('Entry price is required for limit orders');
         }
 
+        // Validate position sizing and risk parameters
+        $this->validateTradeParameters($data);
+
         $logData = [
             'connection_id' => $connection->id,
             'symbol' => $data['symbol'],
@@ -185,6 +188,87 @@ class ExecuteManualTradeAction
         $this->createPositionEntry($log, $connection, $data, $result, $orderId, $positionId, $direction);
 
         $connection->update(['last_trade_execution_at' => now()]);
+    }
+
+    /**
+     * Validate trade parameters before execution
+     */
+    protected function validateTradeParameters(array $data): void
+    {
+        // Validate lot size
+        $lotSize = (float) ($data['lot_size'] ?? 0);
+        if ($lotSize <= 0) {
+            throw new \InvalidArgumentException('Lot size must be greater than zero');
+        }
+        if ($lotSize > 100) {
+            throw new \InvalidArgumentException('Lot size exceeds maximum allowed (100 lots)');
+        }
+
+        // Validate entry price for limit orders
+        if (($data['order_type'] ?? 'market') === 'limit') {
+            $entryPrice = (float) ($data['entry_price'] ?? 0);
+            if ($entryPrice <= 0) {
+                throw new \InvalidArgumentException('Entry price must be greater than zero for limit orders');
+            }
+        }
+
+        // Validate stop loss if provided
+        if (!empty($data['sl_price'])) {
+            $slPrice = (float) $data['sl_price'];
+            $entryPrice = (float) ($data['entry_price'] ?? 0);
+            
+            if ($slPrice <= 0) {
+                throw new \InvalidArgumentException('Stop loss price must be greater than zero');
+            }
+
+            // Validate SL makes sense relative to entry
+            $direction = strtolower($data['direction'] ?? 'buy');
+            if ($entryPrice > 0) {
+                if (in_array($direction, ['buy', 'long'])) {
+                    // For buy orders, SL should be below entry
+                    if ($slPrice >= $entryPrice) {
+                        throw new \InvalidArgumentException('Stop loss must be below entry price for buy orders');
+                    }
+                } else {
+                    // For sell orders, SL should be above entry
+                    if ($slPrice <= $entryPrice) {
+                        throw new \InvalidArgumentException('Stop loss must be above entry price for sell orders');
+                    }
+                }
+            }
+        }
+
+        // Validate take profit if provided
+        if (!empty($data['tp_price'])) {
+            $tpPrice = (float) $data['tp_price'];
+            $entryPrice = (float) ($data['entry_price'] ?? 0);
+            
+            if ($tpPrice <= 0) {
+                throw new \InvalidArgumentException('Take profit price must be greater than zero');
+            }
+
+            // Validate TP makes sense relative to entry
+            $direction = strtolower($data['direction'] ?? 'buy');
+            if ($entryPrice > 0) {
+                if (in_array($direction, ['buy', 'long'])) {
+                    // For buy orders, TP should be above entry
+                    if ($tpPrice <= $entryPrice) {
+                        throw new \InvalidArgumentException('Take profit must be above entry price for buy orders');
+                    }
+                } else {
+                    // For sell orders, TP should be below entry
+                    if ($tpPrice >= $entryPrice) {
+                        throw new \InvalidArgumentException('Take profit must be below entry price for sell orders');
+                    }
+                }
+            }
+        }
+
+        // Validate symbol format
+        $symbol = $data['symbol'] ?? '';
+        if (empty($symbol) || strlen($symbol) < 3) {
+            throw new \InvalidArgumentException('Invalid trading symbol');
+        }
     }
 
     protected function createPositionEntry($log, $connection, $data, $result, $orderId, $positionId, $direction)

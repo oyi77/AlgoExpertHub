@@ -26,6 +26,7 @@ use DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Lang;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -68,16 +69,152 @@ class Helper
     }
 
     /**
+     * Convert object to array recursively, handling all edge cases
+     * 
+     * @param mixed $data Data to convert
+     * @return array|mixed Converted array or original value
+     */
+    private static function objectToArray($data)
+    {
+        if (is_object($data)) {
+            // Handle stdClass and other objects
+            $data = get_object_vars($data);
+        }
+        
+        if (is_array($data)) {
+            // Recursively convert nested objects
+            return array_map([self::class, 'objectToArray'], $data);
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Safely convert value to string, handling objects and other types
+     * 
+     * @param mixed $value Value to convert
+     * @return string String representation
+     */
+    private static function toString($value)
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+        
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+        
+        if (is_null($value)) {
+            return '';
+        }
+        
+        if (is_object($value)) {
+            // Try to get string representation
+            if (method_exists($value, '__toString')) {
+                return (string) $value;
+            }
+            // If object has a 'key' or 'name' property, use that
+            if (isset($value->key)) {
+                return self::toString($value->key);
+            }
+            if (isset($value->name)) {
+                return self::toString($value->name);
+            }
+            // Last resort: return class name
+            return get_class($value);
+        }
+        
+        if (is_array($value)) {
+            // For arrays, return first element if available
+            return !empty($value) ? self::toString(reset($value)) : '';
+        }
+        
+        // Fallback: try casting
+        try {
+            return (string) $value;
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
+
+    /**
      * Translate a string using Laravel's translation system
      * 
-     * @param string $key The translation key or default text
-     * @param array $replace Optional replacement values
+     * @param string|mixed $key The translation key or default text
+     * @param array|object $replace Optional replacement values (array or object)
      * @param string|null $locale Optional locale
      * @return string Translated string
      */
     public static function trans($key, $replace = [], $locale = null)
     {
-        return __($key, $replace, $locale);
+        // Safely convert $key to string, handling objects and other types
+        $key = self::toString($key);
+        
+        // If key is empty after conversion, return empty string
+        if (empty($key)) {
+            return '';
+        }
+        
+        // Convert object to array for PHP 8.4 compatibility
+        // This is critical for PHP 8.4 which has stricter type checking
+        if (is_object($replace)) {
+            // Use our custom conversion method that handles all edge cases
+            $replace = self::objectToArray($replace);
+        }
+        
+        // Ensure $replace is always an array
+        if (!is_array($replace)) {
+            $replace = [];
+        }
+        
+        // Clean up $replace array - ensure all values are strings or primitives
+        $replace = array_map(function($value) {
+            if (is_object($value)) {
+                return self::toString($value);
+            }
+            if (is_array($value)) {
+                return self::objectToArray($value);
+            }
+            return $value;
+        }, $replace);
+        
+        // Use the global trans() helper which handles PHP 8.4 better
+        // The trans() helper internally uses Lang::get() with proper type handling
+        try {
+            if ($locale !== null) {
+                return \trans($key, $replace, $locale);
+            }
+            return \trans($key, $replace);
+        } catch (\TypeError $e) {
+            // If trans() fails, try Lang facade directly
+            try {
+                if ($locale !== null) {
+                    return Lang::get($key, $replace, $locale);
+                }
+                return Lang::get($key, $replace);
+            } catch (\TypeError $e2) {
+                // Last resort: return the key itself
+                Log::warning('Translation type error in Helper::trans', [
+                    'key' => $key,
+                    'key_type' => gettype($key),
+                    'replace_type' => gettype($replace),
+                    'error' => $e2->getMessage()
+                ]);
+                return $key;
+            }
+        } catch (\Exception $e) {
+            // Fallback for any other translation errors
+            Log::warning('Translation error in Helper::trans', [
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            return $key;
+        }
     }
 
     public static function imagePath($folder, $default = false)
@@ -625,6 +762,29 @@ class Helper
 
     public static function getFile($folder_name, $filename, $default = false)
     {
+        // Ensure $filename is a string, not an object
+        if (is_object($filename)) {
+            // Try to get string representation safely
+            if (method_exists($filename, '__toString')) {
+                try {
+                    $filename = (string) $filename;
+                } catch (\Exception $e) {
+                    return asset('asset/images/placeholder.png');
+                }
+            } else {
+                // Object can't be converted to string
+                return asset('asset/images/placeholder.png');
+            }
+        }
+        
+        // Convert to string if it's not null, using safe conversion
+        if ($filename !== null) {
+            try {
+                $filename = (string) $filename;
+            } catch (\Exception $e) {
+                return asset('asset/images/placeholder.png');
+            }
+        }
 
         $general = self::config();
 
@@ -865,6 +1025,40 @@ class Helper
                     $i++;
                 }
             }
+        }
+    }
+
+    /**
+     * Generate navbar menu HTML from pages
+     * 
+     * @return string HTML for navbar menu items
+     */
+    public static function navbarMenus()
+    {
+        try {
+            $html = '';
+            
+            // Home link
+            $homeActive = request()->routeIs('home') ? 'active' : '';
+            $html .= '<li class="nav-item"><a class="nav-link ' . $homeActive . '" href="' . route('home') . '">' . __('Home') . '</a></li>';
+            
+            // Get active pages from database
+            $pages = Page::where('status', 1)
+                ->where('name', '!=', 'home')
+                ->orderBy('id')
+                ->get();
+            
+            foreach ($pages as $page) {
+                $isActive = request()->is('pages/' . $page->slug) ? 'active' : '';
+                $pageName = __(ucfirst(str_replace(['-', '_'], ' ', $page->name)));
+                $html .= '<li class="nav-item"><a class="nav-link ' . $isActive . '" href="' . route('pages', $page->slug) . '">' . $pageName . '</a></li>';
+            }
+            
+            return $html;
+        } catch (\Exception $e) {
+            // Fallback to basic menu if error occurs
+            $homeActive = request()->routeIs('home') ? 'active' : '';
+            return '<li class="nav-item"><a class="nav-link ' . $homeActive . '" href="' . route('home') . '">' . __('Home') . '</a></li>';
         }
     }
 }

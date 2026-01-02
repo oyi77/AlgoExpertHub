@@ -12,6 +12,7 @@ use Addons\MultiChannelSignalAddon\App\Http\Controllers\Controller;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramMtprotoService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -133,10 +134,10 @@ class SignalSourceController extends Controller
             ]);
 
             return redirect()->route('admin.signal-sources.index')
-                ->with('success', 'Signal source created successfully');
+                ->with('notify', NotificationHelper::success('Signal source created successfully', 'Success'));
         } catch (\Throwable $th) {
             return redirect()->route('admin.signal-sources.index')
-                ->with('error', 'Error: ' . $th->getMessage());
+                ->with('notify', NotificationHelper::error('Error: ' . $th->getMessage(), 'Error'));
         }
     }
 
@@ -150,18 +151,18 @@ class SignalSourceController extends Controller
         
         if (empty($globalConfig['api_id']) || empty($globalConfig['api_hash'])) {
             return redirect()->back()
-                ->with('error', 'Telegram global configuration not set. Please configure in Global Settings first.');
+                ->with('notify', NotificationHelper::error('Telegram global configuration not set. Please configure in Global Settings first.', 'Error'));
         }
         
         if (!$globalConfig['enabled']) {
             return redirect()->back()
-                ->with('error', 'Telegram MTProto is disabled in global settings.');
+                ->with('notify', NotificationHelper::error('Telegram MTProto is disabled in global settings.', 'Error'));
         }
 
         if (!empty($data['bot_token'])) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'MadelineProto uses USER authentication with phone number, NOT bot token.');
+                ->with('notify', NotificationHelper::error('MadelineProto uses USER authentication with phone number, NOT bot token.', 'Error'));
         }
 
         $result = $this->telegramMtprotoService->createChannel([
@@ -179,29 +180,29 @@ class SignalSourceController extends Controller
             }
 
             return redirect()->route('admin.signal-sources.index')
-                ->with('success', 'Telegram MTProto source created successfully');
+                ->with('notify', NotificationHelper::success('Telegram MTProto source created successfully', 'Success'));
         }
 
         if (in_array($result['type'], ['phone_required', 'code_required'], true)) {
             if (!isset($result['channel_source']) || !$result['channel_source']) {
                 return redirect()->route('admin.signal-sources.index')
-                    ->with('error', 'Failed to create source. Please try again.');
+                    ->with('notify', NotificationHelper::error('Failed to create source. Please try again.', 'Error'));
             }
 
             $source = $result['channel_source'];
             if ($source->type !== 'telegram_mtproto') {
                 return redirect()->route('admin.signal-sources.index')
-                    ->with('error', 'Invalid source type for authentication.');
+                    ->with('notify', NotificationHelper::error('Invalid source type for authentication.', 'Error'));
             }
 
             return redirect()->route('admin.signal-sources.authenticate', [
                 'id' => $source->id,
                 'step' => $result['step'] ?? 'phone',
-            ])->with('info', $result['message']);
+            ])->with('notify', NotificationHelper::info($result['message'], 'Info'));
         }
 
         return redirect()->route('admin.signal-sources.index')
-            ->with('error', $result['message'] ?? 'Failed to create source');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to create source', 'Error'));
     }
 
     /**
@@ -256,7 +257,7 @@ class SignalSourceController extends Controller
         $source->update($request->only(['name', 'parser_preference']));
 
         return redirect()->route('admin.signal-sources.index')
-            ->with('success', 'Signal source updated successfully');
+            ->with('notify', NotificationHelper::success('Signal source updated successfully', 'Success'));
     }
 
     /**
@@ -274,7 +275,7 @@ class SignalSourceController extends Controller
                 ob_end_clean();
             }
             return redirect()->route('admin.signal-sources.index')
-                ->with('error', 'This source type does not require user authentication.');
+                ->with('notify', NotificationHelper::error('This source type does not require user authentication.', 'Error'));
         }
 
         $originalPost = $_POST ?? [];
@@ -325,7 +326,7 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', 'Authentication error: ' . $e->getMessage());
+                ])->with('notify', NotificationHelper::error('Authentication error: ' . $e->getMessage(), 'Error'));
             }
 
             $output = '';
@@ -338,7 +339,7 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid authentication response. Please try again.');
+                ])->with('notify', NotificationHelper::error('Invalid authentication response. Please try again.', 'Error'));
             }
 
             if ($authResult['type'] === 'code_required') {
@@ -349,7 +350,7 @@ class SignalSourceController extends Controller
                     return redirect()->route('admin.signal-sources.authenticate', [
                         'id' => $source->id,
                         'step' => 'phone',
-                    ])->with('error', 'Failed to get verification code hash.');
+                    ])->with('notify', NotificationHelper::error('Failed to get verification code hash.', 'Error'));
                 }
 
                 $request->session()->put('admin_phone_code_hash', $phoneCodeHash);
@@ -358,7 +359,7 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'code',
-                ])->with('info', $authResult['message'] ?? 'Verification code sent.');
+                ])->with('notify', NotificationHelper::info($authResult['message'] ?? 'Verification code sent.', 'Info'));
             }
 
             if ($authResult['type'] === 'error') {
@@ -366,20 +367,20 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', $authResult['message'] ?? 'Failed to send verification code.');
+                ])->with('notify', NotificationHelper::error($authResult['message'] ?? 'Failed to send verification code.', 'Error'));
             }
 
             if ($authResult['type'] === 'success') {
                 $_POST = $originalPost;
                 return redirect()->route('admin.signal-sources.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
 
             $_POST = $originalPost;
             return redirect()->route('admin.signal-sources.authenticate', [
                 'id' => $source->id,
                 'step' => 'phone',
-            ])->with('error', 'Unexpected authentication response.');
+            ])->with('notify', NotificationHelper::error('Unexpected authentication response.', 'Error'));
         }
 
         if ($request->isMethod('post') && $step === 'code') {
@@ -392,7 +393,7 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid session. Please start over.');
+                ])->with('notify', NotificationHelper::error('Invalid session. Please start over.', 'Error'));
             }
 
             $source = $source->fresh();
@@ -401,7 +402,7 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'phone',
-                ])->with('error', 'Phone number not found.');
+                ])->with('notify', NotificationHelper::error('Phone number not found.', 'Error'));
             }
 
             $_ENV['MADELINE_PROGRAMMATIC_AUTH'] = true;
@@ -423,7 +424,7 @@ class SignalSourceController extends Controller
                 $request->session()->regenerateToken();
 
                 return redirect()->route('admin.signal-sources.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
 
             // Handle password requirement (2FA)
@@ -439,14 +440,14 @@ class SignalSourceController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'password',
-                ])->with('info', $result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.');
+                ])->with('notify', NotificationHelper::info($result['message'] ?? 'Two-factor authentication is enabled. Please enter your password.', 'Info'));
             }
 
             while (ob_get_level() > 0) {
                 ob_end_clean();
             }
             $_POST = $originalPost;
-            return redirect()->back()->with('error', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
         }
 
         // Handle password step
@@ -493,7 +494,7 @@ class SignalSourceController extends Controller
                 $request->session()->regenerateToken();
 
                 return redirect()->route('admin.signal-sources.index')
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
 
             $_POST = $originalPost;
@@ -504,7 +505,7 @@ class SignalSourceController extends Controller
                 $errorMessage .= ' Hint: ' . $source->config['password_hint'];
             }
             
-            return redirect()->back()->with('error', $errorMessage)->withInput();
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'))->withInput();
         }
 
         while (ob_get_level() > 0) {
@@ -524,13 +525,13 @@ class SignalSourceController extends Controller
 
         $status = $request->input('status');
         if (!in_array($status, ['active', 'paused'], true)) {
-            return redirect()->back()->with('error', 'Invalid status');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid status', 'Error'));
         }
 
         $source->update(['status' => $status]);
 
         $message = $status === 'active' ? 'Source resumed' : 'Source paused';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('notify', NotificationHelper::success($message, 'Success'));
     }
 
     /**
@@ -551,7 +552,7 @@ class SignalSourceController extends Controller
         $source->delete();
 
         return redirect()->route('admin.signal-sources.index')
-            ->with('success', 'Signal source deleted successfully');
+            ->with('notify', NotificationHelper::success('Signal source deleted successfully', 'Success'));
     }
 
     /**

@@ -5,12 +5,12 @@
     <div class="sp_container">
         <div class="row gy-4">
             <div class="col-xl-5 col-lg-5">
-                <img src="{{ Config::getFile('referral', $content->image_one) }}" alt="image">
+                <img src="{{ Config::getFile('referral', optional($content)->image_one ?? '') }}" alt="image">
             </div>
             <div class="col-xl-7 col-lg-7 ps-xl-5">
                 <h2 class="sp_theme_top_title"><?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?> </h2>
 
-                <p>{{ Config::trans($content->description) }}</p>
+                <p>{{ Config::trans(optional($content)->description ?? '') }}</p>
 
                 <div class="row gy-4 mt-2">
                     @for ($i = 0; $i < count($invest->level ?? []); $i++)

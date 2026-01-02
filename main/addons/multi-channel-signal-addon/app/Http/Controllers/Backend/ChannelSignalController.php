@@ -6,6 +6,7 @@ use Addons\MultiChannelSignalAddon\App\Http\Controllers\Controller;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelMessage;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\CurrencyPair;
 use App\Models\Market;
 use App\Models\Plan;
@@ -170,7 +171,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         $data['signal'] = $signal;
@@ -197,7 +198,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         $data['signal'] = $signal;
@@ -233,18 +234,18 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         $result = $this->signalService->update($request, $id);
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.channel-signals.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'] ?? 'Failed to update signal');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to update signal', 'Error'));
     }
 
     public function approve(int $id): RedirectResponse
@@ -257,12 +258,12 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         if ($signal->is_published) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('info', 'Signal is already published');
+                ->with('notify', NotificationHelper::info('Signal is already published', 'Info'));
         }
 
         $result = $this->signalService->sent($signal->id);
@@ -274,11 +275,11 @@ class ChannelSignalController extends Controller
             }
 
             return redirect()->route('admin.channel-signals.index')
-                ->with('success', 'Signal approved and published successfully');
+                ->with('notify', NotificationHelper::success('Signal approved and published successfully', 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'] ?? 'Failed to publish signal');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to publish signal', 'Error'));
     }
 
     public function reject(Request $request, int $id): RedirectResponse
@@ -295,7 +296,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         $channelMessage = ChannelMessage::where('signal_id', $signal->id)->first();
@@ -306,7 +307,7 @@ class ChannelSignalController extends Controller
         $signal->delete();
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', 'Signal rejected and deleted');
+            ->with('notify', NotificationHelper::success('Signal rejected and deleted', 'Success'));
     }
 
     public function bulkApprove(Request $request): RedirectResponse
@@ -339,7 +340,7 @@ class ChannelSignalController extends Controller
         }
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', "Approved and published {$approved} signals");
+            ->with('notify', NotificationHelper::success("Approved and published {$approved} signals", 'Success'));
     }
 
     public function bulkReject(Request $request): RedirectResponse
@@ -370,7 +371,7 @@ class ChannelSignalController extends Controller
         }
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', "Rejected and deleted {$rejected} signals");
+            ->with('notify', NotificationHelper::success("Rejected and deleted {$rejected} signals", 'Success'));
     }
     protected function detectSignalAddonColumns(): bool
     {
@@ -382,7 +383,7 @@ class ChannelSignalController extends Controller
     protected function redirectForMissingColumns(): RedirectResponse
     {
         return redirect()->route('admin.channel-signals.index')
-            ->with('error', 'Kolom auto_created belum tersedia. Jalankan migrasi addon Multi-Channel Signal (`php artisan migrate --path=main/addons/multi-channel-signal-addon/database/migrations`).');
+            ->with('notify', NotificationHelper::error('Kolom auto_created belum tersedia. Jalankan migrasi addon Multi-Channel Signal (`php artisan migrate --path=main/addons/multi-channel-signal-addon/database/migrations`).', 'Error'));
     }
 }
 

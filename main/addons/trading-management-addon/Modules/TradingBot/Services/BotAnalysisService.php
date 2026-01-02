@@ -5,6 +5,7 @@ namespace Addons\TradingManagement\Modules\TradingBot\Services;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionLog;
+use Addons\TradingManagement\Modules\PositionMonitoring\Services\EnhancedMetricsService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -66,6 +67,37 @@ class BotAnalysisService
             // Sharpe ratio (simplified calculation)
             $sharpeRatio = $this->calculateSharpeRatio($closedPositions);
 
+            // Calculate enhanced metrics
+            $enhancedMetricsService = app(EnhancedMetricsService::class);
+            
+            // Prepare trades array for enhanced metrics
+            $tradesArray = $closedPositions->map(function ($position) {
+                return [
+                    'profit_loss' => $position->profit_loss ?? 0,
+                    'entry_price' => $position->entry_price ?? 0,
+                    'exit_price' => $position->close_price ?? $position->exit_price ?? 0,
+                    'direction' => $position->direction ?? 'buy',
+                    'pnl' => $position->profit_loss ?? 0,
+                ];
+            })->toArray();
+            
+            // Calculate periodic returns for Sortino ratio
+            $returns = $closedPositions->pluck('profit_loss')->map(function ($pnl) use ($netProfit, $totalTrades) {
+                // Convert P&L to return percentage (simplified)
+                return $totalTrades > 0 ? ($pnl / ($netProfit / $totalTrades)) / 100 : 0;
+            })->toArray();
+            
+            // Calculate annual return (simplified - would need actual time period)
+            $annualReturn = $maxDrawdown > 0 ? (($netProfit / $maxDrawdown) * 100) : 0;
+            
+            $enhancedMetrics = $enhancedMetricsService->calculateAllMetrics(
+                $tradesArray,
+                $netProfit,
+                $maxDrawdown,
+                $annualReturn,
+                $returns
+            );
+
             return [
                 'metrics' => [
                     'total_trades' => $totalTrades,
@@ -81,6 +113,13 @@ class BotAnalysisService
                     'worst_trade' => round($worstTrade ?? 0, 2),
                     'max_drawdown' => round($maxDrawdown, 2),
                     'sharpe_ratio' => round($sharpeRatio, 4),
+                    // Enhanced metrics
+                    'expectancy' => $enhancedMetrics['expectancy'],
+                    'sortino_ratio' => $enhancedMetrics['sortino_ratio'],
+                    'mae' => $enhancedMetrics['mae'],
+                    'mfe' => $enhancedMetrics['mfe'],
+                    'recovery_factor' => $enhancedMetrics['recovery_factor'],
+                    'calmar_ratio' => $enhancedMetrics['calmar_ratio'],
                 ],
                 'positions' => [
                     'open' => $openPositions->count(),

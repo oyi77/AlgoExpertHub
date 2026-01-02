@@ -21,6 +21,28 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Architecture Overview
+
+This project implements a **Repository-Service Pattern** for better modularity and testing.
+
+### Repositories
+Data access is handled by Repositories located in `app/Repositories`. Key repositories include:
+- `UserRepository`
+- `SignalRepository`
+- `TradingBotRepository`
+- `ExchangeConnectionRepository`
+
+### Services
+Business logic is encapsulated in Service classes in `app/Services`, keeping controllers thin:
+- `TradingTerminalService`: Order execution logic.
+- `TradingPairProviderService`: Market data normalization.
+- `PositionManagementService`: Position tracking and closing.
+
+### Testing
+- **Unit Tests**: Business logic is verified in `tests/Unit/Services`.
+- **Repository Tests**: Data access is verified in `tests/Unit/Repositories`.
+- **Helper**: `tests/TestCase` is configured for in-memory SQLite testing for speed.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

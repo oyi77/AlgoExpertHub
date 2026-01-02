@@ -615,10 +615,16 @@
             <li class="nav-label">{{ __('Others') }}</li>
             @if ($adminUser && $adminUser->can('manage-logs'))
                 <li>
-                    <a href="{{ route('admin.transaction') }}" aria-expanded="false">
+                    <a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
                         <i data-feather="file-text"></i>
                         <span class="nav-text">{{ __('Manage Logs') }}</span>
                     </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('admin.transaction') }}">{{ __('Transaction Logs') }}</a></li>
+                        @if (class_exists(\Opcodes\LogViewer\Facades\LogViewer::class))
+                        <li><a href="{{ route('log-viewer.index') }}" target="_blank">{{ __('Application Logs') }} <i data-feather="external-link" style="width: 14px; height: 14px; margin-left: 5px;"></i></a></li>
+                        @endif
+                    </ul>
                 </li>
             @endif
 

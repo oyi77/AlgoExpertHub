@@ -1,4 +1,4 @@
-<section class="testimonial-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('testimonial', $content->image_two) }}');">
+<section class="testimonial-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('testimonial', optional($content)->image_two ?? '') }}');">
     <div class="sp_container">
         <div class="row justify-content-center">
             <div class="col-lg-6 text-center">

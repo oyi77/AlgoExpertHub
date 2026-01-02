@@ -3,6 +3,7 @@
 namespace Addons\AiConnectionAddon\App\Http\Controllers\Backend;
 
 use Addons\AiConnectionAddon\App\Models\AiProvider;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -40,7 +41,7 @@ class ProviderController extends Controller
         AiProvider::create($request->only(['name', 'slug', 'status']));
 
         return redirect()->route('admin.ai-connections.providers.index')
-            ->with('success', 'Provider created successfully');
+            ->with('notify', NotificationHelper::success('Provider created successfully', 'Success'));
     }
 
     /**
@@ -65,7 +66,7 @@ class ProviderController extends Controller
         $provider->update($request->only(['name', 'slug', 'status']));
 
         return redirect()->route('admin.ai-connections.providers.index')
-            ->with('success', 'Provider updated successfully');
+            ->with('notify', NotificationHelper::success('Provider updated successfully', 'Success'));
     }
 
     /**
@@ -75,13 +76,13 @@ class ProviderController extends Controller
     {
         if ($provider->connections()->exists()) {
             return redirect()->back()
-                ->with('error', 'Cannot delete provider with existing connections');
+                ->with('notify', NotificationHelper::error('Cannot delete provider with existing connections', 'Error'));
         }
 
         $provider->delete();
 
         return redirect()->route('admin.ai-connections.providers.index')
-            ->with('success', 'Provider deleted successfully');
+            ->with('notify', NotificationHelper::success('Provider deleted successfully', 'Success'));
     }
 }
 

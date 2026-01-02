@@ -7,6 +7,7 @@ use Addons\FilterStrategyAddon\App\Services\FilterStrategyService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NotificationHelper;
 
 class FilterStrategyController extends Controller
 {
@@ -52,12 +53,12 @@ class FilterStrategyController extends Controller
         try {
             $strategy = $this->service->create($validated, auth()->guard('admin')->user());
             return redirect()->route('admin.filter-strategies.index')
-                ->with('success', 'Filter strategy created successfully');
+                ->with('notify', NotificationHelper::success('Filter strategy created successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to create filter strategy', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create filter strategy: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create filter strategy: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -86,12 +87,12 @@ class FilterStrategyController extends Controller
         try {
             $this->service->update($filterStrategy, $validated, auth()->guard('admin')->user());
             return redirect()->route('admin.filter-strategies.index')
-                ->with('success', 'Filter strategy updated successfully');
+                ->with('notify', NotificationHelper::success('Filter strategy updated successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to update filter strategy', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update filter strategy: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update filter strategy: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -100,11 +101,11 @@ class FilterStrategyController extends Controller
         try {
             $this->service->delete($filterStrategy, auth()->guard('admin')->user());
             return redirect()->route('admin.filter-strategies.index')
-                ->with('success', 'Filter strategy deleted successfully');
+                ->with('notify', NotificationHelper::success('Filter strategy deleted successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to delete filter strategy', ['error' => $e->getMessage()]);
             return redirect()->back()
-                ->with('error', 'Failed to delete filter strategy: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete filter strategy: ' . $e->getMessage(), 'Error'));
         }
     }
 }

@@ -5,6 +5,7 @@ namespace Addons\AiConnectionAddon\App\Http\Controllers\Backend;
 use Addons\AiConnectionAddon\App\Models\AiProvider;
 use Addons\AiConnectionAddon\App\Models\AiConnection;
 use Addons\AiConnectionAddon\App\Services\AiConnectionService;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -79,7 +80,7 @@ class ConnectionController extends Controller
         ]);
 
         return redirect()->route('admin.ai-connections.connections.index')
-            ->with('success', 'Connection created successfully');
+            ->with('notify', NotificationHelper::success('Connection created successfully', 'Success'));
     }
 
     /**
@@ -144,7 +145,7 @@ class ConnectionController extends Controller
         $connection->update($data);
 
         return redirect()->route('admin.ai-connections.connections.index')
-            ->with('success', 'Connection updated successfully');
+            ->with('notify', NotificationHelper::success('Connection updated successfully', 'Success'));
     }
 
     /**
@@ -160,7 +161,7 @@ class ConnectionController extends Controller
         $connection->delete();
 
         return redirect()->route('admin.ai-connections.connections.index')
-            ->with('success', 'Connection deleted successfully');
+            ->with('notify', NotificationHelper::success('Connection deleted successfully', 'Success'));
     }
 
     /**
@@ -182,7 +183,7 @@ class ConnectionController extends Controller
         $connection->update(['status' => $newStatus]);
 
         return redirect()->back()
-            ->with('success', "Connection {$newStatus}");
+            ->with('notify', NotificationHelper::success("Connection {$newStatus}", 'Success'));
     }
 }
 

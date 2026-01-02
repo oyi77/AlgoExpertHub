@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Admin;
 use App\Models\Configuration;
 use App\Models\GeneralSetting;
@@ -15,7 +16,7 @@ class KycController extends Controller
     public function kyc()
     {
         if (auth()->user()->kyc == 1) {
-            return redirect()->route('user.dashboard')->with('success', 'Your Kyc Verification Successfull');
+            return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success('Your Kyc Verification Successfull'));
         }
         $data['title'] = 'Kyc Verification';
         return view(Helper::themeView('user.kyc'))->with($data);
@@ -29,7 +30,7 @@ class KycController extends Controller
         $user = auth()->user();
 
         if ($user->kyc == 2) {
-            return redirect()->back()->with('error', 'You have already submitted KYC form');
+            return redirect()->back()->with('notify', NotificationHelper::error('You have already submitted KYC form'));
         }
 
 
@@ -77,6 +78,6 @@ class KycController extends Controller
         $admin->notify(new KycUpdateNotification($user));
 
 
-        return back()->with('success', 'Successfully send Kyc Information to Admin');
+        return back()->with('notify', NotificationHelper::success('Successfully send Kyc Information to Admin'));
     }
 }

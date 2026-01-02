@@ -7,6 +7,7 @@ use Addons\TradingExecutionEngine\App\Models\ExecutionConnection;
 use Addons\TradingExecutionEngine\App\Models\ExecutionPosition;
 use Addons\TradingExecutionEngine\App\Services\PositionService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -167,10 +168,10 @@ class PositionController extends Controller
             ->findOrFail($id);
 
         if ($this->positionService->closePosition($position, 'manual')) {
-            return redirect()->back()->with('success', 'Position closed successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Position closed successfully', 'Success'));
         }
 
-        return redirect()->back()->with('error', 'Failed to close position');
+        return redirect()->back()->with('notify', NotificationHelper::error('Failed to close position', 'Error'));
     }
 }
 

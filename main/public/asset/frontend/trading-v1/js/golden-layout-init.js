@@ -202,12 +202,26 @@
                 const element = container.getElement();
                 element.appendChild(content);
 
-                // Re-initialize TradingView chart
-                setTimeout(() => {
-                    if (window.initChart) {
-                        window.initChart();
+                // Re-initialize TradingView chart - wait for container to be fully rendered
+                // Use multiple retries to ensure TradingView is loaded and container exists
+                let retryCount = 0;
+                const maxRetries = 20;
+                const initChartWithRetry = function() {
+                    const chartContainer = document.getElementById('tradingview_chart');
+                    if (chartContainer && typeof TradingView !== 'undefined' && window.initChart) {
+                        try {
+                            window.initChart();
+                        } catch (e) {
+                            console.error('Error initializing chart:', e);
+                        }
+                    } else if (retryCount < maxRetries) {
+                        retryCount++;
+                        setTimeout(initChartWithRetry, 200);
+                    } else {
+                        console.warn('Chart initialization failed after multiple retries');
                     }
-                }, 100);
+                };
+                setTimeout(initChartWithRetry, 300);
             }
         });
 
@@ -274,12 +288,24 @@
 
                 // Also initialize depth chart proactively (even if tab is not active)
                 // This ensures it's ready when user switches to depth tab
-                setTimeout(() => {
-                    if (window.initDepthChart) {
-                        window.initDepthChart();
-                        console.log('Depth chart proactively initialized');
+                // Wait for depth chart container to exist and ECharts to be loaded
+                let depthRetryCount = 0;
+                const maxDepthRetries = 15;
+                const initDepthChartWithRetry = function() {
+                    const depthContainer = document.getElementById('depthChart');
+                    if (depthContainer && typeof echarts !== 'undefined' && window.initDepthChart) {
+                        try {
+                            window.initDepthChart();
+                            console.log('Depth chart proactively initialized');
+                        } catch (e) {
+                            console.error('Error initializing depth chart:', e);
+                        }
+                    } else if (depthRetryCount < maxDepthRetries) {
+                        depthRetryCount++;
+                        setTimeout(initDepthChartWithRetry, 200);
                     }
-                }, 300);
+                };
+                setTimeout(initDepthChartWithRetry, 300);
             }
         });
 

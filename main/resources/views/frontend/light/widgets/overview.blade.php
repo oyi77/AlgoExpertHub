@@ -1,6 +1,6 @@
 <section class="overview-section sp_separator_bg sp_pt_120 sp_pb_120">
     <div class="overview-el">
-        <img src="{{ Config::getFile('overview', $content->image_one) }}" alt="image">
+        <img src="{{ Config::getFile('overview', optional($content)->image_one ?? '') }}" alt="image">
 
         <div class="map-dot dot-1"></div>
         <div class="map-dot dot-2"></div>
@@ -17,7 +17,7 @@
         <div class="row">
             <div class="col-lg-6">
                 <h2 class="sp_theme_top_title"><?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?></h2>
-                <p class="mb-lg-5 mb-4 mt-3">{{ Config::trans($content->description) }}</p>
+                <p class="mb-lg-5 mb-4 mt-3">{{ Config::trans(optional($content)->description ?? '') }}</p>
                 <div class="sp_overview_wrapper">
                     <div class="row gy-4">
                         @foreach ($element as $item)

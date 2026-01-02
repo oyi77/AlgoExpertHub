@@ -58,143 +58,134 @@
         flex-wrap: wrap; 
         align-content: center;
         justify-content: center;
+        background: linear-gradient(135deg, #1a0a0a 0%, #2e1a1a 100%);
+        padding: 40px 20px;
       }
       .error-pgae-wrapper #container {
         width: 100%;
+        text-align: center;
       }
-        .st0 {
-            font-family: 'FootlightMTLight';
-        }
-
-        .st1 {
-            font-size: 83.0285px;
-        }
-
-        .st2 {
-            fill: gray;
-        }
-
-        svg {
-            max-width: 1000px;
-            max-height: 600px;
-            text-align: center;
-            fill: #be0eea;
-        }
-
-        path#XMLID_5_ {
-
-            fill: #be0eea;
-            filter: url(#blurFilter4);
-        }
-
-        path#XMLID_11_,
-        path#XMLID_2_ {
-            fill: #be0eea;
-        }
-
-        .circle {
-            animation: out 2s infinite ease-out;
-            fill: #be0eea;
-        }
-
-        #container {
-            text-align: center;
-        }
-
-        .message {
-            color: #be0eea;
-        }
-
-        .message:after {
-            content: "]";
-        }
-
-        .message:before {
-            content: "[";
-        }
-
-        .message:after,
-        .message:before {
-
-            color: #be0eea;
-            font-size: 20px;
-            -webkit-animation-name: opacity;
-            -webkit-animation-duration: 2s;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-name: opacity;
-            animation-name: opacity;
-            -webkit-animation-duration: 2s;
-            animation-duration: 2s;
-            -webkit-animation-iteration-count: infinite;
-            animation-iteration-count: infinite;
-            margin: 0 25px;
-        }
-
-        @-webkit-keyframes opacity {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
-        @keyframes opacity {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
-        @keyframes out {
-            0% {
-                r: 1;
-                opacity: 0.9;
-            }
-
-            25% {
-                r: 5;
-                opacity: 0.3;
-            }
-
-            50% {
-                r: 10;
-                opacity: 0.2;
-            }
-
-            75% {
-                r: 15;
-                opacity: 0.1;
-            }
-
-            100% {
-                r: 20;
-                opacity: 0;
-            }
-        }
-        .error-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .error-actions .btn-outline-primary {
-            border: 2px solid #be0eea;
-            color: #be0eea;
-            background: transparent;
-        }
-        .error-actions .btn-outline-primary:hover {
-            background: #be0eea;
-            color: #fff;
-        }
-
+      
+      /* SVG Text - Make the "50" numbers bright and visible (red/orange for error) */
+      .st0 {
+          font-family: 'Arial', 'Helvetica', sans-serif;
+          font-weight: 700;
+      }
+      .st1 {
+          font-size: 120px;
+          fill: #FF6B6B !important; /* Bright red for error visibility */
+          stroke: #DC2626;
+          stroke-width: 2px;
+          filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.5));
+      }
+      
+      /* SVG Paths - Make all paths bright and visible */
+      .st2 {
+          fill: #FF6B6B !important; /* Changed from gray to bright red */
+          opacity: 0.8;
+      }
+      svg {
+          max-width: 1000px;
+          max-height: 600px;
+          text-align: center;
+          fill: #FF6B6B;
+      }
+      path#XMLID_5_ {
+          fill: #FF6B6B !important;
+          filter: url(#blurFilter4);
+          opacity: 0.7;
+      }
+      path#XMLID_11_,
+      path#XMLID_2_ {
+          fill: #FF6B6B !important;
+      }
+      .circle {
+          animation: out 2s infinite ease-out;
+          fill: #FF6B6B;
+      }
+      
+      /* Message Text - High contrast, larger, bold */
+      .message {
+          color: #FFFFFF !important;
+          font-size: 28px !important;
+          font-weight: 600 !important;
+          margin: 30px 0;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+          letter-spacing: 1px;
+          line-height: 1.6;
+      }
+      
+      /* Remove fading brackets - keep them visible */
+      .message:after {
+          content: "]";
+          color: #FF6B6B !important;
+          font-size: 28px;
+          opacity: 1 !important; /* Always visible */
+          margin: 0 15px;
+      }
+      .message:before {
+          content: "[";
+          color: #FF6B6B !important;
+          font-size: 28px;
+          opacity: 1 !important; /* Always visible */
+          margin: 0 15px;
+      }
+      
+      /* Button styling for better visibility */
+      .error-pgae-wrapper .main-btn {
+          background: #FF6B6B !important;
+          color: #FFFFFF !important;
+          font-weight: 600;
+          padding: 12px 30px;
+          border-radius: 8px;
+          box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+          transition: all 0.3s ease;
+          border: none;
+      }
+      .error-pgae-wrapper .main-btn:hover {
+          background: #DC2626 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+      }
+      
+      .error-actions {
+          display: flex;
+          justify-content: center;
+          gap: 15px;
+          flex-wrap: wrap;
+          margin-top: 30px;
+      }
+      .error-actions .btn-outline-primary {
+          border: 2px solid #FF6B6B !important;
+          color: #FF6B6B !important;
+          background: transparent !important;
+          font-weight: 600;
+          padding: 12px 30px;
+          border-radius: 8px;
+      }
+      .error-actions .btn-outline-primary:hover {
+          background: #FF6B6B !important;
+          color: #FFFFFF !important;
+          transform: translateY(-2px);
+      }
+      
+      /* Animation - Keep but make more visible */
+      @keyframes out {
+          0% { r: 1; opacity: 1; }
+          25% { r: 5; opacity: 0.6; }
+          50% { r: 10; opacity: 0.4; }
+          75% { r: 15; opacity: 0.2; }
+          100% { r: 20; opacity: 0; }
+      }
+      
+      /* Responsive */
+      @media (max-width: 768px) {
+          .st1 {
+              font-size: 80px;
+          }
+          .message {
+              font-size: 22px !important;
+          }
+      }
     </style>
 @endpush

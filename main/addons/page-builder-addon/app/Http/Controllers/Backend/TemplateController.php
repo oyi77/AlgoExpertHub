@@ -4,6 +4,7 @@ namespace Addons\PageBuilderAddon\App\Http\Controllers\Backend;
 
 use Addons\PageBuilderAddon\App\Services\TemplateService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 
 class TemplateController extends Controller
@@ -58,11 +59,11 @@ class TemplateController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.templates.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -90,11 +91,11 @@ class TemplateController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.templates.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -107,9 +108,9 @@ class TemplateController extends Controller
             $template = \Addons\PageBuilderAddon\App\Models\PageBuilderTemplate::findOrFail($id);
             $template->delete();
             
-            return redirect()->back()->with('success', 'Template deleted successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Template deleted successfully', 'Success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete template: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to delete template: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -122,9 +123,9 @@ class TemplateController extends Controller
         $result = $this->templateService->applyTemplate($id, $pageId);
 
         if ($result['type'] === 'success') {
-            return redirect()->back()->with('success', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 }

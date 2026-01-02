@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminUserRequest;
 use App\Jobs\SendEmailJob;
@@ -87,7 +88,7 @@ class ManageUserController extends Controller
         $isSuccess = $this->userservice->update($request);
 
         if ($isSuccess['type'] === 'success')
-            return back()->with('success', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function sendUserMail(Request $request, User $user)
@@ -111,7 +112,7 @@ class ManageUserController extends Controller
         
        
 
-        return back()->with('success', 'Send Email To user Successfully');
+        return back()->with('notify', NotificationHelper::success('Send Email To user Successfully', 'Success'));
     }
 
     public function disabled(Request $request)
@@ -184,10 +185,10 @@ class ManageUserController extends Controller
         $isSuccess = $this->userservice->updateBalance($request);
 
         if ($isSuccess['type'] === 'error') {
-            return back()->with('error', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return back()->with('success', $isSuccess['message']);
+        return back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function loginAsUser($id)
@@ -245,7 +246,7 @@ class ManageUserController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'Successfull');
+        return back()->with('notify', NotificationHelper::success('Successfull', 'Success'));
     }
 
     public function bulkMail(Request $request)
@@ -257,7 +258,7 @@ class ManageUserController extends Controller
 
         SendEmailJob::dispatch($data);
 
-        return redirect()->route('admin.user.index')->with('success', 'Successfully Send Mail');
+        return redirect()->route('admin.user.index')->with('notify', NotificationHelper::success('Successfully Send Mail', 'Success'));
     }
     public function changePassword(Request $request, User $user)
     {
@@ -268,6 +269,6 @@ class ManageUserController extends Controller
         $user->password = bcrypt($request->password);
         $user->save();
 
-        return back()->with('success', 'User Password Changed Successfully');
+        return back()->with('notify', NotificationHelper::success('User Password Changed Successfully', 'Success'));
     }
 }

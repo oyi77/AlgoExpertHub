@@ -5,7 +5,7 @@
         ->get();
 @endphp
 <!-- plan section start -->
-<section class="plan-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('plans', $content->image_one) }}');">
+<section class="plan-section sp_pt_120 sp_pb_120" style="background-image: url('{{ Config::getFile('plans', optional($content)->image_one ?? '') }}');">
     <div class="sp_container">
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">

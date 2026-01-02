@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TranslationSetting;
 use Addons\AiConnectionAddon\App\Models\AiConnection;
@@ -53,7 +54,7 @@ class TranslationSettingController extends Controller
             ]));
         }
 
-        return redirect()->back()->with('success', 'Translation settings updated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Translation settings updated successfully', 'Success'));
     }
 
     /**

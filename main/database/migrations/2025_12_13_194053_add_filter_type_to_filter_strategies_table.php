@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('filter_strategies', function (Blueprint $table) {
-            $table->string('filter_type')->default('technical')->after('name')->comment('technical, test, none');
+            if (!Schema::hasColumn('filter_strategies', 'filter_type')) {
+                $table->string('filter_type')->default('technical')->after('name')->comment('technical, test, none');
+            }
         });
     }
 

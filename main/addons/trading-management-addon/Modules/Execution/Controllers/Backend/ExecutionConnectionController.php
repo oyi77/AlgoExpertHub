@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Execution\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection;
 use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
@@ -98,7 +99,7 @@ class ExecutionConnectionController extends Controller
 
         return redirect()
             ->route('admin.trading-management.operations.connections.index')
-            ->with('success', 'Execution connection created successfully');
+            ->with('notify', NotificationHelper::success('Execution connection created successfully', 'Success'));
     }
 
     /**
@@ -139,7 +140,7 @@ class ExecutionConnectionController extends Controller
 
         return redirect()
             ->route('admin.trading-management.operations.connections.index')
-            ->with('success', 'Connection updated successfully');
+            ->with('notify', NotificationHelper::success('Connection updated successfully', 'Success'));
     }
 
     /**
@@ -151,7 +152,7 @@ class ExecutionConnectionController extends Controller
 
         return redirect()
             ->route('admin.trading-management.operations.connections.index')
-            ->with('success', 'Connection deleted successfully');
+            ->with('notify', NotificationHelper::success('Connection deleted successfully', 'Success'));
     }
 
     /**
@@ -199,7 +200,7 @@ class ExecutionConnectionController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Connection activated');
+            ->with('notify', NotificationHelper::success('Connection activated', 'Success'));
     }
 
     /**
@@ -211,7 +212,7 @@ class ExecutionConnectionController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Connection deactivated');
+            ->with('notify', NotificationHelper::success('Connection deactivated', 'Success'));
     }
 
     /**

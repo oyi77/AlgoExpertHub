@@ -7,6 +7,7 @@ use Addons\AiTradingAddon\App\Services\AiModelProfileService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NotificationHelper;
 
 class AiModelProfileController extends Controller
 {
@@ -66,12 +67,12 @@ class AiModelProfileController extends Controller
         try {
             $profile = $this->service->create($validated, auth()->user());
             return redirect()->route('user.ai-model-profiles.index')
-                ->with('success', 'AI Model Profile created successfully');
+                ->with('notify', NotificationHelper::success('AI Model Profile created successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to create AI model profile', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create AI model profile: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create AI model profile: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -115,12 +116,12 @@ class AiModelProfileController extends Controller
         try {
             $this->service->update($aiModelProfile, $validated, $user);
             return redirect()->route('user.ai-model-profiles.index')
-                ->with('success', 'AI Model Profile updated successfully');
+                ->with('notify', NotificationHelper::success('AI Model Profile updated successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to update AI model profile', ['error' => $e->getMessage()]);
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update AI model profile: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update AI model profile: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -134,11 +135,11 @@ class AiModelProfileController extends Controller
         try {
             $this->service->delete($aiModelProfile, $user);
             return redirect()->route('user.ai-model-profiles.index')
-                ->with('success', 'AI Model Profile deleted successfully');
+                ->with('notify', NotificationHelper::success('AI Model Profile deleted successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to delete AI model profile', ['error' => $e->getMessage()]);
             return redirect()->back()
-                ->with('error', 'Failed to delete AI model profile: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete AI model profile: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -147,11 +148,11 @@ class AiModelProfileController extends Controller
         try {
             $cloned = $this->service->clone($aiModelProfile, auth()->user());
             return redirect()->route('user.ai-model-profiles.edit', $cloned)
-                ->with('success', 'AI Model Profile cloned successfully');
+                ->with('notify', NotificationHelper::success('AI Model Profile cloned successfully', 'Success'));
         } catch (\Exception $e) {
             Log::error('Failed to clone AI model profile', ['error' => $e->getMessage()]);
             return redirect()->back()
-                ->with('error', 'Failed to clone AI model profile: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to clone AI model profile: ' . $e->getMessage(), 'Error'));
         }
     }
 }

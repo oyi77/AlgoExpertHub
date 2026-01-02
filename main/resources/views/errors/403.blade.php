@@ -49,133 +49,117 @@
 @push('style')
     <style>
         .error-pgae-wrapper {
-        min-height: 100vh;
-        display: flex;
-        flex-wrap: wrap; 
-        align-content: center;
-        justify-content: center;
-      }
-      .error-pgae-wrapper #container {
-        width: 100%;
-      }
+            min-height: 100vh;
+            display: flex;
+            flex-wrap: wrap; 
+            align-content: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a0a 0%, #2e2e1a 100%);
+            padding: 40px 20px;
+        }
+        .error-pgae-wrapper #container {
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* SVG Text - Make the "43" numbers bright and visible (yellow/orange for forbidden) */
         .st0 {
-            font-family: 'FootlightMTLight';
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-weight: 700;
         }
-
         .st1 {
-            font-size: 83.0285px;
+            font-size: 120px;
+            fill: #FBBF24 !important; /* Bright yellow/amber for forbidden */
+            stroke: #D97706;
+            stroke-width: 2px;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
         }
-
+        
+        /* SVG Paths - Make all paths bright and visible */
         .st2 {
-            fill: gray;
+            fill: #FBBF24 !important; /* Changed from gray to bright yellow */
+            opacity: 0.8;
         }
-
         svg {
             max-width: 1000px;
             max-height: 600px;
             text-align: center;
-            fill: #be0eea;
+            fill: #FBBF24;
         }
-
         path#XMLID_5_ {
-
-            fill: #be0eea;
+            fill: #FBBF24 !important;
             filter: url(#blurFilter4);
+            opacity: 0.7;
         }
-
         path#XMLID_11_,
         path#XMLID_2_ {
-            fill: #be0eea;
+            fill: #FBBF24 !important;
         }
-
         .circle {
             animation: out 2s infinite ease-out;
-            fill: #be0eea;
+            fill: #FBBF24;
         }
-
-        #container {
-            text-align: center;
-        }
-
+        
+        /* Message Text - High contrast, larger, bold */
         .message {
-            color: #be0eea;
+            color: #FFFFFF !important;
+            font-size: 32px !important;
+            font-weight: 600 !important;
+            margin: 30px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
         }
-
+        
+        /* Remove fading brackets - keep them visible */
         .message:after {
             content: "]";
+            color: #FBBF24 !important;
+            font-size: 32px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
         }
-
         .message:before {
             content: "[";
+            color: #FBBF24 !important;
+            font-size: 32px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
         }
-
-        .message:after,
-        .message:before {
-
-            color: #be0eea;
-            font-size: 20px;
-            -webkit-animation-name: opacity;
-            -webkit-animation-duration: 2s;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-name: opacity;
-            animation-name: opacity;
-            -webkit-animation-duration: 2s;
-            animation-duration: 2s;
-            -webkit-animation-iteration-count: infinite;
-            animation-iteration-count: infinite;
-            margin: 0 25px;
+        
+        /* Button styling for better visibility */
+        .error-pgae-wrapper .main-btn {
+            background: #FBBF24 !important;
+            color: #1a1a0a !important;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+            transition: all 0.3s ease;
         }
-
-        @-webkit-keyframes opacity {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
+        .error-pgae-wrapper .main-btn:hover {
+            background: #D97706 !important;
+            color: #FFFFFF !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
         }
-
-        @keyframes opacity {
-
-            0%,
-            100% {
-                opacity: 0;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
+        
+        /* Animation - Keep but make more visible */
         @keyframes out {
-            0% {
-                r: 1;
-                opacity: 0.9;
+            0% { r: 1; opacity: 1; }
+            25% { r: 5; opacity: 0.6; }
+            50% { r: 10; opacity: 0.4; }
+            75% { r: 15; opacity: 0.2; }
+            100% { r: 20; opacity: 0; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .st1 {
+                font-size: 80px;
             }
-
-            25% {
-                r: 5;
-                opacity: 0.3;
-            }
-
-            50% {
-                r: 10;
-                opacity: 0.2;
-            }
-
-            75% {
-                r: 15;
-                opacity: 0.1;
-            }
-
-            100% {
-                r: 20;
-                opacity: 0;
+            .message {
+                font-size: 24px !important;
             }
         }
-
     </style>
 @endpush

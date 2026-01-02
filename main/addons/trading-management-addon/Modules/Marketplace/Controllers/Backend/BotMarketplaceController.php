@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Marketplace\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Marketplace\Services\MarketplaceService;
 use Addons\TradingManagement\Modules\Marketplace\Models\{BotTemplate, SignalSourceTemplate, CompleteBot};
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class BotMarketplaceController extends Controller
         
         $template->update(['is_public' => true]);
 
-        return redirect()->back()->with('success', 'Template approved successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Template approved successfully', 'Success'));
     }
 
     public function feature($id, Request $request)
@@ -59,7 +60,7 @@ class BotMarketplaceController extends Controller
         
         $template->update(['is_featured' => !$template->is_featured]);
 
-        return redirect()->back()->with('success', 'Template featured status updated');
+        return redirect()->back()->with('notify', NotificationHelper::success('Template featured status updated', 'Success'));
     }
 
     public function destroy($id, Request $request)
@@ -69,7 +70,7 @@ class BotMarketplaceController extends Controller
         
         $template->delete();
 
-        return redirect()->route('admin.trading-management.marketplace.bots.index')->with('success', 'Template deleted successfully');
+        return redirect()->route('admin.trading-management.marketplace.bots.index')->with('notify', NotificationHelper::success('Template deleted successfully', 'Success'));
     }
 
     protected function getTemplate($type, $id)

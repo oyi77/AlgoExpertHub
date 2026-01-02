@@ -6,7 +6,24 @@
             <div class="col-xxl-2 col-lg-3 col-sm-4 col-6">
                 <div class="payment-box text-center">
                     <div class="payment-box-thumb">
-                        <img src="{{ Config::getFile('gateways', $gateway->image, true) }}" alt="Lights" class="trans-img">
+                        @php
+                            // Get gateway image or use placeholder
+                            $gatewayImage = null;
+                            if (!empty($gateway->image)) {
+                                $gatewayImage = Config::getFile('gateways', $gateway->image, true);
+                                // Verify the image actually exists
+                                $imagePath = public_path(str_replace(asset(''), '', $gatewayImage));
+                                if (!file_exists($imagePath)) {
+                                    $gatewayImage = null;
+                                }
+                            }
+                            
+                            // Fallback to placeholder if no valid image
+                            if (!$gatewayImage) {
+                                $gatewayImage = asset('asset/images/placeholder.png');
+                            }
+                        @endphp
+                        <img src="{{ $gatewayImage }}" alt="{{ ucwords(str_replace('_', ' ', $gateway->name)) }}" class="trans-img" onerror="this.src='{{ asset('asset/images/placeholder.png') }}'; this.onerror=null;">
                     </div>
                     <div class="payment-box-content">
                         <h4 class="title">{{ ucwords(str_replace('_', ' ', $gateway->name)) }}</h4>

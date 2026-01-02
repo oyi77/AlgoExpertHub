@@ -82,5 +82,5 @@ Route::get('install', [\App\Http\Controllers\PWAController::class, 'install'])->
 
 // Catch-all route for dynamic CMS pages
 // This must be LAST to avoid interfering with other routes
-Route::get('{pages}', [FrontendController::class, 'page'])->name('pages')->where('pages', '^(?!admin|api).*$');
+Route::get('{pages}', [FrontendController::class, 'page'])->name('pages')->where('pages', '^(?!admin|api|log-viewer).*$');
 

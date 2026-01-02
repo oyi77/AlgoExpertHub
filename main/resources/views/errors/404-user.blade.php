@@ -50,77 +50,112 @@
             align-content: center;
             justify-content: center;
             padding: 50px 0;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 100%);
         }
         .error-pgae-wrapper #container {
             width: 100%;
             text-align: center;
         }
+        
+        /* SVG Text - Make the "4" numbers bright and visible */
         .error-pgae-wrapper .st0 {
-            font-family: 'FootlightMTLight';
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-weight: 700;
         }
         .error-pgae-wrapper .st1 {
-            font-size: 83.0285px;
+            font-size: 100px;
+            fill: #1AFFD5 !important; /* Bright teal/cyan for high visibility */
+            stroke: #0D9488;
+            stroke-width: 2px;
+            filter: drop-shadow(0 0 20px rgba(26, 255, 213, 0.5));
         }
+        
+        /* SVG Paths - Make all paths bright and visible */
         .error-pgae-wrapper .st2 {
-            fill: gray;
+            fill: #1AFFD5 !important; /* Changed from gray to bright teal */
+            opacity: 0.8;
         }
         .error-pgae-wrapper svg {
             max-width: 1000px;
             max-height: 600px;
             text-align: center;
-            fill: #be0eea;
+            fill: #1AFFD5;
         }
         .error-pgae-wrapper path#XMLID_5_ {
-            fill: #be0eea;
+            fill: #1AFFD5 !important;
             filter: url(#blurFilter4);
+            opacity: 0.7;
         }
         .error-pgae-wrapper path#XMLID_11_,
         .error-pgae-wrapper path#XMLID_2_ {
-            fill: #be0eea;
+            fill: #1AFFD5 !important;
         }
         .error-pgae-wrapper .circle {
             animation: out 2s infinite ease-out;
-            fill: #be0eea;
+            fill: #1AFFD5;
         }
+        
+        /* Message Text - High contrast, larger, bold */
         .error-pgae-wrapper .message {
-            color: #be0eea;
-            font-size: 24px;
-            margin: 20px 0;
+            color: #FFFFFF !important;
+            font-size: 28px !important;
+            font-weight: 600 !important;
+            margin: 30px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
         }
+        
+        /* Remove fading brackets - keep them visible */
         .message:after {
             content: "]";
+            color: #1AFFD5 !important;
+            font-size: 28px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
         }
         .message:before {
             content: "[";
+            color: #1AFFD5 !important;
+            font-size: 28px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
         }
-        .message:after,
-        .message:before {
-            color: #be0eea;
-            font-size: 20px;
-            -webkit-animation-name: opacity;
-            -webkit-animation-duration: 2s;
-            -webkit-animation-iteration-count: infinite;
-            animation-name: opacity;
-            animation-duration: 2s;
-            animation-iteration-count: infinite;
-            margin: 0 25px;
+        
+        /* Button styling for better visibility */
+        .error-pgae-wrapper .main-btn {
+            background: #1AFFD5 !important;
+            color: #060F11 !important;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(26, 255, 213, 0.4);
+            transition: all 0.3s ease;
         }
-        @-webkit-keyframes opacity {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
+        .error-pgae-wrapper .main-btn:hover {
+            background: #0D9488 !important;
+            color: #FFFFFF !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 255, 213, 0.6);
         }
-        @keyframes opacity {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
+        
+        /* Animation - Keep but make more visible */
         @keyframes out {
-            0% { r: 1; opacity: 0.9; }
-            25% { r: 5; opacity: 0.3; }
-            50% { r: 10; opacity: 0.2; }
-            75% { r: 15; opacity: 0.1; }
+            0% { r: 1; opacity: 1; }
+            25% { r: 5; opacity: 0.6; }
+            50% { r: 10; opacity: 0.4; }
+            75% { r: 15; opacity: 0.2; }
             100% { r: 20; opacity: 0; }
         }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .error-pgae-wrapper .st1 {
+                font-size: 70px;
+            }
+            .error-pgae-wrapper .message {
+                font-size: 22px !important;
+            }
+        }
     </style>
-</style>
 @endpush
 

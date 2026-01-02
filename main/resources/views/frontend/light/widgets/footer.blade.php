@@ -32,7 +32,7 @@
 @endif
 
 <!-- footer section start -->
-@if($content && $content->content)
+@if($content && optional($content)->content ?? '')
 <footer class="footer-section">
     <div class="sp_footer_menu_area">
         <div class="back-to-top">
@@ -45,8 +45,8 @@
             <div class="row gy-4 justify-content-between">
                 <div class="col-lg-4 pe-xl-5">
                     <div class="sp_footer_item">
-                        <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('footer', $content->content->image_one ?? '') }}" alt="logo"></a>
-                        <p class="mt-4">{{ Config::trans($content->content->footer_short_details ?? '') }}</p>
+                        <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('footer', optional($content)->content ?? ''->image_one ?? '') }}" alt="logo"></a>
+                        <p class="mt-4">{{ Config::trans(optional($content)->content ?? ''->footer_short_details ?? '') }}</p>
                     </div>
                 </div>
                 <div class="col-lg-2 col-6">

@@ -234,7 +234,22 @@ class Signal extends Model
     {
         static::creating(function ($model) {
             if (!$model->getKey()) {
-                $model->id = rand(1111111, 99999999);
+                // Use cryptographically secure random_int with uniqueness check
+                // to prevent ID collisions
+                $maxAttempts = 10;
+                $attempt = 0;
+                
+                do {
+                    $id = random_int(10000000, 99999999);
+                    $exists = self::where('id', $id)->exists();
+                    $attempt++;
+                    
+                    if ($attempt >= $maxAttempts && $exists) {
+                        throw new \RuntimeException('Failed to generate unique signal ID after ' . $maxAttempts . ' attempts');
+                    }
+                } while ($exists);
+                
+                $model->id = $id;
             }
         });
     }

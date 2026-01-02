@@ -3,29 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
-use App\Models\InternalTrade;
-use App\Services\InternalBrokerService;
+use App\Services\TradingTerminalService;
+use App\Services\TradingPairProviderService;
+use App\Services\PositionManagementService;
 use App\Services\MarketDataService;
-use App\Services\Trading\MarketDataService as TradingMarketDataService;
-use App\Events\PositionUpdated;
+use App\Repositories\Contracts\ExchangeConnectionRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class TradingTerminalController extends Controller
 {
-    protected InternalBrokerService $brokerService;
-    protected MarketDataService $marketDataService;
-    protected TradingMarketDataService $tradingMarketDataService;
+    protected $tradingTerminalService;
+    protected $tradingPairProviderService;
+    protected $positionManagementService;
+    protected $marketDataService;
+    protected $exchangeConnectionRepository;
 
     public function __construct(
-        InternalBrokerService $brokerService,
+        TradingTerminalService $tradingTerminalService,
+        TradingPairProviderService $tradingPairProviderService,
+        PositionManagementService $positionManagementService,
         MarketDataService $marketDataService,
-        TradingMarketDataService $tradingMarketDataService
+        ExchangeConnectionRepositoryInterface $exchangeConnectionRepository
     ) {
-        $this->brokerService = $brokerService;
+        $this->tradingTerminalService = $tradingTerminalService;
+        $this->tradingPairProviderService = $tradingPairProviderService;
+        $this->positionManagementService = $positionManagementService;
         $this->marketDataService = $marketDataService;
-        $this->tradingMarketDataService = $tradingMarketDataService;
+        $this->exchangeConnectionRepository = $exchangeConnectionRepository;
     }
 
     /**
@@ -36,15 +42,14 @@ class TradingTerminalController extends Controller
         $user = Auth::user();
         $data['title'] = 'Trading Terminal';
         $data['symbol'] = $request->get('symbol', 'BTCUSDT');
-        $data['isDemo'] = $request->get('mode', 'real') === 'demo'; // Can be toggled via mode parameter
+        $data['isDemo'] = $request->get('mode', 'real') === 'demo';
         
         // Get user's balance
         $data['realBalance'] = $user->balance ?? 0;
-        // Demo balance: use user's demo_balance if exists, otherwise default to 10000 USDT
         $data['demoBalance'] = $user->demo_balance ?? 10000;
         
         // Get user's open positions
-        $data['openPositions'] = $this->brokerService->getUserOpenPositions($user);
+        $data['openPositions'] = $this->positionManagementService->getUserOpenPositions($user);
         
         // Get market data
         $data['currentPrice'] = $this->marketDataService->getCurrentPrice($data['symbol']);
@@ -58,27 +63,8 @@ class TradingTerminalController extends Controller
         })->where('user_id', Auth::id())->orderBy('id', 'desc')->paginate(Helper::pagination());
         
         // Get user's active exchange connections for real trading
-        $data['exchangeConnections'] = collect();
-        $data['hasExchangeConnections'] = false;
-        
-        if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
-            $data['exchangeConnections'] = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('user_id', Auth::id())
-                ->where('is_admin_owned', false)
-                ->where('is_active', true)
-                ->where(function($query) {
-                    $query->where('trade_execution_enabled', true)
-                          ->orWhere('connection_type', 'EXECUTION_ONLY')
-                          ->orWhere('connection_type', 'BOTH');
-                })
-                ->get();
-            $data['hasExchangeConnections'] = $data['exchangeConnections']->isNotEmpty();
-        } elseif (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
-            $data['exchangeConnections'] = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('user_id', Auth::id())
-                ->where('is_admin_owned', false)
-                ->where('is_active', true)
-                ->get();
-            $data['hasExchangeConnections'] = $data['exchangeConnections']->isNotEmpty();
-        }
+        $data['exchangeConnections'] = $this->exchangeConnectionRepository->getUserConnections($user->id, true);
+        $data['hasExchangeConnections'] = $data['exchangeConnections']->isNotEmpty();
 
         return view(Helper::themeView('user.trading_terminal'), $data);
     }
@@ -99,61 +85,8 @@ class TradingTerminalController extends Controller
         ]);
 
         try {
-            $user = Auth::user();
-            $mode = $validated['mode'] ?? 'demo';
-            $connectionId = $validated['connection_id'] ?? null;
-            
-            // Real trading mode: use exchange connection
-            if ($mode === 'real' && $connectionId) {
-                return $this->placeOrderOnExchange($validated, $connectionId);
-            }
-            
-            // Demo mode: use internal broker
-            // Get current market price
-            $currentPrice = $this->marketDataService->getCurrentPrice($validated['symbol']);
-            
-            if (!$currentPrice) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unable to fetch current market price',
-                ], 400);
-            }
-
-            // Place order with internal broker
-            $trade = $this->brokerService->placeOrder(
-                $user,
-                $validated['symbol'],
-                $validated['direction'],
-                $validated['quantity'],
-                $currentPrice,
-                $validated['sl_price'] ?? null,
-                $validated['tp_price'] ?? null
-            );
-
-            // Broadcast position update
-            broadcast(new PositionUpdated($user->id, [
-                'id' => $trade->id,
-                'symbol' => $trade->symbol,
-                'direction' => $trade->direction,
-                'quantity' => $trade->quantity,
-                'entry_price' => $trade->entry_price,
-                'current_price' => $trade->current_price,
-                'pnl' => $trade->pnl,
-                'status' => $trade->status,
-            ]));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order placed successfully (Demo Mode)',
-                'data' => [
-                    'trade_id' => $trade->id,
-                    'symbol' => $trade->symbol,
-                    'direction' => $trade->direction,
-                    'quantity' => $trade->quantity,
-                    'entry_price' => $trade->entry_price,
-                    'mode' => 'demo',
-                ],
-            ]);
+            $result = $this->tradingTerminalService->placeOrder(Auth::user(), $validated);
+            return response()->json($result);
 
         } catch (\Exception $e) {
             Log::error('Failed to place order', [
@@ -169,211 +102,17 @@ class TradingTerminalController extends Controller
     }
 
     /**
-     * Place order on connected exchange
-     */
-    protected function placeOrderOnExchange(array $validated, int $connectionId)
-    {
-        try {
-            // Get connection
-            $connection = null;
-            if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
-                $connection = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('id', $connectionId)
-                    ->where('user_id', Auth::id())
-                    ->where('is_admin_owned', false)
-                    ->where('is_active', true)
-                    ->firstOrFail();
-            } elseif (class_exists(\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::class)) {
-                $connection = \Addons\TradingManagement\Modules\Execution\Models\ExecutionConnection::where('id', $connectionId)
-                    ->where('user_id', Auth::id())
-                    ->where('is_admin_owned', false)
-                    ->where('is_active', true)
-                    ->firstOrFail();
-            }
-
-            if (!$connection) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Exchange connection not found or inactive',
-                ], 404);
-            }
-
-            // Get adapter (same logic as ExecutionLogController)
-            $adapter = $this->getAdapter($connection);
-            if (!$adapter || !method_exists($adapter, 'placeOrder')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trade execution not supported for this connection type',
-                ], 400);
-            }
-
-            // Map direction
-            $direction = strtolower($validated['direction']);
-            if (in_array($direction, ['long', 'short'])) {
-                $direction = $direction === 'long' ? 'buy' : 'sell';
-            }
-
-            // Execute trade via adapter
-            $result = $adapter->placeOrder(
-                $validated['symbol'],
-                $direction,
-                $validated['quantity'],
-                'market', // Terminal always uses market orders
-                null, // No entry price for market orders
-                $validated['sl_price'] ?? null,
-                $validated['tp_price'] ?? null,
-                'Terminal: ' . $validated['symbol']
-            );
-
-            if (isset($result['success']) && $result['success'] === false) {
-                throw new \Exception($result['message'] ?? 'Trade execution failed');
-            }
-
-            // Create execution log
-            $ExecutionLog = \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::class;
-            $log = $ExecutionLog::create([
-                'connection_id' => $connection->id,
-                'signal_id' => null,
-                'symbol' => $validated['symbol'],
-                'direction' => $direction,
-                'quantity' => $validated['quantity'],
-                'entry_price' => $result['data']['openPrice'] ?? $result['data']['price'] ?? null,
-                'sl_price' => $validated['sl_price'],
-                'tp_price' => $validated['tp_price'],
-                'execution_type' => 'market',
-                'status' => 'executed',
-                'executed_at' => now(),
-                'order_id' => $result['orderId'] ?? $result['numericTicket'] ?? null,
-            ]);
-
-            // Create position if needed
-            $orderId = $result['orderId'] ?? $result['numericTicket'] ?? null;
-            $positionId = $result['positionId'] ?? null;
-            
-            if ($orderId || $positionId) {
-                $ExecutionPosition = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class;
-                $entryPrice = $result['data']['openPrice'] ?? $result['data']['price'] ?? 0;
-                
-                $ExecutionPosition::create([
-                    'connection_id' => $connection->id,
-                    'execution_log_id' => $log->id,
-                    'order_id' => $orderId ? (string)$orderId : null,
-                    'symbol' => $validated['symbol'],
-                    'direction' => $direction,
-                    'quantity' => $validated['quantity'],
-                    'entry_price' => $entryPrice > 0 ? $entryPrice : 0,
-                    'current_price' => $entryPrice > 0 ? $entryPrice : 0,
-                    'sl_price' => $validated['sl_price'],
-                    'tp_price' => $validated['tp_price'],
-                    'status' => 'open',
-                ]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Order placed successfully on exchange',
-                'data' => [
-                    'order_id' => $orderId,
-                    'position_id' => $positionId,
-                    'symbol' => $validated['symbol'],
-                    'direction' => strtoupper($direction),
-                    'quantity' => $validated['quantity'],
-                    'entry_price' => $result['data']['openPrice'] ?? $result['data']['price'] ?? 'Market',
-                    'mode' => 'real',
-                    'connection' => $connection->name,
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to place order on exchange', [
-                'user_id' => Auth::id(),
-                'connection_id' => $connectionId,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to place order: ' . $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    /**
-     * Get adapter for connection (same logic as ExecutionLogController)
-     */
-    protected function getAdapter($connection)
-    {
-        $connectionType = $connection->connection_type ?? null;
-        $provider = $connection->provider ?? null;
-        $type = $connection->type ?? null;
-        $exchangeName = $connection->exchange_name ?? null;
-        
-        if ($connectionType === 'CRYPTO_EXCHANGE' || ($type === 'crypto' && !$connectionType)) {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\CcxtAdapter(
-                $connection->credentials,
-                $provider ?? $exchangeName ?? 'binance'
-            );
-        }
-        
-        if ($provider === 'mtapi_grpc' || (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'mtapi_grpc')) {
-            $credentials = $connection->credentials;
-            $globalSettings = \App\Services\GlobalConfigurationService::get('mtapi_global_settings', []);
-            if (!empty($globalSettings['base_url'])) {
-                $credentials['base_url'] = $globalSettings['base_url'];
-            }
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiGrpcAdapter($credentials);
-        } elseif ($provider === 'metaapi' || (isset($connection->credentials['provider']) && $connection->credentials['provider'] === 'metaapi')) {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MetaApiAdapter($connection->credentials);
-        } else {
-            return new \Addons\TradingManagement\Modules\DataProvider\Adapters\MtapiAdapter($connection->credentials);
-        }
-    }
-
-    /**
      * Close position
      */
     public function closePosition(Request $request, $id)
     {
         try {
-            $trade = InternalTrade::where('id', $id)
-                ->where('user_id', Auth::id())
-                ->firstOrFail();
-
-            if ($trade->isClosed()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Position is already closed',
-                ], 400);
-            }
-
-            // Get current market price
-            $currentPrice = $this->marketDataService->getCurrentPrice($trade->symbol);
+            $result = $this->positionManagementService->closePosition($id, Auth::user());
             
-            if (!$currentPrice) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unable to fetch current market price',
-                ], 400);
-            }
-
-            // Close position
-            $this->brokerService->closePosition($trade, $currentPrice);
-
-            // Broadcast position update
-            broadcast(new PositionUpdated(Auth::id(), [
-                'id' => $trade->id,
-                'status' => 'closed',
-                'close_price' => $currentPrice,
-                'pnl' => $trade->pnl,
-            ]));
-
             return response()->json([
                 'success' => true,
                 'message' => 'Position closed successfully',
-                'data' => [
-                    'trade_id' => $trade->id,
-                    'close_price' => $currentPrice,
-                    'pnl' => $trade->pnl,
-                ],
+                'data' => $result,
             ]);
 
         } catch (\Exception $e) {
@@ -395,7 +134,7 @@ class TradingTerminalController extends Controller
      */
     public function getPositions()
     {
-        $positions = $this->brokerService->getUserOpenPositions(Auth::user());
+        $positions = $this->positionManagementService->getUserOpenPositions(Auth::user());
 
         return response()->json([
             'success' => true,
@@ -425,13 +164,7 @@ class TradingTerminalController extends Controller
         $type = $request->get('type', 'price'); // price, orderbook, trades, candlestick
 
         try {
-            \Log::info('Market data request', [
-                'symbol' => $symbol,
-                'type' => $type,
-                'interval' => $request->get('interval'),
-                'limit' => $request->get('limit'),
-            ]);
-
+            // Can be extracted to Service if logic grows, keeping proxy for now
             $data = match ($type) {
                 'price' => [
                     'price' => $this->marketDataService->getCurrentPrice($symbol),
@@ -448,7 +181,6 @@ class TradingTerminalController extends Controller
             };
 
             if ($data === null) {
-                \Log::warning('Invalid data type requested', ['type' => $type]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid data type: ' . $type,
@@ -461,16 +193,15 @@ class TradingTerminalController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Failed to fetch market data', [
+            Log::error('Failed to fetch market data', [
                 'symbol' => $symbol,
                 'type' => $type,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch market data: ' . $e->getMessage(),
+                'message' => 'Failed to fetch market data',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
         }
@@ -482,189 +213,16 @@ class TradingTerminalController extends Controller
     public function getTradingPairs(Request $request)
     {
         try {
-            $category = $request->get('category', 'all'); // all, crypto, forex, indices, commodities, stocks
+            $category = $request->get('category', 'all');
+            $data = $this->tradingPairProviderService->getTradingPairs($category);
             
-            // Define quote currencies that should not be used as base assets
-            $quoteAssets = ['USDT', 'BUSD', 'USDC', 'DAI', 'TUSD', 'PAX', 'USDP', 'UST'];
-            
-            // Get crypto pairs
-            $cryptoData = $this->tradingMarketDataService->getCryptoData(50);
-            // Filter out quote assets to prevent pairs like USDT/USDT
-            $cryptoData = array_filter($cryptoData, function ($item) use ($quoteAssets) {
-                return !in_array(strtoupper($item['symbol']), $quoteAssets);
-            });
-            
-            $cryptoPairs = array_map(function ($item) {
-                return [
-                    'symbol' => $item['symbol'] . 'USDT',
-                    'displaySymbol' => $item['symbol'] . '/USDT',
-                    'name' => $item['name'],
-                    'category' => 'crypto',
-                    'price' => $item['price'],
-                    'change24h' => $item['change_24h'] ?? 0,
-                    'volume' => $item['volume'] ?? 0,
-                    'leverage' => '100x',
-                    'icon' => $item['image'] ?? null,
-                ];
-            }, $cryptoData);
-
-            // Get forex pairs
-            $forexData = $this->tradingMarketDataService->getForexData(20);
-            $forexPairs = array_map(function ($item) {
-                $symbol = $item['symbol'];
-                // Format display symbol for forex (EURUSD -> EUR/USD)
-                $displaySymbol = $symbol;
-                if (strlen($symbol) === 6) {
-                    $displaySymbol = substr($symbol, 0, 3) . '/' . substr($symbol, 3, 3);
-                }
-                
-                return [
-                    'symbol' => $symbol,
-                    'displaySymbol' => $displaySymbol,
-                    'name' => $item['name'],
-                    'category' => 'forex',
-                    'price' => $item['price'],
-                    'change24h' => $item['change_24h'] ?? 0,
-                    'volume' => $item['volume'] ?? 0,
-                    'leverage' => '200x',
-                    'icon' => null,
-                ];
-            }, $forexData);
-            
-            // Filter out forex pairs where base = quote (e.g., EUR/EUR)
-            $forexPairs = array_filter($forexPairs, function ($pair) {
-                $symbol = $pair['symbol'];
-                if (strlen($symbol) === 6) {
-                    $base = substr($symbol, 0, 3);
-                    $quote = substr($symbol, 3, 3);
-                    return $base !== $quote;
-                }
-                return true;
-            });
-
-            // Get indices
-            $indicesData = $this->tradingMarketDataService->getIndicesData(15);
-            $indicesPairs = array_map(function ($item) {
-                return [
-                    'symbol' => $item['symbol'],
-                    'displaySymbol' => $item['symbol'],
-                    'name' => $item['name'],
-                    'category' => 'indices',
-                    'price' => $item['price'],
-                    'change24h' => $item['change_24h'] ?? 0,
-                    'volume' => $item['volume'] ?? 0,
-                    'leverage' => '50x',
-                    'icon' => null,
-                ];
-            }, $indicesData);
-
-            // Get commodities
-            $commoditiesData = $this->tradingMarketDataService->getCommoditiesData(15);
-            $commoditiesPairs = array_map(function ($item) {
-                $symbol = $item['symbol'];
-                // Format display symbol (XAUUSD -> XAU/USD)
-                $displaySymbol = $symbol;
-                if (strlen($symbol) === 6 && strpos($symbol, 'USD') !== false) {
-                    $base = substr($symbol, 0, 3);
-                    $displaySymbol = $base . '/USD';
-                }
-                
-                return [
-                    'symbol' => $symbol,
-                    'displaySymbol' => $displaySymbol,
-                    'name' => $item['name'],
-                    'category' => 'commodities',
-                    'price' => $item['price'],
-                    'change24h' => $item['change_24h'] ?? 0,
-                    'volume' => $item['volume'] ?? 0,
-                    'leverage' => '100x',
-                    'icon' => null,
-                ];
-            }, $commoditiesData);
-            
-            // Filter out commodity pairs where base = quote (e.g., USD/USD)
-            $commoditiesPairs = array_filter($commoditiesPairs, function ($pair) {
-                $symbol = $pair['symbol'];
-                if (strlen($symbol) === 6 && strpos($symbol, 'USD') !== false) {
-                    $base = substr($symbol, 0, 3);
-                    return $base !== 'USD';
-                }
-                return true;
-            });
-
-            // Get stocks
-            $stocksData = $this->tradingMarketDataService->getStocksData(15);
-            $stocksPairs = array_map(function ($item) {
-                return [
-                    'symbol' => $item['symbol'],
-                    'displaySymbol' => $item['symbol'],
-                    'name' => $item['name'],
-                    'category' => 'stocks',
-                    'price' => $item['price'],
-                    'change24h' => $item['change_24h'] ?? 0,
-                    'volume' => $item['volume'] ?? 0,
-                    'leverage' => '5x',
-                    'icon' => null,
-                ];
-            }, $stocksData);
-
-            // Combine all pairs
-            $allPairs = array_merge($cryptoPairs, $forexPairs, $indicesPairs, $commoditiesPairs, $stocksPairs);
-
-            // Filter by category
-            if ($category !== 'all') {
-                $allPairs = array_filter($allPairs, function ($pair) use ($category) {
-                    return $pair['category'] === $category;
-                });
-            }
-
-            // Format volume for display and fix symbol format
-            $allPairs = array_map(function ($pair) {
-                $volume = $pair['volume'];
-                if ($volume >= 1000000000) {
-                    $pair['volumeDisplay'] = number_format($volume / 1000000000, 2) . 'B';
-                } elseif ($volume >= 1000000) {
-                    $pair['volumeDisplay'] = number_format($volume / 1000000, 2) . 'M';
-                } else {
-                    $pair['volumeDisplay'] = number_format($volume, 0);
-                }
-                
-                // Ensure displaySymbol is properly formatted
-                if (!isset($pair['displaySymbol']) || empty($pair['displaySymbol'])) {
-                    if ($pair['category'] === 'crypto') {
-                        $pair['displaySymbol'] = str_replace('USDT', '/USDT', $pair['symbol']);
-                    } else {
-                        // For forex, format like EUR/USD
-                        $symbol = $pair['symbol'];
-                        if (strlen($symbol) === 6) {
-                            $pair['displaySymbol'] = substr($symbol, 0, 3) . '/' . substr($symbol, 3, 3);
-                        } else {
-                            $pair['displaySymbol'] = $symbol;
-                        }
-                    }
-                }
-                
-                return $pair;
-            }, $allPairs);
-
             return response()->json([
                 'success' => true,
-                'data' => array_values($allPairs),
-                'categories' => [
-                    'all' => count($cryptoPairs) + count($forexPairs) + count($indicesPairs) + count($commoditiesPairs) + count($stocksPairs),
-                    'crypto' => count($cryptoPairs),
-                    'forex' => count($forexPairs),
-                    'indices' => count($indicesPairs),
-                    'commodities' => count($commoditiesPairs),
-                    'stocks' => count($stocksPairs),
-                ],
+                'data' => $data['data'],
+                'categories' => $data['counts'],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to fetch trading pairs', [
-                'error' => $e->getMessage(),
-            ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch trading pairs',

@@ -1,6 +1,6 @@
 
 <section class="about-section sp_pt_120 sp_pb_120">
-    <div class="about-el"><img src="{{ Config::getFile('about', $content->image_two ?? '') }}" alt="about line image">
+    <div class="about-el"><img src="{{ Config::getFile('about', optional($content)->image_two ?? '' ?? '') }}" alt="about line image">
     </div>
     <div class="container">
         <div class="row gy-5 align-items-center justify-content-between">
@@ -8,7 +8,7 @@
                 <h2 class="sp_theme_top_title">
                     <?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?>
                 </h2>
-                <p class="fs-lg mt-3"><?= Config::trans($content->description) ?></p>
+                <p class="fs-lg mt-3"><?= Config::trans(optional($content)->description ?? '') ?></p>
                 <ul class="sp_check_list mt-4">
                     @if ($content && isset($content->repeater))
                         @if (is_array($content->repeater))
@@ -20,12 +20,12 @@
                         @endif
                     @endif
                 </ul>
-                <a href="{{ optional($content)->button_link ?? '' }}" class="btn sp_theme_btn mt-4">{{ Config::trans($content->button_text) }}</a>
+                <a href="{{ optional($content)->button_link ?? '' }}" class="btn sp_theme_btn mt-4">{{ Config::trans(optional($content)->button_text ?? 'Learn More') }}</a>
             </div>
             
             <div class="col-lg-5">
                 <div class="about-thumb">
-                    <img src="{{ Config::getFile('about', $content->image_one ?? '') }}" alt="image">
+                    <img src="{{ Config::getFile('about', optional($content)->image_one ?? '' ?? '') }}" alt="image">
                 </div>
             </div>
         </div>

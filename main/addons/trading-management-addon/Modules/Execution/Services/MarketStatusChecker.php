@@ -150,6 +150,26 @@ class MarketStatusChecker
             ];
         }
         
+        // Check market hours
+        $marketHoursService = app(MarketHoursService::class);
+        $marketHoursCheck = $marketHoursService->isMarketOpen($symbol);
+        
+        if (!$marketHoursCheck['is_open']) {
+            Log::warning('MarketStatusChecker: Market is closed', [
+                'bot_id' => $botId,
+                'symbol' => $symbol,
+                'reason' => $marketHoursCheck['reason'],
+                'next_open' => $marketHoursCheck['next_open']?->toDateTimeString(),
+            ]);
+            
+            return [
+                'should_proceed' => false,
+                'reason' => $marketHoursCheck['reason'],
+                'freshness_check' => ['is_fresh' => false, 'status' => 'market_closed'],
+                'next_open' => $marketHoursCheck['next_open']?->toDateTimeString(),
+            ];
+        }
+        
         $freshnessCheck = $this->checkMarketDataFreshness($symbol, $timeframe, $accountId, $botId);
         
         if (!$freshnessCheck['is_fresh']) {
@@ -168,6 +188,20 @@ class MarketStatusChecker
                 'reason' => $reason,
                 'freshness_check' => $freshnessCheck,
             ];
+        }
+        
+        // Check for low liquidity (spread widening) - simplified check
+        // In production, this would check actual spread data
+        $spreadCheck = $this->checkLowLiquidity($symbol);
+        if ($spreadCheck['low_liquidity']) {
+            Log::warning('MarketStatusChecker: Low liquidity detected', [
+                'bot_id' => $botId,
+                'symbol' => $symbol,
+                'reason' => $spreadCheck['reason'],
+            ]);
+            
+            // Don't prevent trade, just warn (can be made configurable)
+            // return ['should_proceed' => false, 'reason' => $spreadCheck['reason']];
         }
         
         Log::info('MarketStatusChecker: Trade validation passed', [
@@ -213,6 +247,26 @@ class MarketStatusChecker
         }
         
         return 'Market validation failed';
+    }
+
+    /**
+     * Check for low liquidity (spread widening)
+     * 
+     * @param string $symbol Trading symbol
+     * @return array ['low_liquidity' => bool, 'reason' => string|null]
+     */
+    protected function checkLowLiquidity(string $symbol): array
+    {
+        // Simplified check - in production, this would:
+        // 1. Fetch current spread from exchange
+        // 2. Compare to average spread
+        // 3. Flag if spread is significantly wider (e.g., 2x average)
+        
+        // For now, return no low liquidity (can be enhanced later)
+        return [
+            'low_liquidity' => false,
+            'reason' => null,
+        ];
     }
 }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\UserWithdrawRequest;
 use App\Models\Withdraw;
 use App\Models\WithdrawGateway;
@@ -34,10 +35,10 @@ class PayoutController extends Controller
         $isSuccess = $this->withdrawservice->makeWithdraw($request);
 
         if($isSuccess['type'] === 'error'){
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message']));
         }
 
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message']));
 
     }
 

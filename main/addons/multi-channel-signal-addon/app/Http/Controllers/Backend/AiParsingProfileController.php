@@ -6,6 +6,7 @@ use Addons\MultiChannelSignalAddon\App\Models\AiParsingProfile;
 use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\AiConnectionAddon\App\Models\AiConnection;
 use Addons\AiConnectionAddon\App\Services\AiConnectionService;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -52,7 +53,7 @@ class AiParsingProfileController extends Controller
         // Check if there are any connections available
         if ($connections->isEmpty()) {
             return redirect()->route('admin.ai-connections.connections.create')
-                ->with('info', 'Please create an AI connection first before creating a parsing profile.');
+                ->with('notify', NotificationHelper::info('Please create an AI connection first before creating a parsing profile.', 'Info'));
         }
 
         return view('multi-channel-signal-addon::backend.ai-parsing-profiles.create', compact('connections', 'channels'));
@@ -84,7 +85,7 @@ class AiParsingProfileController extends Controller
         ]);
 
         return redirect()->route('admin.multi-channel.ai-parsing-profiles.index')
-            ->with('success', 'AI Parsing Profile created successfully');
+            ->with('notify', NotificationHelper::success('AI Parsing Profile created successfully', 'Success'));
     }
 
     /**
@@ -124,7 +125,7 @@ class AiParsingProfileController extends Controller
         ]);
 
         return redirect()->route('admin.multi-channel.ai-parsing-profiles.index')
-            ->with('success', 'AI Parsing Profile updated successfully');
+            ->with('notify', NotificationHelper::success('AI Parsing Profile updated successfully', 'Success'));
     }
 
     /**
@@ -135,7 +136,7 @@ class AiParsingProfileController extends Controller
         $profile->delete();
 
         return redirect()->route('admin.multi-channel.ai-parsing-profiles.index')
-            ->with('success', 'AI Parsing Profile deleted successfully');
+            ->with('notify', NotificationHelper::success('AI Parsing Profile deleted successfully', 'Success'));
     }
 
     /**
@@ -188,7 +189,7 @@ class AiParsingProfileController extends Controller
         $profile->update(['enabled' => !$profile->enabled]);
 
         return redirect()->back()
-            ->with('success', 'Profile ' . ($profile->enabled ? 'enabled' : 'disabled'));
+            ->with('notify', NotificationHelper::success('Profile ' . ($profile->enabled ? 'enabled' : 'disabled'), 'Success'));
     }
 }
 

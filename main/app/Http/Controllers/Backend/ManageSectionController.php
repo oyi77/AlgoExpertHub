@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SectionElementRequest;
 use App\Http\Requests\SectionElementUpdateRequest;
@@ -117,7 +118,7 @@ class ManageSectionController extends Controller
 
         if ($isSuccess['type'] === 'success') {
 
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
         }
     }
 
@@ -137,7 +138,7 @@ class ManageSectionController extends Controller
 
         if ($isSuccess['type'] === 'success') {
 
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
         }
     }
 
@@ -170,10 +171,10 @@ class ManageSectionController extends Controller
         $isSuccess = $this->content->elementUpdate($request, $content);
 
         if ($isSuccess['type'] === 'error') {
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 
@@ -186,7 +187,7 @@ class ManageSectionController extends Controller
         if ($isSuccess['type'] === 'error') {
         }
 
-        return redirect()->back()->with('success', "{$name} Deleted Successfully");
+        return redirect()->back()->with('notify', NotificationHelper::success("{$name} Deleted Successfully", 'Success'));
     }
 
     /**

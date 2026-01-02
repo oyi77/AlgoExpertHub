@@ -30,7 +30,7 @@ class AdminProfileController extends Controller
         $isSuccess = $this->profile->update($request);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
 
@@ -46,12 +46,12 @@ class AdminProfileController extends Controller
         $admin = auth()->guard('admin')->user();
 
         if (!Hash::check($request->old_password, $admin->password)) {
-            return back()->with('error', 'Password Does not match');
+            return back()->with('notify', NotificationHelper::error('Password Does not match', 'Error'));
         }
 
         $admin->password = bcrypt($request->password);
         $admin->save();
 
-        return back()->with('success', 'Password changed Successfully');
+        return back()->with('notify', NotificationHelper::success('Password changed Successfully', 'Success'));
     }
 }

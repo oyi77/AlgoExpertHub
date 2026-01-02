@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\WithdrawRequest;
 use App\Models\Withdraw;
@@ -37,7 +38,7 @@ class ManageWithdrawController extends Controller
         $isSuccess = $this->gateway->create($request);
 
         if ($isSuccess['type'] == 'success')
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function withdrawMethodUpdate(WithdrawRequest $request)
@@ -45,7 +46,7 @@ class ManageWithdrawController extends Controller
         $isSuccess = $this->gateway->update($request);
 
         if ($isSuccess['type'] == 'success')
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function withdrawMethodDelete(Request $request)
@@ -54,10 +55,10 @@ class ManageWithdrawController extends Controller
 
         if ($isSuccess['type'] == 'error') {
 
-            return redirect()->back()->with('error', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->back()->with('success', $isSuccess['message']);
+        return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function filterWithdraw(Request $request)
@@ -79,7 +80,7 @@ class ManageWithdrawController extends Controller
         $isSuccess = $this->gateway->accept($withdraw);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->back()->with('success', 'Withdraw Accepted Successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Withdraw Accepted Successfully', 'Success'));
     }
 
     public function withdrawReject(Request $request, Withdraw $withdraw)
@@ -89,7 +90,7 @@ class ManageWithdrawController extends Controller
         $isSuccess = $this->gateway->reject($withdraw, $request);
 
         if ($isSuccess['type'] === 'success')
-            return redirect()->back()->with('success', $isSuccess['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function withdrawLog(Request $request, $id)

@@ -3,7 +3,12 @@
 namespace Addons\TradingManagement\Modules\RiskManagement\Services\Calculators;
 
 use Addons\TradingManagement\Shared\Contracts\RiskCalculatorInterface;
+use Addons\TradingManagement\Modules\RiskManagement\Services\SymbolSpecService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\MarginManagementService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\CorrelationRiskService;
+use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
 use App\Models\Signal;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Preset Risk Calculator
@@ -23,10 +28,17 @@ class PresetRiskCalculator implements RiskCalculatorInterface
         if ($mode === 'FIXED') {
             $lotSize = (float) ($config['fixed_lot'] ?? 0.01);
             
+            // Calculate actual risk even in FIXED mode
+            $equity = (float) ($accountInfo['equity'] ?? $accountInfo['balance'] ?? 10000);
+            $slDistance = $this->calculateSLDistance($signal, $config);
+            $pipValue = $this->getPipValue($signal, $accountInfo);
+            $riskAmount = $slDistance > 0 ? ($slDistance * $pipValue * $lotSize) : 0;
+            $riskPercent = $equity > 0 ? ($riskAmount / $equity) * 100 : 0;
+            
             return [
                 'lot_size' => $lotSize,
-                'risk_amount' => 0, // Unknown for fixed lot
-                'risk_percent' => 0,
+                'risk_amount' => $riskAmount,
+                'risk_percent' => $riskPercent,
             ];
         }
 
@@ -43,7 +55,7 @@ class PresetRiskCalculator implements RiskCalculatorInterface
             $lotSize = 0.01;
         } else {
             // Lot size = Risk Amount / (SL Distance in pips * Pip Value)
-            $pipValue = $this->getPipValue($signal);
+            $pipValue = $this->getPipValue($signal, $accountInfo);
             $lotSize = $riskAmount / ($slDistance * $pipValue);
             
             // Ensure within reasonable bounds
@@ -154,6 +166,56 @@ class PresetRiskCalculator implements RiskCalculatorInterface
             return ['valid' => false, 'reason' => 'Calculated lot size too large (> 10.0)'];
         }
 
+        // Check margin requirements
+        $marginService = app(MarginManagementService::class);
+        $symbol = $signal->pair->name ?? '';
+        $entryPrice = (float) $signal->open_price;
+        $leverage = (int) ($config['leverage'] ?? $accountInfo['leverage'] ?? 100);
+        
+        if ($entryPrice > 0 && !empty($symbol)) {
+            $requiredMargin = $marginService->calculateRequiredMargin(
+                $positionData['lot_size'],
+                $entryPrice,
+                $leverage,
+                $symbol
+            );
+            
+            $marginCheck = $marginService->shouldPreventTrade($accountInfo, $requiredMargin, $config);
+            
+            if ($marginCheck['should_prevent']) {
+                return [
+                    'valid' => false,
+                    'reason' => $marginCheck['reason'] ?? 'Insufficient margin for trade',
+                ];
+            }
+        }
+
+        // Check correlation risk
+        $correlationService = app(CorrelationRiskService::class);
+        $maxCorrelationExposurePct = (float) ($config['max_correlation_exposure_pct'] ?? 50.0);
+        
+        // Get existing open positions for this connection (if available)
+        $existingPositions = $this->getExistingPositions($accountInfo, $symbol);
+        $newPositionValue = $positionData['lot_size'] * $entryPrice;
+        $equity = (float) ($accountInfo['equity'] ?? $accountInfo['balance'] ?? 0);
+        
+        if (!empty($symbol) && $equity > 0 && $newPositionValue > 0) {
+            $correlationCheck = $correlationService->shouldPreventTrade(
+                $symbol,
+                $existingPositions,
+                $newPositionValue,
+                $equity,
+                $maxCorrelationExposurePct
+            );
+            
+            if ($correlationCheck['should_prevent']) {
+                return [
+                    'valid' => false,
+                    'reason' => $correlationCheck['reason'] ?? 'Correlation risk exceeds limit',
+                ];
+            }
+        }
+
         return ['valid' => true, 'reason' => null];
     }
 
@@ -206,11 +268,63 @@ class PresetRiskCalculator implements RiskCalculatorInterface
     /**
      * Get pip value (how much 1 pip is worth in account currency)
      */
-    protected function getPipValue(Signal $signal): float
+    protected function getPipValue(Signal $signal, array $accountInfo): float
     {
-        // Simplified: Assume $10 per pip for 1.0 lot
-        // In production, calculate based on symbol and account currency
-        return 10.0;
+        $symbolSpecService = app(SymbolSpecService::class);
+        $symbol = $signal->pair->name ?? '';
+        $accountCurrency = $accountInfo['currency'] ?? 'USD';
+        $entryPrice = (float) $signal->open_price;
+        
+        if (empty($symbol) || $entryPrice <= 0) {
+            Log::warning('PresetRiskCalculator: Invalid symbol or entry price for pip value calculation', [
+                'symbol' => $symbol,
+                'entry_price' => $entryPrice,
+            ]);
+            // Fallback to standard $10 per pip for 1.0 lot
+            return 10.0;
+        }
+        
+        return $symbolSpecService->getPipValue($symbol, 1.0, $accountCurrency, $entryPrice);
+    }
+
+    /**
+     * Get existing open positions for correlation check
+     * 
+     * @param array $accountInfo Account information
+     * @param string $symbol Current symbol (to exclude from check)
+     * @return array Array of existing positions
+     */
+    protected function getExistingPositions(array $accountInfo, string $symbol): array
+    {
+        $connectionId = $accountInfo['connection_id'] ?? null;
+        
+        if (!$connectionId) {
+            Log::warning('PresetRiskCalculator: No connection_id in accountInfo, cannot fetch existing positions', [
+                'accountInfo_keys' => array_keys($accountInfo),
+            ]);
+            return [];
+        }
+
+        try {
+            $positions = ExecutionPosition::where('connection_id', $connectionId)
+                ->where('status', 'open')
+                ->get();
+
+            return $positions->map(function ($position) {
+                return [
+                    'symbol' => $position->symbol ?? '',
+                    'quantity' => (float) ($position->quantity ?? 0),
+                    'entry_price' => (float) ($position->entry_price ?? 0),
+                    'direction' => $position->direction ?? 'buy',
+                ];
+            })->toArray();
+        } catch (\Exception $e) {
+            Log::error('PresetRiskCalculator: Failed to fetch existing positions', [
+                'connection_id' => $connectionId,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
     }
 }
 

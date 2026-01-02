@@ -6,6 +6,7 @@ use App\Adapters\ApiAdapter;
 use App\Adapters\RssAdapter;
 use App\Adapters\TelegramAdapter;
 use App\Adapters\WebScrapeAdapter;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ChannelSource;
 use App\Services\TelegramChannelService;
@@ -105,20 +106,20 @@ class ChannelController extends Controller
                     break;
                 default:
                     return redirect()->back()
-                        ->with('error', 'Invalid channel type');
+                        ->with('notify', NotificationHelper::error('Invalid channel type'));
             }
 
             if ($result['type'] === 'success') {
                 return redirect()->route('user.channels.index')
-                    ->with('success', $result['message']);
+                    ->with('notify', NotificationHelper::success($result['message']));
             }
 
             return redirect()->back()
-                ->with('error', $result['message'] ?? 'Failed to create channel');
+                ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to create channel'));
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Error: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Error: ' . $e->getMessage()));
         }
     }
 
@@ -338,13 +339,13 @@ class ChannelController extends Controller
 
         $status = $request->input('status');
         if (!in_array($status, ['active', 'paused'])) {
-            return redirect()->back()->with('error', 'Invalid status');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid status'));
         }
 
         $channel->update(['status' => $status]);
 
         $message = $status === 'active' ? 'Channel resumed' : 'Channel paused';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('notify', NotificationHelper::success($message));
     }
 
     /**
@@ -366,7 +367,7 @@ class ChannelController extends Controller
         $channel->delete();
 
         return redirect()->route('user.channels.index')
-            ->with('success', 'Channel deleted successfully');
+            ->with('notify', NotificationHelper::success('Channel deleted successfully'));
     }
 }
 

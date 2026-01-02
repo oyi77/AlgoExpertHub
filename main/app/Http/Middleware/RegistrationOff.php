@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Configuration;
+use App\Helpers\NotificationHelper;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,7 @@ class RegistrationOff
 
 
         if (!$general->reg_enabled) {
-            return back()->with('error', 'System Registration Is off');
+            return back()->with('notify', NotificationHelper::error('System Registration Is off', 'Error'));
         }
 
 

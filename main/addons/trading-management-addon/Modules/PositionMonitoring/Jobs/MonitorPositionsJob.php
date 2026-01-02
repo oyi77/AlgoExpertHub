@@ -6,6 +6,7 @@ use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
 use Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition;
 use Addons\TradingManagement\Modules\TradingBot\Services\PositionMonitoringService;
+use Addons\TradingManagement\Modules\RiskManagement\Services\SlippageProtectionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -188,7 +189,20 @@ class MonitorPositionsJob implements ShouldQueue
                 return;
             }
 
+            // Determine expected close price (SL or TP price)
+            $expectedPrice = null;
+            if ($reason === 'stop_loss_hit' && $position->sl_price) {
+                $expectedPrice = $position->sl_price;
+            } elseif ($reason === 'take_profit_hit' && $position->tp_price) {
+                $expectedPrice = $position->tp_price;
+            } else {
+                $expectedPrice = $position->current_price;
+            }
+
             $adapter = $this->getAdapter($connection, $position->id);
+            $executionPrice = $expectedPrice; // Default to expected price if adapter unavailable
+            $slippagePips = 0.0;
+
             if (!$adapter) {
                 // Warning already logged in getAdapter if needed (only once per connection)
                 // Still update position status even if we can't close on exchange
@@ -196,13 +210,50 @@ class MonitorPositionsJob implements ShouldQueue
                     'status' => 'closed',
                     'closed_at' => now(),
                     'closed_reason' => $reason . '_local_only',
+                    'execution_price' => $executionPrice,
+                    'slippage_pips' => $slippagePips,
                 ]);
                 return;
             }
 
-            // Close on exchange
+            // Close on exchange and get actual execution price
             if (method_exists($adapter, 'closePosition')) {
-                $result = $adapter->closePosition($position->order_id);
+                $result = $adapter->closePosition($position->order_id, $position->symbol);
+                
+                if ($result['success'] && isset($result['price'])) {
+                    $executionPrice = (float) $result['price'];
+                } elseif ($result['success'] && isset($result['data']['price'])) {
+                    $executionPrice = (float) $result['data']['price'];
+                } elseif ($result['success'] && isset($result['data']['average'])) {
+                    $executionPrice = (float) $result['data']['average'];
+                }
+                
+                // Calculate slippage
+                if ($expectedPrice > 0 && $executionPrice > 0) {
+                    $slippageService = app(SlippageProtectionService::class);
+                    $slippagePips = $slippageService->calculateSlippage(
+                        $expectedPrice,
+                        $executionPrice,
+                        $position->direction === 'buy' ? 'sell' : 'buy', // Opposite direction for closing
+                        $position->symbol
+                    );
+                    
+                    // Validate slippage
+                    $maxSlippage = $slippageService->getMaxAllowedSlippage([]);
+                    $slippageValidation = $slippageService->validateSlippage($slippagePips, $maxSlippage);
+                    
+                    if (!$slippageValidation['acceptable']) {
+                        Log::warning('Slippage exceeded on position close', [
+                            'position_id' => $position->id,
+                            'reason' => $reason,
+                            'slippage_pips' => $slippagePips,
+                            'max_allowed' => $maxSlippage,
+                            'expected_price' => $expectedPrice,
+                            'execution_price' => $executionPrice,
+                        ]);
+                    }
+                }
+                
                 if (!$result['success']) {
                     Log::warning('Failed to close position on exchange', [
                         'position_id' => $position->id,
@@ -211,15 +262,17 @@ class MonitorPositionsJob implements ShouldQueue
                 }
             }
 
-            // Update position status
+            // Update position status with execution price and slippage
             $position->update([
                 'status' => 'closed',
                 'closed_at' => now(),
                 'closed_reason' => $reason,
+                'execution_price' => $executionPrice,
+                'slippage_pips' => $slippagePips,
             ]);
 
-            // Update PnL
-            $position->updatePnL($position->current_price);
+            // Update PnL using execution price
+            $position->updatePnL($executionPrice);
 
             // Broadcast close event
             $this->broadcastPositionClose($position);
@@ -227,6 +280,9 @@ class MonitorPositionsJob implements ShouldQueue
             Log::info('Position closed', [
                 'position_id' => $position->id,
                 'reason' => $reason,
+                'expected_price' => $expectedPrice,
+                'execution_price' => $executionPrice,
+                'slippage_pips' => $slippagePips,
                 'pnl' => $position->pnl,
             ]);
         } catch (\Exception $e) {

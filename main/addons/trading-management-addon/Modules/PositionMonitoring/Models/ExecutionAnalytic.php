@@ -32,6 +32,12 @@ class ExecutionAnalytic extends Model
         'balance',
         'equity',
         'additional_metrics',
+        'expectancy',
+        'sortino_ratio',
+        'mae',
+        'mfe',
+        'recovery_factor',
+        'calmar_ratio',
     ];
 
     protected $casts = [
@@ -43,6 +49,12 @@ class ExecutionAnalytic extends Model
         'balance' => 'decimal:8',
         'equity' => 'decimal:8',
         'additional_metrics' => 'array',
+        'expectancy' => 'decimal:8',
+        'sortino_ratio' => 'decimal:4',
+        'mae' => 'decimal:8',
+        'mfe' => 'decimal:8',
+        'recovery_factor' => 'decimal:4',
+        'calmar_ratio' => 'decimal:4',
     ];
 
     /**

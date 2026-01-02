@@ -34,15 +34,19 @@
     <link href="{{ Config::cssLib('backend', 'summernote-bs4.min.css') }}" rel="stylesheet">
 
     @php
-        $alertType = optional(Config::config())->alert ?? 'sweetalert';
+        $alertType = optional(Config::config())->alert ?? 'notify';
     @endphp
     <link href="{{ Config::cssLib('backend', 'ui.css') }}" rel="stylesheet">
 
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
+    
+    {{-- Legacy notification libraries (will be removed after migration) --}}
     @if ($alertType === 'izi')
         <link href="{{ Config::cssLib('backend', 'izitoast.min.css') }}" rel="stylesheet">
     @elseif($alertType === 'toast')
         <link href="{{ Config::cssLib('backend', 'toastr.min.css') }}" rel="stylesheet">
-    @else
+    @elseif($alertType === 'sweetalert')
         <link href="{{ Config::cssLib('backend', 'sweetalert.min.css') }}" rel="stylesheet">
     @endif
 
@@ -194,11 +198,15 @@
         <script defer src="{{ Config::jsLib('backend', 'iconpicker.js') }}"></script>
     @endif
 
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
+    
+    {{-- Legacy notification libraries (will be removed after migration) --}}
     @if ($alertType === 'izi')
         <script defer src="{{ Config::jsLib('backend', 'izitoast.min.js') }}"></script>
     @elseif($alertType === 'toast')
         <script defer src="{{ Config::jsLib('backend', 'toastr.min.js') }}"></script>
-    @else
+    @elseif($alertType === 'sweetalert')
         <script defer src="{{ Config::jsLib('backend', 'sweetalert.min.js') }}"></script>
     @endif
 

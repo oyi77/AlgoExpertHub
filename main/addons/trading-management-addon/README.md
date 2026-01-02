@@ -134,6 +134,23 @@ Analytics (Win rate, profit factor)
 
 ---
 
+## Risk Management Overhaul (v2.1.0)
+
+**December 2025**: Comprehensive risk management overhaul implemented with advanced features:
+
+- ✅ **Accurate Pip Value Calculation** - SymbolSpecService for precise calculations across all market types
+- ✅ **Margin Management** - Leverage support, margin calls, liquidation protection
+- ✅ **Slippage Protection** - Execution price tracking and slippage validation
+- ✅ **Correlation Risk Management** - Prevents overexposure to correlated pairs
+- ✅ **Position Limits** - Configurable limits per connection and per symbol
+- ✅ **Enhanced Backtesting** - Realistic slippage and spread cost modeling
+- ✅ **Performance Metrics** - Advanced metrics (Expectancy, Sortino, MAE, MFE, Recovery, Calmar)
+- ✅ **Execution Safeguards** - Circuit breaker and market hours validation
+
+📖 See [Risk Management Overhaul Documentation](docs/RISK_MANAGEMENT_OVERHAUL.md) for details.
+
+---
+
 ## Development Progress
 
 ### ✅ Phase 1: Foundation (Complete)

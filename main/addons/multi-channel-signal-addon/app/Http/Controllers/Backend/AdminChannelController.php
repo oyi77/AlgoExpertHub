@@ -7,6 +7,7 @@ use Addons\MultiChannelSignalAddon\App\Models\ChannelSource;
 use Addons\MultiChannelSignalAddon\App\Services\ChannelAssignmentService;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramMtprotoService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -122,11 +123,11 @@ class AdminChannelController extends Controller
             ]);
 
             return redirect()->route('admin.channels.index')
-                ->with('success', 'Admin channel created successfully');
+                ->with('notify', NotificationHelper::success('Admin channel created successfully', 'Success'));
         } catch (\Throwable $th) {
             // Always redirect to index on error, not back to create form
             return redirect()->route('admin.channels.index')
-                ->with('error', 'Error: ' . $th->getMessage());
+                ->with('notify', NotificationHelper::error('Error: ' . $th->getMessage(), 'Error'));
         }
     }
 
@@ -145,7 +146,7 @@ class AdminChannelController extends Controller
         if (!empty($data['bot_token'])) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'MadelineProto (telegram_mtproto) uses USER authentication with phone number, NOT bot token. Bot tokens are only for regular Telegram bot channels (type: telegram).');
+                ->with('notify', NotificationHelper::error('MadelineProto (telegram_mtproto) uses USER authentication with phone number, NOT bot token. Bot tokens are only for regular Telegram bot channels (type: telegram).', 'Error'));
         }
 
         $result = $this->telegramMtprotoService->createChannel([
@@ -170,31 +171,31 @@ class AdminChannelController extends Controller
             }
 
             return redirect()->route('admin.channels.index')
-                ->with('success', 'Telegram MTProto channel created successfully');
+                ->with('notify', NotificationHelper::success('Telegram MTProto channel created successfully', 'Success'));
         }
 
         if (in_array($result['type'], ['phone_required', 'code_required'], true)) {
             if (!isset($result['channel_source']) || !$result['channel_source']) {
                 return redirect()->route('admin.channels.index')
-                    ->with('error', 'Failed to create channel. Please try again.');
+                    ->with('notify', NotificationHelper::error('Failed to create channel. Please try again.', 'Error'));
             }
             
             // Ensure channel type is telegram_mtproto before redirecting to authenticate
             $channelSource = $result['channel_source'];
             if ($channelSource->type !== 'telegram_mtproto') {
                 return redirect()->route('admin.channels.index')
-                    ->with('error', 'Invalid channel type for authentication. Only telegram_mtproto channels require user authentication.');
+                    ->with('notify', NotificationHelper::error('Invalid channel type for authentication. Only telegram_mtproto channels require user authentication.', 'Error'));
             }
             
             return redirect()->route('admin.channels.authenticate', [
                 'id' => $channelSource->id,
                 'step' => $result['step'] ?? 'phone',
-            ])->with('info', $result['message']);
+            ])->with('notify', NotificationHelper::info($result['message'], 'Info'));
         }
 
         // On error, redirect to index instead of back to avoid showing create form
         return redirect()->route('admin.channels.index')
-            ->with('error', $result['message'] ?? 'Failed to create channel');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to create channel', 'Error'));
     }
 
     /**
@@ -261,7 +262,7 @@ class AdminChannelController extends Controller
         ]));
 
         return redirect()->route('admin.channels.index')
-            ->with('success', 'Channel updated successfully');
+            ->with('notify', NotificationHelper::success('Channel updated successfully', 'Success'));
     }
 
     /**
@@ -313,9 +314,9 @@ class AdminChannelController extends Controller
             }
 
             return redirect()->route('admin.channels.index')
-                ->with('success', 'Channel assignments updated successfully');
+                ->with('notify', NotificationHelper::success('Channel assignments updated successfully', 'Success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Error: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -327,7 +328,7 @@ class AdminChannelController extends Controller
         $channel = ChannelSource::adminOwned()->findOrFail($id);
         $this->assignmentService->removeUserAssignment($channel, $userId);
 
-        return redirect()->back()->with('success', 'User assignment removed');
+        return redirect()->back()->with('notify', NotificationHelper::success('User assignment removed', 'Success'));
     }
 
     /**
@@ -338,7 +339,7 @@ class AdminChannelController extends Controller
         $channel = ChannelSource::adminOwned()->findOrFail($id);
         $this->assignmentService->removePlanAssignment($channel, $planId);
 
-        return redirect()->back()->with('success', 'Plan assignment removed');
+        return redirect()->back()->with('notify', NotificationHelper::success('Plan assignment removed', 'Success'));
     }
 
     /**
@@ -359,7 +360,7 @@ class AdminChannelController extends Controller
                 ob_end_clean();
             }
             return redirect()->route('admin.channels.index')
-                ->with('error', 'This channel type does not require user authentication. Bot token authentication is used for regular Telegram bot channels.');
+                ->with('notify', NotificationHelper::error('This channel type does not require user authentication. Bot token authentication is used for regular Telegram bot channels.', 'Error'));
         }
 
         // Prevent MadelineProto from showing web UI
@@ -445,7 +446,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Authentication error: ' . $e->getMessage());
+                ])->with('notify', NotificationHelper::error('Authentication error: ' . $e->getMessage(), 'Error'));
             }
             
             // Get any captured output
@@ -470,7 +471,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid authentication response. Please try again.');
+                ])->with('notify', NotificationHelper::error('Invalid authentication response. Please try again.', 'Error'));
             }
 
             if ($authResult['type'] === 'code_required') {
@@ -482,7 +483,7 @@ class AdminChannelController extends Controller
                     return redirect()->route('admin.channels.authenticate', [
                         'id' => $channel->id,
                         'step' => 'phone',
-                    ])->with('error', 'Failed to get verification code hash. Please try again.');
+                    ])->with('notify', NotificationHelper::error('Failed to get verification code hash. Please try again.', 'Error'));
                 }
                 
                 $request->session()->put('admin_phone_code_hash', $phoneCodeHash);
@@ -492,7 +493,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'code',
-                ])->with('info', $authResult['message'] ?? 'Verification code sent. Please check your Telegram app.');
+                ])->with('notify', NotificationHelper::info($authResult['message'] ?? 'Verification code sent. Please check your Telegram app.', 'Info'));
             }
 
             if ($authResult['type'] === 'error') {
@@ -501,13 +502,13 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', $authResult['message'] ?? 'Failed to send verification code. Please check your API credentials and phone number format.');
+                ])->with('notify', NotificationHelper::error($authResult['message'] ?? 'Failed to send verification code. Please check your API credentials and phone number format.', 'Error'));
             }
 
             if ($authResult['type'] === 'success') {
                 $_POST = $originalPost;
                 return redirect()->route('admin.channels.select-channel', $channel->id)
-                    ->with('success', 'Telegram account authenticated successfully!');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully!', 'Success'));
             }
             
             if ($authResult['type'] === 'phone_required') {
@@ -516,7 +517,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Phone number is required.');
+                ])->with('notify', NotificationHelper::error('Phone number is required.', 'Error'));
             }
             
             // Fallback for any other unexpected result type
@@ -528,7 +529,7 @@ class AdminChannelController extends Controller
             return redirect()->route('admin.channels.authenticate', [
                 'id' => $channel->id,
                 'step' => 'phone',
-            ])->with('error', 'Unexpected authentication response. Please try again.');
+            ])->with('notify', NotificationHelper::error('Unexpected authentication response. Please try again.', 'Error'));
         }
 
         if ($request->isMethod('post') && $step === 'code') {
@@ -544,7 +545,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Invalid session. Please start over.');
+                ])->with('notify', NotificationHelper::error('Invalid session. Please start over.', 'Error'));
             }
 
             // CRITICAL: Refresh channel from database to get latest config (including phone_number)
@@ -561,7 +562,7 @@ class AdminChannelController extends Controller
                 return redirect()->route('admin.channels.authenticate', [
                     'id' => $channel->id,
                     'step' => 'phone',
-                ])->with('error', 'Phone number not found. Please re-enter your phone number.');
+                ])->with('notify', NotificationHelper::error('Phone number not found. Please re-enter your phone number.', 'Error'));
             }
 
             // Prevent MadelineProto web UI
@@ -595,7 +596,7 @@ class AdminChannelController extends Controller
 
                 // Redirect to channel selection after successful authentication
                 return redirect()->route('admin.channels.select-channel', $channel->id)
-                    ->with('success', 'Telegram account authenticated successfully! Please select a channel to monitor.');
+                    ->with('notify', NotificationHelper::success('Telegram account authenticated successfully! Please select a channel to monitor.', 'Success'));
             }
 
             // Clear buffers before redirect
@@ -603,7 +604,7 @@ class AdminChannelController extends Controller
                 ob_end_clean();
             }
             $_POST = $originalPost;
-            return redirect()->back()->with('error', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
         }
 
         // Clear all output buffers before returning view
@@ -630,7 +631,7 @@ class AdminChannelController extends Controller
         // Check if already authenticated
         if ($channel->status !== 'active') {
             return redirect()->route('admin.channels.authenticate', $channel->id)
-                ->with('error', 'Please authenticate first.');
+                ->with('notify', NotificationHelper::error('Please authenticate first.', 'Error'));
         }
 
         // Get dialogs/channels
@@ -638,7 +639,7 @@ class AdminChannelController extends Controller
 
         if ($dialogsResult['type'] === 'error') {
             return redirect()->route('admin.channels.authenticate', $channel->id)
-                ->with('error', $dialogsResult['message']);
+                ->with('notify', NotificationHelper::error($dialogsResult['message'], 'Error'));
         }
 
         // Handle channel selection
@@ -661,7 +662,7 @@ class AdminChannelController extends Controller
             }
 
             if (!$selectedChannel) {
-                return redirect()->back()->with('error', 'Selected channel not found.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Selected channel not found.', 'Error'));
             }
 
             // Update channel config with selected channel
@@ -677,7 +678,7 @@ class AdminChannelController extends Controller
             ]);
 
             return redirect()->route('admin.channels.index')
-                ->with('success', 'Channel selected successfully!');
+                ->with('notify', NotificationHelper::success('Channel selected successfully!', 'Success'));
         }
 
         $data = [
@@ -698,13 +699,13 @@ class AdminChannelController extends Controller
 
         $status = $request->input('status');
         if (!in_array($status, ['active', 'paused'], true)) {
-            return redirect()->back()->with('error', 'Invalid status');
+            return redirect()->back()->with('notify', NotificationHelper::error('Invalid status', 'Error'));
         }
 
         $channel->update(['status' => $status]);
 
         $message = $status === 'active' ? 'Channel resumed' : 'Channel paused';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('notify', NotificationHelper::success($message, 'Success'));
     }
 
     /**
@@ -725,7 +726,7 @@ class AdminChannelController extends Controller
         $channel->delete();
 
         return redirect()->route('admin.channels.index')
-            ->with('success', 'Channel deleted successfully');
+            ->with('notify', NotificationHelper::success('Channel deleted successfully', 'Success'));
     }
 
     /**

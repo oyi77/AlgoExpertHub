@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\ExchangeConnection\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -58,7 +59,7 @@ class GlobalSettingsController extends Controller
         Cache::put('trading_management_global_settings', $settings, now()->addYear());
 
         return redirect()->route('admin.trading-management.config.global-settings.index')
-            ->with('success', 'Global settings updated successfully');
+            ->with('notify', NotificationHelper::success('Global settings updated successfully', 'Success'));
     }
 
     /**

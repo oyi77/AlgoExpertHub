@@ -68,7 +68,10 @@ class RiskManagementService
         $maxSize = $this->config['max_position_size'] ?? 10.0;
         $maxAccountPercent = $this->config['max_position_account_percent'] ?? 10;
         $maxPositionValue = $accountBalance * ($maxAccountPercent / 100);
-        $maxSizeByValue = $maxPositionValue / $signal['entry_price'];
+        // Prevent division by zero
+        $maxSizeByValue = $signal['entry_price'] > 0 
+            ? $maxPositionValue / $signal['entry_price'] 
+            : 0;
 
         $positionSize = max($minSize, min($positionSize, $maxSize, $maxSizeByValue));
 
@@ -230,7 +233,10 @@ class RiskManagementService
         }
 
         $currentBalance = $this->getAccountBalance($user);
-        $drawdown = (($peakBalance - $currentBalance) / $peakBalance) * 100;
+        // Prevent division by zero in drawdown calculation
+        $drawdown = $peakBalance > 0 
+            ? (($peakBalance - $currentBalance) / $peakBalance) * 100 
+            : 0;
 
         return max(0, $drawdown);
     }
@@ -269,8 +275,10 @@ class RiskManagementService
         }
 
         $winningTrades = $recentTrades->filter(fn($pl) => $pl > 0)->count();
-        
-        return $winningTrades / $recentTrades->count();
+        // Prevent division by zero in win rate calculation
+        return $recentTrades->count() > 0 
+            ? $winningTrades / $recentTrades->count() 
+            : 0.5; // Default to 50% if no trades
     }
 
     /**

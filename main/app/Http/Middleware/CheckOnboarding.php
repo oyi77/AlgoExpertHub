@@ -45,6 +45,11 @@ class CheckOnboarding
             'user.payment.*',
             'user.paynow.*',
             'user.gateway.*',
+            // Allow trading bot wizard during onboarding (helps complete onboarding)
+            'user.trading-management.trading-bots.wizard.*',
+            'user.trading-management.trading-bots.create',
+            'user.trading-management.exchange-connections.*',
+            'user.trading-management.trading-presets.*',
         ];
 
         // Get route name safely

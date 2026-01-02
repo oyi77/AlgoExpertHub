@@ -4,6 +4,7 @@ namespace Addons\PageBuilderAddon\App\Http\Controllers\Backend;
 
 use Addons\PageBuilderAddon\App\Services\WidgetLibraryService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 
 class WidgetController extends Controller
@@ -82,11 +83,11 @@ class WidgetController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.widgets.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -125,11 +126,11 @@ class WidgetController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.widgets.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -141,9 +142,9 @@ class WidgetController extends Controller
         $result = $this->widgetLibraryService->deleteWidget($id);
 
         if ($result['type'] === 'success') {
-            return redirect()->back()->with('success', $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Market;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class MarketController extends Controller
 
         Market::create($data);
 
-        return redirect()->back()->with('success', 'Market Type created successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Market Type created successfully', 'Success'));
     }
 
     public function update(Request $request, $id)
@@ -42,7 +43,7 @@ class MarketController extends Controller
 
         $pair->update($data);
 
-        return redirect()->back()->with('success', 'Market Type updated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Market Type updated successfully', 'Success'));
     }
 
     public function destroy($id)
@@ -51,7 +52,7 @@ class MarketController extends Controller
 
         $pair->delete();
 
-        return redirect()->back()->with('success', 'Market Type Deleted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Market Type Deleted successfully', 'Success'));
     }
 
     public function changeStatus($id)

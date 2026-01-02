@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\UserMoneyTransferRequest;
 use App\Models\MoneyTransfer;
 use App\Services\UserMoneyTransferService;
@@ -30,10 +31,10 @@ class MoneyTransferController extends Controller
         $isSuccess = $this->transfer->transferMoney($request);
 
         if ($isSuccess['type'] === 'error') {
-            return back()->with('error', $isSuccess['message']);
+            return back()->with('notify', NotificationHelper::error($isSuccess['message']));
         }
 
-        return back()->with('success', $isSuccess['message']);
+        return back()->with('notify', NotificationHelper::success($isSuccess['message']));
     }
 
     public function transferMoneyLog(Request $request)

@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\NotificationHelper;
 
 class SrmSettingsController extends Controller
 {
@@ -63,7 +64,7 @@ class SrmSettingsController extends Controller
             Cache::forget('srm_settings');
             \Artisan::call('config:clear');
 
-            return redirect()->back()->with('success', 'SRM settings updated successfully.');
+            return redirect()->back()->with('notify', NotificationHelper::success('SRM settings updated successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error("SrmSettingsController: Failed to update settings", [
                 'error' => $e->getMessage(),
@@ -71,7 +72,7 @@ class SrmSettingsController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update settings: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update settings: ' . $e->getMessage(), 'Error'));
         }
     }
 }

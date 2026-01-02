@@ -27,7 +27,7 @@ class SignalCurrencyPairController extends Controller
 
         CurrencyPair::create($data);
 
-        return redirect()->back()->with('success', 'Currency pair created successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Currency pair created successfully', 'Success'));
     }
 
     public function update(Request $request, $id)
@@ -42,7 +42,7 @@ class SignalCurrencyPairController extends Controller
 
         $pair->update($data);
 
-        return redirect()->back()->with('success', 'Currency pair updated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Currency pair updated successfully', 'Success'));
     }
 
     public function destroy($id)
@@ -51,7 +51,7 @@ class SignalCurrencyPairController extends Controller
         
         $pair->delete();
 
-        return redirect()->back()->with('success', 'Currency pair Deleted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Currency pair Deleted successfully', 'Success'));
     }
 
     public function changeStatus($id)

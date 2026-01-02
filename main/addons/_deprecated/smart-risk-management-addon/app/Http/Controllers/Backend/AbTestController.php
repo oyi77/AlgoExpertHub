@@ -6,6 +6,7 @@ use Addons\SmartRiskManagement\App\Http\Controllers\Controller;
 use Addons\SmartRiskManagement\App\Models\AbTest;
 use Addons\SmartRiskManagement\App\Services\AbTestingService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -70,7 +71,7 @@ class AbTestController extends Controller
             ]);
 
             return redirect()->route('admin.srm.ab-tests.index')
-                ->with('success', 'A/B test created successfully.');
+                ->with('notify', NotificationHelper::success('A/B test created successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error("AbTestController: Failed to create A/B test", [
                 'error' => $e->getMessage(),
@@ -78,7 +79,7 @@ class AbTestController extends Controller
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create A/B test: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create A/B test: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -104,7 +105,7 @@ class AbTestController extends Controller
             $test = AbTest::findOrFail($id);
 
             if ($test->status !== 'draft') {
-                return redirect()->back()->with('error', 'Only draft tests can be started.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Only draft tests can be started.', 'Error'));
             }
 
             $test->update([
@@ -116,14 +117,14 @@ class AbTestController extends Controller
             // Assign users to groups
             // This would be done by AbTestingService
 
-            return redirect()->back()->with('success', 'A/B test started successfully.');
+            return redirect()->back()->with('notify', NotificationHelper::success('A/B test started successfully.', 'Success'));
         } catch (\Exception $e) {
             Log::error("AbTestController: Failed to start A/B test", [
                 'test_id' => $id,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to start A/B test: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to start A/B test: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -136,7 +137,7 @@ class AbTestController extends Controller
             $test = AbTest::findOrFail($id);
 
             if ($test->status !== 'running') {
-                return redirect()->back()->with('error', 'Only running tests can be stopped.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Only running tests can be stopped.', 'Error'));
             }
 
             $test->update([
@@ -148,14 +149,14 @@ class AbTestController extends Controller
             $results = $this->abTestingService->compareResults($id);
             $test->update($results);
 
-            return redirect()->back()->with('success', 'A/B test stopped and results calculated.');
+            return redirect()->back()->with('notify', NotificationHelper::success('A/B test stopped and results calculated.', 'Success'));
         } catch (\Exception $e) {
             Log::error("AbTestController: Failed to stop A/B test", [
                 'test_id' => $id,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to stop A/B test: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to stop A/B test: ' . $e->getMessage(), 'Error'));
         }
     }
 

@@ -79,26 +79,52 @@ class MarketplacesController extends Controller
             if ($data['activeCategory'] === 'ai-profiles') {
                 if (class_exists(\Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::class)) {
                     try {
-                        $query = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::whereNull('created_by_user_id')
-                            ->where('visibility', 'PUBLIC_MARKETPLACE')
-                            ->where('enabled', true);
-                        
-                        $count = $query->count();
-                        \Log::info('Marketplace: AI profiles query', [
-                            'category' => 'ai-profiles',
-                            'count' => $count
-                        ]);
-                        
-                        $data['items'] = $query->latest()->paginate(20, ['*'], 'ai_profiles_page');
-                        
-                        \Log::info('Marketplace: AI profiles paginated', [
-                            'total' => $data['items']->total(),
-                            'count' => $data['items']->count()
-                        ]);
+                        // Check if table exists
+                        $tableName = (new \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile())->getTable();
+                        if (!Schema::hasTable($tableName)) {
+                            \Log::warning('Marketplace: AI model profiles table does not exist');
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        } else {
+                            $query = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::query()
+                                ->whereNull('created_by_user_id')
+                                ->where('visibility', 'PUBLIC_MARKETPLACE');
+                            
+                            // Only filter by enabled if column exists and we want to show only enabled
+                            if (Schema::hasColumn($tableName, 'enabled')) {
+                                $query->where('enabled', true);
+                            }
+                            
+                            // Eager load relationships if they exist
+                            if (Schema::hasColumn($tableName, 'ai_connection_id')) {
+                                $query->with('aiConnection');
+                            }
+                            
+                            $count = $query->count();
+                            \Log::info('Marketplace: AI profiles query', [
+                                'category' => 'ai-profiles',
+                                'count' => $count,
+                                'table' => $tableName
+                            ]);
+                            
+                            $data['items'] = $query->latest()->paginate(20, ['*'], 'ai_profiles_page');
+                            
+                            \Log::info('Marketplace: AI profiles paginated', [
+                                'total' => $data['items']->total(),
+                                'count' => $data['items']->count()
+                            ]);
+                        }
                     } catch (\Exception $e) {
-                        \Log::error('Marketplace: Error loading AI profiles', ['error' => $e->getMessage()]);
+                        \Log::error('Marketplace: Error loading AI profiles', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]);
                         $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                     }
+                } else {
+                    \Log::warning('Marketplace: AiModelProfile class does not exist');
+                    $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                 }
             }
 
@@ -112,50 +138,85 @@ class MarketplacesController extends Controller
             if ($data['activeCategory'] === 'bot-marketplace') {
                 if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {
                     try {
-                        $query = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::query();
-                        
-                        // Check which columns exist and filter accordingly
                         $tableName = (new \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot())->getTable();
-                        $hasCreatedByUserId = Schema::hasColumn($tableName, 'created_by_user_id');
-                        $hasIsAdminOwned = Schema::hasColumn($tableName, 'is_admin_owned');
-                        $hasIsDefaultTemplate = Schema::hasColumn($tableName, 'is_default_template');
-                        $hasVisibility = Schema::hasColumn($tableName, 'visibility');
                         
-                        // Admin-owned bots: admin_id is NOT NULL OR user_id is NULL
-                        // Also include default templates if column exists
-                        $query->where(function ($q) use ($hasCreatedByUserId, $hasIsAdminOwned, $hasIsDefaultTemplate) {
-                            // Always check admin_id (always exists) - admin-owned bots
-                            $q->whereNotNull('admin_id')
-                              ->orWhereNull('user_id');
+                        // Check if table exists
+                        if (!Schema::hasTable($tableName)) {
+                            \Log::warning('Marketplace: Trading bots table does not exist');
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        } else {
+                            $query = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::query();
                             
-                            // If created_by_user_id exists, also check it (system templates)
-                            if ($hasCreatedByUserId) {
-                                $q->orWhereNull('created_by_user_id');
-                            }
+                            // Check which columns exist
+                            $hasVisibility = Schema::hasColumn($tableName, 'visibility');
+                            $hasCreatedByUserId = Schema::hasColumn($tableName, 'created_by_user_id');
+                            $hasIsDefaultTemplate = Schema::hasColumn($tableName, 'is_default_template');
+                            $hasIsAdminOwned = Schema::hasColumn($tableName, 'is_admin_owned');
                             
-                            // If is_admin_owned exists, also check it
-                            if ($hasIsAdminOwned) {
-                                $q->orWhere('is_admin_owned', true);
-                            }
+                            // Build query: Show bots that are either:
+                            // 1. Public marketplace (visibility = 'PUBLIC_MARKETPLACE'), OR
+                            // 2. Admin-owned templates (admin_id NOT NULL OR user_id NULL OR created_by_user_id NULL OR is_default_template = true)
+                            $query->where(function ($q) use ($hasVisibility, $hasCreatedByUserId, $hasIsDefaultTemplate, $hasIsAdminOwned) {
+                                // Option 1: Public marketplace bots
+                                if ($hasVisibility) {
+                                    $q->where('visibility', 'PUBLIC_MARKETPLACE');
+                                }
+                                
+                                // Option 2: Admin-owned or template bots
+                                // Admin-owned: admin_id is NOT NULL
+                                $q->orWhereNotNull('admin_id');
+                                
+                                // OR user_id is NULL (system bots)
+                                $q->orWhereNull('user_id');
+                                
+                                // OR created_by_user_id is NULL (system templates)
+                                if ($hasCreatedByUserId) {
+                                    $q->orWhereNull('created_by_user_id');
+                                }
+                                
+                                // OR is_default_template is true
+                                if ($hasIsDefaultTemplate) {
+                                    $q->orWhere('is_default_template', true);
+                                }
+                                
+                                // OR is_admin_owned is true
+                                if ($hasIsAdminOwned) {
+                                    $q->orWhere('is_admin_owned', true);
+                                }
+                            });
                             
-                            // If is_default_template exists, also include default templates
-                            if ($hasIsDefaultTemplate) {
-                                $q->orWhere('is_default_template', true);
-                            }
-                        });
-                        
-                        // Only show public marketplace items if visibility column exists
-                        if ($hasVisibility) {
-                            $query->where('visibility', 'PUBLIC_MARKETPLACE');
+                            $count = $query->count();
+                            \Log::info('Marketplace: Trading bots query', [
+                                'category' => 'bot-marketplace',
+                                'count' => $count,
+                                'table' => $tableName,
+                                'hasVisibility' => $hasVisibility,
+                                'hasCreatedByUserId' => $hasCreatedByUserId,
+                                'hasIsDefaultTemplate' => $hasIsDefaultTemplate,
+                                'hasIsAdminOwned' => $hasIsAdminOwned
+                            ]);
+                            
+                            $data['items'] = $query->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
+                                ->latest()
+                                ->paginate(20, ['*'], 'bots_page');
+                            
+                            \Log::info('Marketplace: Trading bots paginated', [
+                                'total' => $data['items']->total(),
+                                'count' => $data['items']->count()
+                            ]);
                         }
-                        
-                        $data['items'] = $query->with(['exchangeConnection', 'tradingPreset', 'filterStrategy', 'aiModelProfile'])
-                            ->latest()
-                            ->paginate(20, ['*'], 'bots_page');
                     } catch (\Exception $e) {
-                        \Log::error('Marketplace: Error loading trading bots', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                        \Log::error('Marketplace: Error loading trading bots', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]);
                         $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                     }
+                } else {
+                    \Log::warning('Marketplace: TradingBot class does not exist');
+                    $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
                 }
             }
         }

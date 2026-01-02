@@ -8,6 +8,7 @@ use Addons\MultiChannelSignalAddon\App\Models\MessageParsingPattern;
 use Addons\MultiChannelSignalAddon\App\Services\ChannelAssignmentService;
 use Addons\MultiChannelSignalAddon\App\Services\TelegramMtprotoService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -98,18 +99,18 @@ class ChannelForwardingController extends Controller
                 return redirect()->route('admin.signal-sources.authenticate', [
                     'id' => $source->id,
                     'step' => 'password'
-                ])->with('error', 'Two-factor authentication password required. Please complete password authentication first.');
+                ])->with('notify', NotificationHelper::error('Two-factor authentication password required. Please complete password authentication first.', 'Error'));
         }
 
             // Check authentication status first (quick check)
             if (!($source->config['authenticated'] ?? false)) {
             return redirect()->route('admin.signal-sources.authenticate', $source->id)
-                    ->with('error', 'Please complete authentication first.');
+                    ->with('notify', NotificationHelper::error('Please complete authentication first.', 'Error'));
             }
         } else {
             // Channel selection is only available for Telegram MTProto sources
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('error', 'Channel selection is only available for Telegram MTProto sources.');
+                ->with('notify', NotificationHelper::error('Channel selection is only available for Telegram MTProto sources.', 'Error'));
         }
 
         // Handle channel selection
@@ -157,7 +158,7 @@ class ChannelForwardingController extends Controller
                     $dialogsResult = $this->telegramMtprotoService->getDialogs($source);
                     
                     if ($dialogsResult['type'] === 'error') {
-                        return redirect()->back()->with('error', $dialogsResult['message']);
+                        return redirect()->back()->with('notify', NotificationHelper::error($dialogsResult['message'], 'Error'));
                     }
 
                     // Find missing channels from dialogs
@@ -181,7 +182,7 @@ class ChannelForwardingController extends Controller
             }
 
             if (empty($selectedChannels)) {
-                return redirect()->back()->with('error', 'No valid channels selected.');
+                return redirect()->back()->with('notify', NotificationHelper::error('No valid channels selected.', 'Error'));
             }
 
             // Update source config with selected channels
@@ -221,7 +222,7 @@ class ChannelForwardingController extends Controller
                 : count($selectedChannels) . ' channels selected successfully! You can now assign them to users/plans.';
 
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('success', $message);
+                ->with('notify', NotificationHelper::success($message, 'Success'));
         }
 
         // Refresh source to get updated config
@@ -373,7 +374,7 @@ class ChannelForwardingController extends Controller
 
         // Only admin-owned channels can be assigned
         if (!$channel->is_admin_owned) {
-            return redirect()->back()->with('error', 'Only admin-owned channels can be assigned to users/plans.');
+            return redirect()->back()->with('notify', NotificationHelper::error('Only admin-owned channels can be assigned to users/plans.', 'Error'));
         }
 
         $request->validate([
@@ -398,9 +399,9 @@ class ChannelForwardingController extends Controller
             }
 
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('success', 'Channel assignments updated successfully');
+                ->with('notify', NotificationHelper::success('Channel assignments updated successfully', 'Success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Error: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -412,7 +413,7 @@ class ChannelForwardingController extends Controller
         $channel = ChannelSource::findOrFail($id);
         $this->assignmentService->removeUserAssignment($channel, $userId);
 
-        return redirect()->back()->with('success', 'User assignment removed');
+        return redirect()->back()->with('notify', NotificationHelper::success('User assignment removed', 'Success'));
     }
 
     /**
@@ -423,7 +424,7 @@ class ChannelForwardingController extends Controller
         $channel = ChannelSource::findOrFail($id);
         $this->assignmentService->removePlanAssignment($channel, $planId);
 
-        return redirect()->back()->with('success', 'Plan assignment removed');
+        return redirect()->back()->with('notify', NotificationHelper::success('Plan assignment removed', 'Success'));
     }
 
     /**
@@ -455,7 +456,7 @@ class ChannelForwardingController extends Controller
 
         if ($source->type !== 'telegram_mtproto') {
             return redirect()->route('admin.channel-forwarding.index')
-                ->with('error', 'Sample messages are only available for Telegram MTProto sources.');
+                ->with('notify', NotificationHelper::error('Sample messages are only available for Telegram MTProto sources.', 'Error'));
         }
 
         // Get channel ID from request or use first selected channel
@@ -464,7 +465,7 @@ class ChannelForwardingController extends Controller
         
         if (empty($channels)) {
             return redirect()->route('admin.channel-forwarding.select-channel', $id)
-                ->with('error', 'Please select channels first before viewing sample messages.');
+                ->with('notify', NotificationHelper::error('Please select channels first before viewing sample messages.', 'Error'));
         }
 
         // If no channel_id specified, use first channel
@@ -483,7 +484,7 @@ class ChannelForwardingController extends Controller
 
         if (!$selectedChannel) {
             return redirect()->route('admin.channel-forwarding.select-channel', $id)
-                ->with('error', 'Channel not found in selected channels.');
+                ->with('notify', NotificationHelper::error('Channel not found in selected channels.', 'Error'));
         }
 
         // Fetch sample messages
@@ -547,7 +548,7 @@ class ChannelForwardingController extends Controller
         ]);
 
         return redirect()->back()
-            ->with('success', 'Parser pattern created successfully!');
+            ->with('notify', NotificationHelper::success('Parser pattern created successfully!', 'Success'));
     }
 
     /**

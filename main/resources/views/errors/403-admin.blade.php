@@ -43,86 +43,121 @@
 
 @push('style')
 <style>
-.error-pgae-wrapper {
-    min-height: 60vh;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-    padding: 50px 0;
-}
-.error-pgae-wrapper #container {
-    width: 100%;
-    text-align: center;
-}
-.st0 {
-    font-family: 'FootlightMTLight', Arial, sans-serif;
-}
-.st1 {
-    font-size: 83.0285px;
-}
-.st2 {
-    fill: gray;
-}
-.error-pgae-wrapper svg {
-    max-width: 1000px;
-    max-height: 600px;
-    text-align: center;
-    fill: #be0eea;
-    margin: 0 auto;
-    display: block;
-}
-.error-pgae-wrapper path#XMLID_5_ {
-    fill: #be0eea;
-    filter: url(#blurFilter4);
-}
-.error-pgae-wrapper path#XMLID_11_,
-.error-pgae-wrapper path#XMLID_2_ {
-    fill: #be0eea;
-}
-.error-pgae-wrapper .circle {
-    animation: out 2s infinite ease-out;
-    fill: #be0eea;
-}
-.error-pgae-wrapper .message {
-    color: #be0eea;
-    font-size: 24px;
-    margin: 20px 0;
-    font-weight: 500;
-}
-.error-pgae-wrapper .message:after {
-    content: "]";
-}
-.error-pgae-wrapper .message:before {
-    content: "[";
-}
-.error-pgae-wrapper .message:after,
-.error-pgae-wrapper .message:before {
-    color: #be0eea;
-    font-size: 20px;
-    -webkit-animation-name: opacity;
-    -webkit-animation-duration: 2s;
-    -webkit-animation-iteration-count: infinite;
-    animation-name: opacity;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    margin: 0 25px;
-}
-@-webkit-keyframes opacity {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-}
-@keyframes opacity {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-}
-@keyframes out {
-    0% { r: 1; opacity: 0.9; }
-    25% { r: 5; opacity: 0.3; }
-    50% { r: 10; opacity: 0.2; }
-    75% { r: 15; opacity: 0.1; }
-    100% { r: 20; opacity: 0; }
-}
-</style>
+        .error-pgae-wrapper {
+            min-height: 60vh;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: center;
+            justify-content: center;
+            padding: 50px 0;
+            background: linear-gradient(135deg, #1a1a0a 0%, #2e2e1a 100%);
+        }
+        .error-pgae-wrapper #container {
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* SVG Text - Make the "43" numbers bright and visible (yellow for forbidden) */
+        .st0 {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-weight: 700;
+        }
+        .st1 {
+            font-size: 100px;
+            fill: #FBBF24 !important; /* Bright yellow/amber for forbidden */
+            stroke: #D97706;
+            stroke-width: 2px;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+        }
+        
+        /* SVG Paths - Make all paths bright and visible */
+        .st2 {
+            fill: #FBBF24 !important; /* Changed from gray to bright yellow */
+            opacity: 0.8;
+        }
+        .error-pgae-wrapper svg {
+            max-width: 1000px;
+            max-height: 600px;
+            text-align: center;
+            fill: #FBBF24;
+            margin: 0 auto;
+            display: block;
+        }
+        .error-pgae-wrapper path#XMLID_5_ {
+            fill: #FBBF24 !important;
+            filter: url(#blurFilter4);
+            opacity: 0.7;
+        }
+        .error-pgae-wrapper path#XMLID_11_,
+        .error-pgae-wrapper path#XMLID_2_ {
+            fill: #FBBF24 !important;
+        }
+        .error-pgae-wrapper .circle {
+            animation: out 2s infinite ease-out;
+            fill: #FBBF24;
+        }
+        
+        /* Message Text - High contrast, larger, bold */
+        .error-pgae-wrapper .message {
+            color: #FFFFFF !important;
+            font-size: 28px !important;
+            font-weight: 600 !important;
+            margin: 30px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        /* Remove fading brackets - keep them visible */
+        .error-pgae-wrapper .message:after {
+            content: "]";
+            color: #FBBF24 !important;
+            font-size: 28px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
+        }
+        .error-pgae-wrapper .message:before {
+            content: "[";
+            color: #FBBF24 !important;
+            font-size: 28px;
+            opacity: 1 !important; /* Always visible */
+            margin: 0 15px;
+        }
+        
+        /* Button styling for better visibility */
+        .error-pgae-wrapper .main-btn {
+            background: #FBBF24 !important;
+            color: #1a1a0a !important;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+            transition: all 0.3s ease;
+        }
+        .error-pgae-wrapper .main-btn:hover {
+            background: #D97706 !important;
+            color: #FFFFFF !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.6);
+        }
+        
+        /* Animation - Keep but make more visible */
+        @keyframes out {
+            0% { r: 1; opacity: 1; }
+            25% { r: 5; opacity: 0.6; }
+            50% { r: 10; opacity: 0.4; }
+            75% { r: 15; opacity: 0.2; }
+            100% { r: 20; opacity: 0; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .st1 {
+                font-size: 70px;
+            }
+            .error-pgae-wrapper .message {
+                font-size: 22px !important;
+            }
+        }
+    </style>
 @endpush
 

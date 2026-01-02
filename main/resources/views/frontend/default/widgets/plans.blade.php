@@ -10,7 +10,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
                 <div class="sp_theme_top">
-                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans($content->title) }}</div>
+                    <div class="sp_theme_top_caption"><i class="fas fa-bolt"></i> {{ Config::trans(optional($content)->title ?? 'Plans') }}</div>
                     <h2 class="sp_theme_top_title"><?= Config::colorText(optional($content)->title, optional($content)->color_text_for_title) ?></h2>
                 </div>
             </div>

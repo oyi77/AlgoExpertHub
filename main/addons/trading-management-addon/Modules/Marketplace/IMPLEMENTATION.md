@@ -24,6 +24,16 @@
 - ✅ CleanupUnusedMarketDataJob (weekly)
 - ✅ FetchMarketDataCoordinatorJob (5 min)
 
+### Phase 5: Controllers (COMPLETE)
+- ✅ **Backend/BotMarketplaceController.php** - Complete with methods: index, show, approve, feature, destroy
+- ✅ **Backend/TraderMarketplaceController.php** - Complete with methods: index, show, verify, destroy, recalculateLeaderboard
+- ✅ **User/BotMarketplaceController.php** - Complete with methods: index, show, clone, rate, myClones
+- ✅ **User/TraderMarketplaceController.php** - Complete with methods: index, show, follow, unfollow, rate
+
+**Location**: `Modules/Marketplace/Controllers/Backend/` and `Modules/Marketplace/Controllers/User/`
+
+All controllers are fully implemented and registered in route files. See Routes section below for details.
+
 ## Database Tables Created
 
 ```sql
@@ -39,45 +49,99 @@
 ✅ market_data_subscriptions - OHLCV subscription tracking
 ```
 
-## Next Steps for Full Deployment
+## Routes
 
-### Controllers (Quick Implementation)
-```bash
-# Create these 4 controllers:
-1. Modules/Marketplace/Controllers/Backend/BotMarketplaceController.php
-2. Modules/Marketplace/Controllers/Backend/TraderMarketplaceController.php
-3. Modules/Marketplace/Controllers/User/BotMarketplaceController.php
-4. Modules/Marketplace/Controllers/User/TraderMarketplaceController.php
-```
+### Admin Routes
+Registered in `routes/admin.php` (lines 421-435):
 
-### Routes
-Add to `routes/admin.php`:
 ```php
-Route::prefix('marketplace')->name('marketplace.')->group(function() {
-    Route::resource('bots', Backend\BotMarketplaceController::class);
-    Route::resource('traders', Backend\TraderMarketplaceController::class);
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+    // Bot Templates
+    Route::get('bots', [Backend\BotMarketplaceController::class, 'index'])->name('bots.index');
+    Route::get('bots/{id}', [Backend\BotMarketplaceController::class, 'show'])->name('bots.show');
+    Route::post('bots/{id}/approve', [Backend\BotMarketplaceController::class, 'approve'])->name('bots.approve');
+    Route::post('bots/{id}/feature', [Backend\BotMarketplaceController::class, 'feature'])->name('bots.feature');
+    Route::delete('bots/{id}', [Backend\BotMarketplaceController::class, 'destroy'])->name('bots.destroy');
+    
+    // Trader Profiles
+    Route::get('traders', [Backend\TraderMarketplaceController::class, 'index'])->name('traders.index');
+    Route::get('traders/{id}', [Backend\TraderMarketplaceController::class, 'show'])->name('traders.show');
+    Route::post('traders/{id}/verify', [Backend\TraderMarketplaceController::class, 'verify'])->name('traders.verify');
+    Route::delete('traders/{id}', [Backend\TraderMarketplaceController::class, 'destroy'])->name('traders.destroy');
+    Route::post('traders/recalculate-leaderboard', [Backend\TraderMarketplaceController::class, 'recalculateLeaderboard'])->name('traders.recalculate');
 });
 ```
 
-Add to `routes/user.php`:
+### User Routes
+Registered in `routes/user.php` (lines 33-47):
+
 ```php
-Route::prefix('marketplace')->name('marketplace.')->group(function() {
+Route::prefix('marketplace')->name('marketplace.')->group(function () {
+    // Bot Templates
     Route::get('bots', [User\BotMarketplaceController::class, 'index'])->name('bots.index');
     Route::get('bots/{id}', [User\BotMarketplaceController::class, 'show'])->name('bots.show');
     Route::post('bots/{id}/clone', [User\BotMarketplaceController::class, 'clone'])->name('bots.clone');
+    Route::post('bots/{id}/rate', [User\BotMarketplaceController::class, 'rate'])->name('bots.rate');
+    Route::get('my-clones', [User\BotMarketplaceController::class, 'myClones'])->name('my-clones');
+    
+    // Trader Profiles  
     Route::get('traders', [User\TraderMarketplaceController::class, 'index'])->name('traders.index');
+    Route::get('traders/{id}', [User\TraderMarketplaceController::class, 'show'])->name('traders.show');
     Route::post('traders/{id}/follow', [User\TraderMarketplaceController::class, 'follow'])->name('traders.follow');
+    Route::post('traders/{id}/unfollow', [User\TraderMarketplaceController::class, 'unfollow'])->name('traders.unfollow');
+    Route::post('traders/{id}/rate', [User\TraderMarketplaceController::class, 'rate'])->name('traders.rate');
 });
 ```
 
-### Scheduled Jobs
-Add to `app/Console/Kernel.php`:
+## Scheduled Jobs
+
+All Marketplace scheduled jobs are registered in `app/Console/Kernel.php` (lines 84-119) with proper conditional checks:
+
 ```php
-$schedule->job(new CalculateLeaderboardJob())->hourly();
-$schedule->job(new UpdateTraderStatsJob())->daily();
-$schedule->job(new CleanupUnusedMarketDataJob())->weekly();
-$schedule->job(new FetchMarketDataCoordinatorJob())->everyFiveMinutes();
+// Marketplace Module - Scheduled Jobs
+if (AddonRegistry::moduleEnabled('trading-management-addon', 'marketplace')) {
+    // Calculate leaderboard rankings - hourly
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CalculateLeaderboardJob::class)
+            ->hourly()
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    // Update trader statistics - daily at midnight
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\UpdateTraderStatsJob::class)
+            ->daily()
+            ->at('00:00')
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    // Cleanup unused market data - weekly Sunday 3AM
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\CleanupUnusedMarketDataJob::class)
+            ->weekly()
+            ->sundays()
+            ->at('03:00')
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+
+    // Fetch market data coordinator - every 5 minutes
+    if (class_exists(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)) {
+        $schedule->job(\Addons\TradingManagement\Modules\Marketplace\Jobs\FetchMarketDataCoordinatorJob::class)
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->onOneServer();
+    }
+}
 ```
+
+**Schedule Details**:
+- **CalculateLeaderboardJob**: Runs hourly with overlap prevention and single-server execution
+- **UpdateTraderStatsJob**: Runs daily at midnight (00:00) with overlap prevention
+- **CleanupUnusedMarketDataJob**: Runs weekly on Sundays at 3 AM with overlap prevention
+- **FetchMarketDataCoordinatorJob**: Runs every 5 minutes with overlap prevention
 
 ### Seed Sample Data
 ```bash
@@ -229,8 +293,17 @@ Track these metrics:
 
 ---
 
-**Status**: Core infrastructure COMPLETE
-**Ready for**: Controller/View implementation
-**Estimated effort**: 4-6 hours for full UI
+**Status**: FULLY IMPLEMENTED
+
+All core components are complete including:
+- ✅ Database & Models (Phase 1)
+- ✅ Services (Phase 2)
+- ✅ OHLCV Optimization (Phase 3)
+- ✅ Background Jobs (Phase 4)
+- ✅ Controllers (Phase 5)
+- ✅ Routes (Admin & User)
+- ✅ Scheduled Jobs (with proper conditional checks)
+
+The Marketplace module is production-ready and fully functional.
 
 

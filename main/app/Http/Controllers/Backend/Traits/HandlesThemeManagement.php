@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Traits;
 
+use App\Helpers\NotificationHelper;
 use App\Models\Configuration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
@@ -26,7 +27,7 @@ trait HandlesThemeManagement
         $themeName = $name ?? $request->input('name') ?? $request->input('theme');
         
         if (!$themeName) {
-            return redirect()->back()->with('error', 'Theme name is required.');
+            return redirect()->back()->with('notify', NotificationHelper::error('Theme name is required.', 'Error'));
         }
 
         $general->theme = $themeName;
@@ -34,7 +35,7 @@ trait HandlesThemeManagement
 
         $general->save();
 
-        return redirect()->back()->with('success', 'Template Activated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Template Activated successfully', 'Success'));
     }
 
     public function themeColor(Request $request)
@@ -63,13 +64,13 @@ trait HandlesThemeManagement
 
             return redirect()
                 ->route('admin.manage.theme')
-                ->with('success', __('Theme :theme installed successfully.', [
+                ->with('notify', NotificationHelper::success(__('Theme :theme installed successfully.', [
                     'theme' => $result['display_name'] ?? $result['name'],
-                ]));
+                ]), 'Theme Installed'));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.manage.theme')
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 
@@ -97,7 +98,7 @@ trait HandlesThemeManagement
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.manage.theme')
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 
@@ -111,13 +112,13 @@ trait HandlesThemeManagement
 
             return redirect()
                 ->route('admin.manage.theme')
-                ->with('success', __('Theme :theme deleted successfully.', [
+                ->with('notify', NotificationHelper::success(__('Theme :theme deleted successfully.', [
                     'theme' => $result['display_name'] ?? $result['name'],
-                ]));
+                ]), 'Theme Deleted'));
         } catch (Throwable $exception) {
             return redirect()
                 ->route('admin.manage.theme')
-                ->with('error', $exception->getMessage());
+                ->with('notify', NotificationHelper::error($exception->getMessage(), 'Error'));
         }
     }
 
@@ -132,13 +133,13 @@ trait HandlesThemeManagement
         $themeName = $name ?? $request->input('name') ?? $request->input('theme');
         
         if (!$themeName) {
-            return redirect()->back()->with('error', 'Theme name is required.');
+            return redirect()->back()->with('notify', NotificationHelper::error('Theme name is required.', 'Error'));
         }
 
         $general->backend_theme = $themeName;
         $general->save();
 
-        return redirect()->back()->with('success', 'Backend theme activated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Backend theme activated successfully', 'Success'));
     }
 
     /**
@@ -150,15 +151,15 @@ trait HandlesThemeManagement
             $general = Configuration::first();
             
             if (!$general) {
-                return redirect()->back()->with('error', 'Configuration not found.');
+                return redirect()->back()->with('notify', NotificationHelper::error('Configuration not found.', 'Error'));
             }
 
             $general->theme = null;
             $general->save();
 
-            return redirect()->back()->with('success', 'All frontend themes have been deactivated successfully.');
+            return redirect()->back()->with('notify', NotificationHelper::success('All frontend themes have been deactivated successfully.', 'Success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to deactivate themes: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to deactivate themes: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -179,9 +180,9 @@ trait HandlesThemeManagement
 
             $general->save();
 
-            return redirect()->back()->with('success', 'Landing Page updated successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Landing Page updated successfully', 'Success'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update landing page: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to update landing page: ' . $e->getMessage(), 'Error'));
         }
     }
 }

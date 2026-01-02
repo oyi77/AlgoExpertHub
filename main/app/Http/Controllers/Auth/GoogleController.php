@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class GoogleController extends Controller
             }
     
         } catch (Exception $e) {
-           return redirect()->route('user.login')->with('error','Something Went Wrong');
+           return redirect()->route('user.login')->with('notify', NotificationHelper::error('Something Went Wrong', 'Error'));
         }
     }
 }

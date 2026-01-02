@@ -179,14 +179,26 @@ function warmCache() {
         },
         success: function(response) {
             if (response.type === 'success') {
-                toastr.success(response.message);
+                if (typeof notify !== 'undefined') {
+                    notify()->success()->title('Success')->message(response.message)->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.success(response.message);
+                }
                 refreshStats();
             } else {
-                toastr.error(response.message);
+                if (typeof notify !== 'undefined') {
+                    notify()->error()->title('Error')->message(response.message)->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(response.message);
+                }
             }
         },
         error: function(xhr) {
-            toastr.error('Failed to warm cache');
+            if (typeof notify !== 'undefined') {
+                notify()->error()->title('Error')->message('Failed to warm cache')->send();
+            } else if (typeof toastr !== 'undefined') {
+                toastr.error('Failed to warm cache');
+            }
         }
     });
 }
@@ -201,14 +213,26 @@ function clearAllCache() {
             },
             success: function(response) {
                 if (response.type === 'success') {
-                    toastr.success(response.message);
+                    if (typeof notify !== 'undefined') {
+                        notify()->success()->title('Success')->message(response.message)->send();
+                    } else if (typeof toastr !== 'undefined') {
+                        toastr.success(response.message);
+                    }
                     refreshStats();
                 } else {
-                    toastr.error(response.message);
+                    if (typeof notify !== 'undefined') {
+                        notify()->error()->title('Error')->message(response.message)->send();
+                    } else if (typeof toastr !== 'undefined') {
+                        toastr.error(response.message);
+                    }
                 }
             },
             error: function(xhr) {
-                toastr.error('Failed to clear cache');
+                if (typeof notify !== 'undefined') {
+                    notify()->error()->title('Error')->message('Failed to clear cache')->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error('Failed to clear cache');
+                }
             }
         });
     }
@@ -224,14 +248,26 @@ function clearCacheByTag(tag) {
         },
         success: function(response) {
             if (response.type === 'success') {
-                toastr.success(response.message);
+                if (typeof notify !== 'undefined') {
+                    notify()->success()->title('Success')->message(response.message)->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.success(response.message);
+                }
                 refreshStats();
             } else {
-                toastr.error(response.message);
+                if (typeof notify !== 'undefined') {
+                    notify()->error()->title('Error')->message(response.message)->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.error(response.message);
+                }
             }
         },
         error: function(xhr) {
-            toastr.error('Failed to clear cache for tag: ' + tag);
+            if (typeof notify !== 'undefined') {
+                notify()->error()->title('Error')->message('Failed to clear cache for tag: ' + tag)->send();
+            } else if (typeof toastr !== 'undefined') {
+                toastr.error('Failed to clear cache for tag: ' + tag);
+            }
         }
     });
 }
@@ -258,11 +294,19 @@ function refreshStats() {
                     $('#peak-memory').text(data.memory.used_memory_peak_human);
                 }
                 
-                toastr.success('Statistics refreshed');
+                if (typeof notify !== 'undefined') {
+                    notify()->success()->title('Success')->message('Statistics refreshed')->send();
+                } else if (typeof toastr !== 'undefined') {
+                    toastr.success('Statistics refreshed');
+                }
             }
         },
         error: function(xhr) {
-            toastr.error('Failed to refresh statistics');
+            if (typeof notify !== 'undefined') {
+                notify()->error()->title('Error')->message('Failed to refresh statistics')->send();
+            } else if (typeof toastr !== 'undefined') {
+                toastr.error('Failed to refresh statistics');
+            }
         }
     });
 }

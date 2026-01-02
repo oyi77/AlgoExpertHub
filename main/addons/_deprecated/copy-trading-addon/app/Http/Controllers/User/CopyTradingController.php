@@ -3,9 +3,9 @@
 namespace Addons\CopyTrading\App\Http\Controllers\User;
 
 use Addons\CopyTrading\App\Http\Controllers\Controller;
-use Addons\CopyTrading\App\Services\CopyTradingService;
 use Addons\CopyTrading\App\Services\CopyTradingAnalyticsService;
-use App\Helpers\Helper\Helper;
+use Addons\CopyTrading\App\Services\CopyTradingService;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -71,7 +71,7 @@ class CopyTradingController extends Controller
         }
 
         return redirect()->route('user.copy-trading.settings')
-            ->with('success', 'Settings updated successfully');
+            ->with('notify', NotificationHelper::success('Settings updated successfully', 'Success'));
     }
 }
 

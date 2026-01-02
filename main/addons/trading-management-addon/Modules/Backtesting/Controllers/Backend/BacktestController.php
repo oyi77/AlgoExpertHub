@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\Backtesting\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\Backtesting\Models\Backtest;
 use Addons\TradingManagement\Modules\Backtesting\Models\BacktestResult;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
@@ -141,7 +142,7 @@ class BacktestController extends Controller
         if (!$availability['available']) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Insufficient data coverage (' . $availability['coverage_percent'] . '%). Data is missing for ' . count($availability['missing_dates']) . ' dates. Please adjust your date range.');
+                ->with('notify', NotificationHelper::error('Insufficient data coverage (' . $availability['coverage_percent'] . '%). Data is missing for ' . count($availability['missing_dates']) . ' dates. Please adjust your date range.', 'Error'));
         }
 
         // Check if date range is within available data
@@ -150,12 +151,12 @@ class BacktestController extends Controller
             if ($validated['start_date'] < $dateRange['min_date']) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Start date is before available data. Earliest available date: ' . $dateRange['min_date']);
+                    ->with('notify', NotificationHelper::error('Start date is before available data. Earliest available date: ' . $dateRange['min_date'], 'Error'));
             }
             if ($validated['end_date'] > $dateRange['max_date']) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'End date is after available data. Latest available date: ' . $dateRange['max_date']);
+                    ->with('notify', NotificationHelper::error('End date is after available data. Latest available date: ' . $dateRange['max_date'], 'Error'));
             }
         }
 
@@ -167,7 +168,7 @@ class BacktestController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.test.backtests.index')
-            ->with('success', 'Backtest created and queued for processing');
+            ->with('notify', NotificationHelper::success('Backtest created and queued for processing', 'Success'));
     }
 
     public function show(Backtest $backtest)
@@ -215,7 +216,7 @@ class BacktestController extends Controller
     {
         $backtest->delete();
         return redirect()->route('admin.trading-management.test.backtests.index')
-            ->with('success', 'Backtest deleted successfully');
+            ->with('notify', NotificationHelper::success('Backtest deleted successfully', 'Success'));
     }
 
     public function results(Request $request)

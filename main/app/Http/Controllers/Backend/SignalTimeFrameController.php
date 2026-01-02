@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TimeFrame;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class SignalTimeFrameController extends Controller
 
         TimeFrame::create($data);
 
-        return redirect()->back()->with('success', 'Time Frame created successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Time Frame created successfully', 'Success'));
     }
 
     public function update(Request $request, $id)
@@ -42,7 +43,7 @@ class SignalTimeFrameController extends Controller
 
         $frame->update($data);
 
-        return redirect()->back()->with('success', 'Frame updated successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Frame updated successfully', 'Success'));
     }
 
     public function destroy($id)
@@ -51,7 +52,7 @@ class SignalTimeFrameController extends Controller
 
         $frame->delete();
 
-        return redirect()->back()->with('success', 'Frame Deleted successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Frame Deleted successfully', 'Success'));
     }
 
     public function changeStatus($id)

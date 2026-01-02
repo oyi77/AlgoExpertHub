@@ -44,7 +44,7 @@
                             <ul class="signal-info-list">
                                 <li class="signal-single-list">
                                     <span class="caption"><i class="fas fa-id-badge"></i> {{ __('Stop Loss') }}:</span>
-                                    <span class="value">{{ $signal->sl }}</span>
+                                    <span class="value">{{ formatTradingPrice($signal->sl, $signal->pair->name ?? null) }}</span>
                                 </li>
                                 <li class="signal-single-list">
                                     <span class="caption"><i class="far fa-clock"></i> {{ __('Time Frame') }}:</span>
@@ -52,11 +52,11 @@
                                 </li>
                                 <li class="signal-single-list">
                                     <span class="caption"><i class="fas fa-money-bill"></i> {{ __('Open') }}:</span>
-                                    <span class="value">{{ $signal->open_price }}</span>
+                                    <span class="value">{{ formatTradingPrice($signal->open_price, $signal->pair->name ?? null) }}</span>
                                 </li>
                                 <li class="signal-single-list">
                                     <span class="caption"><i class="fas fa-hand-holding-usd"></i> {{ __('Take profit') }}:</span>
-                                    <span class="value">{{ $signal->tp }}</span>
+                                    <span class="value">{{ formatTradingPrice($signal->tp, $signal->pair->name ?? null) }}</span>
                                 </li>
                             </ul>
                             <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" class="view-signal-btn w-100 text-center mt-3">{{__('View Details')}}</a>
@@ -65,12 +65,28 @@
                 </div>
                 @empty
                     <div class="col-md-12">
-                        <div class="text-center py-5">
-                            <i class="far fa-folder-open display-3"></i>
-                            <p class="mt-4">{{ __('No Signals Found') }}</p>
+                    @empty
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+                                <h4 class="mb-3">{{ __('No Trading Signals Available') }}</h4>
+                                <p class="text-muted mb-4">
+                                    {{ __('Signals will appear here once you subscribe to a plan with signal access.') }}<br>
+                                    {{ __('Our expert traders publish high-quality signals with entry, stop loss, and take profit levels.') }}
+                                </p>
+                                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                                    <a href="{{ route('user.plan') }}" class="btn sp_theme_btn btn-lg">
+                                        <i class="fas fa-crown me-2"></i>{{ __('Upgrade Plan') }}
+                                    </a>
+                                    @if(Route::has('user.trading.multi-channel-signal.index'))
+                                    <a href="{{ route('user.trading.multi-channel-signal.index', ['tab' => 'signal-sources']) }}" class="btn btn-outline-primary btn-lg">
+                                        <i class="fas fa-rss me-2"></i>{{ __('Add Custom Signal Source') }}
+                                    </a>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                @endforelse
+                    @endforelse
 
 
                 @if ($signals->hasPages())

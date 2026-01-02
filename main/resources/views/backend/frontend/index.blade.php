@@ -366,16 +366,20 @@
                             },
                             success: function(response) {
                                 if (response.type === 'success') {
-                                    // Show success notification if toastr is available
-                                    if (typeof toastr !== 'undefined') {
+                                    // Show success notification using Laravel Notify
+                                    if (typeof notify !== 'undefined') {
+                                        notify()->success()->title('Success')->message(response.message || 'Sections reordered successfully')->send();
+                                    } else if (typeof toastr !== 'undefined') {
                                         toastr.success(response.message || 'Sections reordered successfully');
                                     }
                                 }
                             },
                             error: function(xhr) {
                                 console.error('Failed to save section order');
-                                // Show error notification if toastr is available
-                                if (typeof toastr !== 'undefined') {
+                                // Show error notification using Laravel Notify
+                                if (typeof notify !== 'undefined') {
+                                    notify()->error()->title('Error')->message('Failed to save section order. Please try again.')->send();
+                                } else if (typeof toastr !== 'undefined') {
                                     toastr.error('Failed to save section order. Please try again.');
                                 }
                                 // Revert on error

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ChannelMessage;
 use App\Models\Signal;
@@ -75,7 +76,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         // Get original message
@@ -105,7 +106,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created', 'Error'));
         }
 
         $data['signal'] = $signal;
@@ -144,18 +145,18 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created'));
         }
 
         $result = $this->signalService->update($request, $id);
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.channel-signals.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'] ?? 'Failed to update signal');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to update signal', 'Error'));
     }
 
     /**
@@ -170,12 +171,12 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created'));
         }
 
         if ($signal->is_published) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('info', 'Signal is already published');
+                ->with('notify', NotificationHelper::info('Signal is already published'));
         }
 
         // Publish the signal
@@ -189,11 +190,11 @@ class ChannelSignalController extends Controller
             }
 
             return redirect()->route('admin.channel-signals.index')
-                ->with('success', 'Signal approved and published successfully');
+                ->with('notify', NotificationHelper::success('Signal approved and published successfully', 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'] ?? 'Failed to publish signal');
+            ->with('notify', NotificationHelper::error($result['message'] ?? 'Failed to publish signal', 'Error'));
     }
 
     /**
@@ -213,7 +214,7 @@ class ChannelSignalController extends Controller
 
         if (!$signal->isAutoCreated()) {
             return redirect()->route('admin.channel-signals.index')
-                ->with('error', 'Signal is not auto-created');
+                ->with('notify', NotificationHelper::error('Signal is not auto-created'));
         }
 
         // Update channel message with rejection reason
@@ -226,7 +227,7 @@ class ChannelSignalController extends Controller
         $signal->delete();
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', 'Signal rejected and deleted');
+            ->with('notify', NotificationHelper::success('Signal rejected and deleted', 'Success'));
     }
 
     /**
@@ -261,7 +262,7 @@ class ChannelSignalController extends Controller
         }
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', "Approved and published {$approved} signals");
+            ->with('notify', NotificationHelper::success("Approved and published {$approved} signals", 'Success'));
     }
 
     /**
@@ -294,7 +295,7 @@ class ChannelSignalController extends Controller
         }
 
         return redirect()->route('admin.channel-signals.index')
-            ->with('success', "Rejected and deleted {$rejected} signals");
+            ->with('notify', NotificationHelper::success("Rejected and deleted {$rejected} signals", 'Success'));
     }
 }
 

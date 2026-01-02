@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\AiAnalysis\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
 use Illuminate\Http\Request;
 
@@ -39,7 +40,7 @@ class AiModelProfileController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.strategy.ai-models.index')
-            ->with('success', 'AI model profile created successfully');
+            ->with('notify', NotificationHelper::success('AI model profile created successfully', 'Success'));
     }
 
     public function edit(AiModelProfile $aiModel)
@@ -67,13 +68,13 @@ class AiModelProfileController extends Controller
         ]);
 
         return redirect()->route('admin.trading-management.strategy.ai-models.index')
-            ->with('success', 'AI model profile updated successfully');
+            ->with('notify', NotificationHelper::success('AI model profile updated successfully', 'Success'));
     }
 
     public function destroy(AiModelProfile $aiModel)
     {
         $aiModel->delete();
         return redirect()->route('admin.trading-management.strategy.ai-models.index')
-            ->with('success', 'AI model profile deleted successfully');
+            ->with('notify', NotificationHelper::success('AI model profile deleted successfully', 'Success'));
     }
 }

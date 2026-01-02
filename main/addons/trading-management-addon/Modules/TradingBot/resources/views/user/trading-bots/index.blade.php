@@ -15,7 +15,11 @@
                     <i class="fa fa-store"></i> {{ __('Browse Templates') }}
                 </a>
                 @endif
-                @if(Route::has('user.trading-management.trading-bots.create'))
+                @if(Route::has('user.trading-management.trading-bots.wizard.index'))
+                <a href="{{ route('user.trading-management.trading-bots.wizard.index') }}" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> {{ __('Create Trading Bot') }}
+                </a>
+                @elseif(Route::has('user.trading-management.trading-bots.create'))
                 <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-primary">
                     <i class="fa fa-plus"></i> {{ __('Create Trading Bot') }}
                 </a>
@@ -187,7 +191,11 @@
                         <i class="fa fa-store"></i> Browse Templates
                     </a>
                     @endif
-                    @if(Route::has('user.trading-management.trading-bots.create'))
+                    @if(Route::has('user.trading-management.trading-bots.wizard.index'))
+                    <a href="{{ route('user.trading-management.trading-bots.wizard.index') }}" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> Create Your Own Bot
+                    </a>
+                    @elseif(Route::has('user.trading-management.trading-bots.create'))
                     <a href="{{ route('user.trading-management.trading-bots.create') }}" class="btn btn-primary">
                         <i class="fa fa-plus"></i> Create Your Own Bot
                     </a>

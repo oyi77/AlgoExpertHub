@@ -3,6 +3,7 @@
 namespace Addons\TradingManagement\Modules\CopyTrading\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\User;
 use Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingSubscription;
 use Addons\TradingManagement\Modules\CopyTrading\Models\CopyTradingExecution;
@@ -158,13 +159,13 @@ class CopyTradingController extends Controller
             'unsubscribed_at' => !$subscription->is_active ? now() : null,
         ]);
 
-        return redirect()->back()->with('success', 'Subscription status updated');
+        return redirect()->back()->with('notify', NotificationHelper::success('Subscription status updated', 'Success'));
     }
 
     public function destroySubscription(CopyTradingSubscription $subscription)
     {
         $subscription->delete();
-        return redirect()->back()->with('success', 'Subscription deleted');
+        return redirect()->back()->with('notify', NotificationHelper::success('Subscription deleted', 'Success'));
     }
 
     protected function calculateSuccessRate($dateFrom, $dateTo)

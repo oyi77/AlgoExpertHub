@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Models\Trade;
 use App\Models\Transaction;
 use Carbon\Carbon;
@@ -234,17 +235,17 @@ class CryptoTradeController extends Controller
 
 
         if ($user->trades->count() >= Helper::config()->trade_limit) {
-            return redirect()->back()->with('error', 'Per Day Trading Limit expired');
+            return redirect()->back()->with('notify', NotificationHelper::error('Per Day Trading Limit expired'));
         }
 
         if ($user->payments->count() <= 0) {
-            return redirect()->back()->with('error', 'You need to subscribe a plan to trade');
+            return redirect()->back()->with('notify', NotificationHelper::error('You need to subscribe a plan to trade'));
         }
 
 
 
         if ($user->balance < Helper::config()->min_trade_balance) {
-            return redirect()->back()->with('error', 'You need minimum of ' . Helper::formatter(Helper::config()->min_trade_balance) . ' To Trade');
+            return redirect()->back()->with('notify', NotificationHelper::error('You need minimum of ' . Helper::formatter(Helper::config()->min_trade_balance) . ' To Trade'));
         }
 
 
@@ -261,7 +262,7 @@ class CryptoTradeController extends Controller
             'trade_opens_at' => now()
         ]);
 
-        return redirect()->back()->with('success', 'Trade Open Successfully');
+        return redirect()->back()->with('notify', NotificationHelper::success('Trade Open Successfully'));
     }
 
     public function tradeClose()

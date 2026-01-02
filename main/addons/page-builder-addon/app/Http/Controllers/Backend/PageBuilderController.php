@@ -4,6 +4,7 @@ namespace Addons\PageBuilderAddon\App\Http\Controllers\Backend;
 
 use Addons\PageBuilderAddon\App\Services\PageBuilderService;
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\Page;
 use Illuminate\Http\Request;
 
@@ -80,11 +81,11 @@ class PageBuilderController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -97,11 +98,11 @@ class PageBuilderController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message'])
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'))
             ->withInput();
     }
 
@@ -114,10 +115,10 @@ class PageBuilderController extends Controller
 
         if ($result['type'] === 'success') {
             return redirect()->route('admin.page-builder.index')
-                ->with('success', $result['message']);
+                ->with('notify', NotificationHelper::success($result['message'], 'Success'));
         }
 
         return redirect()->back()
-            ->with('error', $result['message']);
+            ->with('notify', NotificationHelper::error($result['message'], 'Error'));
     }
 }

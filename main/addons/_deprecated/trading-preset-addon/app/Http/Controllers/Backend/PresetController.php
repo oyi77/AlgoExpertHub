@@ -7,6 +7,7 @@ use Addons\TradingPresetAddon\App\Models\TradingPreset;
 use Addons\TradingPresetAddon\App\Services\PresetService;
 use Addons\TradingPresetAddon\App\Services\PresetValidationService;
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -117,12 +118,12 @@ class PresetController extends Controller
             }
 
             return redirect()->route('admin.trading-presets.index')
-                ->with('success', $message)
+                ->with('notify', NotificationHelper::success($message, 'Success'))
                 ->with('warnings', $warnings);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to create preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -194,12 +195,12 @@ class PresetController extends Controller
             }
 
             return redirect()->route('admin.trading-presets.index')
-                ->with('success', $message)
+                ->with('notify', NotificationHelper::success($message, 'Success'))
                 ->with('warnings', $warnings);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to update preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -214,10 +215,10 @@ class PresetController extends Controller
             $this->presetService->delete($preset, auth()->user());
 
             return redirect()->route('admin.trading-presets.index')
-                ->with('success', 'Preset deleted successfully.');
+                ->with('notify', NotificationHelper::success('Preset deleted successfully.', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to delete preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to delete preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -232,10 +233,10 @@ class PresetController extends Controller
             $cloned = $this->presetService->clone($preset, auth()->user());
 
             return redirect()->route('admin.trading-presets.edit', $cloned->id)
-                ->with('success', 'Preset cloned successfully. You can now edit it.');
+                ->with('notify', NotificationHelper::success('Preset cloned successfully. You can now edit it.', 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to clone preset: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to clone preset: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -253,10 +254,10 @@ class PresetController extends Controller
             $status = $preset->enabled ? 'enabled' : 'disabled';
 
             return redirect()->back()
-                ->with('success', "Preset {$status} successfully.");
+                ->with('notify', NotificationHelper::success("Preset {$status} successfully.", 'Success'));
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to toggle preset status: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Failed to toggle preset status: ' . $e->getMessage(), 'Error'));
         }
     }
 }

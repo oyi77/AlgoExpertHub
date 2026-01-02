@@ -16,7 +16,7 @@ class AdminLoginService
 
         if ($admin) {
             if (!$admin->status) {
-                return redirect()->route('admin.login')->with('error', 'Your account is currently disabled');
+                return redirect()->route('admin.login')->with('notify', \App\Helpers\NotificationHelper::error('Your account is currently disabled', 'Error'));
             }
         }
 

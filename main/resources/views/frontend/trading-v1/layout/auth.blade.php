@@ -223,82 +223,90 @@
     <!-- Main JS -->
     <script src="{{ asset('asset/frontend/trading-v1/js/main.js') }}"></script>
     
-    <!-- Toastr -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    {{-- Laravel Notify CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/notify/notify.css') }}">
     
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <script>toastr.success("{{ session('success') }}");</script>
-    @endif
-    @if(session('error'))
-        <script>toastr.error("{{ session('error') }}");</script>
-    @endif
-    @if(session('warning'))
-        <script>toastr.warning("{{ session('warning') }}");</script>
-    @endif
-    @if(session('info'))
-        <script>toastr.info("{{ session('info') }}");</script>
-    @endif
+    {{-- Laravel Notify JavaScript --}}
+    <script defer src="{{ asset('vendor/notify/notify.js') }}"></script>
+    
+    {{-- Flash Messages (Laravel Notify) --}}
+    @include('alert')
     
     @stack('scripts')
     <script>
-        $(document).ready(function() {
-            // Intercept internal link clicks to show loading
-            $('a').on('click', function(e) {
-                const href = $(this).attr('href');
-                const target = $(this).attr('target');
+        // Wait for jQuery to be available before using it
+        (function() {
+            function initWhenReady() {
+                if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                    setTimeout(initWhenReady, 50);
+                    return;
+                }
                 
-                // Only show for internal links, not # or javascript:, and not new tabs
-                if (href && 
-                    href !== '#' && 
-                    !href.startsWith('javascript:') && 
-                    !href.startsWith('mailto:') && 
-                    !href.startsWith('tel:') &&
-                    (!target || target === '_self') &&
-                    (href.startsWith('/') || href.includes(window.location.hostname))) {
-                    
-                    if (typeof window.showLoading === 'function') {
-                        window.showLoading();
-                        // Add a small timeout to allow the browser to render the loading overlay 
-                        // before starting the heavy navigation process
+                $(document).ready(function() {
+                    // Intercept internal link clicks to show loading
+                    $('a').on('click', function(e) {
+                        const href = $(this).attr('href');
+                        const target = $(this).attr('target');
+                        
+                        // Only show for internal links, not # or javascript:, and not new tabs
+                        if (href && 
+                            href !== '#' && 
+                            !href.startsWith('javascript:') && 
+                            !href.startsWith('mailto:') && 
+                            !href.startsWith('tel:') &&
+                            (!target || target === '_self') &&
+                            (href.startsWith('/') || href.includes(window.location.hostname))) {
+                            
+                            if (typeof window.showLoading === 'function') {
+                                window.showLoading();
+                                // Add a small timeout to allow the browser to render the loading overlay 
+                                // before starting the heavy navigation process
+                            }
+                        }
+                    });
+
+                    // Re-define showLoading to be more beautiful and include text
+                    window.showLoading = function() {
+                        if (!$('#loading-overlay').length) {
+                            $('body').append(`
+                                <div id="loading-overlay" style="
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    background: rgba(18, 18, 18, 0.85);
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    z-index: 10000;
+                                    opacity: 0;
+                                ">
+                                    <div class="spinner"></div>
+                                    <div class="loading-text">{{ __('Loading...') }}</div>
+                                </div>
+                            `);
+                            setTimeout(() => $('#loading-overlay').css('opacity', '1'), 10);
+                        }
+                    };
+                });
+
+                // Hide loading when page is fully loaded or from cache (back button)
+                $(window).on('pageshow load', function() {
+                    if (typeof window.hideLoading === 'function') {
+                        window.hideLoading();
                     }
-                }
-            });
-
-            // Re-define showLoading to be more beautiful and include text
-            window.showLoading = function() {
-                if (!$('#loading-overlay').length) {
-                    $('body').append(`
-                        <div id="loading-overlay" style="
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            bottom: 0;
-                            background: rgba(18, 18, 18, 0.85);
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-                            z-index: 10000;
-                            opacity: 0;
-                        ">
-                            <div class="spinner"></div>
-                            <div class="loading-text">{{ __('Loading...') }}</div>
-                        </div>
-                    `);
-                    setTimeout(() => $('#loading-overlay').css('opacity', '1'), 10);
-                }
-            };
-        });
-
-        // Hide loading when page is fully loaded or from cache (back button)
-        $(window).on('pageshow load', function() {
-            if (typeof window.hideLoading === 'function') {
-                window.hideLoading();
+                });
             }
-        });
+            
+            // Start initialization
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initWhenReady);
+            } else {
+                initWhenReady();
+            }
+        })();
     </script>
 </body>
 </html>

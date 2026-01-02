@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\Traits;
 
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 
 trait HandlesDatabaseBackup
@@ -27,7 +28,11 @@ trait HandlesDatabaseBackup
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
             
         } catch (\Exception $e) {
             $errorMessage = 'Backup failed: ' . $e->getMessage();
@@ -39,7 +44,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 
@@ -56,7 +61,7 @@ trait HandlesDatabaseBackup
                 if ($isAjax) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 400);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+                return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
             }
 
             set_time_limit(600);
@@ -72,7 +77,7 @@ trait HandlesDatabaseBackup
                         'redirect' => route('admin.login')
                     ]);
                 }
-                return redirect()->route('admin.login')->with('success', $message);
+                return redirect()->route('admin.login')->with('notify', NotificationHelper::success($message, 'Success'));
             }
             
             if ($isAjax) {
@@ -82,7 +87,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
             
         } catch (\Exception $e) {
             $errorMessage = 'Restore failed: ' . $e->getMessage();
@@ -94,7 +99,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 
@@ -111,7 +116,7 @@ trait HandlesDatabaseBackup
                 if ($isAjax) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 400);
                 }
-                return redirect()->back()->with('error', $errorMessage);
+                return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
             }
 
             $result = $this->backupService->deleteBackup($request->backup_file);
@@ -124,7 +129,11 @@ trait HandlesDatabaseBackup
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
             
         } catch (\Exception $e) {
             $errorMessage = 'Delete failed: ' . $e->getMessage();
@@ -136,7 +145,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 
@@ -158,7 +167,11 @@ trait HandlesDatabaseBackup
                 ]);
             }
             
-            return redirect()->back()->with($result['type'], $result['message']);
+            if ($result['type'] === 'success') {
+                return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+            } else {
+                return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
+            }
             
         } catch (\Exception $e) {
             $errorMessage = 'Save failed: ' . $e->getMessage();
@@ -170,7 +183,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 
@@ -195,7 +208,7 @@ trait HandlesDatabaseBackup
                         'redirect' => route('admin.login')
                     ]);
                 }
-                return redirect()->route('admin.login')->with('success', $message);
+                return redirect()->route('admin.login')->with('notify', NotificationHelper::success($message, 'Success'));
             }
 
             if ($isAjax) {
@@ -205,7 +218,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
 
-            return redirect()->back()->with($result['type'], $result['message']);
+            return redirect()->back()->with('notify', NotificationHelper::error($result['message'], 'Error'));
 
         } catch (\Exception $e) {
             $errorMessage = 'Factory restore failed: ' . $e->getMessage();
@@ -217,7 +230,7 @@ trait HandlesDatabaseBackup
                 ], 500);
             }
             
-            return redirect()->back()->with('error', $errorMessage);
+            return redirect()->back()->with('notify', NotificationHelper::error($errorMessage, 'Error'));
         }
     }
 }

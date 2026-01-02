@@ -7,6 +7,7 @@ use Addons\AlgoExpertPlus\App\Services\BackupService;
 use Addons\AlgoExpertPlus\App\Services\HealthService;
 use Addons\AlgoExpertPlus\App\Services\SystemHealthService;
 use Addons\AlgoExpertPlus\App\Services\DependencyService;
+use App\Helpers\NotificationHelper;
 use App\Support\AddonRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -114,10 +115,10 @@ class AlgoExpertPlusController extends Controller
         try {
             $result = $this->backupService->run();
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('success', $result['message'] ?? 'Backup started successfully');
+                ->with('notify', NotificationHelper::success($result['message'] ?? 'Backup started successfully', 'Success'));
         } catch (\Throwable $e) {
             return redirect()->route('admin.algoexpert-plus.backup.index')
-                ->with('error', 'Backup failed: ' . $e->getMessage());
+                ->with('notify', NotificationHelper::error('Backup failed: ' . $e->getMessage(), 'Error'));
         }
     }
 
@@ -243,7 +244,7 @@ class AlgoExpertPlusController extends Controller
                 if ($isAjax) {
                     return response()->json(['success' => true, 'message' => $message]);
                 }
-                return redirect()->route('admin.algoexpert-plus.index')->with('info', $message);
+                return redirect()->route('admin.algoexpert-plus.index')->with('notify', NotificationHelper::info($message, 'Info'));
             }
             
             $result = $this->dependencyService->installPackages($packages);
@@ -254,10 +255,10 @@ class AlgoExpertPlusController extends Controller
             
             if ($result['success']) {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('success', $result['message']);
+                    ->with('notify', NotificationHelper::success($result['message'], 'Success'));
             } else {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('error', $result['message']);
+                    ->with('notify', NotificationHelper::error($result['message'], 'Error'));
             }
         }
 
@@ -269,7 +270,7 @@ class AlgoExpertPlusController extends Controller
             if ($isAjax) {
                 return response()->json(['success' => false, 'message' => $message], 400);
             }
-            return redirect()->route('admin.algoexpert-plus.index')->with('error', $message);
+            return redirect()->route('admin.algoexpert-plus.index')->with('notify', NotificationHelper::error($message, 'Error'));
         }
 
         if ($action === 'install') {
@@ -281,10 +282,10 @@ class AlgoExpertPlusController extends Controller
             
             if ($result['success']) {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('success', $result['message']);
+                    ->with('notify', NotificationHelper::success($result['message'], 'Success'));
             } else {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('error', $result['message']);
+                    ->with('notify', NotificationHelper::error($result['message'], 'Error'));
             }
         }
 
@@ -300,10 +301,10 @@ class AlgoExpertPlusController extends Controller
             
             if ($result['success']) {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('success', $result['message']);
+                    ->with('notify', NotificationHelper::success($result['message'], 'Success'));
             } else {
                 return redirect()->route('admin.algoexpert-plus.index')
-                    ->with('error', $result['message']);
+                    ->with('notify', NotificationHelper::error($result['message'], 'Error'));
             }
         }
 
@@ -311,6 +312,6 @@ class AlgoExpertPlusController extends Controller
         if ($isAjax) {
             return response()->json(['success' => false, 'message' => $message], 400);
         }
-        return redirect()->route('admin.algoexpert-plus.index')->with('error', $message);
+        return redirect()->route('admin.algoexpert-plus.index')->with('notify', NotificationHelper::error($message, 'Error'));
     }
 }

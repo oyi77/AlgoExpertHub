@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use App\Helpers\NotificationHelper;
 use Illuminate\Support\Facades\Auth;
 
 class Inactive
@@ -15,7 +16,7 @@ class Inactive
         if (auth()->user()->status == 0) {
             Auth::logout();
 
-            return redirect()->route('user.login')->with('error', 'You Account Is disabled');
+            return redirect()->route('user.login')->with('notify', NotificationHelper::error('You Account Is disabled', 'Error'));
         }
         return $next($request);
     }

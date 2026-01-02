@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Configuration;
 use App\Models\Deposit;
@@ -106,7 +107,7 @@ class ManageDepositController extends Controller
             Helper::fireMail($data, $template);
         }
 
-        return redirect()->back()->with('success', "Payment Confirmed Successfully");
+        return redirect()->back()->with('notify', NotificationHelper::success("Payment Confirmed Successfully", 'Success'));
         
     }
 
@@ -142,7 +143,7 @@ class ManageDepositController extends Controller
         }
 
 
-        return back()->with('success', "Payment Rejected Successfully");
+        return back()->with('notify', NotificationHelper::success("Payment Rejected Successfully", 'Success'));
         
     }
 }

@@ -3,6 +3,7 @@
 namespace Addons\PageBuilderAddon\App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\NotificationHelper;
 use App\Models\Content;
 use App\Utility\Config;
 use Illuminate\Http\Request;
@@ -109,11 +110,11 @@ class SectionController extends Controller
             // If it's a view error, show more details in development
             if (config('app.debug')) {
                 return redirect()->route('admin.page-builder.sections.index')
-                    ->with('error', 'Failed to load section editor: ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ':' . $e->getLine() . ')');
+                    ->with('notify', NotificationHelper::error('Failed to load section editor: ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ':' . $e->getLine() . ')', 'Error'));
             }
             
             return redirect()->route('admin.page-builder.sections.index')
-                ->with('error', 'Failed to load section editor. Please check the logs for details.');
+                ->with('notify', NotificationHelper::error('Failed to load section editor. Please check the logs for details.', 'Error'));
         }
     }
 
@@ -165,7 +166,7 @@ class SectionController extends Controller
             }
 
             // Handle form requests
-            return redirect()->back()->with('success', 'Section updated successfully');
+            return redirect()->back()->with('notify', NotificationHelper::success('Section updated successfully', 'Success'));
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -173,7 +174,7 @@ class SectionController extends Controller
                     'message' => 'Failed to update section: ' . $e->getMessage()
                 ], 500);
             }
-            return redirect()->back()->with('error', 'Failed to update section: ' . $e->getMessage());
+            return redirect()->back()->with('notify', NotificationHelper::error('Failed to update section: ' . $e->getMessage(), 'Error'));
         }
     }
 }

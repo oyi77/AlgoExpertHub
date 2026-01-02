@@ -132,7 +132,7 @@
                                                 <ul class="signal-info-list">
                                                     <li class="signal-single-list">
                                                         <span class="caption"><i class="fas fa-id-badge"></i> {{ __('Stop Loss') }}:</span>
-                                                        <span class="value">{{ $signal->sl }}</span>
+                                                        <span class="value">{{ formatTradingPrice($signal->sl, $signal->pair->name ?? null) }}</span>
                                                     </li>
                                                     <li class="signal-single-list">
                                                         <span class="caption"><i class="far fa-clock"></i> {{ __('Time Frame') }}:</span>
@@ -140,11 +140,11 @@
                                                     </li>
                                                     <li class="signal-single-list">
                                                         <span class="caption"><i class="fas fa-money-bill"></i> {{ __('Open') }}:</span>
-                                                        <span class="value">{{ $signal->open_price }}</span>
+                                                        <span class="value">{{ formatTradingPrice($signal->open_price, $signal->pair->name ?? null) }}</span>
                                                     </li>
                                                     <li class="signal-single-list">
                                                         <span class="caption"><i class="fas fa-hand-holding-usd"></i> {{ __('Take profit') }}:</span>
-                                                        <span class="value">{{ $signal->tp }}</span>
+                                                        <span class="value">{{ formatTradingPrice($signal->tp, $signal->pair->name ?? null) }}</span>
                                                     </li>
                                                 </ul>
                                                 <a href="{{ route('user.signal.details', ['id' => $signal->id, 'slug' => Str::slug($signal->title)]) }}" 

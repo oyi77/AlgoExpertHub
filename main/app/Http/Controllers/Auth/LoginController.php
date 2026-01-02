@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Helpers\Helper\Helper;
+use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserLoginRequest;
 use App\Services\UserLogin;
@@ -31,10 +32,10 @@ class LoginController extends Controller
         $isSuccess = $this->login->login($request);
 
         if ($isSuccess['type'] == 'error') {
-            return redirect()->route('user.login')->with('error', $isSuccess['message']);
+            return redirect()->route('user.login')->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
         }
 
-        return redirect()->route('user.dashboard')->with('success', $isSuccess['message']);
+        return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));
     }
 
     public function signOut()
