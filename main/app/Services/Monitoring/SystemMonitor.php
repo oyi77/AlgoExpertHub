@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Support\AddonRegistry;
 
 class SystemMonitor
 {
@@ -352,6 +353,119 @@ class SystemMonitor
 
         foreach ($keys as $key) {
             Cache::forget($key);
+        }
+    }
+
+    /**
+     * Get Octane status
+     */
+    public function getOctaneStatus(): array
+    {
+        if (!class_exists(\Laravel\Octane\Octane::class)) {
+            return ['status' => 'not_installed'];
+        }
+
+        try {
+            $process = shell_exec('ps aux | grep "octane:start" | grep -v grep');
+            
+            if (empty($process)) {
+                // Check PID file as fallback
+                $pidFile = storage_path('logs/octane.pid');
+                if (file_exists($pidFile)) {
+                    $pid = file_get_contents($pidFile);
+                    if ($pid && posix_kill((int)$pid, 0)) {
+                        return [
+                            'status' => 'running',
+                            'workers' => $this->parseOctaneWorkerCount($process ?? ''),
+                            'memory_mb' => $this->parseOctaneMemory($process ?? ''),
+                        ];
+                    }
+                }
+                return ['status' => 'not_running'];
+            }
+
+            return [
+                'status' => 'running',
+                'workers' => $this->parseOctaneWorkerCount($process),
+                'memory_mb' => $this->parseOctaneMemory($process),
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to get Octane status', ['error' => $e->getMessage()]);
+            return ['status' => 'error'];
+        }
+    }
+
+    /**
+     * Parse Octane worker count from process output
+     */
+    protected function parseOctaneWorkerCount(string $process): int
+    {
+        if (preg_match('/--workers=(\d+)/', $process, $matches)) {
+            return (int)$matches[1];
+        }
+        return 1;
+    }
+
+    /**
+     * Parse Octane memory usage from process output
+     */
+    protected function parseOctaneMemory(string $process): float
+    {
+        if (preg_match('/\s+(\d+)\s+/', $process, $matches)) {
+            return (float)$matches[1] / 1024; // Convert KB to MB
+        }
+        return 0.0;
+    }
+
+    /**
+     * Get bot worker metrics
+     */
+    public function getBotWorkerMetrics(): array
+    {
+        if (!\App\Support\AddonRegistry::active('trading-management-addon')) {
+            return [
+                'status' => 'not_installed',
+                'active' => 0,
+                'total_bots' => 0,
+            ];
+        }
+
+        try {
+            if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class)) {
+                $monitoringService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class);
+                
+                if (method_exists($monitoringService, 'getWorkerStatus')) {
+                    return $monitoringService->getWorkerStatus();
+                }
+            }
+
+            // Fallback: Check database
+            if (DB::getSchemaBuilder()->hasTable('trading_bots')) {
+                $activeBots = DB::table('trading_bots')
+                    ->where('status', 'active')
+                    ->count();
+                
+                $totalBots = DB::table('trading_bots')->count();
+
+                return [
+                    'status' => $activeBots > 0 ? 'running' : 'stopped',
+                    'active' => $activeBots,
+                    'total_bots' => $totalBots,
+                ];
+            }
+
+            return [
+                'status' => 'not_installed',
+                'active' => 0,
+                'total_bots' => 0,
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to get bot worker metrics', ['error' => $e->getMessage()]);
+            return [
+                'status' => 'error',
+                'active' => 0,
+                'total_bots' => 0,
+            ];
         }
     }
 }
