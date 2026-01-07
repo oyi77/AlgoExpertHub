@@ -655,6 +655,9 @@ class FilterStrategyEvaluator
 
     /**
      * Validate candle signal across 3 bars (n-1, n, n+1)
+     * 
+     * Validates that a signal condition is confirmed across multiple candles
+     * to reduce false signals and increase reliability.
      */
     protected function validateCandleSignal(
         array $candles,
@@ -673,33 +676,182 @@ class FilterStrategyEvaluator
         // Get last 3 candles (n-1, n, n+1 where n+1 is current)
         $last3 = array_slice($candles, -3);
         
-        // For now, just check if we have enough data
-        // More sophisticated validation can be added based on signal type
         $confirmed = 0;
         $candleIndices = [];
+        $reasons = [];
 
-        // Simple validation: signal should be present in at least 2 of 3 candles
-        // This is a placeholder - actual validation depends on signal type
+        // Validate signal condition in each of the 3 candles
         for ($i = 0; $i < count($last3); $i++) {
-            // Check if signal conditions are met in this candle
-            // This is simplified - actual implementation would check specific conditions
-            $confirmed++;
-            $candleIndices[] = $i === 0 ? 'n-1' : ($i === 1 ? 'n' : 'n+1');
+            $candle = $last3[$i];
+            $candleIndex = $i === 0 ? 'n-1' : ($i === 1 ? 'n' : 'n+1');
+            
+            // Get price for this candle
+            $candlePrice = $candle['close'] ?? $candle['open'] ?? null;
+            if ($candlePrice === null) {
+                continue;
+            }
+            
+            // Build subset of candles up to this point for indicator calculation
+            $candlesUpToThis = array_slice($candles, 0, count($candles) - 3 + $i + 1);
+            
+            // Recalculate indicators for this subset (needed for accurate validation)
+            // For performance, we'll use the existing indicators but adjust for candle position
+            $isValid = false;
+            $validationReason = '';
+            
+            // Check if condition is met in this candle
+            if ($left && $right) {
+                // Get indicator values for this candle position
+                $leftValue = $this->getIndicatorValueForCandle($left, $indicators, $candlePrice, $i, count($last3));
+                $rightValue = $this->getRightValueForCandle($right, $indicators, $candlePrice, $i, count($last3));
+                
+                if ($leftValue !== null && $rightValue !== null) {
+                    // Evaluate condition based on signal type
+                    switch (strtolower($signalType)) {
+                        case 'crosses_above':
+                        case 'stoch_cross_up':
+                            // For cross above: left should cross above right
+                            // Check if in previous candle left < right, and in current left >= right
+                            if ($i > 0) {
+                                $prevLeft = $this->getIndicatorValueForCandle($left, $indicators, $candlePrice, $i - 1, count($last3));
+                                $prevRight = $this->getRightValueForCandle($right, $indicators, $candlePrice, $i - 1, count($last3));
+                                if ($prevLeft !== null && $prevRight !== null) {
+                                    $isValid = ($prevLeft < $prevRight) && ($leftValue >= $rightValue);
+                                    $validationReason = $isValid ? "Cross confirmed: {$left} crossed above {$right}" : "No cross detected";
+                                }
+                            } else {
+                                // First candle: just check if condition is met
+                                $isValid = $leftValue >= $rightValue;
+                                $validationReason = $isValid ? "Condition met: {$left} >= {$right}" : "Condition not met";
+                            }
+                            break;
+                            
+                        case 'crosses_below':
+                        case 'stoch_cross_down':
+                            // For cross below: left should cross below right
+                            if ($i > 0) {
+                                $prevLeft = $this->getIndicatorValueForCandle($left, $indicators, $candlePrice, $i - 1, count($last3));
+                                $prevRight = $this->getRightValueForCandle($right, $indicators, $candlePrice, $i - 1, count($last3));
+                                if ($prevLeft !== null && $prevRight !== null) {
+                                    $isValid = ($prevLeft > $prevRight) && ($leftValue <= $rightValue);
+                                    $validationReason = $isValid ? "Cross confirmed: {$left} crossed below {$right}" : "No cross detected";
+                                }
+                            } else {
+                                $isValid = $leftValue <= $rightValue;
+                                $validationReason = $isValid ? "Condition met: {$left} <= {$right}" : "Condition not met";
+                            }
+                            break;
+                            
+                        default:
+                            // For other operators, check if condition is met
+                            $isValid = $this->evaluateConditionForCandle($left, $signalType, $right, $leftValue, $rightValue);
+                            $validationReason = $isValid ? "Condition met in {$candleIndex}" : "Condition not met in {$candleIndex}";
+                    }
+                }
+            } else {
+                // If no left/right specified, check if we have valid indicator data
+                $isValid = !empty($indicators);
+                $validationReason = $isValid ? "Indicator data available" : "No indicator data";
+            }
+            
+            if ($isValid) {
+                $confirmed++;
+                $candleIndices[] = $candleIndex;
+            } else {
+                $reasons[] = "{$candleIndex}: {$validationReason}";
+            }
         }
 
+        // Signal is valid if confirmed in at least 2 of 3 candles
         if ($confirmed >= 2) {
             return [
                 'valid' => true,
-                'reason' => "Signal confirmed in " . implode(', ', $candleIndices),
+                'reason' => "Signal confirmed in " . implode(', ', $candleIndices) . " (" . $confirmed . "/3 candles)",
                 'candle_index' => count($candles) - 3,
                 'confirmed_in' => $candleIndices,
+                'confirmation_count' => $confirmed,
             ];
         }
 
         return [
             'valid' => false,
-            'reason' => 'Signal not confirmed across 3 candles',
+            'reason' => 'Signal not confirmed across 3 candles. ' . implode('; ', $reasons),
+            'confirmed_in' => $candleIndices,
+            'confirmation_count' => $confirmed,
         ];
+    }
+    
+    /**
+     * Get indicator value for a specific candle position
+     */
+    protected function getIndicatorValueForCandle(string $name, array $indicators, float $price, int $candleOffset, int $totalCandles): ?float
+    {
+        if (strtolower($name) === 'price' || strtolower($name) === 'current_price') {
+            return $price;
+        }
+        
+        if (!isset($indicators[$name])) {
+            return null;
+        }
+        
+        $values = $indicators[$name];
+        if (!is_array($values) || empty($values)) {
+            return null;
+        }
+        
+        // Get value at the specific offset (from the end)
+        $index = count($values) - ($totalCandles - $candleOffset);
+        if ($index >= 0 && $index < count($values) && $values[$index] !== null) {
+            return (float) $values[$index];
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get right value for a specific candle position
+     */
+    protected function getRightValueForCandle($right, array $indicators, float $price, int $candleOffset, int $totalCandles): ?float
+    {
+        if (is_numeric($right)) {
+            return (float) $right;
+        }
+        
+        if (is_string($right)) {
+            if (strtolower($right) === 'price' || strtolower($right) === 'current_price') {
+                return $price;
+            }
+            
+            return $this->getIndicatorValueForCandle($right, $indicators, $price, $candleOffset, $totalCandles);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Evaluate condition for a specific candle
+     */
+    protected function evaluateConditionForCandle(string $left, string $operator, $right, ?float $leftValue, ?float $rightValue): bool
+    {
+        if ($leftValue === null || $rightValue === null) {
+            return false;
+        }
+        
+        switch ($operator) {
+            case '>':
+                return $leftValue > $rightValue;
+            case '<':
+                return $leftValue < $rightValue;
+            case '>=':
+                return $leftValue >= $rightValue;
+            case '<=':
+                return $leftValue <= $rightValue;
+            case '==':
+            case '=':
+                return abs($leftValue - $rightValue) < 0.0001;
+            default:
+                return false;
+        }
     }
 
     /**
