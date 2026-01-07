@@ -40,6 +40,38 @@ class TemplateController extends Controller
     }
 
     /**
+     * Show template (for JSON API)
+     */
+    public function show($id)
+    {
+        try {
+            $template = \Addons\PageBuilderAddon\App\Models\PageBuilderTemplate::findOrFail($id);
+            
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'template' => $template
+                ]);
+            }
+            
+            $data['title'] = 'View Template';
+            $data['template'] = $template;
+            
+            return view('page-builder-addon::backend.page-builder.templates.show', $data);
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template not found'
+                ], 404);
+            }
+            
+            return redirect()->route('admin.page-builder.templates.index')
+                ->with('notify', NotificationHelper::error('Template not found', 'Error'));
+        }
+    }
+
+    /**
      * Edit template in pagebuilder
      */
     public function edit($id)

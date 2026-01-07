@@ -66,7 +66,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Load template content if exists
-    // TODO: Load from template model
+    @if(isset($templateId))
+        fetch('{{ route("admin.page-builder.templates.show", $templateId) }}', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.template && data.template.content) {
+                const content = data.template.content;
+                
+                // Load HTML if available
+                if (content.html) {
+                    editor.setComponents(content.html);
+                }
+                
+                // Load CSS if available
+                if (content.css) {
+                    editor.setStyle(content.css);
+                }
+                
+                // Load JSON content if available (preferred format for GrapesJS)
+                if (content.content) {
+                    editor.setComponents(content.content);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading template:', error);
+        });
+    @endif
 
     document.getElementById('saveTemplate').addEventListener('click', function() {
         const html = editor.getHtml();
