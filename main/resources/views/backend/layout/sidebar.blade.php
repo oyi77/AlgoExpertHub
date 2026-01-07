@@ -385,6 +385,15 @@
                 @endif
             @endif
 
+            @if ($adminUser && $adminUser->can('manage-system'))
+                <li>
+                    <a href="{{ route('admin.monitoring.index') }}" aria-expanded="false">
+                        <i data-feather="activity"></i>
+                        <span class="nav-text">{{ __('System Monitoring') }}</span>
+                    </a>
+                </li>
+            @endif
+
             @if ($adminUser && $adminUser->can('manage-gateway'))
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i data-feather="tool"></i><span
                             class="nav-text">{{ __('Payment Gateways') }}</span></a>

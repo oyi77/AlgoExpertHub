@@ -381,6 +381,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'stats'])->name('stats');
             Route::get('query-stats', [\App\Http\Controllers\Backend\CacheManagementController::class, 'queryStats'])->name('query-stats');
         });
+
+        // System Monitoring Dashboard Routes
+        Route::middleware('permission:manage-system,admin')->prefix('monitoring')->name('monitoring.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'index'])->name('index');
+            Route::get('health', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'health'])->name('health');
+            Route::get('workers', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'workers'])->name('workers');
+            Route::get('alerts', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'alerts'])->name('alerts');
+            Route::get('chart-data', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'chartData'])->name('chart-data');
+            Route::post('workers/queue/restart', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'restartQueueWorkers'])->name('workers.queue.restart');
+            Route::post('workers/bot/restart', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'restartBotWorkers'])->name('workers.bot.restart');
+            Route::post('workers/octane/restart', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'restartOctane'])->name('workers.octane.restart');
+            Route::post('cache/clear', [\App\Http\Controllers\Backend\SystemMonitoringController::class, 'clearCache'])->name('cache.clear');
+        });
     });
 });
 
