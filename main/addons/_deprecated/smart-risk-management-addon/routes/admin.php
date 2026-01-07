@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('srm')->name('srm.')->group(function () {
     // Signal Provider Metrics
     Route::get('signal-providers', [SignalProviderMetricsController::class, 'index'])->name('signal-providers.index');
+    Route::get('signal-providers/export', [SignalProviderMetricsController::class, 'export'])->name('signal-providers.export');
     Route::get('signal-providers/{id}', [SignalProviderMetricsController::class, 'show'])->name('signal-providers.show');
     
     // Predictions

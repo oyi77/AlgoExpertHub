@@ -79,5 +79,83 @@ class SignalProviderMetricsController extends Controller
 
         return view('smart-risk-management::backend.signal-providers.show', $data);
     }
+
+    /**
+     * Export metrics to CSV
+     */
+    public function export(Request $request)
+    {
+        $query = SignalProviderMetrics::query();
+
+        // Apply same filters as index method
+        if ($request->type) {
+            $query->where('signal_provider_type', $request->type);
+        }
+
+        if ($request->date_from) {
+            $query->where('period_start', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->where('period_end', '<=', $request->date_to);
+        }
+
+        if ($request->score_min) {
+            $query->where('performance_score', '>=', $request->score_min);
+        }
+        if ($request->score_max) {
+            $query->where('performance_score', '<=', $request->score_max);
+        }
+
+        if ($request->search) {
+            $query->where('signal_provider_id', 'like', '%' . $request->search . '%');
+        }
+
+        $metrics = $query->orderBy('period_end', 'desc')
+            ->orderBy('performance_score', 'desc')
+            ->get();
+
+        $filename = 'signal_provider_metrics_' . now()->format('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($metrics) {
+            $file = fopen('php://output', 'w');
+
+            // CSV headers
+            fputcsv($file, [
+                'Provider ID',
+                'Type',
+                'Total Signals',
+                'Win Rate (%)',
+                'Avg Slippage (pips)',
+                'Performance Score',
+                'Trend',
+                'Period Start',
+                'Period End',
+            ]);
+
+            // Data rows
+            foreach ($metrics as $metric) {
+                fputcsv($file, [
+                    $metric->signal_provider_id,
+                    ucfirst(str_replace('_', ' ', $metric->signal_provider_type)),
+                    $metric->total_signals,
+                    number_format($metric->win_rate, 2),
+                    number_format($metric->avg_slippage, 4),
+                    number_format($metric->performance_score, 2),
+                    $metric->score_trend ?? 'stable',
+                    $metric->period_start->format('Y-m-d'),
+                    $metric->period_end->format('Y-m-d'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
 

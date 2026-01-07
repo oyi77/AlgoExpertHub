@@ -156,8 +156,31 @@
 
     <script>
         function exportToCSV() {
-            // TODO: Implement CSV export
-            alert('CSV export feature coming soon');
+            // Build query string from current filters
+            const params = new URLSearchParams();
+            
+            @if(request('type'))
+                params.append('type', '{{ request('type') }}');
+            @endif
+            @if(request('date_from'))
+                params.append('date_from', '{{ request('date_from') }}');
+            @endif
+            @if(request('date_to'))
+                params.append('date_to', '{{ request('date_to') }}');
+            @endif
+            @if(request('score_min'))
+                params.append('score_min', '{{ request('score_min') }}');
+            @endif
+            @if(request('score_max'))
+                params.append('score_max', '{{ request('score_max') }}');
+            @endif
+            @if(request('search'))
+                params.append('search', '{{ request('search') }}');
+            @endif
+            
+            // Redirect to export route with filters
+            const exportUrl = '{{ route('admin.srm.signal-providers.export') }}' + (params.toString() ? '?' + params.toString() : '');
+            window.location.href = exportUrl;
         }
     </script>
 @endsection
