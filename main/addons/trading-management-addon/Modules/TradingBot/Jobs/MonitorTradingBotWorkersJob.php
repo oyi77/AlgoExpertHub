@@ -26,73 +26,41 @@ class MonitorTradingBotWorkersJob implements ShouldQueue
 
     /**
      * Execute the job
+     * 
+     * Enhanced monitoring with:
+     * - Auto-recovery with rate limiting
+     * - Better error handling
+     * - Comprehensive statistics
      */
     public function handle(TradingBotWorkerService $workerService)
     {
-        // Get all running bots
-        $runningBots = TradingBot::running()->get();
+        $startTime = microtime(true);
 
-        $restarted = 0;
-        $checked = 0;
-
-        foreach ($runningBots as $bot) {
-            $checked++;
-            
-            // Check if worker is still running
-            if (!$workerService->isWorkerRunning($bot)) {
-                // Worker is dead but bot status is running - restart it
-                try {
-                    // Check bot configuration before restarting
-                    if (!$bot->is_active) {
-                        Log::info('Skipping restart for inactive bot', [
-                            'bot_id' => $bot->id,
-                            'name' => $bot->name,
-                        ]);
-                        continue;
-                    }
-
-                    $workerService->startWorker($bot);
-                    $restarted++;
-                    
-                    Log::warning('Trading bot worker restarted', [
-                        'bot_id' => $bot->id,
-                        'name' => $bot->name,
-                        'trading_mode' => $bot->trading_mode ?? 'unknown',
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Failed to restart trading bot worker', [
-                        'bot_id' => $bot->id,
-                        'bot_name' => $bot->name ?? 'Unknown',
-                        'trading_mode' => $bot->trading_mode ?? 'unknown',
-                        'worker_status' => $bot->worker_status ?? 'unknown',
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                    
-                    // Update bot status to indicate worker failure
-                    try {
-                        $bot->update([
-                            'worker_status' => 'failed',
-                            'worker_last_heartbeat' => now(),
-                        ]);
-                    } catch (\Exception $updateException) {
-                        Log::error('Failed to update bot status after worker restart failure', [
-                            'bot_id' => $bot->id,
-                            'error' => $updateException->getMessage(),
-                        ]);
-                    }
-                }
-            }
-        }
+        // Use enhanced monitoring and auto-recovery
+        $monitorResult = $workerService->monitorAndRecover(
+            maxRestartsPerHour: (int) env('TRADING_BOT_MAX_RESTARTS_PER_HOUR', 5)
+        );
 
         // Kill stale workers (bots that are stopped but process still running)
         $killed = $workerService->killStaleWorkers();
 
-        if ($restarted > 0 || $killed > 0) {
+        $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+        // Log summary
+        if ($monitorResult['restarted'] > 0 || $monitorResult['failed'] > 0 || $killed > 0) {
             Log::info('Trading bot workers monitored', [
-                'checked' => $checked,
-                'restarted' => $restarted,
+                'checked' => $monitorResult['checked'],
+                'restarted' => $monitorResult['restarted'],
+                'failed' => $monitorResult['failed'],
+                'skipped' => $monitorResult['skipped'],
                 'killed_stale' => $killed,
+                'execution_time_ms' => $executionTime,
+            ]);
+        } else {
+            // Log even when nothing happened (for monitoring)
+            Log::debug('Trading bot workers monitored (no action needed)', [
+                'checked' => $monitorResult['checked'],
+                'execution_time_ms' => $executionTime,
             ]);
         }
     }

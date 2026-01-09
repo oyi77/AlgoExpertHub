@@ -500,4 +500,43 @@ class TradingBot extends Model
         // This would be called after executions complete
         // For now, placeholder - will be implemented with execution logs
     }
+
+    /**
+     * Check if bot can transition to a new status
+     * 
+     * Validates status transitions to prevent invalid state changes:
+     * - stopped -> running (valid)
+     * - stopped -> paused (invalid)
+     * - running -> paused (valid)
+     * - running -> stopped (valid)
+     * - paused -> running (valid)
+     * - paused -> stopped (valid)
+     * 
+     * @param string $newStatus The target status ('running', 'paused', 'stopped')
+     * @return bool True if transition is valid
+     * @throws \Exception If newStatus is invalid
+     */
+    public function canTransitionTo(string $newStatus): bool
+    {
+        // Validate new status is valid
+        if (!in_array($newStatus, ['running', 'paused', 'stopped'])) {
+            throw new \Exception("Invalid status: {$newStatus}. Must be 'running', 'paused', or 'stopped'.");
+        }
+
+        $currentStatus = $this->status;
+
+        // Define valid transitions
+        $validTransitions = [
+            'stopped' => ['running'], // Can only start from stopped
+            'running' => ['paused', 'stopped'], // Can pause or stop from running
+            'paused' => ['running', 'stopped'], // Can resume or stop from paused
+        ];
+
+        // Check if transition is valid
+        if (!isset($validTransitions[$currentStatus])) {
+            return false; // Unknown current status
+        }
+
+        return in_array($newStatus, $validTransitions[$currentStatus]);
+    }
 }

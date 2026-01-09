@@ -1,5 +1,206 @@
 {{-- Reusable form partial for create/edit --}}
 
+{{-- Progress Stepper --}}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="progress-stepper" id="bot-creation-progress">
+            <div class="stepper-item active" data-step="1">
+                <div class="stepper-icon"><i class="fa fa-info-circle"></i></div>
+                <div class="stepper-label">Basic Info</div>
+            </div>
+            <div class="stepper-item" data-step="2">
+                <div class="stepper-icon"><i class="fa fa-exchange-alt"></i></div>
+                <div class="stepper-label">Connection</div>
+            </div>
+            <div class="stepper-item" data-step="3">
+                <div class="stepper-icon"><i class="fa fa-shield-alt"></i></div>
+                <div class="stepper-label">Preset</div>
+            </div>
+            <div class="stepper-item" data-step="4">
+                <div class="stepper-icon"><i class="fa fa-chart-line"></i></div>
+                <div class="stepper-label">Filter</div>
+            </div>
+            <div class="stepper-item" data-step="5">
+                <div class="stepper-icon"><i class="fa fa-brain"></i></div>
+                <div class="stepper-label">AI</div>
+            </div>
+            <div class="stepper-item" data-step="6">
+                <div class="stepper-icon"><i class="fa fa-cogs"></i></div>
+                <div class="stepper-label">Mode</div>
+            </div>
+            <div class="stepper-item" data-step="7">
+                <div class="stepper-icon"><i class="fa fa-flask"></i></div>
+                <div class="stepper-label">Settings</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 20px 0;
+}
+
+.progress-stepper::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 0;
+}
+
+.stepper-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.stepper-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+}
+
+.stepper-item.active .stepper-icon {
+    background: #007bff;
+    color: white;
+}
+
+.stepper-item.completed .stepper-icon {
+    background: #28a745;
+    color: white;
+}
+
+.stepper-label {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+.stepper-item.active .stepper-label {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.stepper-item.completed .stepper-label {
+    color: #28a745;
+}
+</style>
+
+<script>
+(function() {
+    // Update progress stepper based on form completion
+    function updateProgressStepper() {
+        const name = document.getElementById('name')?.value;
+        const connectionId = document.getElementById('exchange_connection_id')?.value;
+        const presetId = document.getElementById('trading_preset_id')?.value;
+        const filterId = document.getElementById('filter_strategy_id')?.value;
+        const aiId = document.getElementById('ai_model_profile_id')?.value;
+        const tradingMode = document.getElementById('trading_mode')?.value;
+        const paperTrading = document.getElementById('is_paper_trading')?.checked;
+        
+        // Update step 1 (Basic Info)
+        if (name) {
+            markStepComplete(1);
+        } else {
+            markStepActive(1);
+        }
+        
+        // Update step 2 (Connection)
+        if (connectionId) {
+            markStepComplete(2);
+        } else {
+            markStepInactive(2);
+        }
+        
+        // Update step 3 (Preset)
+        if (presetId) {
+            markStepComplete(3);
+        } else {
+            markStepInactive(3);
+        }
+        
+        // Update step 4 (Filter) - optional
+        if (filterId) {
+            markStepComplete(4);
+        } else {
+            markStepInactive(4);
+        }
+        
+        // Update step 5 (AI) - optional
+        if (aiId) {
+            markStepComplete(5);
+        } else {
+            markStepInactive(5);
+        }
+        
+        // Update step 6 (Mode)
+        if (tradingMode) {
+            markStepComplete(6);
+        } else {
+            markStepInactive(6);
+        }
+        
+        // Update step 7 (Settings)
+        if (paperTrading !== null) {
+            markStepComplete(7);
+        } else {
+            markStepInactive(7);
+        }
+    }
+    
+    function markStepActive(step) {
+        const item = document.querySelector(`.stepper-item[data-step="${step}"]`);
+        if (item) {
+            item.classList.remove('completed');
+            item.classList.add('active');
+        }
+    }
+    
+    function markStepComplete(step) {
+        const item = document.querySelector(`.stepper-item[data-step="${step}"]`);
+        if (item) {
+            item.classList.remove('active');
+            item.classList.add('completed');
+        }
+    }
+    
+    function markStepInactive(step) {
+        const item = document.querySelector(`.stepper-item[data-step="${step}"]`);
+        if (item) {
+            item.classList.remove('active', 'completed');
+        }
+    }
+    
+    // Listen for form changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('bot-form') || document.querySelector('form');
+        if (form) {
+            form.addEventListener('input', updateProgressStepper);
+            form.addEventListener('change', updateProgressStepper);
+            updateProgressStepper(); // Initial update
+        }
+    });
+})();
+</script>
+
 {{-- Step 1: Basic Information --}}
 <div class="card mb-4">
     <div class="card-header">
@@ -47,46 +248,164 @@
             @if($connections->isEmpty())
                 <div class="alert alert-info">
                     <p class="mb-2"><i class="fa fa-info-circle"></i> No exchange connections available.</p>
-                    @if(Route::has('user.execution-connections.create'))
-                        <a href="{{ route('user.execution-connections.create') }}" class="btn btn-primary btn-sm" target="_blank">
-                            <i class="fa fa-plus"></i> Create New Exchange Connection
-                        </a>
-                    @endif
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createConnectionModal">
+                        <i class="fa fa-plus"></i> Create New Exchange Connection
+                    </button>
                 </div>
                 <input type="hidden" name="exchange_connection_id" value="">
             @else
-                <select class="form-control @error('exchange_connection_id') is-invalid @enderror" 
-                        id="exchange_connection_id" 
-                        name="exchange_connection_id" 
-                        required>
-                    <option value="">-- Select Exchange --</option>
-                    @foreach($connections as $connection)
-                        @php
-                            // Get selected value: old input first, then bot's exchange_connection_id
-                            $selectedValue = old('exchange_connection_id');
-                            if (empty($selectedValue) && isset($bot) && $bot && !empty($bot->exchange_connection_id)) {
-                                $selectedValue = $bot->exchange_connection_id;
-                            }
-                            // Compare as strings to avoid type issues
-                            $isSelected = !empty($selectedValue) && (string)$selectedValue === (string)$connection->id;
-                        @endphp
-                        <option value="{{ $connection->id }}" 
-                                {{ $isSelected ? 'selected' : '' }}>
-                            {{ $connection->name }} ({{ $connection->exchange_name }})
-                        </option>
-                    @endforeach
-                </select>
+                <div class="input-group">
+                    <select class="form-control @error('exchange_connection_id') is-invalid @enderror" 
+                            id="exchange_connection_id" 
+                            name="exchange_connection_id" 
+                            required>
+                        <option value="">-- Select Exchange --</option>
+                        @foreach($connections as $connection)
+                            @php
+                                // Get selected value: old input first, then bot's exchange_connection_id
+                                $selectedValue = old('exchange_connection_id');
+                                if (empty($selectedValue) && isset($bot) && $bot && !empty($bot->exchange_connection_id)) {
+                                    $selectedValue = $bot->exchange_connection_id;
+                                }
+                                // Compare as strings to avoid type issues
+                                $isSelected = !empty($selectedValue) && (string)$selectedValue === (string)$connection->id;
+                                
+                                // Determine health status
+                                $healthStatus = 'unknown';
+                                $healthBadge = '';
+                                if ($connection->status === 'active' && $connection->is_active) {
+                                    $healthStatus = 'healthy';
+                                    $healthBadge = '<span class="badge bg-success ms-2"><i class="fa fa-check-circle"></i> Active</span>';
+                                } elseif ($connection->status === 'error' || !$connection->is_active) {
+                                    $healthStatus = 'error';
+                                    $healthBadge = '<span class="badge bg-danger ms-2"><i class="fa fa-exclamation-circle"></i> Error</span>';
+                                } elseif ($connection->status === 'testing') {
+                                    $healthStatus = 'testing';
+                                    $healthBadge = '<span class="badge bg-warning ms-2"><i class="fa fa-spinner fa-spin"></i> Testing</span>';
+                                } else {
+                                    $healthStatus = 'inactive';
+                                    $healthBadge = '<span class="badge bg-secondary ms-2"><i class="fa fa-pause-circle"></i> Inactive</span>';
+                                }
+                            @endphp
+                            <option value="{{ $connection->id }}" 
+                                    data-health="{{ $healthStatus }}"
+                                    data-exchange-name="{{ strtolower($connection->exchange_name ?? $connection->provider ?? '') }}"
+                                    data-connection-type="{{ $connection->connection_type }}"
+                                    {{ $isSelected ? 'selected' : '' }}>
+                                {{ $connection->name }} ({{ $connection->exchange_name }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createConnectionModal" title="Create New Connection">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+                
+                {{-- Connection Health Info --}}
+                <div id="connection-health-info" class="mt-2" style="display: none;">
+                    <div id="connection-health-badge" class="mb-2"></div>
+                    <div id="connection-requirements" class="alert alert-info" style="display: none;">
+                        <small><strong>Requirements:</strong> <span id="connection-requirements-text"></span></small>
+                    </div>
+                </div>
+                
                 <small class="form-text text-muted mt-1">
-                    @if(Route::has('user.execution-connections.create'))
-                        <a href="{{ route('user.execution-connections.create') }}" target="_blank" class="text-primary">
-                            <i class="fa fa-plus"></i> Add New Connection
-                        </a>
-                    @endif
+                    <i class="fa fa-info-circle"></i> Select an active connection. Connections with errors need to be fixed before use.
                 </small>
             @endif
             @error('exchange_connection_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
+        </div>
+    </div>
+</div>
+
+{{-- Inline Connection Creation Modal --}}
+<div class="modal fade" id="createConnectionModal" tabindex="-1" aria-labelledby="createConnectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createConnectionModalLabel">
+                    <i class="fa fa-plus"></i> Create New Exchange Connection
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="inline-connection-form">
+                    @csrf
+                    <div class="form-group mb-3">
+                        <label for="inline_connection_name">{{ __('Connection Name') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="inline_connection_name" name="name" required placeholder="e.g., My Binance Account">
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="inline_exchange_type">{{ __('Exchange Type') }} <span class="text-danger">*</span></label>
+                        <select class="form-control" id="inline_exchange_type" name="exchange_type" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="CRYPTO_EXCHANGE">Cryptocurrency Exchange</option>
+                            <option value="FX_BROKER">Forex Broker (MT4/MT5)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3" id="inline_exchange_name_group" style="display: none;">
+                        <label for="inline_exchange_name">{{ __('Exchange/Provider') }} <span class="text-danger">*</span></label>
+                        <select class="form-control" id="inline_exchange_name" name="exchange_name" required>
+                            <option value="">-- Select Exchange --</option>
+                        </select>
+                        <small class="form-text text-muted" id="inline_exchange_hint"></small>
+                    </div>
+                    
+                    <div class="form-group mb-3" id="inline_connection_type_group" style="display: none;">
+                        <label for="inline_connection_type">{{ __('Connection Purpose') }} <span class="text-danger">*</span></label>
+                        <select class="form-control" id="inline_connection_type" name="connection_type" required>
+                            <option value="BOTH">Both (Data + Execution)</option>
+                            <option value="EXECUTION_ONLY">Execution Only</option>
+                            <option value="DATA_ONLY">Data Only</option>
+                        </select>
+                    </div>
+                    
+                    {{-- Dynamic Credential Fields --}}
+                    <div id="inline_credentials_group" style="display: none;">
+                        <h6 class="mt-3 mb-2">{{ __('API Credentials') }}</h6>
+                        
+                        <div class="form-group mb-3" id="inline_api_key_field">
+                            <label for="inline_api_key">{{ __('API Key') }} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="inline_api_key" name="credentials[api_key]" placeholder="Enter your API key">
+                            <small class="form-text text-muted">Found in your exchange account settings under API Management</small>
+                        </div>
+                        
+                        <div class="form-group mb-3" id="inline_api_secret_field">
+                            <label for="inline_api_secret">{{ __('API Secret') }} <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="inline_api_secret" name="credentials[api_secret]" placeholder="Enter your API secret">
+                            <small class="form-text text-muted">Shown only once when you create the API key</small>
+                        </div>
+                        
+                        <div class="form-group mb-3" id="inline_api_passphrase_field" style="display: none;">
+                            <label for="inline_api_passphrase">{{ __('API Passphrase') }} <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="inline_api_passphrase" name="credentials[api_passphrase]" placeholder="Enter your API passphrase">
+                            <small class="form-text text-muted">Required for OKX, Kucoin, and Coinbase Pro</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3" id="inline_preset_group" style="display: none;">
+                        <label for="inline_preset_id">{{ __('Trading Preset (Optional)') }}</label>
+                        <select class="form-control" id="inline_preset_id" name="preset_id">
+                            <option value="">-- No Preset --</option>
+                            @foreach($presets ?? [] as $preset)
+                                <option value="{{ $preset->id }}">{{ $preset->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div id="inline_connection_errors" class="alert alert-danger" style="display: none;"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-inline-connection">
+                    <i class="fa fa-save"></i> Create & Test Connection
+                </button>
+            </div>
         </div>
     </div>
 </div>

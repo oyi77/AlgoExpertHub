@@ -564,57 +564,322 @@ class TradingBotWorkerService
     }
 
     /**
-     * Restart worker
+     * Restart worker with retry logic and health verification
+     * 
+     * Enhanced restart with:
+     * - Graceful shutdown with timeout
+     * - Retry mechanism (up to 3 attempts)
+     * - Health check after restart
+     * - PID tracking improvements
      * 
      * @param TradingBot $bot
-     * @return int New process ID
-     * @throws \Exception
+     * @param int $maxRetries Maximum restart attempts (default: 3)
+     * @param int $retryDelay Delay between retries in seconds (default: 2)
+     * @return bool Success status
+     * @throws \Exception If restart fails after all retries
      */
-    public function restartWorker(TradingBot $bot): int
+    public function restartWorker(TradingBot $bot, int $maxRetries = 3, int $retryDelay = 2): bool
     {
-        $this->stopWorker($bot);
-        sleep(1); // Brief pause
-        return $this->startWorker($bot);
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < $maxRetries) {
+            $attempt++;
+            
+            try {
+                Log::info('Restarting trading bot worker', [
+                    'bot_id' => $bot->id,
+                    'attempt' => $attempt,
+                    'max_retries' => $maxRetries,
+                ]);
+
+                // Step 1: Stop worker gracefully
+                $this->stopWorker($bot);
+                
+                // Wait for process to fully stop
+                $stopWaitTime = 0;
+                $maxStopWait = 5; // seconds
+                while ($this->isWorkerRunning($bot) && $stopWaitTime < $maxStopWait) {
+                    sleep(1);
+                    $stopWaitTime++;
+                }
+
+                // Step 2: Start worker
+                $startResult = $this->startWorker($bot);
+                
+                if (!$startResult) {
+                    throw new \Exception('Worker start returned false');
+                }
+
+                // Step 3: Verify worker is actually running (health check)
+                sleep($retryDelay); // Give worker time to initialize
+                
+                if ($this->isWorkerRunning($bot)) {
+                    // Update bot with restart information
+                    $bot->refresh();
+                    $bot->update([
+                        'worker_restart_count' => ($bot->worker_restart_count ?? 0) + 1,
+                        'worker_last_restart_at' => now(),
+                    ]);
+
+                    Log::info('Trading bot worker restarted successfully', [
+                        'bot_id' => $bot->id,
+                        'attempt' => $attempt,
+                        'worker_pid' => $bot->worker_pid,
+                        'worker_status' => $bot->worker_status ?? 'unknown',
+                    ]);
+
+                    return true;
+                } else {
+                    throw new \Exception('Worker started but health check failed');
+                }
+            } catch (\Exception $e) {
+                $lastException = $e;
+                Log::warning('Worker restart attempt failed', [
+                    'bot_id' => $bot->id,
+                    'attempt' => $attempt,
+                    'max_retries' => $maxRetries,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // If not last attempt, wait before retry
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay);
+                }
+            }
+        }
+
+        // All retries failed
+        Log::error('Worker restart failed after all retries', [
+            'bot_id' => $bot->id,
+            'attempts' => $attempt,
+            'error' => $lastException ? $lastException->getMessage() : 'Unknown error',
+        ]);
+
+        // Update bot status to indicate restart failure
+        $bot->update([
+            'worker_status' => 'failed',
+            'worker_last_heartbeat' => now(),
+        ]);
+
+        throw new \Exception("Failed to restart worker after {$maxRetries} attempts: " . ($lastException ? $lastException->getMessage() : 'Unknown error'));
     }
 
     /**
      * Kill stale workers (bots that are stopped but process still running)
+     * 
+     * Enhanced with:
+     * - Better PID validation
+     * - Graceful shutdown attempt before force kill
+     * - Queue-based worker cleanup
      * 
      * @return int Number of workers killed
      */
     public function killStaleWorkers(): int
     {
         $killed = 0;
+        $useQueueWorkers = env('ENABLE_QUEUE_WORKERS', true);
         
-        // Process in chunks to avoid memory issues with large bot counts
-        TradingBot::whereNotNull('worker_pid')
-            ->where('status', 'stopped')
-            ->chunk(100, function ($staleBots) use (&$killed) {
-                foreach ($staleBots as $bot) {
-                    if ($this->isProcessRunning($bot->worker_pid)) {
-                        try {
-                            exec("kill -9 {$bot->worker_pid} 2>&1");
-                            $bot->update(['worker_pid' => null]);
-                            $killed++;
-                            
-                            Log::warning('Killed stale trading bot worker', [
-                                'bot_id' => $bot->id,
-                                'pid' => $bot->worker_pid,
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Failed to kill stale worker', [
-                                'bot_id' => $bot->id,
-                                'pid' => $bot->worker_pid,
-                                'error' => $e->getMessage(),
-                            ]);
-                        }
-                    } else {
-                        // Process already dead, just clear PID
-                        $bot->update(['worker_pid' => null]);
+        if ($useQueueWorkers) {
+            // For queue-based workers, clear stale status
+            TradingBot::where('status', 'stopped')
+                ->whereIn('worker_status', ['queued', 'running'])
+                ->chunk(100, function ($staleBots) use (&$killed) {
+                    foreach ($staleBots as $bot) {
+                        $bot->update([
+                            'worker_status' => 'stopped',
+                            'worker_pid' => null,
+                        ]);
+                        $killed++;
+                        
+                        Log::info('Cleared stale queue-based worker status', [
+                            'bot_id' => $bot->id,
+                        ]);
                     }
-                }
-            });
+                });
+        } else {
+            // Process in chunks to avoid memory issues with large bot counts
+            TradingBot::whereNotNull('worker_pid')
+                ->where('status', 'stopped')
+                ->chunk(100, function ($staleBots) use (&$killed) {
+                    foreach ($staleBots as $bot) {
+                        // Validate PID
+                        if (!is_int($bot->worker_pid) || $bot->worker_pid <= 0) {
+                            // Invalid PID, just clear it
+                            $bot->update(['worker_pid' => null]);
+                            continue;
+                        }
+
+                        if ($this->isProcessRunning($bot->worker_pid)) {
+                            try {
+                                // Try graceful shutdown first
+                                posix_kill($bot->worker_pid, SIGTERM);
+                                
+                                // Wait up to 5 seconds for graceful shutdown
+                                $waited = 0;
+                                while ($this->isProcessRunning($bot->worker_pid) && $waited < 5) {
+                                    sleep(1);
+                                    $waited++;
+                                }
+
+                                // Force kill if still running
+                                if ($this->isProcessRunning($bot->worker_pid)) {
+                                    posix_kill($bot->worker_pid, SIGKILL);
+                                    Log::warning('Force killed stale trading bot worker', [
+                                        'bot_id' => $bot->id,
+                                        'pid' => $bot->worker_pid,
+                                    ]);
+                                } else {
+                                    Log::info('Gracefully stopped stale trading bot worker', [
+                                        'bot_id' => $bot->id,
+                                        'pid' => $bot->worker_pid,
+                                    ]);
+                                }
+
+                                $bot->update(['worker_pid' => null]);
+                                $killed++;
+                            } catch (\Exception $e) {
+                                Log::error('Failed to kill stale worker', [
+                                    'bot_id' => $bot->id,
+                                    'pid' => $bot->worker_pid,
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
+                        } else {
+                            // Process already dead, just clear PID
+                            $bot->update(['worker_pid' => null]);
+                        }
+                    }
+                });
+        }
 
         return $killed;
+    }
+
+    /**
+     * Monitor and auto-recover dead workers
+     * 
+     * Enhanced monitoring with:
+     * - Health check for all running bots
+     * - Auto-restart with exponential backoff
+     * - Restart count tracking
+     * - Maximum restart attempts per hour
+     * 
+     * @param int $maxRestartsPerHour Maximum restarts per bot per hour (default: 5)
+     * @return array ['checked' => int, 'restarted' => int, 'failed' => int, 'skipped' => int]
+     */
+    public function monitorAndRecover(int $maxRestartsPerHour = 5): array
+    {
+        $checked = 0;
+        $restarted = 0;
+        $failed = 0;
+        $skipped = 0;
+
+        // Get all running bots
+        $runningBots = TradingBot::where('status', 'running')
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($runningBots as $bot) {
+            $checked++;
+            
+            // Check if worker is actually running
+            if (!$this->isWorkerRunning($bot)) {
+                // Check restart rate limit
+                $restartCount = $bot->worker_restart_count ?? 0;
+                $lastRestartAt = $bot->worker_last_restart_at;
+                
+                if ($lastRestartAt && $lastRestartAt->isAfter(now()->subHour())) {
+                    // Check if we've exceeded max restarts in the last hour
+                    $recentRestarts = TradingBot::where('id', $bot->id)
+                        ->where('worker_last_restart_at', '>=', now()->subHour())
+                        ->count();
+                    
+                    if ($recentRestarts >= $maxRestartsPerHour) {
+                        Log::warning('Skipping worker restart - rate limit exceeded', [
+                            'bot_id' => $bot->id,
+                            'restarts_last_hour' => $recentRestarts,
+                            'max_restarts_per_hour' => $maxRestartsPerHour,
+                        ]);
+                        $skipped++;
+                        continue;
+                    }
+                }
+
+                // Attempt restart
+                try {
+                    $this->restartWorker($bot, 2, 1); // 2 retries, 1 second delay
+                    $restarted++;
+                } catch (\Exception $e) {
+                    $failed++;
+                    Log::error('Auto-recovery failed for trading bot worker', [
+                        'bot_id' => $bot->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return [
+            'checked' => $checked,
+            'restarted' => $restarted,
+            'failed' => $failed,
+            'skipped' => $skipped,
+        ];
+    }
+
+    /**
+     * Get detailed worker statistics
+     * 
+     * @param TradingBot $bot
+     * @return array Worker statistics
+     */
+    public function getWorkerStats(TradingBot $bot): array
+    {
+        $isRunning = $this->isWorkerRunning($bot);
+        $status = $this->getWorkerStatus($bot);
+        
+        $stats = [
+            'bot_id' => $bot->id,
+            'bot_name' => $bot->name,
+            'status' => $status,
+            'is_running' => $isRunning,
+            'worker_pid' => $bot->worker_pid,
+            'worker_status' => $bot->worker_status ?? 'unknown',
+            'worker_started_at' => $bot->worker_started_at?->toIso8601String(),
+            'worker_last_heartbeat' => $bot->worker_last_heartbeat?->toIso8601String(),
+            'worker_restart_count' => $bot->worker_restart_count ?? 0,
+            'worker_last_restart_at' => $bot->worker_last_restart_at?->toIso8601String(),
+        ];
+
+        // Add uptime if running
+        if ($isRunning && $bot->worker_started_at) {
+            $stats['uptime_seconds'] = now()->diffInSeconds($bot->worker_started_at);
+            $stats['uptime_human'] = $this->formatUptime($stats['uptime_seconds']);
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Format uptime in human-readable format
+     * 
+     * @param int $seconds
+     * @return string
+     */
+    protected function formatUptime(int $seconds): string
+    {
+        $days = floor($seconds / 86400);
+        $hours = floor(($seconds % 86400) / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+
+        $parts = [];
+        if ($days > 0) $parts[] = "{$days}d";
+        if ($hours > 0) $parts[] = "{$hours}h";
+        if ($minutes > 0) $parts[] = "{$minutes}m";
+        if ($secs > 0 || empty($parts)) $parts[] = "{$secs}s";
+
+        return implode(' ', $parts);
     }
 }

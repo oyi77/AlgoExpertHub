@@ -260,4 +260,63 @@ class ExchangeConnectionService
             'message' => $result['message'] ?? 'Connection test failed',
         ];
     }
+
+    /**
+     * Validate exchange connection credentials
+     * 
+     * Validates that the connection's credentials are valid and the connection can be used.
+     * Uses caching to prevent excessive API calls (24-hour cache).
+     * 
+     * @param ExchangeConnection $connection The connection to validate
+     * @return array ['valid' => bool, 'message' => string] Validation result
+     */
+    public function validateCredentials(ExchangeConnection $connection): array
+    {
+        try {
+            // Check cache first (24-hour expiration)
+            $cacheKey = "connection_credentials_valid_{$connection->id}";
+            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            // Get adapter and test connection
+            $adapter = $this->getAdapter($connection);
+            
+            if (!$adapter) {
+                $result = [
+                    'valid' => false,
+                    'message' => 'Unsupported connection type or provider'
+                ];
+                \Illuminate\Support\Facades\Cache::put($cacheKey, $result, now()->addHours(24));
+                return $result;
+            }
+
+            // Test connection
+            $testResult = $this->testConnection($connection);
+            
+            $result = [
+                'valid' => $testResult['success'],
+                'message' => $testResult['success'] 
+                    ? 'Credentials are valid' 
+                    : 'Credential validation failed: ' . ($testResult['message'] ?? 'Unknown error')
+            ];
+
+            // Cache result for 24 hours
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $result, now()->addHours(24));
+
+            return $result;
+        } catch (\Exception $e) {
+            Log::error('Credential validation error', [
+                'connection_id' => $connection->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'valid' => false,
+                'message' => 'Credential validation failed: ' . $e->getMessage()
+            ];
+        }
+    }
 }

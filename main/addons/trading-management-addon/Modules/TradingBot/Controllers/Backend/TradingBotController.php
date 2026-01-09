@@ -469,16 +469,47 @@ class TradingBotController extends Controller
             ]);
             
             // Start worker process
-            $pid = $this->workerService->startWorker($bot);
+            $this->workerService->startWorker($bot);
+            
+            // Wait 2 seconds for worker to initialize, then check health
+            sleep(2);
+            
+            // Check worker health
+            $healthCheck = $this->botService->checkWorkerHealth($bot);
+            
+            if (!$healthCheck['healthy']) {
+                // Worker failed to start - try to stop bot
+                try {
+                    $this->botService->stop($bot, null, auth()->guard('admin')->id());
+                } catch (\Exception $stopException) {
+                    \Log::error('Failed to stop bot after worker health check failure', [
+                        'bot_id' => $bot->id,
+                        'error' => $stopException->getMessage(),
+                    ]);
+                }
+                
+                \Log::error('Worker health check failed after bot start', [
+                    'bot_id' => $bot->id,
+                    'health_message' => $healthCheck['message'],
+                ]);
+                
+                return redirect()
+                    ->back()
+                    ->with('notify', NotificationHelper::error(
+                        'Bot started but worker process failed. Please try again or check system logs.',
+                        'Warning'
+                    ));
+            }
             
             \Log::info('Trading bot and worker started successfully', [
                 'bot_id' => $bot->id,
-                'worker_pid' => $pid,
+                'worker_pid' => $bot->worker_pid,
+                'health_status' => $healthCheck['healthy'] ? 'healthy' : 'unhealthy',
             ]);
             
             return redirect()
                 ->back()
-                ->with('notify', NotificationHelper::success('Trading bot started successfully! Worker PID: ' . $pid, 'Success'));
+                ->with('notify', NotificationHelper::success('Trading bot started successfully!', 'Success'));
         } catch (\Exception $e) {
             \Log::error('Failed to start trading bot', [
                 'bot_id' => $bot->id,

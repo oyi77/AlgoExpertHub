@@ -11,6 +11,7 @@ use Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset;
 use Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy;
 use Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile;
 use Addons\TradingManagement\Modules\ExpertAdvisor\Models\ExpertAdvisor;
+use Addons\TradingManagement\Shared\Helpers\CredentialRedactionHelper;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -44,15 +45,20 @@ class TradingBotService
         }
 
         return DB::transaction(function () use ($data) {
+            // Redact any credentials from data before logging
+            $logData = CredentialRedactionHelper::redact($data);
+            
             $bot = TradingBot::create($data);
             
-            // Log creation
-            \Log::info('Trading bot created', [
+            // Log creation with redacted data
+            \Log::info('Trading bot created', CredentialRedactionHelper::redactLogContext([
                 'bot_id' => $bot->id,
                 'name' => $bot->name,
                 'user_id' => $bot->user_id,
                 'admin_id' => $bot->admin_id,
-            ]);
+                'exchange_connection_id' => $bot->exchange_connection_id,
+                'trading_mode' => $bot->trading_mode,
+            ]));
 
             return $bot;
         });
@@ -282,12 +288,20 @@ class TradingBotService
     }
 
     /**
-     * Validate relationships exist
+     * Validate relationships exist and are compatible
      * 
-     * @param array $data
-     * @param TradingBot|null $bot
+     * Validates all relationships required for bot creation/update:
+     * - Exchange connection (type, status, active)
+     * - Trading preset (enabled, configured)
+     * - Filter strategy (optional)
+     * - AI model profile (optional)
+     * - Expert advisor (optional)
+     * 
+     * @param array $data Bot data array containing relationship IDs
+     * @param TradingBot|null $bot Optional existing bot for update operations
      * @return void
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If relationship not found
+     * @throws \Exception If validation fails (inactive connection, disabled preset, etc.)
      */
     protected function validateRelationships(array $data, ?TradingBot $bot = null): void
     {
@@ -298,8 +312,47 @@ class TradingBotService
             $connectionId = $bot?->exchange_connection_id;
         }
 
+        $connection = null;
         if ($connectionId) {
-            ExchangeConnection::findOrFail($connectionId);
+            $connection = ExchangeConnection::findOrFail($connectionId);
+            
+            // Validate connection ownership (for users)
+            if (!Auth::guard('admin')->check()) {
+                $userId = Auth::id();
+                if ($connection->is_admin_owned || $connection->user_id !== $userId) {
+                    throw new \Exception('The selected exchange connection does not belong to you. Please select your own connection or create a new one.');
+                }
+            }
+            
+            // Validate connection is active
+            if (!$connection->is_active) {
+                throw new \Exception('The selected exchange connection is not active. Please activate the connection first or select an active connection.');
+            }
+            
+            // Validate connection status
+            if ($connection->status !== 'active') {
+                throw new \Exception('The selected exchange connection is not ready. Please ensure the connection is tested and active. Current status: ' . $connection->status);
+            }
+            
+            // For crypto exchanges, validate credentials are present and valid
+            if ($connection->connection_type === 'CRYPTO_EXCHANGE') {
+                $credentials = $connection->credentials;
+                $exchangeName = strtolower($connection->exchange_name ?? $connection->provider ?? '');
+                
+                // Check for required credentials
+                if (empty($credentials['api_key']) || empty($credentials['api_secret'])) {
+                    throw new \Exception('The selected exchange connection is missing required API credentials. Please update the connection with valid API key and secret.');
+                }
+                
+                // Check for passphrase requirement
+                $requiresPassphrase = in_array($exchangeName, ['okx', 'kucoin', 'coinbasepro', 'coinbase']);
+                if ($requiresPassphrase && empty($credentials['api_passphrase'])) {
+                    throw new \Exception('The selected exchange connection requires an API passphrase. Please update the connection with a valid passphrase for ' . strtoupper($exchangeName) . '.');
+                }
+            }
+            
+            // Validate connection type compatibility
+            $this->validateConnectionType($connection, $bot);
         }
 
         // Validate trading preset
@@ -309,8 +362,12 @@ class TradingBotService
             $presetId = $bot?->trading_preset_id;
         }
 
+        $preset = null;
         if ($presetId) {
-            TradingPreset::findOrFail($presetId);
+            $preset = TradingPreset::findOrFail($presetId);
+            
+            // Validate preset is enabled
+            $this->validatePreset($preset, $bot);
         }
 
         // Validate filter strategy (optional)
@@ -344,6 +401,58 @@ class TradingBotService
 
         if ($eaId) {
             ExpertAdvisor::findOrFail($eaId);
+        }
+    }
+
+    /**
+     * Validate connection type compatibility with bot
+     * 
+     * @param ExchangeConnection $connection
+     * @param TradingBot|null $bot
+     * @return void
+     * @throws \Exception If connection type is incompatible
+     */
+    protected function validateConnectionType(ExchangeConnection $connection, ?TradingBot $bot = null): void
+    {
+        // If bot exists and has a connection type requirement, validate it
+        if ($bot && method_exists($bot, 'getConnectionType')) {
+            $botType = $bot->getConnectionType();
+            $connectionType = $connection->connection_type === 'CRYPTO_EXCHANGE' ? 'crypto' : 'fx';
+            
+            if ($botType && $botType !== $connectionType) {
+                throw new \Exception("Connection type mismatch. Bot requires {$botType} connection but selected connection is {$connectionType}.");
+            }
+        }
+        
+        // Additional validation: ensure connection can execute trades
+        if (!$connection->canExecuteTrades()) {
+            throw new \Exception('The selected exchange connection does not have trade execution enabled. Please select a connection with execution enabled.');
+        }
+    }
+
+    /**
+     * Validate trading preset is enabled and accessible
+     * 
+     * @param TradingPreset $preset
+     * @param TradingBot|null $bot
+     * @return void
+     * @throws \Exception If preset is not enabled or accessible
+     */
+    protected function validatePreset(TradingPreset $preset, ?TradingBot $bot = null): void
+    {
+        if (!$preset->enabled) {
+            throw new \Exception('The selected trading preset is not enabled. Please select an enabled preset.');
+        }
+        
+        // Validate preset visibility for users
+        if (!Auth::guard('admin')->check()) {
+            $userId = Auth::id();
+            $isOwnPreset = $preset->created_by_user_id === $userId;
+            $isPublic = $preset->visibility === 'PUBLIC_MARKETPLACE';
+            
+            if (!$isOwnPreset && !$isPublic) {
+                throw new \Exception('The selected trading preset is not accessible. Please select your own preset or a public preset.');
+            }
         }
     }
 
@@ -803,14 +912,43 @@ class TradingBotService
     /**
      * Stop trading bot
      * 
-     * @param TradingBot $bot
-     * @param int|null $executedByUserId
-     * @param int|null $executedByAdminId
-     * @return TradingBot
+     * Stops the bot with race condition protection and idempotency checks.
+     * Uses row-level locking to prevent concurrent stop/start operations.
+     * 
+     * @param TradingBot $bot The bot to stop
+     * @param int|null $executedByUserId User ID executing the action (for logging)
+     * @param int|null $executedByAdminId Admin ID executing the action (for logging)
+     * @return TradingBot Updated bot instance
      */
     public function stop(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
     {
+        // Idempotency check: If bot is already stopped, return it
+        if ($bot->isStopped()) {
+            Log::info('Bot already stopped, skipping stop', [
+                'bot_id' => $bot->id,
+                'status' => $bot->status,
+            ]);
+            return $bot;
+        }
+
         return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            // Use lockForUpdate to prevent race conditions (concurrent stop/start operations)
+            $bot = TradingBot::lockForUpdate()->findOrFail($bot->id);
+            
+            // Double-check status after acquiring lock (idempotency)
+            if ($bot->isStopped()) {
+                Log::info('Bot already stopped after lock, skipping stop', [
+                    'bot_id' => $bot->id,
+                    'status' => $bot->status,
+                ]);
+                return $bot;
+            }
+
+            // Validate status transition
+            if (!$bot->canTransitionTo('stopped')) {
+                throw new \Exception("Invalid status transition from '{$bot->status}' to 'stopped'.");
+            }
+
             $oldStatus = $bot->status;
             
             // Update status
@@ -836,6 +974,10 @@ class TradingBotService
             Log::info('Trading bot stopped', [
                 'bot_id' => $bot->id,
                 'name' => $bot->name,
+                'user_id' => $executedByUserId,
+                'admin_id' => $executedByAdminId,
+                'status' => $bot->status,
+                'old_status' => $oldStatus,
             ]);
 
             return $bot->fresh();
@@ -845,18 +987,44 @@ class TradingBotService
     /**
      * Pause trading bot
      * 
-     * @param TradingBot $bot
-     * @param int|null $executedByUserId
-     * @param int|null $executedByAdminId
-     * @return TradingBot
+     * Pauses a running bot with race condition protection and status transition validation.
+     * Bot must be in 'running' status to be paused.
+     * 
+     * @param TradingBot $bot The bot to pause
+     * @param int|null $executedByUserId User ID executing the action (for logging)
+     * @param int|null $executedByAdminId Admin ID executing the action (for logging)
+     * @return TradingBot Updated bot instance
+     * @throws \Exception If bot is not in a valid state to be paused
      */
     public function pause(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
     {
-        if (!$bot->isRunning()) {
-            throw new \Exception('Bot must be running to pause');
+        // Idempotency check: If bot is already paused, return it
+        if ($bot->isPaused()) {
+            Log::info('Bot already paused, skipping pause', [
+                'bot_id' => $bot->id,
+                'status' => $bot->status,
+            ]);
+            return $bot;
         }
 
         return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            // Use lockForUpdate to prevent race conditions (concurrent pause/resume operations)
+            $bot = TradingBot::lockForUpdate()->findOrFail($bot->id);
+            
+            // Double-check status after acquiring lock (idempotency)
+            if ($bot->isPaused()) {
+                Log::info('Bot already paused after lock, skipping pause', [
+                    'bot_id' => $bot->id,
+                    'status' => $bot->status,
+                ]);
+                return $bot;
+            }
+
+            // Validate status transition
+            if (!$bot->canTransitionTo('paused')) {
+                throw new \Exception("Invalid status transition from '{$bot->status}' to 'paused'. Bot must be running to pause.");
+            }
+
             $oldStatus = $bot->status;
             
             // Update status
@@ -881,6 +1049,10 @@ class TradingBotService
             Log::info('Trading bot paused', [
                 'bot_id' => $bot->id,
                 'name' => $bot->name,
+                'user_id' => $executedByUserId,
+                'admin_id' => $executedByAdminId,
+                'status' => $bot->status,
+                'old_status' => $oldStatus,
             ]);
 
             return $bot->fresh();
@@ -912,18 +1084,44 @@ class TradingBotService
     /**
      * Resume paused trading bot
      * 
-     * @param TradingBot $bot
-     * @param int|null $executedByUserId
-     * @param int|null $executedByAdminId
-     * @return TradingBot
+     * Resumes a paused bot with race condition protection and status transition validation.
+     * Bot must be in 'paused' status to be resumed.
+     * 
+     * @param TradingBot $bot The bot to resume
+     * @param int|null $executedByUserId User ID executing the action (for logging)
+     * @param int|null $executedByAdminId Admin ID executing the action (for logging)
+     * @return TradingBot Updated bot instance
+     * @throws \Exception If bot is not in a valid state to be resumed
      */
     public function resume(TradingBot $bot, ?int $executedByUserId = null, ?int $executedByAdminId = null): TradingBot
     {
-        if (!$bot->isPaused()) {
-            throw new \Exception('Bot must be paused to resume');
+        // Idempotency check: If bot is already running, return it
+        if ($bot->isRunning()) {
+            Log::info('Bot already running, skipping resume', [
+                'bot_id' => $bot->id,
+                'status' => $bot->status,
+            ]);
+            return $bot;
         }
 
         return DB::transaction(function () use ($bot, $executedByUserId, $executedByAdminId) {
+            // Use lockForUpdate to prevent race conditions (concurrent resume/pause operations)
+            $bot = TradingBot::lockForUpdate()->findOrFail($bot->id);
+            
+            // Double-check status after acquiring lock (idempotency)
+            if ($bot->isRunning()) {
+                Log::info('Bot already running after lock, skipping resume', [
+                    'bot_id' => $bot->id,
+                    'status' => $bot->status,
+                ]);
+                return $bot;
+            }
+
+            // Validate status transition
+            if (!$bot->canTransitionTo('running')) {
+                throw new \Exception("Invalid status transition from '{$bot->status}' to 'running'. Bot must be paused to resume.");
+            }
+
             $oldStatus = $bot->status;
             
             // Update status

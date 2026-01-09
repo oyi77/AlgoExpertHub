@@ -1,45 +1,89 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
-    | Monitoring Configuration
+    | Alert Thresholds
     |--------------------------------------------------------------------------
+    |
+    | Configure thresholds for system monitoring alerts. When metrics exceed
+    | these thresholds, alerts will be generated with appropriate severity.
+    |
     */
 
-    'enabled' => env('MONITORING_ENABLED', true),
+    'thresholds' => [
+        // CPU load averages (1-minute average)
+        'cpu_critical' => env('MONITORING_CPU_CRITICAL', 4.0),
+        'cpu_warning' => env('MONITORING_CPU_WARNING', 2.5),
 
-    'slow_query_threshold' => env('MONITORING_SLOW_QUERY_THRESHOLD', 100), // milliseconds
+        // Memory usage percentage
+        'memory_critical' => env('MONITORING_MEMORY_CRITICAL', 90),
+        'memory_warning' => env('MONITORING_MEMORY_WARNING', 85),
 
-    'response_time_threshold' => env('MONITORING_RESPONSE_TIME_THRESHOLD', 200), // milliseconds
+        // Disk usage percentage
+        'disk_critical' => env('MONITORING_DISK_CRITICAL', 90),
+        'disk_warning' => env('MONITORING_DISK_WARNING', 80),
 
-    'error_rate_threshold' => env('MONITORING_ERROR_RATE_THRESHOLD', 5), // percentage
+        // Database slow queries count
+        'slow_queries_critical' => env('MONITORING_SLOW_QUERIES_CRITICAL', 50),
+        'slow_queries_warning' => env('MONITORING_SLOW_QUERIES_WARNING', 20),
 
-    'cpu_load_threshold' => env('MONITORING_CPU_LOAD_THRESHOLD', 4.0),
+        // Failed jobs count
+        'failed_jobs_critical' => env('MONITORING_FAILED_JOBS_CRITICAL', 200),
+        'failed_jobs_warning' => env('MONITORING_FAILED_JOBS_WARNING', 100),
 
-    'memory_threshold' => env('MONITORING_MEMORY_THRESHOLD', 512), // MB
+        // Cache hit rate percentage (below threshold = warning)
+        'cache_hit_rate_warning' => env('MONITORING_CACHE_HIT_RATE_WARNING', 60),
+        'cache_hit_rate_critical' => env('MONITORING_CACHE_HIT_RATE_CRITICAL', 40),
 
-    'failed_jobs_threshold' => env('MONITORING_FAILED_JOBS_THRESHOLD', 100),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Alert Configuration
-    |--------------------------------------------------------------------------
-    */
-
-    'alerts' => [
-        'enabled' => env('MONITORING_ALERTS_ENABLED', true),
-        'channels' => ['log', 'database'], // log, database, email, slack
-        'check_interval' => env('MONITORING_ALERT_CHECK_INTERVAL', 60), // seconds
+        // Database connection count
+        'db_connections_critical' => env('MONITORING_DB_CONNECTIONS_CRITICAL', 80),
+        'db_connections_warning' => env('MONITORING_DB_CONNECTIONS_WARNING', 60),
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Metrics Retention
+    | Metrics Cache TTL
     |--------------------------------------------------------------------------
+    |
+    | How long to cache collected metrics (in seconds) to reduce database load.
+    | Recommended: 5 seconds for balance between freshness and performance.
+    |
     */
 
-    'metrics_retention_days' => env('MONITORING_METRICS_RETENTION_DAYS', 30),
+    'cache_ttl' => env('MONITORING_CACHE_TTL', 5),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Alert Cache TTL
+    |--------------------------------------------------------------------------
+    |
+    | How long to store alerts in cache (in seconds). Alerts are ephemeral
+    | and resolved when metrics normalize.
+    |
+    */
+
+    'alert_cache_ttl' => env('MONITORING_ALERT_CACHE_TTL', 3600), // 1 hour
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard Refresh Interval
+    |--------------------------------------------------------------------------
+    |
+    | Frontend auto-refresh interval in milliseconds. Default: 30 seconds.
+    |
+    */
+
+    'refresh_interval' => env('MONITORING_REFRESH_INTERVAL', 30000),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Historical Data Retention
+    |--------------------------------------------------------------------------
+    |
+    | How many hours of historical data to keep for charts. Default: 24 hours.
+    |
+    */
+
+    'history_hours' => env('MONITORING_HISTORY_HOURS', 24),
 ];

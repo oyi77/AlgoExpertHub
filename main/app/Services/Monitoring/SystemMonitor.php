@@ -2,470 +2,376 @@
 
 namespace App\Services\Monitoring;
 
-use App\Services\Analytics\MetricsCollector;
+use App\Services\CacheManager;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use App\Support\AddonRegistry;
+use Illuminate\Support\Facades\Cache;
 
+/**
+ * SystemMonitor Service
+ * 
+ * Collects system health metrics including CPU, memory, disk usage,
+ * database performance, cache statistics, and worker status.
+ */
 class SystemMonitor
 {
-    protected MetricsCollector $metricsCollector;
-    protected array $config;
+    protected CacheManager $cacheManager;
 
-    public function __construct(MetricsCollector $metricsCollector)
+    public function __construct(CacheManager $cacheManager)
     {
-        $this->metricsCollector = $metricsCollector;
-        $this->config = config('monitoring', []);
+        $this->cacheManager = $cacheManager;
     }
 
     /**
-     * Collect system metrics
+     * Collect all system metrics
+     * 
+     * @return array
      */
     public function collectMetrics(): array
     {
-        $metrics = [
-            'timestamp' => now(),
-            'response_times' => $this->getResponseTimeMetrics(),
-            'error_rates' => $this->getErrorRateMetrics(),
-            'resource_utilization' => $this->getResourceUtilization(),
-            'database_performance' => $this->getDatabasePerformance(),
-            'cache_performance' => $this->getCachePerformance(),
-            'queue_health' => $this->getQueueHealth()
+        return [
+            'timestamp' => now()->toIso8601String(),
+            'system' => $this->getSystemMetrics(),
+            'database' => $this->getDatabaseMetrics(),
+            'cache' => $this->getCacheMetrics(),
         ];
+    }
 
-        // Store metrics
-        foreach ($metrics as $key => $value) {
-            if (is_array($value)) {
-                foreach ($value as $subKey => $subValue) {
-                    if (is_numeric($subValue)) {
-                        $this->metricsCollector->gauge("system.{$key}.{$subKey}", (float)$subValue);
-                    }
-                }
-            } elseif (is_numeric($value)) {
-                $this->metricsCollector->gauge("system.{$key}", (float)$value);
-            }
-        }
+    /**
+     * Get system metrics (CPU, memory, disk)
+     * 
+     * @return array
+     */
+    protected function getSystemMetrics(): array
+    {
+        $metrics = [
+            'cpu_load_1m' => $this->getCpuLoad(1),
+            'cpu_load_5m' => $this->getCpuLoad(5),
+            'cpu_load_15m' => $this->getCpuLoad(15),
+            'memory_usage_mb' => $this->getMemoryUsage(),
+            'memory_peak_mb' => $this->getMemoryPeak(),
+            'memory_usage_percent' => $this->getMemoryUsagePercent(),
+            'disk_usage_percent' => $this->getDiskUsage(),
+        ];
 
         return $metrics;
     }
 
     /**
-     * Get response time metrics
+     * Get CPU load average
+     * 
+     * @param int $minutes 1, 5, or 15
+     * @return float
      */
-    protected function getResponseTimeMetrics(): array
-    {
-        $cacheKey = 'monitoring:response_times';
-        $times = Cache::get($cacheKey, []);
-
-        if (empty($times)) {
-            return [
-                'avg' => 0,
-                'p50' => 0,
-                'p95' => 0,
-                'p99' => 0,
-                'max' => 0
-            ];
-        }
-
-        sort($times);
-        $count = count($times);
-
-        return [
-            'avg' => array_sum($times) / $count,
-            'p50' => $this->percentile($times, 50),
-            'p95' => $this->percentile($times, 95),
-            'p99' => $this->percentile($times, 99),
-            'max' => max($times)
-        ];
-    }
-
-    /**
-     * Record response time
-     */
-    public function recordResponseTime(float $milliseconds): void
-    {
-        $cacheKey = 'monitoring:response_times';
-        $times = Cache::get($cacheKey, []);
-        $times[] = $milliseconds;
-
-        // Keep last 1000 measurements
-        if (count($times) > 1000) {
-            array_shift($times);
-        }
-
-        Cache::put($cacheKey, $times, 3600);
-    }
-
-    /**
-     * Get error rate metrics
-     */
-    protected function getErrorRateMetrics(): array
-    {
-        $totalRequests = Cache::get('monitoring:total_requests', 0);
-        $errorRequests = Cache::get('monitoring:error_requests', 0);
-
-        return [
-            'total_requests' => $totalRequests,
-            'error_requests' => $errorRequests,
-            'error_rate' => $totalRequests > 0 ? ($errorRequests / $totalRequests) * 100 : 0
-        ];
-    }
-
-    /**
-     * Record request
-     */
-    public function recordRequest(bool $isError = false): void
-    {
-        Cache::increment('monitoring:total_requests');
-        if ($isError) {
-            Cache::increment('monitoring:error_requests');
-        }
-    }
-
-    /**
-     * Get resource utilization
-     */
-    protected function getResourceUtilization(): array
-    {
-        $load = sys_getloadavg();
-        
-        return [
-            'cpu_load_1m' => $load[0] ?? 0,
-            'cpu_load_5m' => $load[1] ?? 0,
-            'cpu_load_15m' => $load[2] ?? 0,
-            'memory_usage_mb' => memory_get_usage(true) / 1024 / 1024,
-            'memory_peak_mb' => memory_get_peak_usage(true) / 1024 / 1024
-        ];
-    }
-
-    /**
-     * Get database performance
-     */
-    protected function getDatabasePerformance(): array
-    {
-        $slowQueries = Cache::get('monitoring:slow_queries', 0);
-        $totalQueries = Cache::get('monitoring:total_queries', 0);
-
-        return [
-            'total_queries' => $totalQueries,
-            'slow_queries' => $slowQueries,
-            'slow_query_rate' => $totalQueries > 0 ? ($slowQueries / $totalQueries) * 100 : 0,
-            'active_connections' => $this->getActiveConnections()
-        ];
-    }
-
-    /**
-     * Get active database connections
-     */
-    protected function getActiveConnections(): int
+    protected function getCpuLoad(int $minutes): float
     {
         try {
-            return DB::select('SHOW STATUS LIKE "Threads_connected"')[0]->Value ?? 0;
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Record query execution
-     */
-    public function recordQuery(float $executionTime): void
-    {
-        Cache::increment('monitoring:total_queries');
-
-        // Slow query threshold: 100ms
-        if ($executionTime > 100) {
-            Cache::increment('monitoring:slow_queries');
-            
-            Log::warning('Slow query detected', [
-                'execution_time' => $executionTime
-            ]);
-        }
-    }
-
-    /**
-     * Get cache performance
-     */
-    protected function getCachePerformance(): array
-    {
-        $hits = Cache::get('monitoring:cache_hits', 0);
-        $misses = Cache::get('monitoring:cache_misses', 0);
-        $total = $hits + $misses;
-
-        return [
-            'hits' => $hits,
-            'misses' => $misses,
-            'hit_rate' => $total > 0 ? ($hits / $total) * 100 : 0
-        ];
-    }
-
-    /**
-     * Record cache access
-     */
-    public function recordCacheAccess(bool $isHit): void
-    {
-        if ($isHit) {
-            Cache::increment('monitoring:cache_hits');
-        } else {
-            Cache::increment('monitoring:cache_misses');
-        }
-    }
-
-    /**
-     * Get queue health
-     */
-    protected function getQueueHealth(): array
-    {
-        return [
-            'pending_jobs' => $this->getPendingJobsCount(),
-            'failed_jobs' => $this->getFailedJobsCount(),
-            'processing_jobs' => $this->getProcessingJobsCount()
-        ];
-    }
-
-    /**
-     * Get pending jobs count
-     */
-    protected function getPendingJobsCount(): int
-    {
-        try {
-            return DB::table('jobs')->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Get failed jobs count
-     */
-    protected function getFailedJobsCount(): int
-    {
-        try {
-            return DB::table('failed_jobs')->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Get processing jobs count
-     */
-    protected function getProcessingJobsCount(): int
-    {
-        try {
-            return DB::table('jobs')
-                ->where('reserved_at', '!=', null)
-                ->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Check alert thresholds
-     */
-    public function checkAlerts(): array
-    {
-        $alerts = [];
-        $metrics = $this->collectMetrics();
-
-        // Check response time
-        if (($metrics['response_times']['p95'] ?? 0) > 200) {
-            $alerts[] = [
-                'type' => 'response_time',
-                'severity' => 'warning',
-                'message' => 'P95 response time exceeds 200ms',
-                'value' => $metrics['response_times']['p95']
-            ];
-        }
-
-        // Check error rate
-        if (($metrics['error_rates']['error_rate'] ?? 0) > 5) {
-            $alerts[] = [
-                'type' => 'error_rate',
-                'severity' => 'critical',
-                'message' => 'Error rate exceeds 5%',
-                'value' => $metrics['error_rates']['error_rate']
-            ];
-        }
-
-        // Check CPU load
-        if (($metrics['resource_utilization']['cpu_load_1m'] ?? 0) > 4) {
-            $alerts[] = [
-                'type' => 'cpu_load',
-                'severity' => 'warning',
-                'message' => 'High CPU load detected',
-                'value' => $metrics['resource_utilization']['cpu_load_1m']
-            ];
-        }
-
-        // Check failed jobs
-        if (($metrics['queue_health']['failed_jobs'] ?? 0) > 100) {
-            $alerts[] = [
-                'type' => 'failed_jobs',
-                'severity' => 'warning',
-                'message' => 'High number of failed jobs',
-                'value' => $metrics['queue_health']['failed_jobs']
-            ];
-        }
-
-        return $alerts;
-    }
-
-    /**
-     * Calculate percentile
-     */
-    protected function percentile(array $values, int $percentile): float
-    {
-        $count = count($values);
-        if ($count === 0) {
-            return 0;
-        }
-
-        $index = ($percentile / 100) * ($count - 1);
-        $lower = floor($index);
-        $upper = ceil($index);
-
-        if ($lower === $upper) {
-            return $values[(int)$index];
-        }
-
-        $fraction = $index - $lower;
-        return $values[(int)$lower] + ($fraction * ($values[(int)$upper] - $values[(int)$lower]));
-    }
-
-    /**
-     * Reset metrics
-     */
-    public function resetMetrics(): void
-    {
-        $keys = [
-            'monitoring:response_times',
-            'monitoring:total_requests',
-            'monitoring:error_requests',
-            'monitoring:slow_queries',
-            'monitoring:total_queries',
-            'monitoring:cache_hits',
-            'monitoring:cache_misses'
-        ];
-
-        foreach ($keys as $key) {
-            Cache::forget($key);
-        }
-    }
-
-    /**
-     * Get Octane status
-     */
-    public function getOctaneStatus(): array
-    {
-        if (!class_exists(\Laravel\Octane\Octane::class)) {
-            return ['status' => 'not_installed'];
-        }
-
-        try {
-            $process = shell_exec('ps aux | grep "octane:start" | grep -v grep');
-            
-            if (empty($process)) {
-                // Check PID file as fallback
-                $pidFile = storage_path('logs/octane.pid');
-                if (file_exists($pidFile)) {
-                    $pid = file_get_contents($pidFile);
-                    if ($pid && posix_kill((int)$pid, 0)) {
-                        return [
-                            'status' => 'running',
-                            'workers' => $this->parseOctaneWorkerCount($process ?? ''),
-                            'memory_mb' => $this->parseOctaneMemory($process ?? ''),
-                        ];
-                    }
-                }
-                return ['status' => 'not_running'];
+            if (function_exists('sys_getloadavg')) {
+                $load = sys_getloadavg();
+                return match($minutes) {
+                    1 => $load[0] ?? 0.0,
+                    5 => $load[1] ?? 0.0,
+                    15 => $load[2] ?? 0.0,
+                    default => 0.0,
+                };
             }
 
-            return [
-                'status' => 'running',
-                'workers' => $this->parseOctaneWorkerCount($process),
-                'memory_mb' => $this->parseOctaneMemory($process),
-            ];
+            // Fallback: Try reading from /proc/loadavg on Linux
+            if (file_exists('/proc/loadavg')) {
+                $load = file_get_contents('/proc/loadavg');
+                $parts = explode(' ', $load);
+                return match($minutes) {
+                    1 => (float)($parts[0] ?? 0),
+                    5 => (float)($parts[1] ?? 0),
+                    15 => (float)($parts[2] ?? 0),
+                    default => 0.0,
+                };
+            }
         } catch (\Exception $e) {
-            Log::warning('Failed to get Octane status', ['error' => $e->getMessage()]);
-            return ['status' => 'error'];
+            Log::warning('Failed to get CPU load', ['error' => $e->getMessage()]);
         }
-    }
 
-    /**
-     * Parse Octane worker count from process output
-     */
-    protected function parseOctaneWorkerCount(string $process): int
-    {
-        if (preg_match('/--workers=(\d+)/', $process, $matches)) {
-            return (int)$matches[1];
-        }
-        return 1;
-    }
-
-    /**
-     * Parse Octane memory usage from process output
-     */
-    protected function parseOctaneMemory(string $process): float
-    {
-        if (preg_match('/\s+(\d+)\s+/', $process, $matches)) {
-            return (float)$matches[1] / 1024; // Convert KB to MB
-        }
         return 0.0;
     }
 
     /**
-     * Get bot worker metrics
+     * Get current memory usage in MB
+     * 
+     * @return float
      */
-    public function getBotWorkerMetrics(): array
+    protected function getMemoryUsage(): float
     {
-        if (!\App\Support\AddonRegistry::active('trading-management-addon')) {
+        try {
+            return round(memory_get_usage(true) / 1024 / 1024, 2);
+        } catch (\Exception $e) {
+            Log::warning('Failed to get memory usage', ['error' => $e->getMessage()]);
+            return 0.0;
+        }
+    }
+
+    /**
+     * Get peak memory usage in MB
+     * 
+     * @return float
+     */
+    protected function getMemoryPeak(): float
+    {
+        try {
+            return round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+        } catch (\Exception $e) {
+            Log::warning('Failed to get peak memory', ['error' => $e->getMessage()]);
+            return 0.0;
+        }
+    }
+
+    /**
+     * Get memory usage percentage
+     * 
+     * @return float
+     */
+    protected function getMemoryUsagePercent(): float
+    {
+        try {
+            $used = memory_get_usage(true);
+            $limit = $this->getMemoryLimit();
+            
+            if ($limit > 0) {
+                return round(($used / $limit) * 100, 2);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to calculate memory percentage', ['error' => $e->getMessage()]);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Get PHP memory limit in bytes
+     * 
+     * @return int
+     */
+    protected function getMemoryLimit(): int
+    {
+        $limit = ini_get('memory_limit');
+        
+        if ($limit == -1) {
+            // Unlimited memory
+            return 0;
+        }
+
+        // Convert to bytes
+        $limit = trim($limit);
+        $last = strtolower($limit[strlen($limit) - 1]);
+        $value = (int)$limit;
+
+        return match($last) {
+            'g' => $value * 1024 * 1024 * 1024,
+            'm' => $value * 1024 * 1024,
+            'k' => $value * 1024,
+            default => $value,
+        };
+    }
+
+    /**
+     * Get disk usage percentage
+     * 
+     * @return float
+     */
+    protected function getDiskUsage(): float
+    {
+        try {
+            $path = base_path();
+            $total = disk_total_space($path);
+            $free = disk_free_space($path);
+            
+            if ($total > 0) {
+                $used = $total - $free;
+                return round(($used / $total) * 100, 2);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to get disk usage', ['error' => $e->getMessage()]);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Get database metrics
+     * 
+     * @return array
+     */
+    protected function getDatabaseMetrics(): array
+    {
+        try {
+            $connection = DB::connection();
+            $pdo = $connection->getPdo();
+            
+            // Get active connections
+            $activeConnections = DB::selectOne("SHOW STATUS WHERE Variable_name = 'Threads_connected'");
+            $connections = $activeConnections->Value ?? 0;
+
+            // Get slow queries count (queries > 100ms)
+            $slowQueries = DB::selectOne("SHOW STATUS WHERE Variable_name = 'Slow_queries'");
+            $slowCount = $slowQueries->Value ?? 0;
+
+            return [
+                'active_connections' => (int)$connections,
+                'slow_queries' => (int)$slowCount,
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to get database metrics', ['error' => $e->getMessage()]);
+            return [
+                'active_connections' => 0,
+                'slow_queries' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get cache metrics
+     * 
+     * @return array
+     */
+    protected function getCacheMetrics(): array
+    {
+        try {
+            $stats = $this->cacheManager->getStats();
+            $memoryStats = $this->cacheManager->getMemoryStats();
+            
+            return [
+                'hit_rate' => round($stats['hit_rate'] ?? 0, 2),
+                'hits' => $stats['hits'] ?? 0,
+                'misses' => $stats['misses'] ?? 0,
+                'memory_mb' => isset($memoryStats['used_memory']) 
+                    ? round($memoryStats['used_memory'] / 1024 / 1024, 2) 
+                    : 0,
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to get cache metrics', ['error' => $e->getMessage()]);
+            return [
+                'hit_rate' => 0,
+                'hits' => 0,
+                'misses' => 0,
+                'memory_mb' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Get Octane status and metrics
+     * 
+     * @return array
+     */
+    public function getOctaneStatus(): array
+    {
+        // Check if Octane is installed
+        if (!class_exists(\Laravel\Octane\Octane::class)) {
             return [
                 'status' => 'not_installed',
+                'message' => 'Laravel Octane is not installed',
+            ];
+        }
+
+        // Check if Octane server is running
+        try {
+            $process = shell_exec('ps aux | grep "octane:start" | grep -v grep');
+            
+            if (empty($process)) {
+                return [
+                    'status' => 'not_running',
+                    'message' => 'Laravel Octane is installed but not running',
+                ];
+            }
+
+            // Parse Octane process info
+            $lines = explode("\n", trim($process));
+            $workerCount = count(array_filter($lines));
+            
+            // Try to get memory usage from process
+            $memoryMb = 0;
+            foreach ($lines as $line) {
+                if (preg_match('/\s+(\d+)\s+/', $line, $matches)) {
+                    $pid = $matches[1];
+                    $memInfo = shell_exec("ps -p {$pid} -o rss= 2>/dev/null");
+                    if ($memInfo) {
+                        $memoryMb += round(trim($memInfo) / 1024, 2);
+                    }
+                }
+            }
+
+            return [
+                'status' => 'running',
+                'workers' => $workerCount,
+                'memory_mb' => $memoryMb,
+                'message' => "Octane running with {$workerCount} worker(s)",
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to get Octane status', ['error' => $e->getMessage()]);
+            return [
+                'status' => 'unknown',
+                'message' => 'Unable to determine Octane status',
+            ];
+        }
+    }
+
+    /**
+     * Get bot worker metrics (if trading bot addon is active)
+     * 
+     * @return array
+     */
+    public function getBotWorkers(): array
+    {
+        // Check if trading bot addon is active
+        if (!class_exists(\App\Support\AddonRegistry::class)) {
+            return [
+                'status' => 'addon_not_available',
                 'active' => 0,
-                'total_bots' => 0,
+                'total' => 0,
             ];
         }
 
         try {
-            if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class)) {
-                $monitoringService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class);
-                
-                if (method_exists($monitoringService, 'getWorkerStatus')) {
-                    return $monitoringService->getWorkerStatus();
-                }
-            }
-
-            // Fallback: Check database
-            if (DB::getSchemaBuilder()->hasTable('trading_bots')) {
-                $activeBots = DB::table('trading_bots')
-                    ->where('status', 'active')
-                    ->count();
-                
-                $totalBots = DB::table('trading_bots')->count();
-
+            $isActive = \App\Support\AddonRegistry::active('trading-management-addon');
+            
+            if (!$isActive) {
                 return [
-                    'status' => $activeBots > 0 ? 'running' : 'stopped',
-                    'active' => $activeBots,
-                    'total_bots' => $totalBots,
+                    'status' => 'addon_inactive',
+                    'active' => 0,
+                    'total' => 0,
                 ];
             }
 
+            // Check if TradingBotMonitoringService exists
+            if (!class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class)) {
+                return [
+                    'status' => 'service_not_available',
+                    'active' => 0,
+                    'total' => 0,
+                ];
+            }
+
+            $monitoringService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class);
+            
+            // Get bot worker stats
+            $bots = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::all();
+            $activeBots = $bots->filter(function ($bot) {
+                return $bot->isRunning() && $bot->worker_pid;
+            });
+
             return [
-                'status' => 'not_installed',
-                'active' => 0,
-                'total_bots' => 0,
+                'status' => 'active',
+                'active' => $activeBots->count(),
+                'total' => $bots->count(),
             ];
         } catch (\Exception $e) {
-            Log::warning('Failed to get bot worker metrics', ['error' => $e->getMessage()]);
+            Log::warning('Failed to get bot workers', ['error' => $e->getMessage()]);
             return [
                 'status' => 'error',
                 'active' => 0,
-                'total_bots' => 0,
+                'total' => 0,
+                'error' => $e->getMessage(),
             ];
         }
     }
 }
+

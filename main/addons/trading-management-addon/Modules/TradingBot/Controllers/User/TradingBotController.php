@@ -6,6 +6,7 @@ use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotService;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotWorkerService;
 use Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService;
+use Addons\TradingManagement\Modules\TradingBot\Http\Requests\StoreTradingBotRequest;
 use App\Http\Controllers\Controller;
 use App\Helpers\NotificationHelper;
 use Illuminate\Http\RedirectResponse;
@@ -113,29 +114,12 @@ class TradingBotController extends Controller
     /**
      * Store a newly created trading bot
      */
-    public function store(Request $request)
+    public function store(StoreTradingBotRequest $request)
     {
         $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
         
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'exchange_connection_id' => 'required|exists:execution_connections,id',
-            'trading_preset_id' => 'required|exists:trading_presets,id',
-            'filter_strategy_id' => 'nullable|exists:filter_strategies,id',
-            'ai_model_profile_id' => 'nullable|exists:ai_model_profiles,id',
-            'expert_advisor_id' => 'nullable|exists:expert_advisors,id',
-            'trading_mode' => 'required|in:SIGNAL_BASED,MARKET_STREAM_BASED',
-            'data_connection_id' => 'nullable|exists:execution_connections,id', // Changed to execution_connections (unified connection)
-            'streaming_symbols' => 'nullable|array',
-            'streaming_symbols.*' => 'nullable|string',
-            'streaming_symbols_manual' => 'nullable|string', // Manual entry fallback
-            'streaming_timeframes' => 'nullable|array',
-            'streaming_timeframes.*' => 'nullable|string',
-            'market_analysis_interval' => 'nullable|integer|min:10',
-            'position_monitoring_interval' => 'nullable|integer|min:1',
-            'is_paper_trading' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validated();
 
         // Auto-fill data_connection_id from exchange_connection_id if not provided and MARKET_STREAM_BASED
         if (isset($validated['trading_mode']) && $validated['trading_mode'] === 'MARKET_STREAM_BASED') {
@@ -532,18 +516,68 @@ class TradingBotController extends Controller
         $bot = TradingBot::forUser(auth()->id())->findOrFail($id);
 
         try {
+            // Start bot (validates configuration and credentials)
             $this->botService->start($bot, auth()->id(), null);
             
             // Start worker process
             $this->workerService->startWorker($bot);
             
+            // Wait 2 seconds for worker to initialize, then check health
+            sleep(2);
+            
+            // Check worker health
+            $healthCheck = $this->botService->checkWorkerHealth($bot);
+            
+            if (!$healthCheck['healthy']) {
+                // Worker failed to start - try to stop bot
+                try {
+                    $this->botService->stop($bot, auth()->id(), null);
+                } catch (\Exception $stopException) {
+                    \Log::error('Failed to stop bot after worker health check failure', [
+                        'bot_id' => $bot->id,
+                        'error' => $stopException->getMessage(),
+                    ]);
+                }
+                
+                \Log::error('Worker health check failed after bot start', [
+                    'bot_id' => $bot->id,
+                    'health_message' => $healthCheck['message'],
+                ]);
+                
+                return redirect()
+                    ->back()
+                    ->with('notify', NotificationHelper::error(
+                        'Bot started but worker process failed. Please try again or contact support.',
+                        'Warning'
+                    ));
+            }
+            
             return redirect()
                 ->back()
                 ->with('notify', NotificationHelper::success('Trading bot started successfully!', 'Success'));
         } catch (\Exception $e) {
+            \Log::error('Failed to start trading bot', [
+                'bot_id' => $bot->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Provide user-friendly error messages
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, 'connection type') !== false) {
+                $errorMessage = 'The selected exchange connection type is not compatible with this bot. Please select a compatible connection.';
+            } elseif (strpos($errorMessage, 'not active') !== false) {
+                $errorMessage = 'The selected exchange connection is not active. Please activate the connection first.';
+            } elseif (strpos($errorMessage, 'preset') !== false && strpos($errorMessage, 'enabled') !== false) {
+                $errorMessage = 'The selected trading preset is not enabled. Please select an enabled preset.';
+            } elseif (strpos($errorMessage, 'Credential validation') !== false) {
+                $errorMessage = 'Cannot start bot: Exchange connection credentials are invalid. Please test and update the connection.';
+            }
+            
             return redirect()
                 ->back()
-                ->with('notify', NotificationHelper::error('Failed to start bot: ' . $e->getMessage(), 'Error'));
+                ->with('notify', NotificationHelper::error('Failed to start bot: ' . $errorMessage, 'Error'));
         }
     }
 

@@ -3,10 +3,14 @@
 namespace App\Services\Monitoring;
 
 use App\Services\QueueOptimizer;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Monitoring\SystemMonitor;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * WorkerManager Service
+ * 
+ * Aggregates worker metrics from all sources (queue workers, bot workers, Octane).
+ */
 class WorkerManager
 {
     protected QueueOptimizer $queueOptimizer;
@@ -19,7 +23,9 @@ class WorkerManager
     }
 
     /**
-     * Get all worker types status
+     * Get all worker metrics
+     * 
+     * @return array
      */
     public function getAllWorkers(): array
     {
@@ -31,209 +37,86 @@ class WorkerManager
     }
 
     /**
-     * Get queue workers status
+     * Get queue worker metrics
+     * 
+     * @return array
      */
     protected function getQueueWorkers(): array
     {
         try {
+            $health = $this->queueOptimizer->monitorHealth();
             $metrics = $this->queueOptimizer->getMetrics();
             
+            $overall = $health['overall'] ?? [];
+            
             return [
-                'active' => $metrics['active_workers'] ?? 0,
-                'total_jobs' => $metrics['total_jobs'] ?? 0,
-                'pending_jobs' => $metrics['pending_jobs'] ?? 0,
-                'failed_jobs' => $metrics['failed_jobs'] ?? 0,
-                'processed_jobs' => $metrics['processed_jobs'] ?? 0,
-                'status' => $this->getQueueWorkerStatus($metrics),
+                'status' => 'active',
+                'active' => $overall['active_workers'] ?? 0,
+                'total_jobs' => $overall['total_jobs'] ?? 0,
+                'failed_jobs' => $this->getFailedJobsCount(),
+                'pending_jobs' => $this->getPendingJobsCount(),
+                'health_score' => $overall['average_health'] ?? 0,
             ];
         } catch (\Exception $e) {
-            Log::error('Failed to get queue workers', ['error' => $e->getMessage()]);
+            Log::warning('Failed to get queue workers', ['error' => $e->getMessage()]);
             return [
+                'status' => 'error',
                 'active' => 0,
                 'total_jobs' => 0,
-                'pending_jobs' => 0,
                 'failed_jobs' => 0,
-                'processed_jobs' => 0,
-                'status' => 'error',
+                'pending_jobs' => 0,
+                'health_score' => 0,
+                'error' => $e->getMessage(),
             ];
         }
     }
 
     /**
-     * Get queue worker health status
+     * Get failed jobs count
+     * 
+     * @return int
      */
-    protected function getQueueWorkerStatus(array $metrics): string
+    protected function getFailedJobsCount(): int
     {
-        $failedJobs = $metrics['failed_jobs'] ?? 0;
-        $pendingJobs = $metrics['pending_jobs'] ?? 0;
-        $activeWorkers = $metrics['active_workers'] ?? 0;
-
-        if ($activeWorkers === 0) {
-            return 'critical';
+        try {
+            return \Illuminate\Support\Facades\DB::table('failed_jobs')->count();
+        } catch (\Exception $e) {
+            return 0;
         }
-
-        if ($failedJobs > 100 || $pendingJobs > 1000) {
-            return 'warning';
-        }
-
-        return 'healthy';
     }
 
     /**
-     * Get bot workers status
+     * Get pending jobs count
+     * 
+     * @return int
+     */
+    protected function getPendingJobsCount(): int
+    {
+        try {
+            return \Illuminate\Support\Facades\DB::table('jobs')->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get bot worker metrics
+     * 
+     * @return array
      */
     protected function getBotWorkers(): array
     {
-        // Check if trading bot addon is active
-        if (!\App\Support\AddonRegistry::active('trading-management-addon')) {
-            return [
-                'status' => 'not_installed',
-                'active' => 0,
-                'total_bots' => 0,
-            ];
-        }
-
-        try {
-            // Try to get bot worker data from TradingBotMonitoringService
-            if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class)) {
-                $monitoringService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class);
-                
-                // Check if the service has a method to get worker status
-                if (method_exists($monitoringService, 'getWorkerStatus')) {
-                    return $monitoringService->getWorkerStatus();
-                }
-            }
-
-            // Fallback: Check database for active bots
-            if (DB::getSchemaBuilder()->hasTable('trading_bots')) {
-                $activeBots = DB::table('trading_bots')
-                    ->where('status', 'active')
-                    ->count();
-                
-                $totalBots = DB::table('trading_bots')->count();
-
-                return [
-                    'status' => $activeBots > 0 ? 'running' : 'stopped',
-                    'active' => $activeBots,
-                    'total_bots' => $totalBots,
-                ];
-            }
-
-            return [
-                'status' => 'not_installed',
-                'active' => 0,
-                'total_bots' => 0,
-            ];
-        } catch (\Exception $e) {
-            Log::warning('Failed to get bot workers', ['error' => $e->getMessage()]);
-            return [
-                'status' => 'error',
-                'active' => 0,
-                'total_bots' => 0,
-            ];
-        }
+        return $this->systemMonitor->getBotWorkers();
     }
 
     /**
-     * Get Octane workers status
+     * Get Octane worker metrics
+     * 
+     * @return array
      */
     protected function getOctaneWorkers(): array
     {
-        // Check if Octane is installed
-        if (!class_exists(\Laravel\Octane\Octane::class)) {
-            return [
-                'status' => 'not_installed',
-                'workers' => 0,
-                'memory_mb' => 0,
-            ];
-        }
-
-        try {
-            // Check if Octane server is running
-            $process = $this->checkOctaneProcess();
-            
-            if (empty($process)) {
-                return [
-                    'status' => 'not_running',
-                    'workers' => 0,
-                    'memory_mb' => 0,
-                ];
-            }
-
-            // Parse worker count and memory from process
-            $workers = $this->parseOctaneWorkerCount($process);
-            $memory = $this->parseOctaneMemory($process);
-
-            return [
-                'status' => 'running',
-                'workers' => $workers,
-                'memory_mb' => $memory,
-            ];
-        } catch (\Exception $e) {
-            Log::warning('Failed to get Octane workers', ['error' => $e->getMessage()]);
-            return [
-                'status' => 'error',
-                'workers' => 0,
-                'memory_mb' => 0,
-            ];
-        }
-    }
-
-    /**
-     * Check if Octane process is running
-     */
-    protected function checkOctaneProcess(): ?string
-    {
-        try {
-            // Try to check via ps command
-            $process = shell_exec('ps aux | grep "octane:start" | grep -v grep');
-            
-            if (!empty($process)) {
-                return $process;
-            }
-
-            // Fallback: Check PID file if exists
-            $pidFile = storage_path('logs/octane.pid');
-            if (file_exists($pidFile)) {
-                $pid = file_get_contents($pidFile);
-                if ($pid && posix_kill((int)$pid, 0)) {
-                    // Process is running, get details
-                    return shell_exec("ps -p {$pid} -o command=");
-                }
-            }
-
-            return null;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Parse Octane worker count from process output
-     */
-    protected function parseOctaneWorkerCount(string $process): int
-    {
-        // Try to extract workers from command line arguments
-        if (preg_match('/--workers=(\d+)/', $process, $matches)) {
-            return (int)$matches[1];
-        }
-
-        // Default to 1 if not found
-        return 1;
-    }
-
-    /**
-     * Parse Octane memory usage from process output
-     */
-    protected function parseOctaneMemory(string $process): float
-    {
-        // Try to get memory from ps output
-        if (preg_match('/\s+(\d+)\s+/', $process, $matches)) {
-            // This is a rough estimate - actual memory would need more parsing
-            return (float)$matches[1] / 1024; // Convert KB to MB
-        }
-
-        return 0.0;
+        return $this->systemMonitor->getOctaneStatus();
     }
 }
 

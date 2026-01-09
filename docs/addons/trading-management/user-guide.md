@@ -445,28 +445,74 @@ Automate your trading with custom bots.
 
 1. Go to **Trading → Trading Bots**
 2. Click **Create Bot**
-3. Configure bot:
+3. Follow the step-by-step form:
 
-#### Bot Settings
-- **Name**: Bot name
-- **Connection**: Which exchange/broker to use
-- **Strategy**: Combine filters + AI + risk preset
-- **Symbols**: Which pairs to trade
-- **Timeframe**: Analysis timeframe
+#### Step 1: Basic Information
+- **Bot Name**: Give your bot a descriptive name (e.g., "Binance Scalper Bot")
+- **Description**: Optional description of bot strategy
 
-#### Trigger Conditions
-- **Signal-Based**: Execute when signals published
-- **Indicator-Based**: Execute when indicators trigger
-- **Time-Based**: Execute at specific times
-- **Custom**: Write custom logic
+#### Step 2: Exchange Connection
+- **Select Exchange/Broker**: Choose an active exchange connection
+  - ✅ **Health Badge**: Shows connection status (Active, Error, Testing, Inactive)
+  - ✅ **Requirements Info**: Displays exchange-specific credential requirements
+  - ✅ **Create New Connection**: Click "+" button to create connection inline without leaving the page
+- **Connection Requirements**:
+  - Connection must be **active** (`status = 'active'` and `is_active = true`)
+  - Connection must belong to you (not admin-owned or another user's)
+  - Connection must have valid credentials (API key, secret, and passphrase if required)
 
-#### Execution Rules
-- **Max Daily Trades**: Limit trades per day
-- **Trading Hours**: Only trade during specific hours
-- **Max Drawdown**: Stop bot if drawdown exceeds limit
-- **Max Position Size**: Limit total exposure
+**Exchange-Specific Requirements**:
+- **Binance, Bybit**: Requires API Key and Secret only
+- **OKX, KuCoin, Coinbase Pro**: Requires API Key, Secret, AND Passphrase
+- **Other Exchanges**: Check requirements in connection health info
 
-4. Click **Save Bot**
+**Inline Connection Creation**:
+- Click the **"+"** button next to the connection dropdown
+- Fill in connection details in the modal:
+  - Connection name
+  - Exchange type (Crypto or FX)
+  - Exchange/Provider selection
+  - Connection purpose (Data, Execution, or Both)
+  - API credentials (fields show/hide based on exchange)
+- Click **"Create & Test Connection"**
+- Connection is created and automatically selected
+
+#### Step 3: Risk Management Preset
+- **Select Trading Preset**: Choose a risk management preset
+  - Defines position sizing, stop loss, take profit rules
+  - Can be customized per bot
+
+#### Step 4: Technical Indicator Filter (Optional)
+- **Select Filter Strategy**: Apply technical indicators to filter signals
+  - Examples: MA100, MA10, Parabolic SAR
+  - Only signals passing filters will be executed
+  - Leave empty to execute all signals
+
+#### Step 5: AI Market Confirmation (Optional)
+- **Select AI Model Profile**: Use AI to validate signals before execution
+  - AI analyzes market conditions
+  - Provides safety score
+  - Can auto-reject risky signals
+
+#### Step 6: Trading Mode
+- **Signal-Based**: Execute only when signals are published
+- **Market Stream-Based**: Continuously stream OHLCV data and apply technical indicators
+  - Requires data connection
+  - Configure streaming symbols and timeframes
+  - Set market analysis interval
+
+#### Step 7: Trading Settings
+- **Paper Trading Mode**: Enable demo mode (no real money)
+  - ✅ Recommended for testing
+  - Toggle on/off with checkbox
+
+#### Step 8: Advanced Configuration (Optional)
+- **Data Fetch Interval**: How often to fetch market data
+- **Filter Priority**: Configure multiple filters with priority order
+
+4. Click **Create Trading Bot**
+
+**Progress Indicator**: The form includes a progress stepper at the top showing your completion status through all 7 steps.
 
 ### Running Bots
 
@@ -521,6 +567,92 @@ Share and discover trading strategies, bots, and presets.
 
 ## Troubleshooting
 
+### Bot Creation Issues
+
+**Problem**: "The selected exchange connection is invalid or not active"
+
+**Solutions**:
+1. **Check Connection Status**:
+   - Go to **Trading → Exchange Connections**
+   - Verify connection status is "Active" (green badge)
+   - Ensure `is_active` is enabled
+   - If inactive, click "Activate" or fix connection errors
+
+2. **Verify Connection Ownership**:
+   - Connection must belong to you (not admin-owned)
+   - If using admin connection, create your own connection
+
+3. **Check Connection Credentials**:
+   - Go to connection details
+   - Click "Test Connection"
+   - Fix any credential errors
+   - Re-activate connection after fixing
+
+**Problem**: "Connection missing required credentials"
+
+**Solutions**:
+1. **For Binance/Bybit**:
+   - Ensure API Key is present
+   - Ensure API Secret is present
+   - Passphrase NOT required
+
+2. **For OKX/KuCoin/Coinbase Pro**:
+   - Ensure API Key is present
+   - Ensure API Secret is present
+   - ✅ **Ensure API Passphrase is present** (required for these exchanges)
+   - Go to connection settings and add missing passphrase
+
+3. **Verify Credentials in Exchange**:
+   - Log into your exchange account
+   - Go to API Management
+   - Verify API key is active
+   - Check API permissions (trading enabled)
+   - For OKX/KuCoin: Verify passphrase is correct
+
+**Problem**: Bot creation form shows validation errors
+
+**Solutions**:
+1. **Check Required Fields**:
+   - Bot name is filled
+   - Exchange connection is selected
+   - Trading preset is selected
+   - Trading mode is selected
+
+2. **Check Connection Health**:
+   - Look at connection health badge
+   - Red badge = Connection has errors (fix before using)
+   - Yellow badge = Connection testing (wait for completion)
+   - Gray badge = Connection inactive (activate first)
+   - Green badge = Connection ready ✅
+
+3. **Review Error Messages**:
+   - Read validation error messages carefully
+   - They indicate exactly what's wrong
+   - Fix the issue and retry
+
+**Problem**: Inline connection creation fails
+
+**Solutions**:
+1. **Check Credentials**:
+   - Verify API key format is correct
+   - Verify API secret is correct
+   - For OKX/KuCoin: Verify passphrase is correct
+   - Check for typos or extra spaces
+
+2. **Check Exchange Type**:
+   - Ensure correct exchange type selected (Crypto vs FX)
+   - Ensure correct exchange name selected
+
+3. **Test Connection Separately**:
+   - Create connection via main Exchange Connections page
+   - Test connection there first
+   - Then use in bot creation
+
+4. **Check Network**:
+   - Ensure internet connection is stable
+   - Check if exchange API is accessible
+   - Try again after a moment
+
 ### Connection Issues
 
 **Problem**: "Connection failed" error
@@ -531,6 +663,7 @@ Share and discover trading strategies, bots, and presets.
 - Ensure API has trading permissions
 - Test with testnet first
 - Check exchange/broker status
+- For OKX/KuCoin: Verify passphrase is correct
 
 ### Execution Failures
 
@@ -543,6 +676,7 @@ Share and discover trading strategies, bots, and presets.
 - Review AI analysis (might be rejecting)
 - Check symbol availability on exchange
 - Review execution logs for details
+- Verify bot is active and running
 
 ### Position Not Closing
 
@@ -607,6 +741,9 @@ Share and discover trading strategies, bots, and presets.
 - Set stop losses on all trades
 - Don't risk more than you can afford to lose
 - Regularly review and adjust strategies
+- **Always verify connection health before creating bots**
+- **Test connections in paper trading mode first**
+- **Keep passphrases secure (required for OKX, KuCoin, Coinbase Pro)**
 
 ---
 
