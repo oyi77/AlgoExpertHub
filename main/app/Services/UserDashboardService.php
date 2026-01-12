@@ -31,6 +31,7 @@ class UserDashboardService
                 'totalWithdraw' => $user->withdraws()->where('status', 1)->sum('withdraw_amount'),
                 'totalPayments' => $user->payments()->where('status', 1)->sum('amount'),
                 'totalSupportTickets' => $user->tickets()->count(),
+                'recentTransactions' => $user->transactions()->latest()->limit(3)->get(),
             ];
         });
 
@@ -52,7 +53,7 @@ class UserDashboardService
 
         $data['totalbalance'] = $user->balance;
         $data['user'] = $user;
-        $data['transactions'] = $user->transactions()->latest()->limit(3)->get();
+        $data['transactions'] = $cachedTotals['recentTransactions'] ?? $user->transactions()->latest()->limit(3)->get();
 
         $data['signals'] = DashboardSignal::where('user_id', $user->id)->latest()->with('signal.market', 'signal.pair', 'signal.time')->paginate(Helper::pagination());
 
