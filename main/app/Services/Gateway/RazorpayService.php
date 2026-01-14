@@ -29,15 +29,15 @@ class RazorpayService extends BaseAdapter
         }
 
         if (!$deposit) {
-            return (new static())->error('Transaction not found');
+            return (new static())->returnError('Transaction not found');
         }
 
         if (isset($data['razorpay_payment_id'])) {
             (new static())->handlePaymentSuccess($deposit, 0.0, $data['razorpay_payment_id']);
 
-            return (new static())->success('Payment Successful');
+            return (new static())->returnSuccess('Payment Successful');
         }
 
-        return (new static())->error('Something Went Wrong');
+        return (new static())->returnError('Something Went Wrong');
     }
 }

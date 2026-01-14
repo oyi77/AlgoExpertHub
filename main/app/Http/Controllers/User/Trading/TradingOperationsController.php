@@ -6,6 +6,7 @@ use App\Helpers\Helper\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TradingOperationsController extends Controller
 {
@@ -31,5 +32,21 @@ class TradingOperationsController extends Controller
         }
 
         return view(Helper::themeView('user.trading.operations'), $data);
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = __('Trading Operations');
+        $data['activeTab'] = $request->get('tab', 'trading-bots');
+
+        $data['tradingManagementEnabled'] = $this->tradingService->isTradingManagementEnabled();
+
+        if ($data['tradingManagementEnabled'] && $data['activeTab'] === 'trading-bots') {
+            $data['bots'] = $this->tradingService->getTradingBots(Auth::id());
+        }
+
+        return Inertia::render('User/TradingOperations', $data);
     }
 }

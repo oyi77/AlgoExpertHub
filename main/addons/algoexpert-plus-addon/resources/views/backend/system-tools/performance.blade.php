@@ -426,7 +426,7 @@
         
         function loadOpcacheStatus() {
             $.ajax({
-                url: '{{ route("admin.performance.status") }}',
+                url: '{{ route("admin.general.performance.status") }}',
                 method: 'GET',
                 dataType: 'json',
                 success: function(response) {

@@ -1,7 +1,7 @@
 @extends(Config::themeView('auth.master'))
 
 @section('content')
-    <form action="{{ route('user.register') }}" method="POST">
+    <form action="{{ route('user.register') }}" method="POST" onsubmit="return submitUserForm()">
         @csrf
         <div class="row">
             @if (isset(request()->reffer))
@@ -79,6 +79,19 @@
                 </div>
             </div>
 
+            <!-- GDPR Terms of Service Acceptance -->
+            <div class="col-lg-12 my-3">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="terms" value="1" required class="form-check-input">
+                    <span class="ml-2">
+                        I agree to the
+                        <a href="/terms" target="_blank">Terms of Service</a>
+                        and
+                        <a href="/privacy" target="_blank">Privacy Policy</a>
+                    </span>
+                </label>
+            </div>
+
             @if (Config::config()->allow_recaptcha == 1)
                 <div class="col-md-12 my-3">
                     <script src="https://www.google.com/recaptcha/api.js"></script>
@@ -121,17 +134,23 @@
 
 
             function submitUserForm() {
-                var response = grecaptcha.getResponse();
-                if (response.length == 0) {
-                    document.getElementById('g-recaptcha-error').innerHTML =
-                        "<span class='sp_text_danger'>{{ __('Captcha field is required.') }}</span>";
-                    return false;
+                // Check if reCAPTCHA is present on the page
+                if (typeof grecaptcha !== 'undefined' && document.querySelector('.g-recaptcha')) {
+                    var response = grecaptcha.getResponse();
+                    if (response.length == 0) {
+                        document.getElementById('g-recaptcha-error').innerHTML =
+                            "<span class='sp_text_danger'>{{ __('Captcha field is required.') }}</span>";
+                        return false;
+                    }
                 }
                 return true;
             }
 
             function verifyCaptcha() {
-                document.getElementById('g-recaptcha-error').innerHTML = '';
+                var errorElement = document.getElementById('g-recaptcha-error');
+                if (errorElement) {
+                    errorElement.innerHTML = '';
+                }
             }
         </script>
     @endpush

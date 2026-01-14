@@ -8,6 +8,7 @@ use App\Helpers\Helper\Helper;
 use App\Services\SignalService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Inertia\Inertia;
 
 class SignalController extends Controller
 {
@@ -31,9 +32,9 @@ class SignalController extends Controller
     public function details(int $id): View
     {
         $data['title'] = 'Signal Description';
-        
-        $result = $this->signalService.details($id);
-        
+
+        $result = $this->signalService->details($id);
+
         if ($result['type'] === 'error') {
             abort($result['code'] ?? 404);
         }
@@ -41,5 +42,16 @@ class SignalController extends Controller
         $data['signal'] = $result['data']['signal'];
 
         return view(Helper::themeView('user.signal_details'))->with($data);
+    }
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = 'All Signals';
+        $data['search'] = $request->search ?? '';
+
+        $result = $this->signalService->allSignals(['search' => $request->search]);
+        $data['signals'] = $result['data']['signals'];
+
+        return Inertia::render('User/SignalCenter', $data);
     }
 }

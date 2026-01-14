@@ -756,7 +756,7 @@
             <h5 class="mb-3"><i class="las la-database"></i> {{ __('Database Cleanup') }}</h5>
             <div class="card border">
                 <div class="card-body">
-                    <form action="{{ route('admin.general.performance.db') }}" method="POST">
+                    <form action="{{ route('admin.general.performance.database') }}" method="POST">
                         @csrf
                         <div class="form-row">
                             <div class="col-md-4">

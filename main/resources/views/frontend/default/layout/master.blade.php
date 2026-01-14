@@ -24,13 +24,23 @@
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
-    @if(optional(Config::config()->fonts)->heading_font_url)
-        <link rel="preconnect" href="{{ parse_url(optional(Config::config()->fonts)->heading_font_url, PHP_URL_SCHEME) }}://{{ parse_url(optional(Config::config()->fonts)->heading_font_url, PHP_URL_HOST) }}" crossorigin>
+    @php
+        $config = Config::config();
+        $fonts = optional($config)->fonts;
+        $heading = optional($fonts)->heading_font_family ?? 'DM Sans';
+        $paragraph = optional($fonts)->paragraph_font_family ?? 'Poppins';
+    @endphp
+    @if(optional($fonts)->heading_font_url)
+        <link rel="preconnect" href="{{ parse_url(optional($fonts)->heading_font_url, PHP_URL_SCHEME) }}://{{ parse_url(optional($fonts)->heading_font_url, PHP_URL_HOST) }}" crossorigin>
     @endif
-    <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
-    <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
+    @if(optional($fonts)->heading_font_url)
+        <link rel="stylesheet" href="{{ optional($fonts)->heading_font_url }}">
+    @endif
+    @if(optional($fonts)->paragraph_font_url)
+        <link rel="stylesheet" href="{{ optional($fonts)->paragraph_font_url }}">
+    @endif
 
-    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->favicon, true) }}">
+    <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional($config)->favicon, true) }}">
 
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'lib/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ Config::cssLib('frontend', 'all.min.css') }}">
@@ -46,11 +56,6 @@
     <link href="{{ Config::cssLib('frontend', 'components.css') }}?v=20251211" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'main.css') }}?v=20251202" rel="stylesheet">
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
-
-    @php
-        $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
-        $paragraph = optional(Config::config()->fonts)->paragraph_font_family ?? 'Poppins';
-    @endphp
 
     <style>
         :root {

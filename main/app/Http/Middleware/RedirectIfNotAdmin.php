@@ -31,11 +31,11 @@ class RedirectIfNotAdmin
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated. Please log in.',
-                    'redirect' => route('admin.login')
+                    'redirect' => url('/admin/login')
                 ], 401);
             }
             
-            return redirect()->route('admin.login')
+            return redirect()->to('/admin/login')
                 ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
                 ->header('Pragma', 'no-cache')
                 ->header('Expires', '0');

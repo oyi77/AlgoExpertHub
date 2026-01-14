@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\backend;
+namespace App\Http\Controllers\Backend;
 
 use App\Helpers\Helper\Helper;
 use App\Helpers\NotificationHelper;

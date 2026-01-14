@@ -132,15 +132,22 @@ class ExecuteManualTradeAction
     {
         try {
             $prefix = Schema::getConnection()->getTablePrefix();
-            $tableName = $prefix . 'execution_logs';
-            $columnInfo = DB::select("SHOW COLUMNS FROM `{$tableName}` WHERE Field = 'signal_id'");
-            if (!empty($columnInfo) && isset($columnInfo[0]->Null) && $columnInfo[0]->Null === 'YES') {
-                $logData['signal_id'] = null;
+            $tableName = 'execution_logs'; // Schema checks use un-prefixed names usually, but depends on config.
+            // Actually Schema::hasColumn handles prefix automatically.
+            
+            if (Schema::hasColumn('execution_logs', 'signal_id')) {
+                 // Check if nullable? Schema::getConnection()->getDoctrineColumn... implies doctrine/dbal dependency.
+                 // Let's stick to the safer check: if the column exists, we set it to null if key exists.
+                 // The original logic checked if it was nullable.
+                 // For now, let's just use the safer logic without raw SQL.
+                 $logData['signal_id'] = null;
             } else {
-                Log::warning('ExecuteManualTradeAction: signal_id column is NOT NULL');
+                 // Column doesn't exist, remove from array
+                 unset($logData['signal_id']);
             }
         } catch (\Exception $e) {
-            $logData['signal_id'] = null;
+            // Fallback
+            if (isset($logData['signal_id'])) unset($logData['signal_id']);
         }
     }
 

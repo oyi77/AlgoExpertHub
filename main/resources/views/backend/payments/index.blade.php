@@ -171,36 +171,66 @@
 
 @push('scripts')
     <script>
-        $(function() {
-            'use strict'
+        // Wrap everything in a check for AdminCore/jQuery
+        (function() {
+            var initPayments = function() {
+                // Ensure jQuery is available
+                if (typeof window.jQuery === 'undefined') return;
+                var $ = window.jQuery;
 
-            $('input[name="dates"]').daterangepicker({
+                'use strict'
 
-                autoUpdateInput: false,
-                locale: {
-                    cancelLabel: 'Clear'
+                if ($('input[name="dates"]').length) {
+                    $('input[name="dates"]').daterangepicker({
+                        autoUpdateInput: false,
+                        locale: {
+                            cancelLabel: 'Clear'
+                        }
+                    });
+
+                    $('input[name="dates"]').on('apply.daterangepicker', function(ev, picker) {
+                        $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format(
+                            'MM/DD/YYYY'));
+                    });
                 }
-            });
 
-            $('input[name="dates"]').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format(
-                    'MM/DD/YYYY'));
-            });
+                // Use event delegation for dynamic elements
+                $(document).on('click', '.accept', function() {
+                    const modal = $('#accept');
+                    modal.find('form').attr('action', $(this).data('url'));
+                    modal.modal('show');
+                });
 
-            $('.accept').on('click', function() {
-                const modal = $('#accept');
+                $(document).on('click', '.reject', function() {
+                    const modal = $('#reject');
+                    modal.find('form').attr('action', $(this).data('url'));
+                    modal.modal('show');
+                });
+            };
 
-                modal.find('form').attr('action', $(this).data('url'));
-                modal.modal('show');
-            })
-
-            $('.reject').on('click', function() {
-                const modal = $('#reject');
-
-                modal.find('form').attr('action', $(this).data('url'));
-                modal.modal('show');
-            })
-
-        })
+            // Use AdminCore loader if available
+            if (typeof window.AdminCore !== 'undefined' && typeof window.AdminCore.loader !== 'undefined') {
+                window.AdminCore.loader.waitForJQuery(initPayments);
+            } else {
+                // Fallback
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (typeof window.jQuery !== 'undefined') {
+                        initPayments();
+                    } else {
+                        // Poll for jQuery
+                        var attempts = 0;
+                        var interval = setInterval(function() {
+                            if (typeof window.jQuery !== 'undefined') {
+                                clearInterval(interval);
+                                initPayments();
+                            } else if (attempts >= 50) {
+                                clearInterval(interval);
+                            }
+                            attempts++;
+                        }, 50);
+                    }
+                });
+            }
+        })();
     </script>
 @endpush

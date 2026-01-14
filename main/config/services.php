@@ -51,4 +51,15 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
     ],
 
+    'nexmo' => [
+        'key' => env('NEXMO_KEY'),
+        'secret' => env('NEXMO_SECRET'),
+    ],
+
+    'ultramsg' => [
+        'allow' => env('ALLOW_ULTRA'),
+        'token' => env('ULTRA_TOKEN'),
+        'instance_id' => env('ULTRA_ID'),
+    ],
+
 ];

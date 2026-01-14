@@ -46,5 +46,54 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
     Route::get('commision', [LogController::class, 'Commision'])->name('commision');
     Route::get('subscription-log', [LogController::class, 'subscriptionLog'])->name('subscription');
     Route::get('refferal', [LogController::class, 'refferalLog'])->name('refferalLog');
+
+    // ========== BETA ROUTES (React/Inertia UI) ==========
+    Route::prefix('beta')->name('beta.')->group(function () {
+        // Profile
+        Route::get('/profile', [UserController::class, 'betaProfile'])->name('profile');
+        Route::post('/profile', [UserController::class, 'betaProfileUpdate'])->name('profile.update');
+        Route::get('/profile/change-password', [UserController::class, 'betaChangePassword'])->name('change.password');
+        Route::post('/profile/change-password', [UserController::class, 'betaUpdatePassword'])->name('update.password');
+
+        // Tickets
+        Route::resource('ticket', TicketController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy'])->names([
+            'index' => 'ticket.index',
+            'create' => 'ticket.create',
+            'store' => 'ticket.store',
+            'show' => 'ticket.show',
+            'update' => 'ticket.update',
+            'destroy' => 'ticket.destroy',
+        ]);
+        Route::post('ticket/reply', [TicketController::class, 'betaReply'])->name('ticket.reply');
+        Route::get('ticket/status/{status}', [TicketController::class, 'betaTicketStatus'])->name('ticket.status');
+
+        // Wallet
+        Route::get('/deposit', [UserController::class, 'betaDeposit'])->name('deposit');
+        Route::get('/withdraw', [UserController::class, 'betaWithdraw'])->name('withdraw');
+        Route::get('/transfer-money', [MoneyTransferController::class, 'betaTransfer'])->name('transfer_money');
+        Route::post('/transfer-money', [MoneyTransferController::class, 'betaTransferMoney']);
+        Route::get('/transfer-money/log', [MoneyTransferController::class, 'betaTransferMoneyLog'])->name('transfer_money.log');
+        Route::get('/receiver-money/log', [MoneyTransferController::class, 'betaReceiveMoneyLog'])->name('receive_money.log');
+
+        // Logs
+        Route::get('/transaction/log', [LogController::class, 'betaTransactionLog'])->name('transaction.log');
+        Route::get('/interest/log', [UserController::class, 'betaInterestLog'])->name('interest.log');
+        Route::get('/deposit/log', [LogController::class, 'betaDepositLog'])->name('deposit.log');
+        Route::get('/refferal', [LogController::class, 'betaRefferalLog'])->name('refferalLog');
+        Route::get('/commision', [LogController::class, 'betaCommision'])->name('commision');
+        Route::get('/subscription-log', [LogController::class, 'betaSubscriptionLog'])->name('subscription.log');
+        Route::get('/plans', [\App\Http\Controllers\PlanController::class, 'betaPlans'])->name('plans');
+        Route::get('/subscription', [UserController::class, 'betaSubscription'])->name('subscription');
+
+        // Investment
+        Route::get('/invest/all', [UserController::class, 'betaAllInvest'])->name('invest.all');
+        Route::get('/invest/pending', [UserController::class, 'betaPendingInvest'])->name('invest.pending');
+        Route::get('/invest/log', [LogController::class, 'betaInvestLog'])->name('invest.log');
+
+        // Withdraw History
+        Route::get('/withdraw/history', [LogController::class, 'betaAllWithdraw'])->name('withdraw.history');
+        Route::get('/withdraw/pending', [LogController::class, 'betaPendingWithdraw'])->name('withdraw.pending');
+        Route::get('/withdraw/completed', [LogController::class, 'betaCompleteWithdraw'])->name('withdraw.completed');
+    });
 });
 

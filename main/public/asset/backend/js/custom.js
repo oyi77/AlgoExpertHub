@@ -14,6 +14,7 @@
         // Show main wrapper when page is loaded
         jQuery(window).on("load", function () {
             $('#main-wrapper').addClass('show');
+            $('#overlay').fadeOut(500);
         });
 
         (function ($) {

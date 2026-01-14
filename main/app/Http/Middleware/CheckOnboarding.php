@@ -38,6 +38,9 @@ class CheckOnboarding
         $skipRoutes = [
             'user.onboarding.*',
             'user.logout',
+            'user.dashboard',
+            'user.terminal.index',
+            'user.trading.*',
             'user.profile',
             'user.profileupdate',
             'user.plans',

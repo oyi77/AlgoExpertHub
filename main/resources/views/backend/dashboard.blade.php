@@ -639,7 +639,11 @@
                     window.$ = jQuery; // Make it globally available
                 }
 
-                @if (now()->diffInMinutes(\Carbon\Carbon::parse(Config::config()->cron_run_time)) > 25)
+                @php
+                    $config = Config::config();
+                    $cronRunTime = optional($config)->cron_run_time;
+                @endphp
+                @if ($cronRunTime && now()->diffInMinutes(\Carbon\Carbon::parse($cronRunTime)) > 25)
 
                     $(function() {
                         const modal = $('#cron')

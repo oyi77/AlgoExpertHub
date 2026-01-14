@@ -27,6 +27,29 @@ class UserController extends Controller
     }
 
     /**
+     * Get User Status Counts
+     * 
+     * Get counts for different user statuses (active, banned, kyc, etc)
+     * 
+     * @return JsonResponse
+     */
+    public function getCounts(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'all' => User::count(),
+                'active' => User::where('status', 1)->count(),
+                'deactive' => User::where('status', 0)->count(),
+                'email_unverified' => User::where('is_email_verified', 0)->count(),
+                'sms_unverified' => User::where('is_sms_verified', 0)->count(),
+                'kyc_unverified' => User::whereIn('is_kyc_verified', [0, 2])->count(),
+                'kyc_req' => User::where('is_kyc_verified', 2)->count(),
+            ]
+        ]);
+    }
+
+    /**
      * List Users
      * 
      * Get all users with filters

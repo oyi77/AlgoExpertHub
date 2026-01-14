@@ -435,9 +435,9 @@
                             name: "{{ auth()->user()->username }}",
                         },
                         customizations: {
-                            title: "{{ Config::config()->sitename }}",
+                            title: "{{ optional(Config::config())->sitename ?? config('app.name', 'AlgoExpertHub') }}",
                             description: "Payment for purchasing a plan",
-                            logo: "{{ Config::getFile('logo', Config::config()->logo) }}",
+                            logo: "{{ Config::getFile('logo', optional(Config::config())->logo ?? '') }}",
                         },
                     });
                 }
@@ -464,9 +464,9 @@
                     "key": "{{ $gateway->parameter->razor_key }}",
                     "amount": total_amount,
                     "currency": "{{ $gateway->parameter->gateway_currency }}",
-                    "name": "{{ Config::config()->site_name }}",
+                    "name": "{{ optional(Config::config())->site_name ?? config('app.name', 'AlgoExpertHub') }}",
                     "description": "Transaction",
-                    "image": "{{ Config::getFile('logo', Config::config()->logo, true) }}",
+                    "image": "{{ Config::getFile('logo', optional(Config::config())->logo ?? '', true) }}",
                     "order_id": "",
                     "callback_url": url,
                     "prefill": {

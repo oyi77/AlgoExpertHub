@@ -308,6 +308,7 @@
                         <span class="nav-text">{{ __('Manage Addons') }}</span>
                     </a>
                 </li>
+            @endif
                 @php
                     $algoPlusActive = \App\Support\AddonRegistry::active('algoexpert-plus-addon');
                     $algoPlusHasAdmin = $algoPlusActive && \Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.index');
@@ -324,73 +325,50 @@
                                      ($algoPlusHealthEnabled && $systemHealthRouteExists) || 
                                      ($algoPlusBackupEnabled && $backupRouteExists);
                 @endphp
-                @if ($hasSystemTools)
+            @if (($adminUser && $adminUser->can('manage-system')) || ($adminUser && $hasSystemTools))
                 <li>
                     <a class="has-arrow" href="javascript:void(0)" aria-expanded="false">
-                        <i data-feather="tool"></i>
-                        <span class="nav-text">{{ __('System Tools') }}</span>
-                    </a>
-                    <ul aria-expanded="false">
-                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.dashboard'))
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.system-tools.dashboard') }}" aria-expanded="false">
-                                {{ __('Dashboard') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.performance'))
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.system-tools.performance') }}" aria-expanded="false">
-                                {{ __('Performance') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.cron-jobs'))
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.system-tools.cron-jobs') }}" aria-expanded="false">
-                                {{ __('Cron Jobs') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if ($algoPlusHealthEnabled && $systemHealthRouteExists)
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.system-health') }}" aria-expanded="false">
-                                {{ __('System Health') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if ($algoPlusHasAdmin)
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.index') }}" aria-expanded="false">
-                                {{ __('Dependencies') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if ($algoPlusBackupEnabled && $backupRouteExists)
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.backup.index') }}" aria-expanded="false">
-                                {{ __('Backup Dashboard') }}
-                            </a>
-                        </li>
-                        @endif
-                        @if ($algoPlusQueuesEnabled && $horizonRouteExists)
-                        <li>
-                            <a href="{{ route('admin.algoexpert-plus.horizon') }}" aria-expanded="false">
-                                {{ __('Queues Dashboard') }}
-                            </a>
-                        </li>
-                        @endif
-                    </ul>
-                </li>
-                @endif
-            @endif
-
-            @if ($adminUser && $adminUser->can('manage-system'))
-                <li>
-                    <a href="{{ route('admin.monitoring.index') }}" aria-expanded="false">
                         <i data-feather="activity"></i>
                         <span class="nav-text">{{ __('System Monitoring') }}</span>
                     </a>
+                    <ul aria-expanded="false">
+                        @if ($adminUser->can('manage-system'))
+                        <li>
+                            <a href="{{ route('admin.monitoring.index') }}" aria-expanded="false">
+                                {{ __('Overview') }}
+                            </a>
+                        </li>
+                        @endif
+
+                        {{-- AlgoExpert Plus Tools --}}
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.dashboard'))
+                        <li><a href="{{ route('admin.algoexpert-plus.system-tools.dashboard') }}">{{ __('Tools Dashboard') }}</a></li>
+                        @endif
+                        
+                        @if ($algoPlusHealthEnabled && $systemHealthRouteExists)
+                        <li><a href="{{ route('admin.algoexpert-plus.system-health') }}">{{ __('Health Check') }}</a></li>
+                        @endif
+
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.performance'))
+                        <li><a href="{{ route('admin.algoexpert-plus.system-tools.performance') }}">{{ __('Performance') }}</a></li>
+                        @endif
+
+                        @if ($algoPlusQueuesEnabled && $horizonRouteExists)
+                        <li><a href="{{ route('admin.algoexpert-plus.horizon') }}">{{ __('Horizon Queues') }}</a></li>
+                        @endif
+
+                        @if (\Illuminate\Support\Facades\Route::has('admin.algoexpert-plus.system-tools.cron-jobs'))
+                        <li><a href="{{ route('admin.algoexpert-plus.system-tools.cron-jobs') }}">{{ __('Cron Jobs') }}</a></li>
+                        @endif
+
+                        @if ($algoPlusBackupEnabled && $backupRouteExists)
+                        <li><a href="{{ route('admin.algoexpert-plus.backup.index') }}">{{ __('Backups') }}</a></li>
+                        @endif
+
+                        @if ($algoPlusHasAdmin)
+                        <li><a href="{{ route('admin.algoexpert-plus.index') }}">{{ __('Dependencies') }}</a></li>
+                        @endif
+                    </ul>
                 </li>
             @endif
 

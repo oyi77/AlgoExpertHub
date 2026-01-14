@@ -32,7 +32,21 @@ class LoginController extends Controller
         $isSuccess = $this->login->login($request);
 
         if ($isSuccess['type'] == 'error') {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'type' => 'error',
+                    'message' => $isSuccess['message']
+                ], 422);
+            }
             return redirect()->route('user.login')->with('notify', NotificationHelper::error($isSuccess['message'], 'Error'));
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'type' => 'success',
+                'message' => $isSuccess['message'],
+                'redirect_url' => route('user.dashboard')
+            ]);
         }
 
         return redirect()->route('user.dashboard')->with('notify', NotificationHelper::success($isSuccess['message'], 'Success'));

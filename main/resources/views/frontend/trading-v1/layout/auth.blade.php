@@ -173,6 +173,105 @@
     <!-- Mobile Overlay -->
     <div class="tv-mobile-overlay" id="sidebarOverlay"></div>
 
+    <!-- Beta UI Banner (Persistent, Dismissible) -->
+    <div id="beta-ui-banner" class="beta-banner">
+        <div class="container-fluid">
+            <div class="beta-banner-content">
+                <div class="beta-banner-message">
+                    <i class="fas fa-flask me-2"></i>
+                    <span>{{ __('We have new UI if you might want to try it out.') }}</span>
+                </div>
+                <div class="beta-banner-actions">
+                    <a href="{{ route('user.beta.dashboard') }}" class="btn btn-sm btn-primary me-2">
+                        {{ __('Try New UI') }}
+                    </a>
+                    <button type="button" class="btn btn-sm btn-link text-white" onclick="dismissBetaBanner()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .beta-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .beta-banner-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .beta-banner-message {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        .beta-banner-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .beta-banner .btn-primary {
+            background-color: white;
+            color: #667eea;
+            border: none;
+            font-weight: 600;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+        .beta-banner .btn-primary:hover {
+            background-color: #f8f9fa;
+            color: #5568d3;
+        }
+        .beta-banner .btn-link {
+            padding: 0.25rem 0.5rem;
+            text-decoration: none;
+        }
+        .beta-banner.dismissed {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .beta-banner-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .beta-banner-actions {
+                justify-content: space-between;
+            }
+        }
+    </style>
+
+    <script>
+        // Hide banner immediately if previously dismissed
+        (function() {
+            const dismissed = localStorage.getItem('beta_banner_dismissed');
+            if (dismissed) {
+                const banner = document.getElementById('beta-ui-banner');
+                if (banner) {
+                    banner.classList.add('dismissed');
+                }
+            }
+        })();
+
+        // Dismiss the beta banner
+        function dismissBetaBanner() {
+            localStorage.setItem('beta_banner_dismissed', 'true');
+            const banner = document.getElementById('beta-ui-banner');
+            if (banner) {
+                banner.classList.add('dismissed');
+            }
+        }
+    </script>
+
     <div class="tv-panel">
         <!-- Sidebar -->
         @include(\App\Helpers\Helper\Helper::theme() . 'layout.user_sidebar')

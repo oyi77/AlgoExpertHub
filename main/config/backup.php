@@ -151,14 +151,12 @@ return [
     'notifications' => [
 
         'notifications' => [
-            // Email notifications disabled by default to prevent SMTP relay errors
-            // To enable: uncomment below and ensure SMTP is properly configured
-            // \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['mail'],
-            // \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['mail'],
-            // \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['mail'],
-            // \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => ['mail'],
-            // \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['mail'],
-            // \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => ['mail'],
+            // Email notifications enabled for critical backup events
+            // Ensure BACKUP_NOTIFICATION_EMAIL is set in .env file
+            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['mail'],
+            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['mail'],
+            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['mail'],
+            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['mail'],
         ],
 
 

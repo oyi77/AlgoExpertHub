@@ -59,6 +59,6 @@ class Manual extends BaseAdapter
             $admin->notify(new DepositNotification($deposit, 'offline', $type));
         }
 
-        return (new static())->success('Payment proof submitted successfully');
+        return (new static())->returnSuccess('Payment proof submitted successfully');
     }
 }

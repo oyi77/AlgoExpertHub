@@ -1,0 +1,36 @@
+import React from 'react';
+import { Head } from '@inertiajs/react';
+import { AppLayout } from '../../Components/Layout/AppLayout';
+import { Card, CardContent } from '../../Components/ui/Card';
+
+export default function ReceiveMoneyLog({ title, transferMoneys }) {
+    return (
+        <AppLayout>
+            <Head title={title || 'Receive Money Log'} />
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-[#eaecef]">Received Money Log</h1>
+            </div>
+            <Card className="bg-[#1e2329] border-[#2b3139]">
+                <CardContent className="p-0">
+                    {transferMoneys && transferMoneys.data && transferMoneys.data.length > 0 ? (
+                        <div className="divide-y divide-[#2b3139]">
+                            {transferMoneys.data.map((item) => (
+                                <div key={item.id} className="p-4">
+                                    <div className="flex justify-between">
+                                        <div>
+                                            <span className="text-[#eaecef]">From: {item.sender?.username}</span>
+                                            <div className="text-xs text-[#848e9c]">{item.trx}</div>
+                                        </div>
+                                        <span className="text-[#0ecb81]">+{item.amount}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-8 text-center text-[#848e9c]">No received transfers found</div>
+                    )}
+                </CardContent>
+            </Card>
+        </AppLayout>
+    );
+}

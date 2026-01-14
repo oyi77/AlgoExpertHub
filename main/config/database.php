@@ -126,6 +126,11 @@ return [
 
     'migrations' => 'migrations',
 
+    'backup' => [
+        'root_user' => env('DB_BACKUP_ROOT_USER'),
+        'root_password' => env('DB_BACKUP_ROOT_PASSWORD'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Query Optimization Settings

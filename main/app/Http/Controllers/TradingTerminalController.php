@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+use Inertia\Inertia;
+
 class TradingTerminalController extends Controller
 {
     protected $tradingTerminalService;
@@ -35,7 +37,7 @@ class TradingTerminalController extends Controller
     }
 
     /**
-     * Display trading terminal
+     * Display legacy trading terminal (GoldenLayout + Interact.js)
      */
     public function index(Request $request)
     {
@@ -66,7 +68,44 @@ class TradingTerminalController extends Controller
         $data['exchangeConnections'] = $this->exchangeConnectionRepository->getUserConnections($user->id, true);
         $data['hasExchangeConnections'] = $data['exchangeConnections']->isNotEmpty();
 
-        return view(Helper::themeView('user.trading_terminal'), $data);
+        // Return legacy Blade view with GoldenLayout
+        return view(Helper::themeView('user.trading_terminal'))->with($data);
+    }
+
+    /**
+     * Display new trading terminal (React/Inertia - Beta)
+     */
+    public function betaIndex(Request $request)
+    {
+        $user = Auth::user();
+        $data['title'] = 'Trading Terminal';
+        $data['symbol'] = $request->get('symbol', 'BTCUSDT');
+        $data['isDemo'] = $request->get('mode', 'real') === 'demo';
+        
+        // Get user's balance
+        $data['realBalance'] = $user->balance ?? 0;
+        $data['demoBalance'] = $user->demo_balance ?? 10000;
+        
+        // Get user's open positions
+        $data['openPositions'] = $this->positionManagementService->getUserOpenPositions($user);
+        
+        // Get market data
+        $data['currentPrice'] = $this->marketDataService->getCurrentPrice($data['symbol']);
+        $data['stats24h'] = $this->marketDataService->get24hStats($data['symbol']);
+        
+        // Get trades for demo mode (legacy trade page)
+        $data['trades'] = \App\Models\Trade::when($request->trx, function ($item) use ($request) {
+            $item->where('ref', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('trade_opens_at', $request->date);
+        })->where('user_id', Auth::id())->orderBy('id', 'desc')->paginate(Helper::pagination());
+        
+        // Get user's active exchange connections for real trading
+        $data['exchangeConnections'] = $this->exchangeConnectionRepository->getUserConnections($user->id, true);
+        $data['hasExchangeConnections'] = $data['exchangeConnections']->isNotEmpty();
+
+        // Return React/Inertia view for Beta
+        return Inertia::render('User/TradingTerminal', $data);
     }
 
     /**

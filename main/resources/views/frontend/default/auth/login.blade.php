@@ -1,7 +1,7 @@
 @extends(Config::themeView('auth.master'))
 
 @section('content')
-    <form class="sp_account_form mt-4" action="" method="POST" novalidate>
+    <form class="sp_account_form mt-4" id="loginForm" action="{{ route('user.login.post') }}" method="POST" novalidate>
         @csrf
         
         <div class="mb-3">
@@ -65,7 +65,13 @@
         </div>
 
         <div class="mb-4">
-            <button type="submit" class="btn btn-primary w-100 btn-lg focus-ring">{{ __('Login') }}</button>
+            <button type="submit" id="loginBtn" class="btn btn-primary w-100 btn-lg focus-ring">
+                <span class="btn-text">{{ __('Login') }}</span>
+                <span class="btn-spinner d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    {{ __('Logging In...') }}
+                </span>
+            </button>
         </div>
 
         @if ((Config::config()->allow_facebook ?? false) || (Config::config()->allow_google ?? false))
@@ -98,18 +104,75 @@
     <script>
         "use strict";
 
-        function submitUserForm() {
-            var response = grecaptcha.getResponse();
-            if (response.length == 0) {
-                document.getElementById('g-recaptcha-error').innerHTML =
-                    "<span class='sp_text_danger'>{{ __('Captcha field is required.') }}</span>";
-                return false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const btnSpinner = loginBtn.querySelector('.btn-spinner');
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Client-side validation for reCAPTCHA if present
+                if (typeof grecaptcha !== 'undefined' && document.querySelector('.g-recaptcha')) {
+                    var response = grecaptcha.getResponse();
+                    if (response.length == 0) {
+                        notify().error().message("{{ __('Captcha field is required.') }}").send();
+                        return;
+                    }
+                }
+
+                // Show loading state
+                loginBtn.disabled = true;
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+
+                // Prepare form data
+                const formData = new FormData(loginForm);
+
+                // Send AJAX request
+                fetch(loginForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.type === 'success') {
+                        notify().success().message(data.message).send();
+                        // Redirect after short delay
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+                    } else {
+                        // Show error
+                        notify().error().message(data.message || 'Login failed').send();
+                        resetButton();
+                        if (typeof grecaptcha !== 'undefined') {
+                            grecaptcha.reset();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    notify().error().message('Something went wrong. Please try again.').send();
+                    resetButton();
+                });
+            });
+
+            function resetButton() {
+                loginBtn.disabled = false;
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
             }
-            return true;
-        }
+        });
 
         function verifyCaptcha() {
-            document.getElementById('g-recaptcha-error').innerHTML = '';
+            // Callback for reCAPTCHA
         }
     </script>
 @endpush

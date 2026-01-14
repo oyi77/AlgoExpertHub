@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Scheduler trigger route (public, used by cron jobs/webhooks)
+// This route must be defined before route groups to ensure it's registered
+Route::get('/fire', function () {
+    \Illuminate\Support\Facades\Artisan::call('schedule:run');
+    return response()->json(['success' => true, 'message' => 'Scheduler executed']);
+})->name('fire');
+
 // Admin redirect
 Route::get('admin', function () {
     return redirect()->route('admin.login');

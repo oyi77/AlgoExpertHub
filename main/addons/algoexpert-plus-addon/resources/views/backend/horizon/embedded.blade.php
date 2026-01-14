@@ -22,7 +22,7 @@
                         </a>
                         @if($isAvailable && $isRunning)
                         <button type="button" class="btn btn-light btn-sm ml-2" onclick="refreshHorizon()">
-                            <i class="las la-sync-alt"></i> {{ __('Refresh') }}
+                            <i class="las la-sync-alt"></i> {{ __('Refresh Stats') }}
                         </button>
                         @endif
                     </div>
@@ -161,16 +161,13 @@
                             <i class="las la-play-circle"></i> {{ __('Start Horizon') }}
                         </a>
                         @endif
-                        <a href="{{ route('horizon.index') }}" target="_blank" class="btn btn-primary btn-sm">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#horizonModal" {{ !$isRunning ? 'disabled' : '' }}>
+                            <i class="las la-expand-arrows-alt"></i> {{ __('Open Fullscreen Dashboard') }}
+                        </button>
+                        <a href="{{ route('horizon.index') }}" target="_blank" class="btn btn-info btn-sm">
                             <i class="las la-external-link-alt"></i> {{ __('Open in New Tab') }}
                         </a>
-                        <a href="{{ route('admin.algoexpert-plus.system-tools.performance') }}" class="btn btn-info btn-sm">
-                            <i class="las la-cog"></i> {{ __('View Performance Settings') }}
-                        </a>
                         @if(isset($queueStats['failed']) && $queueStats['failed'] > 0)
-                        <a href="{{ route('horizon.index') }}#/failed" target="_blank" class="btn btn-danger btn-sm">
-                            <i class="las la-exclamation-triangle"></i> {{ __('View Failed Jobs') }} ({{ $queueStats['failed'] }})
-                        </a>
                         <button type="button" class="btn btn-danger btn-sm" id="clear-failed-btn" onclick="clearFailedJobs()">
                             <i class="las la-trash"></i> {{ __('Clear All Failed Jobs') }} ({{ $queueStats['failed'] }})
                         </button>
@@ -272,116 +269,73 @@
     </div>
     @endif
 
-    <!-- Queue Statistics -->
-    @if(isset($queueStats['queues']) && !empty($queueStats['queues']))
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="las la-layer-group"></i> {{ __('Queue Distribution') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach($queueStats['queues'] as $queueName => $count)
-                        <div class="col-md-3 col-sm-6 mb-3">
-                            <div class="queue-stat-box">
-                                <div class="queue-name">{{ $queueName ?: __('default') }}</div>
-                                <div class="queue-count">{{ number_format($count) }}</div>
-                                <small class="text-muted">{{ __('jobs pending') }}</small>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @elseif(isset($queueDiagnostics) && $queueDiagnostics['horizon_compatible'])
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-info">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="las la-info-circle"></i> {{ __('No Jobs in Queue') }}
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-3">{{ __('There are currently no jobs waiting in the queue. Jobs will appear here when:') }}</p>
-                    <ul>
-                        <li>{{ __('Jobs are dispatched via') }} <code>dispatch(new JobClass())</code></li>
-                        <li>{{ __('Jobs are queued (not running synchronously)') }}</li>
-                        <li>{{ __('Queue connection is set to Redis') }}</li>
-                        <li>{{ __('Horizon is running and monitoring the queues') }}</li>
-                    </ul>
-                    <div class="alert alert-info mt-3 mb-0">
-                        <strong>{{ __('Note') }}:</strong> {{ __('If you just dispatched a job and it doesn\'t appear, check:') }}
-                        <ul class="mb-0 mt-2">
-                            <li>{{ __('Is QUEUE_CONNECTION=redis in .env?') }}</li>
-                            <li>{{ __('Is Horizon worker running?') }}</li>
-                            <li>{{ __('Did you run') }} <code>php artisan config:cache</code> {{ __('after changing .env?') }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    <!-- Horizon Dashboard Iframe -->
+    <!-- Horizon Dashboard Trigger -->
     <div class="row">
         <div class="col-12">
-            <div class="card horizon-iframe-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="las la-monitor"></i> {{ __('Live Dashboard') }}
-                    </h5>
-                    <div class="iframe-controls">
-                        <button type="button" class="btn btn-sm btn-light" onclick="refreshHorizon()" title="{{ __('Refresh') }}">
-                            <i class="las la-sync-alt"></i>
-                        </button>
-                        <a href="{{ route('horizon.index') }}" target="_blank" class="btn btn-sm btn-light" title="{{ __('Open in New Tab') }}">
-                            <i class="las la-external-link-alt"></i>
-                        </a>
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <span class="icon-circle bg-primary-light text-primary">
+                            <i class="las la-tachometer-alt" style="font-size: 3rem;"></i>
+                        </span>
                     </div>
-                </div>
-                <div class="card-body p-0 position-relative">
+                    <h3 class="mb-2">{{ __('Horizon Dashboard') }}</h3>
+                    <p class="text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
+                        {{ __('Access the full Horizon dashboard to monitor job throughput, runtime metrics, and job failures in real-time. The dashboard runs in a dedicated fullscreen view for better visibility.') }}
+                    </p>
+                    
                     @if($isAvailable && $isRunning)
-                    <div id="horizon-loading" class="horizon-loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">{{ __('Loading...') }}</span>
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-primary btn-lg shadow-sm" data-toggle="modal" data-target="#horizonModal">
+                                <i class="las la-expand-arrows-alt"></i> {{ __('Open Fullscreen Dashboard') }}
+                            </button>
+                            <a href="{{ route('horizon.index') }}" target="_blank" class="btn btn-outline-primary btn-lg shadow-sm ml-3">
+                                <i class="las la-external-link-alt"></i> {{ __('Open in New Tab') }}
+                            </a>
                         </div>
-                        <p class="mt-3">{{ __('Loading Horizon dashboard...') }}</p>
-                    </div>
-                    <iframe 
-                        id="horizon-iframe"
-                        src="{{ $horizonUrl }}" 
-                        style="width: 100%; height: calc(100vh - 650px); min-height: 600px; border: none; display: none;"
-                        title="Horizon Queue Dashboard"
-                        allow="fullscreen">
-                    </iframe>
                     @else
-                    <div class="horizon-unavailable p-5 text-center">
-                        <i class="las la-exclamation-triangle" style="font-size: 4rem; color: #ffc107;"></i>
-                        <h4 class="mt-3">{{ __('Horizon Dashboard Unavailable') }}</h4>
-                        <p class="text-muted">
-                            @if(!$isAvailable)
-                                {{ __('Laravel Horizon is not installed or not configured properly.') }}
-                            @else
-                                {{ __('Horizon is not currently running. Please start Horizon to view the dashboard.') }}
-                            @endif
-                        </p>
-                        @if(!$isRunning && $isAvailable)
-                        <div class="mt-4">
+                        <div class="alert alert-warning d-inline-block">
+                            <i class="las la-exclamation-triangle"></i> 
+                            {{ __('Horizon is not running. Please start the worker to access the dashboard.') }}
+                        </div>
+                        <div class="mt-3">
                             <a href="{{ route('admin.algoexpert-plus.system-tools.performance') }}" class="btn btn-primary">
                                 <i class="las la-cog"></i> {{ __('Go to Performance Settings') }}
                             </a>
                         </div>
-                        @endif
-                    </div>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Horizon Modal -->
+<div class="modal fade p-0" id="horizonModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 100%; width: 100%; height: 100%; margin: 0;">
+        <div class="modal-content" style="height: 100%; border: 0; border-radius: 0;">
+            <div class="modal-header py-2" style="background: #4052bf; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div class="d-flex align-items-center">
+                    <i class="las la-tachometer-alt mr-2" style="font-size: 1.5rem;"></i>
+                    <h5 class="modal-title text-white mb-0">{{ __('Horizon Dashboard') }}</h5>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge badge-light mr-3 text-primary">
+                        <i class="las la-circle text-success" style="font-size: 0.7em;"></i> {{ __('Live') }}
+                    </span>
+                    <button type="button" class="btn btn-sm btn-light text-primary font-weight-bold" data-dismiss="modal">
+                        <i class="las la-arrow-left"></i> {{ __('Back to Admin') }}
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-0 bg-light" style="position: relative;">
+                <div id="modal-loading" class="d-flex flex-column justify-content-center align-items-center h-100 bg-white">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="sr-only">{{ __('Loading...') }}</span>
+                    </div>
+                    <p class="mt-3 text-muted">{{ __('Connecting to Horizon...') }}</p>
+                </div>
+                <iframe id="horizon-modal-iframe" src="" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
             </div>
         </div>
     </div>
@@ -393,6 +347,16 @@
         background-color: #f8f9fa;
         min-height: calc(100vh - 150px);
         padding-bottom: 2rem;
+    }
+    
+    .icon-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: rgba(64, 82, 191, 0.1);
     }
 
     .page-header {
@@ -471,41 +435,6 @@
         font-weight: 700;
         margin: 0;
         color: #212529;
-    }
-
-    .horizon-iframe-card {
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-    }
-
-    .horizon-iframe-card .card-header {
-        background: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-        padding: 1rem 1.5rem;
-    }
-
-    .iframe-controls .btn {
-        margin-left: 0.5rem;
-    }
-
-    .horizon-loading {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255, 255, 255, 0.95);
-        z-index: 10;
-    }
-
-    .horizon-unavailable {
-        background: #fff;
-        min-height: 400px;
     }
 
     .queue-stat-box {
@@ -591,16 +520,52 @@
 
 @push('scripts')
 <script>
+    $(document).ready(function() {
+        // Modal handling for Horizon
+        $('#horizonModal').on('show.bs.modal', function () {
+            var iframe = $('#horizon-modal-iframe');
+            var loading = $('#modal-loading');
+            
+            // Force reset on open
+            loading.show();
+            iframe.hide();
+            
+            // Set src only if empty or to reload
+            if (!iframe.attr('src')) {
+                iframe.attr('src', '{{ $horizonUrl }}');
+            } else {
+                // If src exists, force reload by setting src to itself
+                var currentSrc = iframe.attr('src');
+                iframe.attr('src', currentSrc);
+            }
+            
+            // Remove previous handlers to avoid duplicates
+            iframe.off('load');
+            
+            // One-time load handler
+            iframe.on('load', function() {
+                loading.hide();
+                iframe.show();
+            });
+            
+            // Fallback timeout to show iframe anyway if load event misses
+            setTimeout(function() {
+                if(iframe.is(':hidden')) {
+                    loading.hide();
+                    iframe.show();
+                }
+            }, 5000); // 5 seconds timeout
+        });
+    });
+
     function refreshHorizon() {
-        var iframe = document.getElementById('horizon-iframe');
-        var loading = document.getElementById('horizon-loading');
-        
-        if (iframe) {
-            iframe.style.display = 'none';
-            if (loading) loading.style.display = 'flex';
-            iframe.src = iframe.src; // Reload iframe
-        }
+        // Only refresh stats, as dashboard is now separate
+        window.location.reload();
     }
+
+
+
+
 
     function testJobDispatch() {
         var btn = document.getElementById('test-job-btn');
@@ -690,39 +655,6 @@
             }
         });
     };
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var iframe = document.getElementById('horizon-iframe');
-        var loading = document.getElementById('horizon-loading');
-        
-        if (iframe && loading) {
-            iframe.addEventListener('load', function() {
-                loading.style.display = 'none';
-                iframe.style.display = 'block';
-            });
-
-            iframe.addEventListener('error', function() {
-                loading.innerHTML = '<div class="alert alert-danger"><i class="las la-exclamation-triangle"></i> Failed to load Horizon dashboard</div>';
-            });
-
-            // Auto-hide loading after 10 seconds if iframe hasn't loaded
-            setTimeout(function() {
-                if (loading.style.display !== 'none') {
-                    loading.style.display = 'none';
-                    iframe.style.display = 'block';
-                }
-            }, 10000);
-        }
-
-        // Auto-refresh stats every 30 seconds
-        setInterval(function() {
-            // You can add AJAX call here to refresh stats without reloading page
-            // For now, we'll just update the iframe if it exists
-            if (iframe && iframe.style.display !== 'none') {
-                // Stats will be refreshed when user manually refreshes or navigates
-            }
-        }, 30000);
-    });
 </script>
 @endpush
 @endsection

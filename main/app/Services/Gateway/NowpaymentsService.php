@@ -27,9 +27,9 @@ class NowpaymentsService extends BaseAdapter
         $data = json_decode($payment);
 
         if ($data) {
-            return (new static())->success('Payment link created', ['invoice' => $data]);
+            return (new static())->returnSuccess('Payment link created', ['invoice' => $data]);
         }
 
-        return (new static())->error('Something Goes Wrong');
+        return (new static())->returnError('Something Goes Wrong');
     }
 }

@@ -258,14 +258,16 @@
                                             @php
                                                 $config = \App\Models\Configuration::first();
                                             @endphp
-                                            @if(!$config->landing_page)
+                                            @if($config && !$config->landing_page)
                                                 <span class="badge badge-success">{{ __('Activated') }}</span>
-                                            @else
+                                            @elseif($config)
                                                 <span class="badge badge-secondary">{{ __('Inactive') }}</span>
+                                            @else
+                                                <span class="badge badge-warning">{{ __('Config Missing') }}</span>
                                             @endif
                                         </td>
                                         <td>
-                                            @if($config->landing_page)
+                                            @if($config && $config->landing_page)
                                                 <a href="#" class="btn btn-sm btn-primary active-landing-btn" data-landing="default">
                                                     <i data-feather="check"></i> {{ __('Activate') }}
                                                 </a>

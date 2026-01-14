@@ -29,14 +29,14 @@ class PaystackService extends BaseAdapter
             }
 
             if (!$payment) {
-                return $this->error('Transaction not found');
+                return $this->returnError('Transaction not found');
             }
 
             $this->handlePaymentSuccess($payment, (float)$payment->charge, $request['reference']);
 
-            return $this->success('Payment Successfully received');
+            return $this->returnSuccess('Payment Successfully received');
         }
 
-        return $this->error('Invalid reference');
+        return $this->returnError('Invalid reference');
     }
 }

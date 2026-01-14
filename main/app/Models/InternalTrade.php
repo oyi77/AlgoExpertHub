@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InternalTrade extends Model
 {
@@ -95,16 +97,37 @@ class InternalTrade extends Model
         $this->save();
     }
 
-    public function close(float $closePrice): void
+    public function close(float $closePrice, ?bool $isDemoMode = false): void
     {
-        $this->current_price = $closePrice;
-        $this->pnl = $this->calculatePnL($closePrice);
-        $this->status = 'closed';
-        $this->closed_at = now();
-        $this->save();
+        if ($this->isClosed()) {
+            throw new \Exception('Trade is already closed');
+        }
 
-        // Update user balance
-        $this->user->balance += $this->pnl;
-        $this->user->save();
+        DB::beginTransaction();
+
+        try {
+            $this->current_price = $closePrice;
+            $this->pnl = $this->calculatePnL($closePrice);
+            $this->status = 'closed';
+            $this->closed_at = now();
+
+            // Update user balance based on trading mode
+            if ($isDemoMode) {
+                // Demo/paper mode: Update demo_balance only
+                $this->user->demo_balance = ($this->user->demo_balance ?? 10000) + $this->pnl;
+                $this->user->save();
+            } else {
+                // Real trading mode: Update real balance only
+                $this->user->balance += $this->pnl;
+                $this->user->save();
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to close internal trade', [
+                'trade_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 }

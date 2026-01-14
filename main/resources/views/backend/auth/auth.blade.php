@@ -7,9 +7,12 @@
 
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>{{Config::config()->appname}}</title>
+    @php
+        $config = Config::config();
+    @endphp
+    <title>{{ optional($config)->appname ?? config('app.name', 'AlgoExpertHub') }}</title>
 
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ Config::fetchImage('icon', Config::config()->favicon, true) }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ Config::fetchImage('icon', optional($config)->favicon ?? '', true) }}">
 
     
     {{-- Laravel Notify CSS --}}

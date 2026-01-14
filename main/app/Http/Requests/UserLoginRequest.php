@@ -25,11 +25,11 @@ class UserLoginRequest extends FormRequest
      */
     public function rules()
     {
-        $general  = Configuration::first();
+        $general = Configuration::first();
         return [
             'email' => 'required',
             'password' => 'required',
-            'g-recaptcha-response' => Rule::requiredIf($general->allow_recaptcha == 1)
+            'g-recaptcha-response' => Rule::requiredIf(optional($general)->allow_recaptcha == 1)
         ];
     }
 

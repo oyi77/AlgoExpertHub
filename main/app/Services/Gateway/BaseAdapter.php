@@ -16,7 +16,7 @@ abstract class BaseAdapter
      * @param array $data
      * @return array
      */
-    protected function success(string $message, array $data = []): array
+    protected function returnSuccess(string $message, array $data = []): array
     {
         return [
             'type' => 'success',
@@ -33,7 +33,7 @@ abstract class BaseAdapter
      * @param int $code
      * @return array
      */
-    protected function error(string $message, array $errors = [], int $code = 400): array
+    protected function returnError(string $message, array $errors = [], int $code = 400): array
     {
         return [
             'type' => 'error',

@@ -62,7 +62,7 @@ class MercadopagoService extends BaseAdapter
             return (new static())->successResponse('Redirect to Mercadopago', ['redirect_url' => $redirectUrl]);
         }
 
-        return (new static())->error('Invalid Request');
+        return (new static())->returnError('Invalid Request');
     }
 
     /**
@@ -80,7 +80,7 @@ class MercadopagoService extends BaseAdapter
         }
 
         if (!$deposit) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
         }
 
         $url = "https://api.mercadopago.com/v1/payments/" . $request['data']['id'] . "?access_token=" . $deposit->gateway->parameter->access_token;
@@ -97,9 +97,9 @@ class MercadopagoService extends BaseAdapter
         if (isset($paymentData->status) && $paymentData->status === 'approved') {
             $this->handlePaymentSuccess($deposit, 0.0, $deposit->trx);
 
-            return $this->success('Payment Successful');
+            return $this->returnSuccess('Payment Successful');
         }
 
-        return $this->error('Payment verification failed');
+        return $this->returnError('Payment verification failed');
     }
 }

@@ -9,7 +9,12 @@ class GatewayManager extends Component
 {
     public function getGatewaysProperty()
     {
-        return Gateway::latest()->get();
+        // Use request() to filter based on current route
+        if (request()->routeIs('admin.payment.offline')) {
+            return Gateway::where('type', 0)->latest()->get();
+        }
+        
+        return Gateway::where('type', 1)->latest()->get();
     }
 
     public function render()

@@ -15,6 +15,16 @@ class Gateway extends Model
         'parameter' => 'object',
     ];
 
+    protected $fillable = [
+        'name',
+        'type',
+        'parameter',
+        'rate',
+        'charge',
+        'currency',
+        'status',
+    ];
+
 
 
 }

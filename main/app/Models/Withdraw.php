@@ -13,7 +13,17 @@ class Withdraw extends Model
         'proof' => 'array'
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'withdraw_method_id',
+        'trx',
+        'withdraw_amount',
+        'withdraw_charge',
+        'total',
+        'proof',
+        'reject_reason',
+        'status',
+    ];
 
 
     public function withdrawMethod()

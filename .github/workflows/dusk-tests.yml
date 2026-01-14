@@ -1,0 +1,48 @@
+name: Run E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  dusk:
+    name: Run Laravel Dusk Tests
+    runs-on: ubuntu-latest
+
+    services:
+      chrome:
+        image: selenium/standalone-chrome:latest
+        ports:
+          - 5900:5900
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, pdo, ctype, json, openssl, dom, curl
+
+      - name: Install dependencies
+        run: |
+          cd main
+          composer install --prefer-dist --no-interaction --no-progress
+          php artisan key:generate --ansi
+
+      - name: Run migrations
+        run: |
+          cd main
+          php artisan migrate --force
+
+      - name: Run Dusk tests
+        run: |
+          cd main
+          php artisan dusk:chrome --headless
+        env:
+          APP_URL: http://localhost:8000
+          DUSK_HEADLESS: true

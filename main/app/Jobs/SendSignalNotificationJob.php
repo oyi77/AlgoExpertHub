@@ -149,7 +149,7 @@ class SendSignalNotificationJob extends OptimizedJob
         // Use your SMS service here (Vonage, Twilio, etc.)
         // This is a placeholder implementation
         try {
-            $basic = new \Vonage\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+            $basic = new \Vonage\Client\Credentials\Basic(config("services.nexmo.key"), config("services.nexmo.secret"));
             $client = new \Vonage\Client($basic);
             
             $client->sms()->send(

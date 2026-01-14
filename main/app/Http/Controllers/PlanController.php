@@ -11,6 +11,7 @@ use App\Services\UserPlanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class PlanController extends Controller
 {
@@ -53,5 +54,15 @@ class PlanController extends Controller
         }
         
         return redirect()->back()->with('notify', NotificationHelper::success($result['message'], 'Success'));
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaPlans()
+    {
+        $data['title'] = 'Plans';
+        $data['plans'] = Plan::where('status', true)->paginate(10);
+
+        return Inertia::render('User/Plans', $data);
     }
 }

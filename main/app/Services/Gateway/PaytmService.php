@@ -54,7 +54,7 @@ class PaytmService extends BaseAdapter
         }
 
         if (!$payment) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
         }
 
         $ptm = new paytmCheckSum();
@@ -67,12 +67,12 @@ class PaytmService extends BaseAdapter
             if ($request->input('STATUS') === "TXN_SUCCESS") {
                 $this->handlePaymentSuccess($payment, 0.0, $request->input('BANKTXNID', ''));
 
-                return $this->success('Payment Successful');
+                return $this->returnSuccess('Payment Successful');
             }
             
-            return $this->error('Payment Unsuccessful');
+            return $this->returnError('Payment Unsuccessful');
         }
 
-        return $this->error('Checksum verification failed');
+        return $this->returnError('Checksum verification failed');
     }
 }

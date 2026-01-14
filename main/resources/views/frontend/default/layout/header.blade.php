@@ -1,6 +1,7 @@
 @php
     $singleElement = Config::builder('contact');
     $socials = Config::builder('socials', true);
+    $config = Config::config();
 @endphp
 
 
@@ -61,7 +62,7 @@
         <div class="container">
             <nav class="navbar navbar-expand-xl p-0 align-items-center" role="navigation" aria-label="{{ __('Main navigation') }}">
                 <a class="site-logo site-title" href="{{ route('home') }}" aria-label="{{ __('Home') }}">
-                    <img src="{{ Config::getFile('logo', Config::config()->logo) }}" alt="{{ Config::config()->appname ?? 'Logo' }}" loading="eager">
+                    <img src="{{ Config::getFile('logo', optional($config)->logo ?? '') }}" alt="{{ optional($config)->appname ?? 'Logo' }}" loading="eager">
                 </a>
                 <button class="navbar-toggler ms-auto focus-ring" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false"

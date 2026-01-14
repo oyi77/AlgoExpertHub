@@ -6,6 +6,7 @@ use App\Helpers\Helper\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TradingConfigurationController extends Controller
 {
@@ -113,5 +114,85 @@ class TradingConfigurationController extends Controller
         }
 
         return view(Helper::themeView('user.trading.configuration'), $data);
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = __('Trading Configuration');
+        $data['activeTab'] = $request->get('tab', 'data-connections');
+        $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon');
+
+        if ($data['tradingManagementEnabled']) {
+            try {
+                if ($data['activeTab'] === 'data-connections') {
+                    if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
+                        try {
+                            $data['dataConnections'] = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('user_id', Auth::id())
+                                ->where('is_admin_owned', false)
+                                ->with(['user', 'preset'])
+                                ->latest()
+                                ->paginate(20);
+                        } catch (\Exception $e) {
+                            $data['dataConnections'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                if ($data['activeTab'] === 'risk-presets') {
+                    try {
+                        if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::class)) {
+                            $data['presets'] = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::where(function($query) {
+                                    $query->where('created_by_user_id', Auth::id())->orWhereNull('created_by_user_id');
+                                })
+                                ->latest()
+                                ->paginate(20);
+                        } else {
+                            $data['presets'] = collect([])->paginate(20);
+                        }
+                    } catch (\Exception $e) {
+                        $data['presets'] = collect([])->paginate(20);
+                    }
+                }
+
+                if ($data['activeTab'] === 'smart-risk') {
+                    try {
+                        $data['smartRiskSettings'] = \Illuminate\Support\Facades\Cache::get('smart_risk_settings_' . Auth::id(), [
+                            'enabled' => false,
+                            'min_provider_score' => 70,
+                            'slippage_buffer_enabled' => false,
+                            'dynamic_lot_enabled' => false,
+                        ]);
+                    } catch (\Exception $e) {
+                        $data['smartRiskSettings'] = ['enabled' => false, 'min_provider_score' => 70, 'slippage_buffer_enabled' => false, 'dynamic_lot_enabled' => false];
+                    }
+                }
+
+                if ($data['activeTab'] === 'filter-strategies') {
+                    if (class_exists(\Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::class)) {
+                        try {
+                            $data['filterStrategies'] = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::where('created_by_user_id', Auth::id())->latest()->paginate(20);
+                        } catch (\Exception $e) {
+                            $data['filterStrategies'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                if ($data['activeTab'] === 'ai-profiles') {
+                    if (class_exists(\Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::class)) {
+                        try {
+                            $data['aiProfiles'] = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::where('created_by_user_id', Auth::id())->latest()->paginate(20);
+                        } catch (\Exception $e) {
+                            $data['aiProfiles'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silently fail
+            }
+        }
+
+        return Inertia::render('User/TradingConfiguration', $data);
     }
 }

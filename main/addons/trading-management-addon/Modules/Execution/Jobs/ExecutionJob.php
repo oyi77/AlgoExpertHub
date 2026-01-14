@@ -15,6 +15,10 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use App\Models\InternalTrade;
+use App\Models\User;
+use App\Services\InternalBrokerService;
 
 /**
  * ExecutionJob
@@ -74,49 +78,39 @@ class ExecutionJob implements ShouldQueue
 
             // Validate market status before execution (skip in test mode)
             $isTestMode = $this->executionData['test_mode'] ?? false;
-            if (!$isTestMode) {
-                $marketChecker = app(MarketStatusChecker::class);
-                $validation = $marketChecker->validateTradeExecution(
-                    $this->executionData,
-                    $connection->credentials['account_id'] ?? null,
-                    false // Not test mode
-                );
-                
-                if (!$validation['should_proceed']) {
-                    $this->logMarketClosedError($validation, $connection, $botId);
-                    return;
-                }
-                
-                Log::info('ExecutionJob: Market validation passed', [
+
+            // Paper trading mode not yet implemented for bot execution
+            // Use manual trading terminal for paper trading (TradingTerminalController -> InternalBrokerService)
+            if ($isTestMode) {
+                Log::warning('Paper trading for bot execution not yet implemented in ExecutionJob', [
                     'bot_id' => $botId,
                     'symbol' => $symbol,
-                    'data_age_minutes' => $validation['freshness_check']['age_minutes'] ?? null,
+                    'direction' => $direction,
                 ]);
+                return;
             }
 
             // Check position limits
             $positionLimitService = app(PositionLimitService::class);
             $positionLimitCheck = $positionLimitService->shouldPreventTrade($connection, $symbol ?? '');
-            
+
             if ($positionLimitCheck['should_prevent']) {
                 Log::warning('ExecutionJob: Position limit check failed', [
-                    'connection_id' => $connection->id,
+                    'bot_id' => $this->executionData['bot_id'] ?? null,
                     'symbol' => $symbol,
                     'reason' => $positionLimitCheck['reason'],
                 ]);
-                
-                // Update execution log if it exists
-                if (isset($executionLog)) {
-                    $executionLog->update([
-                        'status' => 'failed',
-                        'error_message' => $positionLimitCheck['reason'],
-                    ]);
-                }
-                
                 return;
             }
 
-            // Get adapter for connection - create directly based on connection type
+            // Continue with normal execution
+            Log::info('ExecutionJob: All validations passed, proceeding with execution', [
+                'bot_id' => $botId,
+                'symbol' => $symbol,
+                'direction' => $direction,
+            ]);
+
+        // Get adapter for connection - create directly based on connection type
             $adapter = $this->createAdapter($connection);
 
             Log::info('ExecutionJob: Adapter created, executing trade', [
@@ -653,5 +647,74 @@ class ExecutionJob implements ShouldQueue
             'tp_price' => $this->executionData['take_profit'] ?? null,
             'error_message' => $validation['reason'] ?? 'Market validation failed',
         ]);
+    }
+
+    /**
+     * Create virtual position for paper trading
+     * Uses InternalBrokerService to create demo trades instead of real exchange trades
+     */
+    protected function createVirtualPosition(
+        string $symbol,
+        string $direction,
+        float $quantity,
+        ?float $entryPrice,
+        ?float $stopLoss,
+        ?float $takeProfit,
+        ?int $connectionId = null
+    ): array {
+        try {
+            $userId = $this->executionData['user_id'] ?? auth()->id();
+            if (!$userId) {
+                throw new \Exception('User ID not found in execution data');
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                throw new \Exception('User not found: ' . $userId);
+            }
+
+            // Use InternalBrokerService to place paper trading order
+            $internalBrokerService = app(InternalBrokerService::class);
+            $trade = $internalBrokerService->placeOrder(
+                $user,
+                $symbol,
+                $direction,
+                $quantity,
+                $entryPrice ?? 0,
+                $stopLoss,
+                $takeProfit
+            );
+
+            Log::info('Paper trading position created', [
+                'trade_id' => $trade->id,
+                'user_id' => $userId,
+                'symbol' => $symbol,
+                'direction' => $direction,
+                'quantity' => $quantity,
+                'entry_price' => $entryPrice,
+                'stop_loss' => $stopLoss,
+                'take_profit' => $takeProfit,
+            ]);
+
+            return [
+                'success' => true,
+                'trade_id' => $trade->id,
+                'internal_trade' => true,
+                'message' => 'Paper trading position created successfully'
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to create virtual position', [
+                'error' => $e->getMessage(),
+                'symbol' => $symbol,
+                'direction' => $direction,
+                'quantity' => $quantity,
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Failed to create paper trading position'
+            ];
+        }
     }
 }

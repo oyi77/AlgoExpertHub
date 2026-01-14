@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('execution_analytics', function (Blueprint $table) {
+            $table->decimal('sharpe_ratio', 10, 4)->nullable()->after('additional_metrics')->comment('Risk-adjusted return');
             $table->decimal('expectancy', 20, 8)->nullable()->after('sharpe_ratio')->comment('Average expected value per trade');
             $table->decimal('sortino_ratio', 10, 4)->nullable()->after('expectancy')->comment('Risk-adjusted return (downside deviation)');
             $table->decimal('mae', 20, 8)->nullable()->after('sortino_ratio')->comment('Maximum Adverse Excursion');
@@ -28,6 +29,7 @@ return new class extends Migration
     {
         Schema::table('execution_analytics', function (Blueprint $table) {
             $table->dropColumn([
+                'sharpe_ratio',
                 'expectancy',
                 'sortino_ratio',
                 'mae',

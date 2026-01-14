@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
 
 class MarketplacesController extends Controller
 {
@@ -222,5 +223,96 @@ class MarketplacesController extends Controller
         }
 
         return view(Helper::themeView('user.trading.marketplaces'), $data);
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = __('Marketplaces');
+        $data['activeCategory'] = $request->get('category', 'trading-presets');
+        $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon');
+        $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+
+        if ($data['tradingManagementEnabled']) {
+            try {
+                if ($data['activeCategory'] === 'trading-presets') {
+                    if (class_exists(\Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::class)) {
+                        try {
+                            $query = \Addons\TradingManagement\Modules\RiskManagement\Models\TradingPreset::whereNull('created_by_user_id')
+                                ->where('visibility', 'PUBLIC_MARKETPLACE');
+                            $data['items'] = $query->latest()->paginate(20);
+                        } catch (\Exception $e) {
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                if ($data['activeCategory'] === 'filter-strategies') {
+                    if (class_exists(\Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::class)) {
+                        try {
+                            $query = \Addons\TradingManagement\Modules\FilterStrategy\Models\FilterStrategy::query()
+                                ->whereNull('created_by_user_id')
+                                ->where('visibility', 'PUBLIC_MARKETPLACE')
+                                ->where('enabled', true);
+                            $data['items'] = $query->latest()->paginate(20);
+                        } catch (\Exception $e) {
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                if ($data['activeCategory'] === 'ai-profiles') {
+                    if (class_exists(\Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::class)) {
+                        try {
+                            $tableName = (new \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile())->getTable();
+                            if (Schema::hasTable($tableName)) {
+                                $query = \Addons\TradingManagement\Modules\AiAnalysis\Models\AiModelProfile::query()
+                                    ->whereNull('created_by_user_id')
+                                    ->where('visibility', 'PUBLIC_MARKETPLACE');
+                                if (Schema::hasColumn($tableName, 'enabled')) {
+                                    $query->where('enabled', true);
+                                }
+                                $data['items'] = $query->latest()->paginate(20);
+                            }
+                        } catch (\Exception $e) {
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                if ($data['activeCategory'] === 'bot-marketplace') {
+                    if (class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class)) {
+                        try {
+                            $tableName = (new \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot())->getTable();
+                            if (Schema::hasTable($tableName)) {
+                                $query = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::query();
+                                $hasVisibility = Schema::hasColumn($tableName, 'visibility');
+                                $hasCreatedByUserId = Schema::hasColumn($tableName, 'created_by_user_id');
+                                
+                                $query->where(function ($q) use ($hasVisibility, $hasCreatedByUserId) {
+                                    if ($hasVisibility) {
+                                        $q->where('visibility', 'PUBLIC_MARKETPLACE');
+                                    }
+                                    $q->orWhereNotNull('admin_id');
+                                    $q->orWhereNull('user_id');
+                                    if ($hasCreatedByUserId) {
+                                        $q->orWhereNull('created_by_user_id');
+                                    }
+                                });
+                                
+                                $data['items'] = $query->with(['exchangeConnection', 'tradingPreset'])->latest()->paginate(20);
+                            }
+                        } catch (\Exception $e) {
+                            $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                $data['items'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+            }
+        }
+
+        return Inertia::render('User/Marketplaces', $data);
     }
 }

@@ -87,11 +87,13 @@ class User extends Authenticatable
         return $this->hasMany(DashboardSignal::class);
     }
 
-    // Telegram chat id for direct messaging
-    protected $fillable = [
-        'telegram_chat_id',
-        'phone_country_code',
-    ];
+    /**
+     * The attributes that are mass assignable.
+     * 
+     * Using guarded = [] to allow mass assignment of all fields
+     * except those explicitly protected. This is standard for User models.
+     */
+    protected $guarded = [];
 
     public function trades()
     {

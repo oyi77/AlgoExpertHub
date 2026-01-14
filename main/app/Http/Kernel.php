@@ -54,6 +54,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\QueueMonitoringMiddleware::class,
             \App\Http\Middleware\ResponsiveDesignMiddleware::class,
             \App\Http\Middleware\RealTimeFeedbackMiddleware::class,
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ],
 
         'api' => [

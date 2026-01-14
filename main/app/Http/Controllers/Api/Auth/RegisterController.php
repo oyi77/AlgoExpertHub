@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Services\UserRegistration;
+use App\Jobs\PurgeUserDataJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Bus;
 
 /**
  * @group Authentication
@@ -82,6 +84,32 @@ class RegisterController extends Controller
                 'token' => $token
             ],
             'message' => $isSuccess['message']
-        ], 201);
+            ], 201);
+    }
+
+    public function requestAccountDeletion(): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        if ($user->deleted_at !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account already scheduled for deletion',
+            ], 400);
+        }
+
+        Bus::dispatch(new PurgeUserDataJob($user->id));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account deletion scheduled. Your data will be permanently deleted within 30 days.',
+        ]);
     }
 }

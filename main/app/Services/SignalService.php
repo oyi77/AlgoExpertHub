@@ -390,7 +390,7 @@ class SignalService extends BaseService
         $message .= 'direction : ' . $signal->direction;
 
         try {
-            $basic  = new \Vonage\Client\Credentials\Basic(env("NEXMO_KEY"), env("NEXMO_SECRET"));
+            $basic  = new \Vonage\Client\Credentials\Basic(config("services.nexmo.key"), config("services.nexmo.secret"));
             $client = new \Vonage\Client($basic);
             $client->sms()->send(
                 new \Vonage\SMS\Message\SMS(
@@ -436,7 +436,7 @@ class SignalService extends BaseService
     private static function whatsappSend($signal, $user)
     {
 
-        if (env('ALLOW_ULTRA') == 'on') {
+        if (config('services.ultramsg.allow') == 'on') {
 
             $calling_code = rtrim(file_get_contents('https://ipapi.co/103.100.232.0/country_calling_code/'), "0");
 
@@ -454,13 +454,13 @@ class SignalService extends BaseService
             $message .= 'direction : ' . $signal->direction;
 
             $params = array(
-                'token' => env('ULTRA_TOKEN'),
+                'token' => config('services.ultramsg.token'),
                 'to' => $receiverNumber,
                 'body' => $message
             );
             $curl = curl_init();
 
-            $id = env('ULTRA_ID');
+            $id = config('services.ultramsg.instance_id');
 
 
             curl_setopt_array($curl, array(

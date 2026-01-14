@@ -7,7 +7,7 @@
             <div class="card">
 
                 <div class="card-body">
-                    <form action="{{ route('admin.payment.update.online', $gateway->id) }}" method="post"
+                    <form action="{{ route('admin.payment.online.update', $gateway->id) }}" method="post"
                         enctype="multipart/form-data">
                         @csrf
                         <div class="row">

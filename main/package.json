@@ -1,5 +1,6 @@
 {
     "private": true,
+    "type": "module",
     "scripts": {
         "dev": "npm run development",
         "development": "mix",
@@ -7,15 +8,35 @@
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
         "prod": "npm run production",
-        "production": "mix --production"
+        "production": "mix --production",
+        "vite": "vite",
+        "build": "vite build"
     },
     "devDependencies": {
+        "@inertiajs/react": "^2.3.8",
+        "@tailwindcss/forms": "^0.5.11",
+        "@tailwindcss/typography": "^0.5.19",
+        "@tailwindcss/vite": "^4.1.18",
+        "@tanstack/react-query": "^5.90.16",
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
+        "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.22",
         "axios": "^0.21",
         "cssnano": "^7.1.2",
         "laravel-mix": "^6.0.6",
+        "laravel-vite-plugin": "^1.0.0",
         "lodash": "^4.17.19",
         "postcss": "^8.1.14",
-        "postcss-import": "^16.1.1"
+        "postcss-import": "^16.1.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^4.1.18",
+        "typescript": "^5.0.0",
+        "vite": "^5.0.0"
+    },
+    "dependencies": {
+        "lightweight-charts": "^5.1.0",
+        "react-grid-layout": "^2.2.2"
     }
 }

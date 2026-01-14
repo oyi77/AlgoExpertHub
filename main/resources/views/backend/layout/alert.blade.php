@@ -1,177 +1,111 @@
+@php
+    $js_alerts = [];
+
+    // Laravel Notify (Primary)
+    if (session()->has('notify')) {
+        $notify = session('notify');
+        if (is_array($notify)) {
+            $js_alerts[] = [
+                'type' => $notify['type'] ?? 'success',
+                'title' => $notify['title'] ?? '',
+                'message' => $notify['message'] ?? '',
+                'duration' => $notify['duration'] ?? null,
+            ];
+        }
+    }
+
+    // Legacy session flash messages
+    foreach (['success', 'error', 'warning', 'info'] as $type) {
+        if (session()->has($type)) {
+            $js_alerts[] = [
+                'type' => $type,
+                'title' => ucfirst($type),
+                'message' => session($type),
+            ];
+        }
+    }
+
+    // Validation errors
+    if ($errors->any()) {
+        foreach ($errors->all() as $error) {
+            $js_alerts[] = [
+                'type' => 'error',
+                'title' => 'Validation Error',
+                'message' => $error,
+            ];
+        }
+    }
+@endphp
+
 <script>
     'use strict';
     
-    // Wait for jQuery and notify to be available before showing notifications
+    // In backend, we use AdminCore loader if available, otherwise DOMContentLoaded
     (function() {
-        function showNotifications() {
+        // Safe injection of PHP data into JS
+        var alerts = <?php echo json_encode($js_alerts); ?>;
+
+        var showNotify = function() {
             if (typeof notify === 'undefined') {
+                console.warn('Notify.js not loaded');
                 return;
             }
 
-            @php
-                $alertType = optional(Config::config())->alert ?? 'notify';
-            @endphp
+            if (!Array.isArray(alerts) || alerts.length === 0) return;
 
-            {{-- Laravel Notify (Primary - Always enabled after migration) --}}
-            @if (session()->has('notify'))
-                @php
-                    $notify = session('notify');
-                @endphp
-                @if (is_array($notify))
-                    try {
-                        @php
-                            $notifyType = isset($notify['type']) && in_array(strtolower($notify['type']), ['success', 'error', 'warning', 'info']) 
-                                ? strtolower($notify['type']) 
-                                : 'success';
-                            $notifyTitle = isset($notify['title']) ? addslashes($notify['title']) : '';
-                            $notifyMessage = isset($notify['message']) ? addslashes($notify['message']) : '';
-                            $notifyDuration = isset($notify['duration']) ? (int)$notify['duration'] : null;
-                        @endphp
-                        
-                        // Build notification chain using the same pattern as other notifications
-                        var notifyChain = notify().{{ $notifyType }}();
-                        
-                        @if(!empty($notifyTitle))
-                            if (notifyChain && typeof notifyChain.title === 'function') {
-                                notifyChain = notifyChain.title('{{ $notifyTitle }}');
-                            }
-                        @endif
-                        
-                        @if(!empty($notifyMessage))
-                            if (notifyChain && typeof notifyChain.message === 'function') {
-                                notifyChain = notifyChain.message('{{ $notifyMessage }}');
-                            }
-                        @endif
-                        
-                        @if($notifyDuration !== null)
-                            if (notifyChain && typeof notifyChain.duration === 'function') {
-                                notifyChain = notifyChain.duration({{ $notifyDuration }});
-                            }
-                        @endif
-                        
-                        if (notifyChain && typeof notifyChain.send === 'function') {
-                            notifyChain.send();
-                        }
-                    } catch(e) {
-                        console.error('Error showing notification:', e);
+            alerts.forEach(function(alert) {
+                try {
+                    var type = (alert.type || 'success').toLowerCase();
+                    if (!['success', 'error', 'warning', 'info'].includes(type)) {
+                        type = 'success';
                     }
-                @endif
-            @endif
 
-            {{-- Legacy session flash messages (backward compatibility) --}}
-            @if (session()->has('error'))
-                try {
-                    notify()
-                        .error()
-                        .title('Error')
-                        .message("{{ addslashes(session('error')) }}")
-                        .send();
-                } catch(e) {
-                    console.error('Error showing error notification:', e);
-                }
-            @endif
+                    var notifyChain = notify()[type]();
 
-            @if (session()->has('success'))
-                try {
-                    notify()
-                        .success()
-                        .title('Success')
-                        .message("{{ addslashes(session('success')) }}")
-                        .send();
-                } catch(e) {
-                    console.error('Error showing success notification:', e);
-                }
-            @endif
-
-            @if (session()->has('warning'))
-                try {
-                    notify()
-                        .warning()
-                        .title('Warning')
-                        .message("{{ addslashes(session('warning')) }}")
-                        .send();
-                } catch(e) {
-                    console.error('Error showing warning notification:', e);
-                }
-            @endif
-
-            @if (session()->has('info'))
-                try {
-                    notify()
-                        .info()
-                        .title('Info')
-                        .message("{{ addslashes(session('info')) }}")
-                        .send();
-                } catch(e) {
-                    console.error('Error showing info notification:', e);
-                }
-            @endif
-
-            @if ($errors->any())
-                @foreach ($errors->all() as $error)
-                    try {
-                        notify()
-                            .error()
-                            .title('Validation Error')
-                            .message("{{ addslashes($error) }}")
-                            .send();
-                    } catch(e) {
-                        console.error('Error showing validation error:', e);
+                    if (alert.title) {
+                        notifyChain = notifyChain.title(alert.title);
                     }
-                @endforeach
-            @endif
-        }
-
-        // Wait for both jQuery and notify to be available
-        function waitForDependencies() {
-            if (typeof window.jQuery !== 'undefined' && typeof notify !== 'undefined') {
-                showNotifications();
-                return;
-            }
+                    
+                    if (alert.message) {
+                        notifyChain = notifyChain.message(alert.message);
+                    }
+                    
+                    if (alert.duration) {
+                        notifyChain = notifyChain.duration(parseInt(alert.duration));
+                    }
+                    
+                    notifyChain.send();
+                } catch(e) {
+                    console.error('Error showing notification:', e);
+                }
+            });
             
-            // Wait for notify-loaded event
-            var notifyHandler = function() {
-                window.removeEventListener('notify-loaded', notifyHandler);
-                // Give it a moment to initialize
-                setTimeout(function() {
-                    if (typeof notify !== 'undefined') {
-                        showNotifications();
-                    } else {
-                        // Try polling as fallback
-                        var attempts = 0;
-                        var maxAttempts = 20;
-                        var checkInterval = setInterval(function() {
+            // Clear alerts to prevent duplicate showing
+            alerts = [];
+        };
+
+        // If AdminCore is available (from our frontend optimization), use it
+        if (typeof window.AdminCore !== 'undefined' && typeof window.AdminCore.loader !== 'undefined') {
+            window.addEventListener('notify-loaded', showNotify);
+            if (typeof notify !== 'undefined') showNotify();
+        } else {
+            // Fallback for standard DOM usage
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof notify !== 'undefined') {
+                    showNotify();
+                } else {
+                    var attempts = 0;
+                    var interval = setInterval(function() {
+                        if (typeof notify !== 'undefined') {
+                            clearInterval(interval);
+                            showNotify();
+                        } else {
                             attempts++;
-                            if (typeof notify !== 'undefined') {
-                                clearInterval(checkInterval);
-                                showNotifications();
-                            } else if (attempts >= maxAttempts) {
-                                clearInterval(checkInterval);
-                                console.warn('Notify library not available after event');
-                            }
-                        }, 100);
-                    }
-                }, 100);
-            };
-            window.addEventListener('notify-loaded', notifyHandler, { once: true });
-            
-            // Also poll as fallback (max 5 seconds)
-            var attempts = 0;
-            var maxAttempts = 50;
-            var checkInterval = setInterval(function() {
-                attempts++;
-                if (typeof window.jQuery !== 'undefined' && typeof notify !== 'undefined') {
-                    clearInterval(checkInterval);
-                    window.removeEventListener('notify-loaded', notifyHandler);
-                    showNotifications();
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(checkInterval);
-                    window.removeEventListener('notify-loaded', notifyHandler);
-                    console.warn('Dependencies not loaded after 5 seconds');
+                            if (attempts >= 40) clearInterval(interval);
+                        }
+                    }, 50);
                 }
-            }, 100);
+            });
         }
-        
-        waitForDependencies();
     })();
 </script>

@@ -25,11 +25,12 @@
             </div>
             <div class="tv-stat-value">
                 @php
-                    $currentPlan = auth()->user()->currentplan()->first();
-                    $subscription = $currentPlan ? auth()->user()->subscriptions()->where('is_current', 1)->first() : null;
+                    $currentPlanSubscription = auth()->user()->currentplan()->first();
+                    $currentPlan = $currentPlanSubscription ? $currentPlanSubscription->plan : null;
+                    $subscription = $currentPlanSubscription;
                 @endphp
                 @if($currentPlan)
-                    {{ $currentPlan->plan->name ?? 'N/A' }}
+                    {{ $currentPlan->name ?? 'N/A' }}
                     @if($subscription && $subscription->end_date)
                         @php
                             $daysLeft = now()->diffInDays($subscription->end_date, false);
@@ -49,7 +50,7 @@
                 @else
                     No Plan
                     <div class="tv-stat-hint">
-                        <small class="text-muted">Subscribe to access signals</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Subscribe to access signals</small>
                     </div>
                 @endif
             </div>
@@ -62,14 +63,17 @@
             </div>
             <div class="tv-stat-value">
                 @php
-                    $signalsCount = auth()->user()->currentplan()->exists() 
-                        ? auth()->user()->currentplan->first()->plan->signals()->where('is_published', 1)
+                    $currentPlanSubscription = auth()->user()->currentplan()->first();
+                    $currentPlan = $currentPlanSubscription ? $currentPlanSubscription->plan : null;
+                    
+                    $signalsCount = $currentPlan 
+                        ? $currentPlan->signals()->where('is_published', 1)
                             ->whereMonth('published_date', now()->month)
                             ->whereYear('published_date', now()->year)
                             ->count()
                         : 0;
-                    $lastMonthCount = auth()->user()->currentplan()->exists()
-                        ? auth()->user()->currentplan->first()->plan->signals()->where('is_published', 1)
+                    $lastMonthCount = $currentPlan
+                        ? $currentPlan->signals()->where('is_published', 1)
                             ->whereMonth('published_date', now()->subMonth()->month)
                             ->whereYear('published_date', now()->subMonth()->year)
                             ->count()
@@ -113,8 +117,10 @@
             </div>
             <div class="tv-card-body">
                 @php
-                    $recentSignals = auth()->user()->currentplan()->exists() 
-                        ? auth()->user()->currentplan->first()->plan->signals()->where('is_published', 1)->latest()->take(5)->get()
+                    $currentPlanSubscription = auth()->user()->currentplan()->first();
+                    $currentPlan = $currentPlanSubscription ? $currentPlanSubscription->plan : null;
+                    $recentSignals = $currentPlan 
+                        ? $currentPlan->signals()->where('is_published', 1)->latest()->take(5)->get()
                         : collect();
                 @endphp
                 

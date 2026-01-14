@@ -37,12 +37,19 @@
                      </div>
                  </div>
 
-                 <ul class="navbar-nav header-right">
-                     <li class="nav-item d-md-flex d-none">
-                         <a href="{{ route('home') }}"
-                             class="btn btn-primary btn-sm" target="_blank">{{ __('Visit Frontend') }}</a>
-                     </li>
-                     <li class="nav-item header-lang">
+                  <ul class="navbar-nav header-right">
+                      <li class="nav-item d-md-flex d-none">
+                          <a href="{{ route('home') }}"
+                              class="btn btn-primary btn-sm" target="_blank">{{ __('Visit Frontend') }}</a>
+                      </li>
+                      {{-- Theme Toggle --}}
+                      <li class="nav-item">
+                          <a href="javascript:void(0)" class="nav-link theme-toggle" id="theme-toggle" title="{{ __('Toggle Dark Mode') }}">
+                              <i data-feather="sun" class="theme-icon-sun" style="display: {{ (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'none' : 'block' }}"></i>
+                              <i data-feather="moon" class="theme-icon-moon" style="display: {{ (isset($_COOKIE['theme']) && $_COOKIE['theme'] === 'dark') ? 'block' : 'none' }}"></i>
+                          </a>
+                      </li>
+                      <li class="nav-item header-lang">
                          <select class="form-control selectric changeLang">
                              @foreach (Config::languages() as $top)
                                  <option value="{{ $top->code }}"
@@ -97,11 +104,11 @@
                          <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                              <i data-feather="user"></i>
                          </a>
-                         <div class="dropdown-menu dropdown-menu-right">
-                             <a href="{{ route('admin.profile') }}" class="dropdown-item">
-                                 <i class="las la-user"></i>
-                                 <span class="ml-2">{{ __('Profile') }} </span>
-                             </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a href="{{ route('admin.profile.index') }}" class="dropdown-item">
+                                <i class="las la-user"></i>
+                                <span class="ml-2">{{ __('Profile') }} </span>
+                            </a>
 
                              <a href="{{ route('admin.logout') }}" class="dropdown-item">
                                  <i class="las la-sign-out-alt"></i>
@@ -137,7 +144,7 @@
         <i data-feather="bell"></i>
         <p>{{ __('Notification') }}</p>
     </a>
-    <a href="{{ route('admin.profile') }}" class="profile-img">
+    <a href="{{ route('admin.profile.index') }}" class="profile-img">
         <img src="{{ auth()->guard('admin')->user()->image ? asset('asset/backend/images/' . auth()->guard('admin')->user()->image) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->guard('admin')->user()->username) . '&background=4e73df&color=fff&size=80' }}" 
              alt="{{ auth()->guard('admin')->user()->username }}" 
              onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode(auth()->guard('admin')->user()->username) }}&background=4e73df&color=fff&size=80'; this.onerror=null;">

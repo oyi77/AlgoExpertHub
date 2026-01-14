@@ -13,6 +13,8 @@ use PayPal\Api\Transaction;
 use PayPal\Api\PaymentExecution;
 use PayPal\Rest\ApiContext;
 
+use Illuminate\Support\Facades\Log;
+
 class PaypalService
 {
     public function process($request, $paypal, $totalAmount, $deposit)
@@ -62,11 +64,11 @@ class PaypalService
 
             // Redirect the customer to $approvalUrl
         } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            echo $ex->getCode();
-            echo $ex->getData();
-            die($ex);
+            Log::error('PayPal Connection Exception', ['code' => $ex->getCode(), 'data' => $ex->getData()]);
+            return null;
         } catch (\Exception $ex) {
-            die($ex);
+            Log::error('PayPal Exception', ['message' => $ex->getMessage()]);
+            return null;
         }
 
         return $payment;
@@ -91,9 +93,9 @@ class PaypalService
         );
 
         // Get payment object by passing paymentId
-        $paymentId = $_GET['paymentId'];
+        $paymentId = request()->input('paymentId');
         $payment = Payment::get($paymentId, $apiContext);
-        $payerId = $_GET['PayerID'];
+        $payerId = request()->input('PayerID');
 
         // Execute payment with payer ID
         $execution = new PaymentExecution();
@@ -114,11 +116,11 @@ class PaypalService
                 return ['type'=>'success', 'message'=>'Payment Successfully Done'];
             }
         } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-            echo $ex->getCode();
-            echo $ex->getData();
-            die($ex);
+            Log::error('PayPal Connection Exception', ['code' => $ex->getCode(), 'data' => $ex->getData()]);
+            return ['type' => 'error', 'message' => 'PayPal Connection Error'];
         } catch (\Exception $ex) {
-            die($ex);
+            Log::error('PayPal Exception', ['message' => $ex->getMessage()]);
+            return ['type' => 'error', 'message' => 'PayPal Error'];
         }
     }
 }

@@ -2,26 +2,29 @@
 
 
 @section('element')
+    @php
+        $config = Config::config();
+    @endphp
     <div class="auth-header mb-4">
-        @if(Config::config()->logo && Config::config()->logo !== 'placeholder.png')
+        @if(optional($config)->logo && optional($config)->logo !== 'placeholder.png')
             <div class="auth-logo mb-3">
-                <img src="{{ Config::fetchImage('logo', Config::config()->logo, true) }}" 
-                     alt="{{ Config::config()->appname }}" 
+                <img src="{{ Config::fetchImage('logo', optional($config)->logo ?? '', true) }}" 
+                     alt="{{ optional($config)->appname ?? config('app.name', 'AlgoExpertHub') }}" 
                      class="auth-logo-img"
                      style="max-height: 35px !important; max-width: 120px !important; width: auto !important; height: auto !important; object-fit: contain !important;"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <h2 class="auth-logo-text" style="display: none;">{{ Config::config()->appname }}</h2>
+                <h2 class="auth-logo-text" style="display: none;">{{ optional($config)->appname ?? config('app.name', 'AlgoExpertHub') }}</h2>
             </div>
         @else
             <div class="auth-logo mb-3">
-                <h2 class="auth-logo-text">{{ Config::config()->appname }}</h2>
+                <h2 class="auth-logo-text">{{ optional($config)->appname ?? config('app.name', 'AlgoExpertHub') }}</h2>
             </div>
         @endif
         <h4 class="auth-title">{{ __('Welcome Back') }}</h4>
         <p class="auth-subtitle">{{ __('Sign in to continue to your admin panel') }}</p>
     </div>
 
-    <form action="" method="POST" id="adminLoginForm" class="auth-form-content">
+    <form action="{{ url('/admin/login') }}" method="POST" id="adminLoginForm" class="auth-form-content">
         @csrf
         
         @if(session('error'))
@@ -86,10 +89,10 @@
             </div>
         </div>
 
-        @if (Config::config()->allow_recaptcha)
+        @if (optional($config)->allow_recaptcha)
             <div class="form-group mb-4">
                 <script src="https://www.google.com/recaptcha/api.js"></script>
-                <div class="g-recaptcha" data-sitekey="{{ Config::config()->recaptcha_key }}" data-callback="verifyCaptcha">
+                <div class="g-recaptcha" data-sitekey="{{ optional($config)->recaptcha_key ?? '' }}" data-callback="verifyCaptcha">
                 </div>
                 <div id="g-recaptcha-error" class="text-danger mt-2"></div>
             </div>
@@ -150,37 +153,48 @@
             
             if (loginForm && submitBtn) {
                 loginForm.addEventListener('submit', function(e) {
-                    // Check reCAPTCHA if enabled
-                    @if (Config::config()->allow_recaptcha)
-                    var response = grecaptcha.getResponse();
-                    if (response.length == 0) {
-                        e.preventDefault();
-                        document.getElementById('g-recaptcha-error').innerHTML =
-                            "<span class='text-danger'><i class='las la-exclamation-circle me-1'></i>{{__('Captcha field is required.')}}</span>";
-                        return false;
+                    // Check reCAPTCHA if enabled (only prevent if validation fails)
+                    @if (optional($config)->allow_recaptcha == 1)
+                    try {
+                        if (typeof grecaptcha !== 'undefined') {
+                            var response = grecaptcha.getResponse();
+                            if (!response || response.length == 0) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                var errorDiv = document.getElementById('g-recaptcha-error');
+                                if (errorDiv) {
+                                    errorDiv.innerHTML = "<span class='text-danger'><i class='las la-exclamation-circle me-1'></i>{{__('Captcha field is required.')}}</span>";
+                                }
+                                return false;
+                            }
+                        }
+                    } catch(err) {
+                        console.error('reCAPTCHA error:', err);
+                        // Don't prevent submission on error, let server handle it
                     }
                     @endif
                     
-                    // Show loading state
-                    submitBtn.disabled = true;
-                    submitBtn.querySelector('.btn-text').classList.add('d-none');
-                    submitBtn.querySelector('.btn-spinner').classList.remove('d-none');
+                    // Show loading state (after validation passes)
+                    if (!e.defaultPrevented) {
+                        submitBtn.disabled = true;
+                        const btnText = submitBtn.querySelector('.btn-text');
+                        const btnSpinner = submitBtn.querySelector('.btn-spinner');
+                        if (btnText) btnText.classList.add('d-none');
+                        if (btnSpinner) btnSpinner.classList.remove('d-none');
+                    }
                 });
             }
         });
 
-        function submitUserForm() {
-            var response = grecaptcha.getResponse();
-            if (response.length == 0) {
-                document.getElementById('g-recaptcha-error').innerHTML =
-                    "<span class='text-danger'><i class='las la-exclamation-circle me-1'></i>{{__('Captcha field is required.')}}</span>";
-                return false;
-            }
-            return true;
-        }
-
         function verifyCaptcha() {
-            document.getElementById('g-recaptcha-error').innerHTML = '';
+            try {
+                var errorDiv = document.getElementById('g-recaptcha-error');
+                if (errorDiv) {
+                    errorDiv.innerHTML = '';
+                }
+            } catch(err) {
+                console.error('verifyCaptcha error:', err);
+            }
         }
     </script>
 @endpush

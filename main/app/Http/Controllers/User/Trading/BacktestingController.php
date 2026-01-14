@@ -7,6 +7,7 @@ use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class BacktestingController extends Controller
 {
@@ -179,9 +180,48 @@ class BacktestingController extends Controller
 
             return response()->stream($callback, 200, $headers);
         } catch (\Exception $e) {
-            \Log::error('Backtest export error', ['error' => $e->getMessage()]);
             return redirect()->route('user.trading.backtesting.show', $id)
                 ->with('notify', NotificationHelper::error(__('Failed to export trades.')));
         }
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = __('Backtesting');
+        $data['activeTab'] = $request->get('tab', 'create');
+        $data['tradingManagementEnabled'] = \App\Support\AddonRegistry::active('trading-management-addon')
+            && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'backtesting');
+
+        if ($data['tradingManagementEnabled']) {
+            try {
+                if ($data['activeTab'] === 'create') {
+                    try {
+                        $data['currencyPairs'] = \App\Models\CurrencyPair::where('status', 1)->get();
+                        $data['timeframes'] = \App\Models\TimeFrame::where('status', 1)->get();
+                    } catch (\Exception $e) {
+                        $data['currencyPairs'] = collect([]);
+                        $data['timeframes'] = collect([]);
+                    }
+                }
+
+                if ($data['activeTab'] === 'results') {
+                    try {
+                        $data['backtests'] = \App\Models\Backtest::where('user_id', Auth::id())->orderBy('created_at', 'desc')->paginate(20);
+                    } catch (\Exception $e) {
+                        $data['backtests'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
+                }
+
+                if ($data['activeTab'] === 'reports') {
+                    $data['reports'] = collect([]);
+                }
+            } catch (\Exception $e) {
+                // Silently fail
+            }
+        }
+
+        return Inertia::render('User/Backtesting', $data);
     }
 }

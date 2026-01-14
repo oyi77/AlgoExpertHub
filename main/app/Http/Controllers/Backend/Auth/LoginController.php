@@ -31,20 +31,24 @@ class LoginController extends Controller
 
     public function login(AdminLoginRequest $request)
     {
+        // Check if admin account is disabled before attempting login
+        if (!$this->login->checkAdminStatus($request->email)) {
+            return redirect()->to('/admin/login')->with('notify', NotificationHelper::error('Your account is currently disabled', 'Error'));
+        }
         
         [$data, $remember] = $this->login->validateData($request);
 
         if(auth()->guard('admin')->attempt($data, $remember)){
-            return redirect()->route('admin.home')->with('notify', NotificationHelper::success('Login Successful', 'Success'));
+            return redirect()->to('/admin/home')->with('notify', NotificationHelper::success('Login Successful', 'Success'));
         }
 
-        return redirect()->route('admin.login')->with('notify', NotificationHelper::error('Invalid Credentials', 'Error'));
+        return redirect()->to('/admin/login')->with('notify', NotificationHelper::error('Invalid Credentials', 'Error'));
     }
 
     public function logout()
     {
         auth()->guard('admin')->logout();
 
-        return redirect()->route('admin.login')->with('notify', NotificationHelper::success('Logout Successful', 'Success'));
+        return redirect()->to('/admin/login')->with('notify', NotificationHelper::success('Logout Successful', 'Success'));
     }
 }

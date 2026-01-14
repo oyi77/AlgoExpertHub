@@ -19,8 +19,7 @@ class IsInstalled
     {
 
         if(Helper::isInstalled()){
-            header('Location:install');
-            die();
+            return redirect('install');
         }
 
         return $next($request);

@@ -2,7 +2,7 @@
 
 @section('title', 'System Monitoring')
 
-@section('content')
+@section('element')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -25,66 +25,66 @@
                     </div>
 
                     <!-- System Health Metrics -->
-                    <div class="row mb-4">
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
+                    <div class="row mb-3">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card bg-primary text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-title">CPU Load (1m)</h6>
-                                            <h3 id="cpu-load-1m">-</h3>
-                                            <small>5m: <span id="cpu-load-5m">-</span> | 15m: <span id="cpu-load-15m">-</span></small>
+                                            <h6 class="card-title mb-1">CPU Load (1m)</h6>
+                                            <h3 id="cpu-load-1m" class="mb-0">-</h3>
+                                            <small class="text-white-50">5m: <span id="cpu-load-5m">-</span></small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fas fa-microchip fa-2x"></i>
+                                            <i class="fas fa-microchip fa-2x opacity-50"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card bg-info text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-title">Memory Usage</h6>
-                                            <h3 id="memory-usage">-</h3>
-                                            <small><span id="memory-percent">-</span>% used</small>
+                                            <h6 class="card-title mb-1">Memory Usage</h6>
+                                            <h3 id="memory-usage" class="mb-0">-</h3>
+                                            <small class="text-white-50"><span id="memory-percent">-</span>% used</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fas fa-memory fa-2x"></i>
+                                            <i class="fas fa-memory fa-2x opacity-50"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card bg-warning text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-title">Disk Usage</h6>
-                                            <h3 id="disk-usage">-</h3>
-                                            <small><span id="disk-percent">-</span>% used</small>
+                                            <h6 class="card-title mb-1">Disk Usage</h6>
+                                            <h3 id="disk-usage" class="mb-0">-</h3>
+                                            <small class="text-white-50"><span id="disk-percent">-</span>% used</small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fas fa-hdd fa-2x"></i>
+                                            <i class="fas fa-hdd fa-2x opacity-50"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="card-title">Database Connections</h6>
-                                            <h3 id="db-connections">-</h3>
-                                            <small>Slow queries: <span id="slow-queries">-</span></small>
+                                            <h6 class="card-title mb-1">DB Connections</h6>
+                                            <h3 id="db-connections" class="mb-0">-</h3>
+                                            <small class="text-white-50">Slow queries: <span id="slow-queries">-</span></small>
                                         </div>
                                         <div class="align-self-center">
-                                            <i class="fas fa-database fa-2x"></i>
+                                            <i class="fas fa-database fa-2x opacity-50"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -92,44 +92,143 @@
                         </div>
                     </div>
 
-                    <!-- Cache Metrics -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">Cache Hit Rate</h6>
-                                    <h3 id="cache-hit-rate">-</h3>
-                                    <small>Hits: <span id="cache-hits">-</span> | Misses: <span id="cache-misses">-</span></small>
+                    <!-- Trading Bot Metrics -->
+                    <div class="row mb-3" id="trading-bot-metrics" style="display: none;">
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-primary h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title text-primary mb-1">Active Bots</h6>
+                                            <h3 id="bot-active-count" class="mb-0">-</h3>
+                                            <small class="text-muted">Total: <span id="bot-total-count">-</span></small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-robot fa-2x text-primary opacity-50"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">Cache Memory</h6>
-                                    <h3 id="cache-memory">-</h3>
-                                    <small>MB</small>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-success h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title text-success mb-1">Total PnL (Open)</h6>
+                                            <h3 id="bot-total-pnl" class="mb-0">-</h3>
+                                            <small class="text-muted">Unrealized Profit/Loss</small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-chart-line fa-2x text-success opacity-50"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Workers Table -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h5>Worker Status</h5>
-                            <div id="workers-container">
-                                @include('backend.monitoring.partials.workers')
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-info h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title text-info mb-1">Open Positions</h6>
+                                            <h3 id="bot-open-positions" class="mb-0">-</h3>
+                                            <small class="text-muted">Across all bots</small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-layer-group fa-2x text-info opacity-50"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6 mb-3">
+                            <div class="card border-danger h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title text-danger mb-1">Errors (24h)</h6>
+                                            <h3 id="bot-total-errors" class="mb-0">-</h3>
+                                            <small class="text-muted">System-wide</small>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-danger opacity-50"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Performance Charts -->
+                    <div class="mb-3">
+                        <div id="charts-container">
+                            @include('backend.monitoring.partials.charts')
+                        </div>
+                    </div>
+
+                    <!-- Tables Section -->
                     <div class="row">
-                        <div class="col-12">
-                            <h5>Performance Trends (24 Hours)</h5>
-                            <div id="charts-container">
-                                @include('backend.monitoring.partials.charts')
+                        <!-- Workers Table -->
+                        <div class="col-lg-7 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-transparent py-3">
+                                    <h5 class="card-title mb-0">Worker Status</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="workers-container">
+                                        @include('backend.monitoring.partials.workers')
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Bots Table -->
+                        <div class="col-lg-5 mb-4" id="top-bots-section" style="display: none;">
+                            <div class="card h-100">
+                                <div class="card-header bg-transparent py-3">
+                                    <h5 class="card-title mb-0">Top Active Bots</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-striped mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Bot</th>
+                                                    <th class="text-right">Positions</th>
+                                                    <th class="text-right">PnL</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="top-bots-body">
+                                                <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cache Metrics (Compact) -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                    <span class="font-weight-bold ml-2">Cache Hit Rate</span>
+                                    <div>
+                                        <span class="h5 mb-0 mr-2" id="cache-hit-rate">-</span>
+                                        <small class="text-muted">(Hits: <span id="cache-hits">-</span> / Misses: <span id="cache-misses">-</span>)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                                    <span class="font-weight-bold ml-2">Cache Memory</span>
+                                    <span class="h5 mb-0 mr-2"><span id="cache-memory">-</span> MB</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -219,7 +318,7 @@
 </style>
 @endpush
 
-@push('script')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 let refreshInterval;
@@ -287,14 +386,16 @@ function loadHistory() {
 
 function updateDashboard(data) {
     // Update system metrics
-    if (data.system) {
-        $('#cpu-load-1m').text(data.system.cpu_load_1m?.toFixed(2) || '-');
-        $('#cpu-load-5m').text(data.system.cpu_load_5m?.toFixed(2) || '-');
-        $('#cpu-load-15m').text(data.system.cpu_load_15m?.toFixed(2) || '-');
-        $('#memory-usage').text(data.system.memory_usage_mb?.toFixed(0) + ' MB' || '-');
-        $('#memory-percent').text(data.system.memory_usage_percent?.toFixed(1) || '-');
-        $('#disk-usage').text(data.system.disk_usage_percent?.toFixed(1) + '%' || '-');
-        $('#disk-percent').text(data.system.disk_usage_percent?.toFixed(1) || '-');
+    const systemMetrics = data.system?.system || data.system;
+
+    if (systemMetrics) {
+        $('#cpu-load-1m').text(systemMetrics.cpu_load_1m?.toFixed(2) || '-');
+        $('#cpu-load-5m').text(systemMetrics.cpu_load_5m?.toFixed(2) || '-');
+        $('#cpu-load-15m').text(systemMetrics.cpu_load_15m?.toFixed(2) || '-');
+        $('#memory-usage').text(systemMetrics.memory_usage_mb?.toFixed(0) + ' MB' || '-');
+        $('#memory-percent').text(systemMetrics.memory_usage_percent?.toFixed(1) || '-');
+        $('#disk-usage').text(systemMetrics.disk_usage_percent?.toFixed(1) + '%' || '-');
+        $('#disk-percent').text(systemMetrics.disk_usage_percent?.toFixed(1) || '-');
     }
     
     // Update database metrics
@@ -319,6 +420,58 @@ function updateDashboard(data) {
     // Update workers
     if (data.workers) {
         updateWorkers(data.workers);
+    }
+
+    // Update Trading Bots
+    if (data.trading_bots) {
+        updateTradingBots(data.trading_bots);
+    }
+}
+
+function updateTradingBots(bots) {
+    if (!bots || bots.active_count === undefined) return;
+
+    $('#trading-bot-metrics').show();
+    $('#top-bots-section').show();
+
+    $('#bot-active-count').text(bots.active_count);
+    $('#bot-total-count').text(bots.total_count);
+    
+    // Format PnL
+    const pnl = parseFloat(bots.total_unrealized_pnl || 0);
+    const pnlFormatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pnl);
+    $('#bot-total-pnl').text(pnlFormatted);
+    if (pnl > 0) $('#bot-total-pnl').removeClass('text-danger').addClass('text-success');
+    else if (pnl < 0) $('#bot-total-pnl').removeClass('text-success').addClass('text-danger');
+
+    $('#bot-open-positions').text(bots.total_open_positions);
+    $('#bot-total-errors').text(bots.total_errors_24h);
+    
+    // Top Bots Table
+    const tbody = $('#top-bots-body');
+    if (bots.top_bots && bots.top_bots.length > 0) {
+        let html = '';
+        bots.top_bots.forEach(bot => {
+            const statusClass = bot.status === 'healthy' ? 'text-success' : 'text-danger';
+            const botPnl = parseFloat(bot.pnl || 0);
+            const botPnlClass = botPnl >= 0 ? 'text-success' : 'text-danger';
+            const botPnlFormatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(botPnl);
+            
+            html += `
+                <tr>
+                    <td>
+                        <div class="font-weight-bold">${bot.name}</div>
+                        <small class="text-muted">${bot.symbol}</small>
+                    </td>
+                    <td class="text-right">${bot.open_positions}</td>
+                    <td class="text-right ${botPnlClass}">${botPnlFormatted}</td>
+                    <td><i class="fas fa-circle ${statusClass} small"></i></td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    } else {
+        tbody.html('<tr><td colspan="4" class="text-center text-muted">No active bots</td></tr>');
     }
 }
 

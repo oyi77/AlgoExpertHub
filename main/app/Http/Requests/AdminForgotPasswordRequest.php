@@ -26,15 +26,16 @@ class AdminForgotPasswordRequest extends FormRequest
      */
     public function rules()
     {
+        $config = Helper::config();
         if (request()->code) {
             return [
                 'code' => 'required',
-                'g-recaptcha-response' => Rule::requiredIf(Helper::config()->allow_recaptcha == 1)
+                'g-recaptcha-response' => Rule::requiredIf(optional($config)->allow_recaptcha == 1)
             ];
         }
         return [
             'email' => 'required|email',
-            'g-recaptcha-response' => Rule::requiredIf(Helper::config()->allow_recaptcha == 1)
+            'g-recaptcha-response' => Rule::requiredIf(optional($config)->allow_recaptcha == 1)
         ];
     }
 

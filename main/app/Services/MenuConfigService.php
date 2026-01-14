@@ -130,6 +130,26 @@ class MenuConfigService
     {
         $items = [];
 
+        // Terminal - Always include for all users
+        if (Route::has('user.terminal.index')) {
+            $items[] = [
+                'route' => 'user.terminal.index',
+                'label' => __('Terminal'),
+                'icon' => 'fas fa-chart-line',
+                'tooltip' => __('Trading terminal'),
+            ];
+        }
+
+        // Signals - Always include for all users
+        if (Route::has('user.signals.index')) {
+            $items[] = [
+                'route' => 'user.signals.index',
+                'label' => __('Signals'),
+                'icon' => 'fas fa-broadcast-tower',
+                'tooltip' => __('Trading signals'),
+            ];
+        }
+
         // My Bots
         if (Route::has('user.trading.operations.index')) {
             $items[] = [
@@ -155,9 +175,9 @@ class MenuConfigService
         if (Route::has('user.trading.multi-channel-signal.index')) {
             $items[] = [
                 'route' => 'user.trading.multi-channel-signal.index',
-                'label' => __('Signal Center'),
-                'icon' => 'fas fa-broadcast-tower',
-                'tooltip' => __('Signal monitoring and history'),
+                'label' => __('Signal Sources'),
+                'icon' => 'fas fa-network-wired',
+                'tooltip' => __('Manage signal sources and channel forwarding'),
             ];
         }
 
@@ -432,6 +452,79 @@ class MenuConfigService
             ];
         }
 
+        // Investment (submenu)
+        $investmentItems = [];
+        if (Route::has('user.invest.all')) {
+            $investmentItems[] = [
+                'route' => 'user.invest.all',
+                'label' => __('All Investments'),
+                'icon' => 'fas fa-chart-line',
+            ];
+        }
+        if (Route::has('user.invest.pending')) {
+            $investmentItems[] = [
+                'route' => 'user.invest.pending',
+                'label' => __('Pending Investments'),
+                'icon' => 'fas fa-clock',
+            ];
+        }
+        if (Route::has('user.invest.log')) {
+            $investmentItems[] = [
+                'route' => 'user.invest.log',
+                'label' => __('Investment Log'),
+                'icon' => 'fas fa-list',
+            ];
+        }
+        if (Route::has('user.interest.log')) {
+            $investmentItems[] = [
+                'route' => 'user.interest.log',
+                'label' => __('Interest Log'),
+                'icon' => 'fas fa-percentage',
+            ];
+        }
+
+        if (!empty($investmentItems)) {
+            $items[] = [
+                'label' => __('Investment'),
+                'icon' => 'fas fa-piggy-bank',
+                'type' => 'submenu',
+                'children' => $investmentItems,
+            ];
+        }
+
+        // Withdraw History (submenu)
+        $withdrawItems = [];
+        if (Route::has('user.withdraw.all')) {
+            $withdrawItems[] = [
+                'route' => 'user.withdraw.all',
+                'label' => __('All Withdrawals'),
+                'icon' => 'fas fa-list',
+            ];
+        }
+        if (Route::has('user.withdraw.pending')) {
+            $withdrawItems[] = [
+                'route' => 'user.withdraw.pending',
+                'label' => __('Pending Withdrawals'),
+                'icon' => 'fas fa-clock',
+            ];
+        }
+        if (Route::has('user.withdraw.complete')) {
+            $withdrawItems[] = [
+                'route' => 'user.withdraw.complete',
+                'label' => __('Completed Withdrawals'),
+                'icon' => 'fas fa-check-circle',
+            ];
+        }
+
+        if (!empty($withdrawItems)) {
+            $items[] = [
+                'label' => __('Withdraw History'),
+                'icon' => 'fas fa-money-bill-wave',
+                'type' => 'submenu',
+                'children' => $withdrawItems,
+            ];
+        }
+
         // Referral Log
         if (Route::has('user.refferalLog')) {
             $items[] = [
@@ -465,19 +558,60 @@ class MenuConfigService
         $onboardingService = app(UserOnboardingService::class);
         
         // Always show home and account menus
-        // Trading menu visibility based on onboarding progress
+        // Trading menu visibility - show Terminal and Signals for all users
+        // Other trading menus based on onboarding progress
         
-        // Hide trading_console menu if user has no active plan (renamed from 'trading')
-        if (!$onboardingService->hasActivePlan($user)) {
-            unset($menu['trading_console']);
-            unset($menu['market_analysis']);
-            unset($menu['marketplace']);
-            return $menu;
+        // Always keep trading_console, market_analysis, marketplace sections
+        // but can filter items inside based on plan status
+        
+        // Filter trading console items based on plan
+        if (isset($menu['trading_console']['items'])) {
+            $planBasedRoutes = ['user.trading.operations.index', 'user.trading.multi-channel-signal.index'];
+            $menu['trading_console']['items'] = array_filter($menu['trading_console']['items'], function($item) use ($user, $onboardingService, $planBasedRoutes) {
+                $route = $item['route'] ?? '';
+                // Skip plan-based routes if user has no active plan
+                if (in_array($route, $planBasedRoutes) && !$onboardingService->hasActivePlan($user)) {
+                    return false;
+                }
+                return true;
+            });
+            // Re-index array
+            $menu['trading_console']['items'] = array_values($menu['trading_console']['items']);
         }
-
-        // Show all trading menu items if user has active plan
-        // Progressive disclosure is handled via onboarding checklist, not menu hiding
-        // This allows users to see all available features and guides them via onboarding
+        
+        // Filter market_analysis items based on plan
+        if (isset($menu['market_analysis']['items'])) {
+            $planBasedRoutes = ['user.trading.execution-log.index', 'user.trading.backtesting.index'];
+            $menu['market_analysis']['items'] = array_filter($menu['market_analysis']['items'], function($item) use ($user, $onboardingService, $planBasedRoutes) {
+                $route = $item['route'] ?? '';
+                if (in_array($route, $planBasedRoutes) && !$onboardingService->hasActivePlan($user)) {
+                    return false;
+                }
+                return true;
+            });
+            $menu['market_analysis']['items'] = array_values($menu['market_analysis']['items']);
+        }
+        
+        // Filter marketplace items based on plan
+        if (isset($menu['marketplace']['items'])) {
+            $planBasedRoutes = ['user.trading.marketplaces.index'];
+            $menu['marketplace']['items'] = array_filter($menu['marketplace']['items'], function($item) use ($user, $onboardingService, $planBasedRoutes) {
+                $route = $item['route'] ?? '';
+                if (in_array($route, $planBasedRoutes) && !$onboardingService->hasActivePlan($user)) {
+                    return false;
+                }
+                return true;
+            });
+            $menu['marketplace']['items'] = array_values($menu['marketplace']['items']);
+        }
+        
+        // Remove empty sections
+        $sectionsToCheck = ['trading_console', 'market_analysis', 'marketplace'];
+        foreach ($sectionsToCheck as $section) {
+            if (!isset($menu[$section]['items']) || empty($menu[$section]['items'])) {
+                unset($menu[$section]);
+            }
+        }
         
         return $menu;
     }

@@ -6,6 +6,7 @@ use App\Helpers\Helper\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class MultiChannelSignalController extends Controller
 {
@@ -234,5 +235,112 @@ class MultiChannelSignalController extends Controller
         }
 
         return $info;
+    }
+
+    // ========== BETA METHOD ==========
+
+    public function betaIndex(Request $request)
+    {
+        $data['title'] = __('Multi-Channel Signal');
+        $data['activeTab'] = $request->get('tab', 'all-signals');
+
+        // Check if addon is enabled
+        $data['multiChannelEnabled'] = \App\Support\AddonRegistry::active('multi-channel-signal-addon')
+            && \App\Support\AddonRegistry::moduleEnabled('multi-channel-signal-addon', 'user_ui');
+
+        // Load data for each tab (simplified for beta)
+        if ($data['multiChannelEnabled']) {
+            try {
+                // All Signals tab
+                if ($data['activeTab'] === 'all-signals') {
+                    try {
+                        $data['signals'] = \App\Models\Signal::where('auto_created', 1)
+                            ->with(['pair', 'time', 'market', 'channelSource'])
+                            ->latest()
+                            ->paginate(20, ['*'], 'signals_page');
+                    } catch (\Exception $e) {
+                        $data['signals'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
+                }
+
+                // Signal Sources tab
+                if ($data['activeTab'] === 'signal-sources') {
+                    if (class_exists(\Addons\MultiChannelSignalAddon\App\Models\ChannelSource::class)) {
+                        try {
+                            $data['sources'] = \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::where('user_id', Auth::id())
+                                ->where('is_admin_owned', false)
+                                ->latest()
+                                ->paginate(20, ['*'], 'sources_page');
+                        } catch (\Exception $e) {
+                            $data['sources'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                        }
+                    }
+                }
+
+                // Channel Forwarding tab
+                if ($data['activeTab'] === 'channel-forwarding') {
+                    if (class_exists(\Addons\MultiChannelSignalAddon\App\Models\ChannelSource::class)) {
+                        try {
+                            $data['channels'] = \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())
+                                ->where('status', 'active')
+                                ->with(['assignedUsers', 'assignedPlans', 'signals'])
+                                ->latest()
+                                ->paginate(20, ['*'], 'channels_page');
+
+                            $data['stats'] = [
+                                'total' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())->where('status', 'active')->count(),
+                                'by_user' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())->whereHas('assignedUsers', fn($q) => $q->where('users.id', Auth::id()))->where('status', 'active')->count(),
+                                'by_plan' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())->whereHas('assignedPlans', function ($q) {
+                                    $q->whereHas('subscriptions', function ($sq) {
+                                        $sq->where('user_id', Auth::id())->where('is_current', 1)->where(function($dateQuery) {
+                                            $dateQuery->where('plan_expired_at', '>', now())->orWhereNull('plan_expired_at');
+                                        });
+                                    });
+                                })->where('status', 'active')->count(),
+                                'global' => \Addons\MultiChannelSignalAddon\App\Models\ChannelSource::assignedToUser(Auth::id())->where('scope', 'global')->where('status', 'active')->count(),
+                            ];
+                        } catch (\Exception $e) {
+                            $data['channels'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                            $data['stats'] = ['total' => 0, 'by_user' => 0, 'by_plan' => 0, 'global' => 0];
+                        }
+                    }
+                }
+
+                // Signal Review tab
+                if ($data['activeTab'] === 'signal-review') {
+                    try {
+                        $data['reviewSignals'] = \App\Models\Signal::where('auto_created', 1)->where('is_published', 0)
+                            ->with(['pair', 'time', 'market', 'channelSource'])
+                            ->latest()
+                            ->paginate(20, ['*'], 'review_page');
+                    } catch (\Exception $e) {
+                        $data['reviewSignals'] = new \Illuminate\Pagination\LengthAwarePaginator(collect([]), 0, 20, 1);
+                    }
+                }
+
+                // Analytics tab
+                if ($data['activeTab'] === 'analytics') {
+                    try {
+                        $allAutoSignals = \App\Models\Signal::where('auto_created', 1);
+                        $totalSignals = $allAutoSignals->count();
+                        $publishedSignals = (clone $allAutoSignals)->where('is_published', 1)->count();
+                        $draftSignals = (clone $allAutoSignals)->where('is_published', 0)->count();
+
+                        $data['analytics'] = [
+                            'total_signals' => $totalSignals,
+                            'published_signals' => $publishedSignals,
+                            'draft_signals' => $draftSignals,
+                            'active_sources' => 0,
+                        ];
+                    } catch (\Exception $e) {
+                        $data['analytics'] = ['total_signals' => 0, 'published_signals' => 0, 'draft_signals' => 0, 'active_sources' => 0];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log error silently
+            }
+        }
+
+        return Inertia::render('User/MultiChannelSignal', $data);
     }
 }

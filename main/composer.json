@@ -18,6 +18,7 @@
         "grpc/grpc": "^1.57",
         "guzzlehttp/guzzle": "^7.0.1",
         "hansschouten/laravel-pagebuilder": "^0.31",
+        "inertiajs/inertia-laravel": "^2.0",
         "intervention/image": "^2.7",
         "jorenvanhocht/laravel-share": "^4.2",
         "laminas/laminas-diactoros": "^3.7.0",

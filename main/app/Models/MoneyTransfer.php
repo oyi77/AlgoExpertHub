@@ -10,7 +10,14 @@ class MoneyTransfer extends Model
 {
     use HasFactory, Searchable;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'sender_id',
+        'receiver_id',
+        'trx',
+        'details',
+        'amount',
+        'charge',
+    ];
 
     public $searchable = ['trx'];
 

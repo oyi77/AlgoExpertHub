@@ -11,6 +11,7 @@ use App\Services\CacheManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * SystemMonitoringController
@@ -64,6 +65,7 @@ class SystemMonitoringController extends Controller
                 'system' => $this->systemMonitor->collectMetrics(),
                 'workers' => $this->workerManager->getAllWorkers(),
                 'alerts' => $this->alertManager->getActiveAlerts(),
+                'trading_bots' => $this->getTradingBotMetrics(),
             ];
         });
 
@@ -71,6 +73,65 @@ class SystemMonitoringController extends Controller
         $this->monitoringHistory->recordSnapshot($data['system'], $data['workers']);
 
         return response()->json($data);
+    }
+
+    /**
+     * Get aggregated trading bot metrics
+     * 
+     * @return array
+     */
+    protected function getTradingBotMetrics(): array
+    {
+        if (!class_exists(\Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::class) || 
+            !class_exists(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class)) {
+            return [];
+        }
+
+        try {
+            $bots = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::where('status', 'active')->get();
+            $monitoringService = app(\Addons\TradingManagement\Modules\TradingBot\Services\TradingBotMonitoringService::class);
+            
+            $totalOpen = 0;
+            $totalPnl = 0;
+            $activeCount = $bots->count();
+            $totalBots = \Addons\TradingManagement\Modules\TradingBot\Models\TradingBot::count();
+            $errorCount = 0;
+            $botDetails = [];
+
+            foreach ($bots as $bot) {
+                // Use the lightweight skipExchangeFetch=true for list view
+                $stats = $monitoringService->calculatePositionStats($bot, true);
+                $metrics = $monitoringService->getBotMetrics($bot);
+                
+                $totalOpen += $stats['total_open'] ?? 0;
+                $totalPnl += $stats['total_unrealized_pnl'] ?? 0;
+                $errorCount += $metrics['error_count_24h'] ?? 0;
+                
+                $botDetails[] = [
+                    'id' => $bot->id,
+                    'name' => $bot->name,
+                    'symbol' => $bot->symbol,
+                    'open_positions' => $stats['total_open'] ?? 0,
+                    'pnl' => $stats['total_unrealized_pnl'] ?? 0,
+                    'status' => $metrics['error_count_24h'] > 0 ? 'warning' : 'healthy',
+                ];
+            }
+            
+            // Sort details by PnL descending (best performers first)
+            usort($botDetails, fn($a, $b) => $b['pnl'] <=> $a['pnl']);
+
+            return [
+                'active_count' => $activeCount,
+                'total_count' => $totalBots,
+                'total_open_positions' => $totalOpen,
+                'total_unrealized_pnl' => $totalPnl,
+                'total_errors_24h' => $errorCount,
+                'top_bots' => array_slice($botDetails, 0, 5), // Top 5
+            ];
+        } catch (\Exception $e) {
+            \Log::warning('Failed to aggregate bot metrics: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**

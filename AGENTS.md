@@ -1,210 +1,196 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
+# PROJECT KNOWLEDGE BASE
 
-These instructions are for AI assistants working in this project.
+**Generated:** 2025-01-10
+**Commit:** (latest)
+**Branch:** (current)
 
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
+## OVERVIEW
+AlgoExpertHub is a Laravel 10-based trading signal platform for distributing trading signals across Forex, Crypto, and Stock markets. Features include multi-plan subscription system, automated signal ingestion, AI-powered analysis, and automated trade execution.
 
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-
-# AI Trading Platform - Agent Development Guide
-
-## Issue Tracking with bd (beads)
-
-**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
-
-**Check for ready work:**
-```bash
-bd ready --json
+## STRUCTURE
+```
+./
+├── main/                    # Core Laravel application
+│   ├── app/                # Application logic
+│   │   ├── Services/        # Business logic (Service Layer Pattern)
+│   │   ├── Models/          # Eloquent models
+│   │   └── Http/           # Controllers, middleware, requests
+│   ├── addons/              # Modular addon packages
+│   │   ├── multi-channel-signal-addon/
+│   │   ├── trading-management-addon/
+│   │   └── ai-connection-addon/
+│   ├── database/
+│   │   └── migrations/      # Database schema
+│   ├── config/              # Configuration files
+│   └── resources/
+│       └── views/           # Blade templates
+├── openspec/               # Spec-driven development
+├── docs/                   # Documentation
+└── scripts/
+    └── deployment/          # Deployment scripts
 ```
 
-**Create new issues:**
-```bash
-bd create "Issue title" -t bug|feature|task -p 0-4 --json
-```
+## OpenSpec & Spec-Driven Development (SDD)
 
-**Complete work:**
-```bash
-bd close bd-42 --reason "Completed" --json
-```
+This project strictly follows **Spec-Driven Development (SDD)** using the **OpenSpec** framework. Every non-trivial change MUST start with a specification before any code is written.
 
-## Build, Test & Development Commands
+### 🔄 Three-Stage Lifecycle
+1.  **Proposal**: Create a change proposal in `openspec/changes/{change-id}/`.
+2.  **Implementation**: Execute tasks sequentially from `tasks.md` after approval.
+3.  **Archival**: Move completed changes to `openspec/changes/archive/` and update canonical specs in `openspec/specs/`.
+
+### 📝 Core Workflow
+- **File Structure**: `openspec/changes/{name}/{proposal,design,tasks}.md`.
+- **Spec Deltas**: Using `## ADDED Requirements`, `## MODIFIED Requirements`.
+- **Validation**: Run `openspec validate [change-id] --strict`.
+- **Oh-My-OpenCode**: Integrated with `.opencode/` agents for automated analysis.
+- **Reference**: See `openspec/AGENTS.md` for detailed instructions.
+
+## WHERE TO LOOK
+| Task | Location | Notes |
+|------|----------|-------|
+| Business logic | `main/app/Services/` | ALL business logic here, never in controllers |
+| Data models | `main/app/Models/` | Eloquent models with relationships |
+| Controllers | `main/app/Http/Controllers/` | Thin HTTP handlers |
+| Migrations | `main/database/migrations/` | Database schema changes |
+| Addon features | `main/addons/{addon-name}/app/` | Self-contained packages |
+| Payment gateways | `main/app/Services/Gateway/` | Gateway service implementations |
+| AI Connections | `AiConnectionService::execute()` | Centralized AI provider management |
+| Queue jobs | `main/app/Jobs/` | Async operations |
+| Tests | `main/tests/` | Unit and feature tests |
+| Views | `main/resources/views/` | Blade templates (theming) |
+
+## CONVENTIONS (Deviations from Standard)
+
+### Architecture
+- **Service Layer Pattern**: Controllers delegate ALL business logic to Services
+- **Repository Pattern**: Data access layer in `app/Repositories/`
+- **Nested Structure**: Core Laravel app in `/main/`, root handles deployment/installation
+- **Addon System**: Modular architecture, no core modifications for features
+- **Entry Point Proxy**: Root `/index.php` proxies to `/main/bootstrap/app.php`
+
+### PHP Standards
+- **Strict Typing**: All files require `declare(strict_types=1);`
+- **Type Hints**: Always use parameter and return type declarations
+- **PSR-12**: Coding style compliance
+- **PHP 8.1+**: Minimum version requirement
+
+### Laravel 10 Specific
+- **Queue All Long Operations**: Anything >2 seconds goes to jobs
+- **Form Requests**: Validation in `app/Http/Requests/`
+- **Response Format**: `['type' => 'success|error', 'message' => '...']`
+- **Theme System**: Dynamic views via `Helper::theme()`
+
+### Database
+- **Table Names**: Plural snake_case
+- **Model Names**: Singular PascalCase
+- **Foreign Keys**: `{table}_id` format
+- **Timestamps**: Always include `created_at`, `updated_at`
+- **Random IDs**: Generated in model boot methods
+
+### Naming
+- **Models**: Singular PascalCase (User, PlanSubscription)
+- **Controllers**: PascalCase with suffix (UserController, SignalController)
+- **Services**: PascalCase with suffix (UserService, SignalService)
+- **Methods**: camelCase, descriptive verbs
+- **Constants**: UPPER_SNAKE_CASE
+
+## ANTI-PATTERNS (THIS PROJECT)
+
+### NEVER
+- Put business logic in controllers
+- Commit `.env` files or API keys
+- Modify core files for addon development
+- Suppress type errors (`as any`, `@ts-ignore`, `@ts-expect-error`)
+- Initialize MadelineProto during GET requests (AdminChannelController.php)
+- Clear `$_POST` before validation (removes CSRF tokens)
+- Create markdown TODO lists (use `bd` instead)
+- Use `env()` directly in code (use `config()` instead)
+
+### MUST
+- Validate ALL input using Form Requests
+- Queue operations >2 seconds
+- Use transactions for multi-step DB operations
+- Encrypt sensitive data (API keys, credentials)
+- Use `bd` for ALL task tracking with `--json` flag
+- Store AI planning docs in `history/` directory
+- Log errors and important events
+
+## IMPORTANT BUSINESS RULES
+- One active subscription per user (`is_current=1`)
+- Signals MUST be published (`is_published=1`) before distribution
+- Auto-created signals start as drafts (`auto_created=1`)
+- Payment approval triggers subscription creation
+- All financial activities logged in transactions table
+- Demo mode prevents destructive actions
+
+## COMMANDS
 
 ### Laravel Application (main/ directory)
 ```bash
-# Install dependencies
-cd main && composer install
-cd main && npm install
+cd main
 
-# Database migrations
+# Dependencies
+composer install
+npm install
+
+# Database
 php artisan migrate
 php artisan migrate:fresh --seed
 
-# Run tests
+# Tests
 php artisan test                    # All tests
 php artisan test --filter SignalTest  # Single test file
 ./vendor/bin/phpunit tests/Unit/SignalTest.php
 
-# Asset compilation
+# Test Types
+# Unit Tests: Services/Repositories in isolation (mock dependencies)
+# Feature Tests: Full HTTP flows (Controller -> Service -> DB)
+# Property Tests: System invariants via Eris (N+1, API compliance)
+
+# Assets
 npm run dev                        # Development build
 npm run prod                       # Production build
 npm run watch                      # Watch for changes
 
-# Queue management
+# Queue
 php artisan queue:work
 php artisan horizon                 # Redis queue dashboard
 ```
 
-### Frontend Assets
+### Docker Environment
 ```bash
-cd main
-npm run development                # Build assets
-npm run watch                      # Watch and rebuild
-npm run production                 # Optimized production build
+# All PHP commands MUST use docker exec
+docker exec 1Panel-php8-mrTy php artisan <command>
+docker exec 1Panel-php8-mrTy composer <command>
 ```
 
-## Code Style & Architecture Guidelines
-
-### Laravel Architecture (Service Layer Pattern)
-- **Controllers**: Thin HTTP handlers only, delegate to services
-- **Services**: ALL business logic in `app/Services/` directory
-- **Models**: Eloquent models in `app/Models/` with relationships and casts
-- **Jobs**: Async operations in `app/Jobs/`, queue anything >2 seconds
-- **Requests**: Form validation in `app/Http/Requests/`
-
-### Naming Conventions
-- **Models**: Singular PascalCase (User, PlanSubscription, TradingSignal)
-- **Tables**: Plural snake_case (users, plan_subscriptions, trading_signals)
-- **Controllers**: PascalCase with suffix (UserController, SignalController)
-- **Services**: PascalCase with suffix (UserService, SignalService)
-- **Methods**: camelCase, descriptive verbs (createSignal, processPayment)
-- **Variables**: camelCase, meaningful names
-- **Constants**: UPPER_SNAKE_CASE
-
-### PHP Code Standards
-- **PSR-12** coding style
-- **Laravel 10.x** framework (upgraded from Laravel 9)
-- **PHP 8.1+** required
-- **Strict types**: Declare `declare(strict_types=1);`
-- **Type hints**: Always use parameter and return type declarations
-- **Properties**: Declare visibility and types
-- **Imports**: Use grouped imports at top of files
-- **Error handling**: Use try-catch, return structured responses
-
-### Response Format
-```php
-// Standard API response format
-return [
-    'type' => 'success|error',
-    'message' => 'User-friendly message',
-    'data' => [...], // optional data
-];
+### Task Tracking
+```bash
+bd ready --json              # Check for ready work
+bd create "Issue title" -t bug|feature|task -p 0-4 --json
+bd close bd-42 --reason "Completed" --json
 ```
 
-### Database Conventions
-- **Foreign keys**: `{table}_id` (user_id, signal_id)
-- **Timestamps**: Always include `created_at`, `updated_at`
-- **Soft deletes**: Use `deleted_at` when needed
-- **Random IDs**: Generate in model boot methods for security
-- **Indexes**: Add to foreign keys and frequently queried columns
-- **JSON fields**: Use for flexible data structures
+## NOTES
 
-### Security Requirements
-- **Validate ALL input** using Form Requests
-- **Sanitize output** using Laravel's built-in protections
-- **Encrypt sensitive data** (API keys, credentials): `encrypt()`
-- **Use middleware** for auth, permissions, 2FA, KYC
-- **CSRF protection**: Enabled by default
-- **SQL injection prevention**: Use Eloquent, parameterized queries
+### Gotchas
+- Root `/index.php` has custom bootstrapping logic (installation checks)
+- Use `Helper::theme()` for view paths (multiple themes support)
+- Addon namespaces: `Addons\{AddonName}\`
+- Addon tables prefixed with addon identifier
+- Queue workers must be running for async operations
+- Use `config()` helper, never `env()` directly in code
 
-### Trading Platform Specific Rules
-- **Financial calculations**: Use precise decimal arithmetic
-- **Risk management**: Implement position sizing, stop-loss logic
-- **Real-time data**: Use WebSockets, queue processing
-- **Payment processing**: Always log transactions, use idempotency
-- **User balance**: Update atomically, maintain audit trail
-- **Signal publishing**: Draft → Published workflow, immutable when published
+### External Integrations
+- **AI Connection Manager**: Centralized AI provider management (OpenAI, Gemini, OpenRouter) via `AiConnectionService::execute()`
+- Payment gateways: PayPal, Stripe, Paystack, Coinpayments, etc.
+- Trading APIs: CCXT (crypto), MetaApi (forex)
+- Telegram: MadelineProto (MTProto), Bot API
 
-### Testing Requirements
-- **Feature tests**: Test complete workflows
-- **Unit tests**: Test individual methods and services
-- **Database transactions**: Use `RefreshDatabase` trait
-- **Mocking**: Mock external APIs and services
-- **Coverage**: Critical trading logic must have 100% test coverage
-
-### Addon Development
-- **Self-contained**: Each addon in `addons/{name}/` directory
-- **No core modifications**: Use events/observers for integration
-- **Namespacing**: `Addons\{AddonName}\` namespace
-- **Service provider**: Conditional registration based on addon status
-- **Database isolation**: Prefix addon tables with addon identifier
-
-### Performance Optimizations
-- **Eager loading**: Prevent N+1 queries with `with()`
-- **Caching**: Cache expensive queries and configurations
-- **Pagination**: Use `paginate()` for large datasets
-- **Queue long operations**: External APIs, emails, file processing
-- **Database indexes**: Add to frequently queried columns
-- **Asset optimization**: Use Laravel Mix for production builds
-
-### Important Business Rules
-- **One active subscription** per user (`is_current=1`)
-- **Signals MUST be published** before distribution
-- **Payment approval triggers** subscription creation
-- **All financial activities** logged in transactions table
-- **Auto-created signals** start as drafts for admin review
-- **Demo mode** prevents destructive actions
-
-### File Organization
-- **Controllers**: `app/Http/Controllers/{Backend|User|Api}/`
-- **Services**: `app/Services/`
-- **Models**: `app/Models/`
-- **Jobs**: `app/Jobs/`
-- **Migrations**: `database/migrations/`
-- **Tests**: `tests/{Feature|Unit}/`
-- **Views**: `resources/views/{backend|frontend/{theme}/}`
-
-### Configuration Management
-- **Environment**: Use `.env` for sensitive data
-- **Config files**: Use `config()` helper, never `env()` directly
-- **Feature flags**: Use Configuration model for admin-controlled settings
-- **Theme system**: Use `Helper::theme()` for dynamic view paths
-
-### Logging & Monitoring
-- **Log errors**: `Log::error('Message', ['context' => $data])`
-- **Log important events**: Job failures, API errors, security events
-- **Audit trail**: Use UserLog model for user actions
-- **Performance monitoring**: Track slow queries and API responses
-
-## Quick Reference
-- **Service pattern**: Controllers thin, Services handle business logic
-- **Always validate**: Form Requests for input validation
-- **Queue long operations**: External APIs, emails, file processing
-- **Use transactions**: Wrap multi-step DB operations in `DB::transaction()`
-- **Eager load relationships**: Prevent N+1 queries
-- **Encrypt sensitive data**: API keys, credentials
-- **Log everything**: Errors, important events, audit trails
-
-## Important Rules
-- ✅ Use bd for ALL task tracking with `--json` flag
-- ✅ Store AI planning docs in `history/` directory
-- ✅ Follow service layer pattern for business logic
-- ✅ Always validate input and sanitize output
-- ✅ Use type hints and strict typing
-- ✅ Queue operations that take >2 seconds
-- ✅ Log errors and important events
-- ✅ Write tests for critical trading logic
-- ❌ Don't put business logic in controllers
-- ❌ Don't commit `.env` files or API keys
-- ❌ Don't create markdown TODO lists
-- ❌ Don't modify core files for addon development
+### Security
+- CSRF protection enabled by default
+- SQL injection prevention via Eloquent
+- XSS prevention via Blade auto-escaping
+- Rate limiting on sensitive routes
+- Encrypt gateway credentials: `encrypt(json_encode($credentials))`

@@ -6,6 +6,7 @@ use App\Helpers\Helper\Helper;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class DatabaseBackupService
@@ -110,14 +111,32 @@ class DatabaseBackupService
                 $hostEscaped = addslashes($tryHost);
                 try {
                     if ($authPlugin === 'ed25519' || $authPlugin === 'mysql_native_password') {
-                        if (!empty($passwordEscaped)) {
-                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED VIA " . $authPlugin . " USING PASSWORD('" . $passwordEscaped . "')");
+                        $userQuoted = DB::getPdo()->quote($username);
+                        $hostQuoted = DB::getPdo()->quote($tryHost);
+                        // DB::quote includes surrounding quotes, so we strip them for the identifier context if needed,
+                        // but actually CREATE USER 'user'@'host' expects string literals.
+                        // However, DB::quote("'") returns "\'", so we need to be careful.
+                        // Better to rely on proper escaping. The original addslashes was weak.
+                        // Let's use a robust escaping for the SQL statement construction.
+                        
+                        // User and Host in MySQL need to be quoted as identifiers or string literals depending on context.
+                        // In ALTER USER 'user'@'host', they are string literals.
+                        
+                        $safeUser = str_replace("'", "''", $username); // Escape single quotes for SQL string literal
+                        $safeHost = str_replace("'", "''", $tryHost);
+                        
+                        if (!empty($password)) {
+                            $safePass = str_replace("'", "''", $password);
+                            DB::statement("ALTER USER '$safeUser'@'$safeHost' IDENTIFIED VIA $authPlugin USING PASSWORD('$safePass')");
                         } else {
-                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED VIA " . $authPlugin);
+                            DB::statement("ALTER USER '$safeUser'@'$safeHost' IDENTIFIED VIA $authPlugin");
                         }
                     } else {
-                        if (!empty($passwordEscaped)) {
-                            DB::statement("ALTER USER '" . addslashes($username) . "'@'" . $hostEscaped . "' IDENTIFIED BY '" . $passwordEscaped . "'");
+                        $safeUser = str_replace("'", "''", $username);
+                        $safeHost = str_replace("'", "''", $tryHost);
+                        if (!empty($password)) {
+                            $safePass = str_replace("'", "''", $password);
+                            DB::statement("ALTER USER '$safeUser'@'$safeHost' IDENTIFIED BY '$safePass'");
                         }
                     }
                     $fixedCount++;
@@ -540,8 +559,8 @@ class DatabaseBackupService
             
             // Check if root credentials are provided (for backup operations)
             // Root user typically has proper auth plugin and can bypass auth issues
-            $rootUsername = env('DB_BACKUP_ROOT_USER', null);
-            $rootPassword = env('DB_BACKUP_ROOT_PASSWORD', null);
+            $rootUsername = config('database.backup.root_user');
+            $rootPassword = config('database.backup.root_password');
             
             // Use root credentials if provided, otherwise use regular user credentials
             $useRootCredentials = false;

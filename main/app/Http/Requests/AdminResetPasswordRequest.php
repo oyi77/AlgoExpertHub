@@ -26,11 +26,12 @@ class AdminResetPasswordRequest extends FormRequest
      */
     public function rules()
     {
+        $config = Helper::config();
         return [
             'email' => 'required|email',
             'token' => 'required',
             'password' => 'required|confirmed|min:4',
-            'g-recaptcha-response' => Rule::requiredIf(Helper::config()->allow_recaptcha == 1)
+            'g-recaptcha-response' => Rule::requiredIf(optional($config)->allow_recaptcha == 1)
         ];
     }
 

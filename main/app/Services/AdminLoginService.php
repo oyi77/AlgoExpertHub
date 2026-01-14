@@ -12,16 +12,19 @@ class AdminLoginService
 
         $data = [$fieldType => $request->email, 'password' => $request->password];
 
-        $admin = Admin::where('email', $request->email)->orWhere('username', $request->email)->first();
-
-        if ($admin) {
-            if (!$admin->status) {
-                return redirect()->route('admin.login')->with('notify', \App\Helpers\NotificationHelper::error('Your account is currently disabled', 'Error'));
-            }
-        }
-
         $remember = $request->remember == 'on' ? true : false;
 
         return [$data, $remember];
+    }
+    
+    public function checkAdminStatus($email)
+    {
+        $admin = Admin::where('email', $email)->orWhere('username', $email)->first();
+
+        if ($admin && !$admin->status) {
+            return false;
+        }
+
+        return true;
     }
 }

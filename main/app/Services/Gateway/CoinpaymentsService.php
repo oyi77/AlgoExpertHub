@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\Gateway;
 
-use App\Models\Configuration;
+use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Payment;
+use App\Services\WebhookVerificationService;
 use CoinpaymentsAPI as GlobalCoinpaymentsAPI;
 use Illuminate\Http\Request;
 
 class CoinpaymentsService extends BaseAdapter
 {
-    /**
-     * Process payment with Coinpayments.
-     */
     public static function process($request, $gateway, float $totalAmount, $deposit): array|string
     {
         $amount = $totalAmount;
@@ -33,19 +31,16 @@ class CoinpaymentsService extends BaseAdapter
             'success_url' => url('/payment/success'),
             'cancel_url' => url('/payment/cancel'),
         ];
-        
+
         $transaction = $api->CreateCustomTransaction($req);
 
         if (isset($transaction['error'])) {
-            return (new static())->error($transaction['error']);
+            return (new static())->returnError($transaction['error']);
         }
 
         return $transaction['result']['status_url'];
     }
 
-    /**
-     * Handle success callback from Coinpayments.
-     */
     public function success(Request $request): array
     {
         $trx = session('trx');
@@ -58,11 +53,34 @@ class CoinpaymentsService extends BaseAdapter
         }
 
         if (!$payment) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
+        }
+
+        $gateway = \App\Models\Gateway::where('status', 1)->where('name', 'coinpayments')->first();
+
+        if (!$gateway || !$gateway->parameter?->ipn_secret) {
+            Log::warning('Coinpayments webhook called but no secret configured', [
+                'trx' => $trx,
+            ]);
+            $this->handlePaymentSuccess($payment, (float)$payment->charge, $trx);
+            return $this->returnSuccess('Payment Successful');
+        }
+
+        $verification = WebhookVerificationService::verifyCoinpayments(
+            $request,
+            $gateway->parameter->ipn_secret
+        );
+
+        if (!$verification['valid']) {
+            Log::warning('Coinpayments webhook signature verification failed', [
+                'error' => $verification['error'],
+                'trx' => $trx,
+            ]);
+            return $this->returnError('Invalid webhook signature');
         }
 
         $this->handlePaymentSuccess($payment, (float)$payment->charge, $trx);
 
-        return $this->success('Payment Successful');
+        return $this->returnSuccess('Payment Successful');
     }
 }

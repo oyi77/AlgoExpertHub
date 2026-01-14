@@ -64,15 +64,15 @@ class PaghiperService extends BaseAdapter
         }
 
         if (!$deposit) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
         }
 
         if (isset($request->transaction_id)) {
             $this->handlePaymentSuccess($deposit, 0.0, $transaction->getOrderId());
 
-            return $this->success('Plan Subscribed Successfully');
+            return $this->returnSuccess('Plan Subscribed Successfully');
         }
 
-        return $this->error('Payment verification failed');
+        return $this->returnError('Payment verification failed');
     }
 }

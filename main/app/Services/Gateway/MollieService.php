@@ -30,7 +30,7 @@ class MollieService extends BaseAdapter
                 ],
             ]);
         } catch (\Throwable $th) {
-            return (new static())->error('Something went wrong! Check your API credentials');
+            return (new static())->returnError('Something went wrong! Check your API credentials');
         }
 
         session()->put('payment_id', $payment->id);
@@ -55,7 +55,7 @@ class MollieService extends BaseAdapter
         }
 
         if (!$deposit) {
-            return (new static())->error('Transaction not found');
+            return (new static())->returnError('Transaction not found');
         }
 
         FacadesMollie::api()->setApiKey($deposit->gateway->gateway_parameters->mollie_key);
@@ -66,12 +66,12 @@ class MollieService extends BaseAdapter
             if ($payment->isPaid()) {
                 (new static())->handlePaymentSuccess($deposit, (float)$deposit->charge, $deposit->transaction_id);
 
-                return (new static())->success('Payment Successful');
+                return (new static())->returnSuccess('Payment Successful');
             }
         } catch (\Throwable $e) {
-            return (new static())->error('Mollie API error: ' . $e->getMessage());
+            return (new static())->returnError('Mollie API error: ' . $e->getMessage());
         }
 
-        return (new static())->error('Something Went Wrong');
+        return (new static())->returnError('Something Went Wrong');
     }
 }

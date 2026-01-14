@@ -8,14 +8,22 @@
 
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <meta name="description" content="{{ $page->seo_description ?? Config::config()->seo_description }}" />
-    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? Config::config()->seo_tags) }} ">
+    @php
+        $config = Config::config();
+        $fonts = optional($config)->fonts;
+    @endphp
+    <meta name="description" content="{{ $page->seo_description ?? optional($config)->seo_description ?? 'AlgoExpertHub Trading Signal Platform' }}" />
+    <meta name="keywords" content="{{ implode(',', $page->seo_keywords ?? optional($config)->seo_tags ?? []) }} ">
 
-    <title>{{ Config::config()->appname }}</title>
+    <title>{{ optional($config)->appname ?? config('app.name', 'AlgoExpertHub') }}</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:wght@300;400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->heading_font_url }}">
-    <link rel="stylesheet" href="{{ optional(Config::config()->fonts)->paragraph_font_url }}">
+    @if(optional($fonts)->heading_font_url)
+        <link rel="stylesheet" href="{{ optional($fonts)->heading_font_url }}">
+    @endif
+    @if(optional($fonts)->paragraph_font_url)
+        <link rel="stylesheet" href="{{ optional($fonts)->paragraph_font_url }}">
+    @endif
 
     <link rel="shortcut icon" type="image/png" href="{{ Config::getFile('icon', optional(Config::config())->favicon, true) }}">
 
@@ -32,8 +40,8 @@
     <link href="{{ Config::cssLib('frontend', 'helper.css') }}?v=20251202" rel="stylesheet">
 
     @php
-        $heading = optional(Config::config()->fonts)->heading_font_family ?? 'DM Sans';
-        $paragraph = optional(Config::config()->fonts)->paragraph_font_family ?? 'Poppins';
+        $heading = optional($fonts)->heading_font_family ?? 'DM Sans';
+        $paragraph = optional($fonts)->paragraph_font_family ?? 'Poppins';
     @endphp
 
     <style>
@@ -52,7 +60,7 @@
 
 <body>
 
-    @if (Config::config()->preloader_status)
+    @if (optional($config)->preloader_status)
         <div class="preloader-holder">
             <div class="preloader">
                 <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
@@ -61,8 +69,8 @@
     @endif
 
 
-    @if (Config::config()->analytics_status)
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ Config::config()->analytics_key }}"></script>
+    @if (optional($config)->analytics_status)
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ optional($config)->analytics_key }}"></script>
         <script>
             'use strict'
             window.dataLayer = window.dataLayer || [];
@@ -71,35 +79,35 @@
                 dataLayer.push(arguments);
             }
             gtag("js", new Date());
-            gtag("config", "{{ Config::config()->analytics_key }}");
+            gtag("config", "{{ optional($config)->analytics_key }}");
         </script>
     @endif
 
-    @if (Config::config()->allow_modal)
+    @if (optional($config)->allow_modal)
         @include('cookie-consent::index')
     @endif
 
     @php
-        $content= App\Models\Content::where('name', 'auth')->where('theme', Config::config()->theme)->first();
+        $content= App\Models\Content::where('name', 'auth')->where('theme', optional($config)->theme ?? 'default')->first();
     @endphp
     
 
     <div class="account-page">
         <div class="form-wrapper">
             <div class="logo text-center">
-                <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('logo', Config::config()->logo) }}"
+                <a href="{{ route('home') }}" class="site-logo"><img src="{{ Config::getFile('logo', optional($config)->logo ?? '') }}"
                         alt="image"></a>
             </div>
             <div class="inner-wrapper">
-                <h3 class="title">{{ $content->content->title }}</h3>
+                <h3 class="title">{{ optional($content)->content->title ?? '' }}</h3>
                 @yield('content')
             </div>
             <div class="copy-right-text">
-                <p>{{__(Config::config()->copyright)}}</p>
+                <p>{{__(optional($config)->copyright ?? '')}}</p>
             </div>
         </div>
         <div class="img-wrapper">
-            <img src="{{ Config::getFile('auth', $content->content->image_one) }}" class="account-line-bg" alt="image">
+            <img src="{{ Config::getFile('auth', optional($content)->content->image_one ?? '') }}" class="account-line-bg" alt="image">
         </div>
     </div>
 

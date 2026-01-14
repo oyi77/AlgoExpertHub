@@ -10,6 +10,7 @@ use App\Models\ReferralCommission;
 use App\Models\Transaction;
 use App\Models\Withdraw;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LogController extends Controller
 {
@@ -124,5 +125,105 @@ class LogController extends Controller
         $data['title'] = 'Refferal Log';
 
         return view(Helper::themeView('user.refferal'))->with($data);
+    }
+
+    // ========== BETA METHODS ==========
+
+    public function betaTransactionLog(Request $request)
+    {
+        $data['title'] = 'Transaction Log';
+        $data['transactions'] = Transaction::with('user')->when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })->where('user_id', auth()->id())->latest()->with('user')->paginate(10);
+
+        return Inertia::render('User/TransactionLog', $data);
+    }
+
+    public function betaCommision(Request $request)
+    {
+        $data['title'] = 'Refferal Commission';
+        $data['commison'] = ReferralCommission::when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })->where('commission_to', auth()->id())->latest()->with('whoGetTheMoney', 'whoSendTheMoney')->paginate(10);
+
+        return Inertia::render('User/CommissionLog', $data);
+    }
+
+    public function betaSubscriptionLog(Request $request)
+    {
+        $data['title'] = 'Subscription Log';
+        $data['subscriptions'] = PlanSubscription::when($request->date, function ($item) use ($request) {
+            $item->whereDate('plan_expired_at', $request->date);
+        })->where('user_id', auth()->id())->latest()->with('user', 'plan')->paginate(10);
+
+        return Inertia::render('User/SubscriptionLog', $data);
+    }
+
+    public function betaRefferalLog()
+    {
+        $data['reference'] = auth()->user()->refferals;
+        $data['title'] = 'Refferal Log';
+        return Inertia::render('User/RefferalLog', $data);
+    }
+
+    // ========== ADDITIONAL BETA METHODS ==========
+
+    public function betaDepositLog(Request $request)
+    {
+        $data['title'] = "Deposit Log";
+        $data['deposits'] = Deposit::when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })
+            ->where('user_id', auth()->id())
+            ->latest()->with('user')
+            ->whereIn('status', [1, 2, 3])
+            ->with('gateway')
+            ->paginate(Helper::pagination());
+
+        return Inertia::render('User/DepositLog', $data);
+    }
+
+    public function betaAllWithdraw(Request $request)
+    {
+        $data['title'] = 'All Withdrawals';
+        $data['withdrawlogs'] = Withdraw::when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })->where('user_id', auth()->id())->latest()->with('withdrawMethod')->paginate(Helper::pagination());
+
+        return Inertia::render('User/WithdrawHistory', $data);
+    }
+
+    public function betaPendingWithdraw()
+    {
+        $data['title'] = 'Pending Withdrawals';
+        $data['withdrawlogs'] = Withdraw::where('user_id', auth()->id())->where('status', 0)->latest()->with('withdrawMethod')->paginate(Helper::pagination());
+
+        return Inertia::render('User/WithdrawHistory', $data);
+    }
+
+    public function betaCompleteWithdraw()
+    {
+        $data['title'] = 'Completed Withdrawals';
+        $data['withdrawlogs'] = Withdraw::where('user_id', auth()->id())->where('status', 1)->latest()->with('withdrawMethod')->paginate(Helper::pagination());
+
+        return Inertia::render('User/WithdrawHistory', $data);
+    }
+
+    public function betaInvestLog(Request $request)
+    {
+        $data['title'] = 'Invest Log';
+        $data['investments'] = Payment::when($request->trx, function ($item) use ($request) {
+            $item->where('trx', $request->trx);
+        })->when($request->date, function ($item) use ($request) {
+            $item->whereDate('created_at', $request->date);
+        })->where('user_id', auth()->id())->whereIn('status', [1, 2, 3])->latest()->with('user', 'gateway')->paginate(Helper::pagination());
+
+        return Inertia::render('User/Invest', $data);
     }
 }

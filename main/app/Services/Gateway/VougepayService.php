@@ -30,22 +30,22 @@ class VougepayService extends BaseAdapter
         $data = json_decode((string)$vogueData);
         
         if (!$data || !isset($data->merchant_ref)) {
-            return $this->error('Invalid response from Vougepay');
+            return $this->returnError('Invalid response from Vougepay');
         }
 
         $transactionId = $data->merchant_ref;
         $deposit = Payment::where('trx', $transactionId)->first();
 
         if (!$deposit) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
         }
 
         if ($data->status === "Approved") {
             $this->handlePaymentSuccess($deposit, (float)$deposit->charge, (string)$request->transaction_id);
 
-            return $this->success('Payment Successful');
+            return $this->returnSuccess('Payment Successful');
         }
 
-        return $this->error('Payment not approved');
+        return $this->returnError('Payment not approved');
     }
 }

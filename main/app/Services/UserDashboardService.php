@@ -26,7 +26,7 @@ class UserDashboardService
 
         $cachedTotals = Cache::remember('udash:totals:' . auth()->id(), $ttl, function () use ($user) {
             return [
-                'currentPlan' => $user->currentplan()->first(),
+                'currentPlan' => $user->currentplan()->with('plan')->first(),
                 'totalDeposit' => $user->deposits()->where('status', 1)->sum('amount'),
                 'totalWithdraw' => $user->withdraws()->where('status', 1)->sum('withdraw_amount'),
                 'totalPayments' => $user->payments()->where('status', 1)->sum('amount'),

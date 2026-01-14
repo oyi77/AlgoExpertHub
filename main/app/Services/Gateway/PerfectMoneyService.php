@@ -40,17 +40,17 @@ class PerfectMoneyService extends BaseAdapter
         $url = file_get_contents('https://perfectmoney.is/acct/balance.asp?AccountID=' . $this->accountId . '&PassPhrase=' . $this->passphrase, false, stream_context_create($this->sslFix));
         
         if (!$url) {
-            return $this->error('Connection error');
+            return $this->returnError('Connection error');
         }
 
         if (!preg_match_all("/<input name='(.*)' type='hidden' value='(.*)'>/", $url, $result, PREG_SET_ORDER)) {
-            return $this->error('Invalid output');
+            return $this->returnError('Invalid output');
         }
 
         $data = [];
         foreach ($result as $item) {
             if ($item[1] == 'ERROR') {
-                return $this->error($item[2]);
+                return $this->returnError($item[2]);
             }
             
             $data['balance'] = [
@@ -70,17 +70,17 @@ class PerfectMoneyService extends BaseAdapter
         $url = file_get_contents('https://perfectmoney.is/acct/confirm.asp?AccountID=' . urlencode(trim($this->accountId)) . '&PassPhrase=' . urlencode(trim($this->passphrase)) . '&Payer_Account=' . urlencode(trim($this->merchantId)) . '&Payee_Account=' . urlencode(trim($account)) . '&Amount=' . $amount . (empty($description) ? '' : '&Memo=' . urlencode(trim($description))) . (empty($paymentId) ? '' : '&PAYMENT_ID=' . urlencode(trim($paymentId))), false, stream_context_create($this->sslFix));
 
         if (!$url) {
-            return $this->error('Connection error');
+            return $this->returnError('Connection error');
         }
 
         if (!preg_match_all("/<input name='(.*)' type='hidden' value='(.*)'>/", $url, $result, PREG_SET_ORDER)) {
-            return $this->error('Invalid output');
+            return $this->returnError('Invalid output');
         }
 
         $data = [];
         foreach ($result as $item) {
             if ($item[1] == 'ERROR') {
-                return $this->error($item[2]);
+                return $this->returnError($item[2]);
             }
             
             $data['data'][$item[1]] = $item[2];
@@ -144,7 +144,7 @@ class PerfectMoneyService extends BaseAdapter
         $content = file_get_contents($url, false, stream_context_create($this->sslFix));
         
         if (!$content) {
-            return $this->error('Connection error');
+            return $this->returnError('Connection error');
         }
 
         if (str_starts_with($content, 'Time,Type,Batch,Currency,Amount,Fee,Payer Account,Payee Account')) {
@@ -166,7 +166,7 @@ class PerfectMoneyService extends BaseAdapter
             return $this->successResponse('History retrieved', ['history' => $history]);
         }
 
-        return $this->error($content);
+        return $this->returnError($content);
     }
 
     /**
@@ -201,7 +201,7 @@ class PerfectMoneyService extends BaseAdapter
         }
 
         if (!$deposit) {
-            return $this->error('Transaction not found');
+            return $this->returnError('Transaction not found');
         }
 
         $gateway = $deposit->gateway->parameter;
@@ -212,9 +212,9 @@ class PerfectMoneyService extends BaseAdapter
         if ($payeeAccount === $gateway->accountid && $unit === $gateway->gateway_currency && $amount === (float)$deposit->total) {
             $this->handlePaymentSuccess($deposit, 0.0, (string)$request->input('PAYMENT_ID'));
 
-            return $this->success('Payment Successful');
+            return $this->returnSuccess('Payment Successful');
         }
 
-        return $this->error('Payment verification failed');
+        return $this->returnError('Payment verification failed');
     }
 }

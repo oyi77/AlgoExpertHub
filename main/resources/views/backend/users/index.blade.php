@@ -12,24 +12,10 @@
             <div class="card">
                 <div class="card-header site-card-header justify-content-between align-items-center">
                     <div class="card-header-left">
-                        <form action="" method="get">
-                            <!-- Existing search form retained but Livewire has its own search -->
-                            <!-- We can keep this or hide it. Livewire component has search built-in -->
-                            <!-- Hiding it to avoid confusion -->
-                            <!--
-                            <div class="input-group flex-wrap user-search-area">
-                                <input type="text" class="form-control form-control-sm" placeholder="username or email or phone" name="search">
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary btn-sm" type="submit"> 
-                                        <i class="fa fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            -->
-                        </form>
+                        <!-- Legacy search form hidden/removed -->
                     </div>
                     <div  class="card-header-right">
-                        <button class="btn btn-sm btn-primary sendMail"><i class="las la-mail-bulk mr-2"></i>{{ __('Bulk Mail') }}</button>
+                        <button class="btn btn-sm btn-primary sendMail" data-toggle="modal" data-target="#mail"><i class="las la-mail-bulk mr-2"></i>{{ __('Bulk Mail') }}</button>
                     </div>
                 </div>
 
@@ -60,7 +46,7 @@
 
     <div class="modal fade" tabindex="-1" role="dialog" id="mail">
         <div class="modal-dialog modal-lg" role="document">
-            <form action="{{ route('admin.user.bulk') }}" method="post">
+            <form action="{{ route('admin.user.bulk.mail') }}" method="post">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
@@ -121,6 +107,5 @@
 @endsection
 
 @push('scripts')
-    <!-- Legacy script might interfere with Livewire, careful -->
-    <script src="{{ asset('js/pages/admin/users-index.js') }}"></script>
+    <script src="{{ asset('js/pages/admin/users-spa.js') }}"></script>
 @endpush

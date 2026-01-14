@@ -76,7 +76,7 @@
                                     <h4 class="d-card-balance mt-xxl-3 mt-2">{{ Config::formatter($totalbalance) }}</h4>
                                     @if($currentPlan)
                                         <small class="text-muted">
-                                            {{ $currentPlan->plan->plan_name ?? 'Free Trial' }}
+                                            {{ $currentPlan->plan->plan_name ?? __('Free Trial') }}
                                             @if($plan_expired_at && $plan_expired_at->isFuture())
                                                 - {{ $plan_expired_at->diffInDays(now()) }} {{ __('days left') }}
                                             @endif
@@ -226,7 +226,7 @@
                                     <h4 class="d-card-balance mt-xxl-3 mt-2 mb-4">{{ Config::formatter($totalbalance) }}</h4>
                                     @if($currentPlan)
                                         <small class="text-muted mb-3 d-block">
-                                            {{ $currentPlan->plan->plan_name ?? 'Free Trial' }}
+                                            {{ $currentPlan->plan->plan_name ?? __('Free Trial') }}
                                             @if($plan_expired_at && $plan_expired_at->isFuture())
                                                 - {{ $plan_expired_at->diffInDays(now()) }} {{ __('days left') }}
                                             @endif
@@ -486,7 +486,7 @@
             if (timeLeft < 0) {
                 // The plan has expired
                 $('#countdownTwo').html(`
-                    <p class="upgrade-text"><i class="fas fa-rocket"></i> Please Upgrade Your Plan To Get Signals</p>
+                    <p class="upgrade-text"><i class="fas fa-rocket"></i> {{ __('Please Upgrade Your Plan To Get Signals') }}</p>
                 `);
             } else {
                 // The plan is still active

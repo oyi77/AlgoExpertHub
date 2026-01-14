@@ -14,7 +14,18 @@ class Deposit extends Model
         'payment_proof' => 'array'
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'gateway_id',
+        'trx',
+        'amount',
+        'rate',
+        'charge',
+        'total',
+        'status',
+        'type',
+        'payment_proof',
+    ];
 
 
     public function gateway()

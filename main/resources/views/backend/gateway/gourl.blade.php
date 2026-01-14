@@ -24,7 +24,7 @@
             <div class="card">
 
                 <div class="card-body">
-                    <form action="{{ route('admin.payment.update.gourl') }}" method="post" enctype="multipart/form-data">
+                    <form action="{{ route('admin.payment.gourl.update') }}" method="post" enctype="multipart/form-data">
                         @csrf
                         <div class="payment-wrapper">
                             @foreach ($gateways as $gateway)

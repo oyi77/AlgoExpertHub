@@ -68,7 +68,7 @@ class GatewayController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|unique:gateways,name',
             'type' => 'required|in:0,1',
             'parameter' => 'required|json',
@@ -77,7 +77,7 @@ class GatewayController extends Controller
             'currency' => 'required|string',
         ]);
 
-        Gateway::create($request->all());
+        Gateway::create($validated);
 
         return response()->json([
             'success' => true,
@@ -124,7 +124,7 @@ class GatewayController extends Controller
      */
     public function update(Request $request, Gateway $gateway): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'sometimes|string|unique:gateways,name,' . $gateway->id,
             'type' => 'sometimes|in:0,1',
             'parameter' => 'sometimes|json',
@@ -133,7 +133,7 @@ class GatewayController extends Controller
             'currency' => 'sometimes|string',
         ]);
 
-        $gateway->update($request->all());
+        $gateway->update($validated);
 
         return response()->json([
             'success' => true,

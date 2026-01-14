@@ -8,6 +8,7 @@ use App\Helpers\Helper\Helper;
 use App\Models\Deposit;
 use App\Models\Gateway;
 use App\Models\Payment as ModelsPayment;
+use App\Services\WebhookVerificationService;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Api\Amount;
 use PayPal\Api\Payer;
@@ -17,6 +18,8 @@ use PayPal\Api\Transaction;
 use PayPal\Api\PaymentExecution;
 use PayPal\Rest\ApiContext;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaypalService extends BaseAdapter
 {
@@ -61,9 +64,24 @@ class PaypalService extends BaseAdapter
         return $payment;
     }
 
-    public function success(): array
+    public function success(Request $request): array
     {
         $paypal = Gateway::where('name', 'paypal')->firstOrFail();
+
+        // $request is passed from controller
+        $verification = WebhookVerificationService::verifyPayPal(
+            $request,
+            $paypal->parameter->paypal_webhook_id ?? '',
+            $paypal->parameter->paypal_webhook_secret ?? ''
+        );
+
+        if (!$verification['valid']) {
+            Log::warning('PayPal webhook signature verification failed', [
+                'error' => $verification['error'],
+                'trx' => session('trx'),
+            ]);
+            return $this->returnError('Invalid webhook signature');
+        }
 
         if (session('type') == 'deposit') {
             $booking = Deposit::where('trx', session('trx'))->first();
@@ -78,9 +96,9 @@ class PaypalService extends BaseAdapter
             )
         );
 
-        $paymentId = $_GET['paymentId'] ?? '';
+        $paymentId = $request->input('paymentId', '');
         $payment = Payment::get($paymentId, $apiContext);
-        $payerId = $_GET['PayerID'] ?? '';
+        $payerId = $request->input('PayerID', '');
 
         $execution = new PaymentExecution();
         $execution->setPayerId($payerId);
@@ -92,13 +110,13 @@ class PaypalService extends BaseAdapter
 
             if ($result->getState() == 'approved') {
                 $this->handlePaymentSuccess($booking, (float)$transactionFee, $transactionId);
-                return $this->success('Payment Successfully Done');
+                return $this->returnSuccess('Payment Successfully Done');
             }
         } catch (Exception $ex) {
             $this->log('Paypal payment success execution failed', ['error' => $ex->getMessage()]);
-            return $this->error('Something Goes Wrong');
+            return $this->returnError('Something Goes Wrong');
         }
 
-        return $this->error('Something Goes Wrong');
+        return $this->returnError('Something Goes Wrong');
     }
 }
