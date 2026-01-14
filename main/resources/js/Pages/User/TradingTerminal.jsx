@@ -3,6 +3,7 @@ import { Head, usePage } from '@inertiajs/react';
 import { AppLayout } from '../../Components/Layout/AppLayout';
 import { ChartWidget } from '../../Components/Terminal/Widgets/ChartWidget';
 import { OrderBookWidget } from '../../Components/Terminal/Widgets/OrderBookWidget';
+import { OrderFormWidget } from '../../Components/Terminal/Widgets/OrderFormWidget';
 import { SymbolSelector } from '../../Components/Terminal/Widgets/SymbolSelector';
 
 const TradingTerminal = () => {
@@ -72,9 +73,10 @@ const TradingTerminal = () => {
     const defaultLayouts = {
         lg: [
             { i: 'chart', x: 0, y: 0, w: 9, h: 20, minW: 4, minH: 10 },
-            { i: 'orderbook', x: 9, y: 0, w: 3, h: 20, minW: 2, minH: 10 },
-            { i: 'trades', x: 9, y: 20, w: 3, h: 10, minW: 2, minH: 5 },
-            { i: 'positions', x: 0, y: 20, w: 9, h: 10, minW: 4, minH: 5 },
+            { i: 'orderbook', x: 9, y: 0, w: 3, h: 12, minW: 2, minH: 8 },
+            { i: 'orderform', x: 9, y: 12, w: 3, h: 18, minW: 2, minH: 8 },
+            { i: 'trades', x: 0, y: 20, w: 3, h: 10, minW: 2, minH: 5 }, // Moved trades to bottom left
+            { i: 'positions', x: 3, y: 20, w: 6, h: 10, minW: 4, minH: 5 }, // Adjusted positions width
         ]
     };
 
@@ -142,6 +144,15 @@ const TradingTerminal = () => {
                         </div>
                         <div className="h-[calc(100%-24px)]">
                             <OrderBookWidget symbol={symbol} currentPrice={currentPrice} />
+                        </div>
+                    </div>
+
+                    <div key="orderform" className="bg-[#1e2329] border border-[#2b3139] rounded overflow-hidden">
+                        <div className="drag-handle h-6 bg-[#2b3139] cursor-move flex items-center px-2">
+                            <span className="text-xs text-[#848e9c] font-medium">Order Entry</span>
+                        </div>
+                        <div className="h-[calc(100%-24px)]">
+                            <OrderFormWidget symbol={symbol} currentPrice={currentPrice} />
                         </div>
                     </div>
 
