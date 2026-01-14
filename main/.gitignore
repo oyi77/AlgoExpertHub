@@ -58,3 +58,6 @@ Thumbs.db
 
 # Npm package lock
 package-lock.json
+
+# Vite Build
+/public/build
