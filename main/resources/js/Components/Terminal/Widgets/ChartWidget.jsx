@@ -11,6 +11,9 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
     const [LightweightCharts, setLightweightCharts] = useState(null);
     const { routes } = usePage().props;
 
+    const [interval, setInterval] = useState('1h');
+    const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d'];
+
     // Dynamically import lightweight-charts only on client side
     useEffect(() => {
         import('lightweight-charts').then(module => {
@@ -26,15 +29,17 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
         try {
             // Check if routes.marketData exists
             if (!routes || !routes.marketData) {
-                console.error('Market data route not found');
-                return [];
+                // If route not found, try to use a default API route
+                console.warn('Market data route not found, using default');
             }
 
-            const response = await axios.get(routes.marketData, {
+            const url = (routes && routes.marketData) ? routes.marketData : '/api/market-data';
+
+            const response = await axios.get(url, {
                 params: {
                     symbol: symbol,
                     type: 'candlestick',
-                    interval: '1h',
+                    interval: interval,
                     limit: 100
                 }
             });
@@ -56,6 +61,21 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
         }
         return [];
     };
+
+    // Refetch data when interval changes
+    useEffect(() => {
+        if (isMounted && LightweightCharts && candlestickSeriesRef.current) {
+            const updateData = async () => {
+                setIsLoading(true);
+                const data = await fetchData();
+                if (data.length > 0 && candlestickSeriesRef.current) {
+                    candlestickSeriesRef.current.setData(data);
+                }
+                setIsLoading(false);
+            };
+            updateData();
+        }
+    }, [interval]);
 
     useEffect(() => {
         if (!chartContainerRef.current || !isMounted || !LightweightCharts) return;
@@ -82,14 +102,18 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
                             textColor: '#848e9c',
                         },
                         grid: {
-                            vertLines: { color: '#2b3139' },
-                            horzLines: { color: '#2b3139' },
+                            vertLines: { color: '#1E2329' },
+                            horzLines: { color: '#1E2329' },
                         },
                         width: width,
                         height: height,
                         timeScale: {
                             timeVisible: true,
                             secondsVisible: false,
+                            borderColor: '#2b3139',
+                        },
+                        rightPriceScale: {
+                            borderColor: '#2b3139',
                         },
                         handleScroll: {
                             mouseWheel: true,
@@ -103,7 +127,19 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
                             pinch: true,
                         },
                         crosshair: {
-                            mode: 0, // Normal crosshair
+                            mode: 1, // Magnet mode
+                            vertLine: {
+                                color: '#535a64',
+                                width: 1,
+                                style: 3,
+                                labelBackgroundColor: '#535a64',
+                            },
+                            horzLine: {
+                                color: '#535a64',
+                                width: 1,
+                                style: 3,
+                                labelBackgroundColor: '#535a64',
+                            },
                         },
                     });
 
@@ -138,7 +174,7 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
                         const basePrice = currentPrice ? parseFloat(currentPrice) : 95000;
                         const now = Math.floor(Date.now() / 1000);
                         const mockData = Array.from({ length: 100 }, (_, i) => {
-                            const time = now - (100 - i) * 3600;
+                            const time = now - (100 - i) * (interval === '1m' ? 60 : interval === '5m' ? 300 : 3600);
                             const random = Math.random() * (basePrice * 0.02) - (basePrice * 0.01);
                             return {
                                 time: time,
@@ -200,13 +236,32 @@ export const ChartWidget = ({ symbol = 'BTCUSDT', height = 400, currentPrice }) 
     }, [symbol, isMounted, LightweightCharts]);
 
     return (
-        <div className="w-full h-full relative">
+        <div className="w-full h-full relative group">
             <div
                 ref={chartContainerRef}
                 className="w-full h-full min-h-[300px]"
                 onMouseDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
             />
+            
+            {/* Timeframe Controls Overlay */}
+            <div className="absolute top-2 left-2 z-20 flex gap-1 bg-[#0b0e11]/80 p-1 rounded backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {timeframes.map((tf) => (
+                    <button
+                        key={tf}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setInterval(tf);
+                        }}
+                        className={`px-2 py-0.5 text-xs font-medium rounded hover:bg-[#2b3139] transition-colors ${
+                            interval === tf ? 'text-[#0ecb81] bg-[#2b3139]/50' : 'text-[#848e9c]'
+                        }`}
+                    >
+                        {tf.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#0b0e11] bg-opacity-50 z-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0ecb81]"></div>
