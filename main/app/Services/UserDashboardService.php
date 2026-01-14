@@ -42,8 +42,8 @@ class UserDashboardService
         $data['totalSupportTickets'] = $cachedTotals['totalSupportTickets'];
 
         if ($data['currentPlan'] != null) {
-            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
-                return UserSignal::where('user_id', auth()->id())
+            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . $user->id, $ttl, function () use ($user) {
+                return UserSignal::where('user_id', $user->id)
                     ->selectRaw('COUNT(*) as total, MONTHNAME(created_at) as month')
                     ->groupBy('month')
                     ->get();
@@ -76,26 +76,26 @@ class UserDashboardService
             $signalGrapTotal->push(0);
         }
 
-        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl, function () {
+        $payment = Cache::remember('udash:paymentAgg:' . $user->id, $ttl, function () use ($user) {
             return Payment::where('status', 1)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $user->id)
                 ->whereYear('created_at', now()->year)
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl, function () {
+        $withdraw = Cache::remember('udash:withdrawAgg:' . $user->id, $ttl, function () use ($user) {
             return Withdraw::where('status', 1)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $user->id)
                 ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl, function () {
+        $deposit = Cache::remember('udash:depositAgg:' . $user->id, $ttl, function () use ($user) {
             return Deposit::where('status', 1)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $user->id)
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
