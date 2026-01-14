@@ -4,14 +4,15 @@ import { Header } from './Header';
 import { MobileBottomMenu } from './MobileBottomMenu';
 
 export const AppLayout = ({ children }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+    // Initialize sidebar as open on desktop
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
         <div className="flex h-screen bg-[#0b0e11]">
             <Sidebar
-                className={`hidden md:flex ${isSidebarOpen ? '!flex fixed inset-y-0 left-0 z-50 w-64 shadow-xl' : ''}`}
+                className={`transition-all duration-300 ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full md:w-0 md:translate-x-0 overflow-hidden'} md:static fixed inset-y-0 left-0 z-50 shadow-xl md:shadow-none`}
                 onClose={() => setIsSidebarOpen(false)}
             />
 
