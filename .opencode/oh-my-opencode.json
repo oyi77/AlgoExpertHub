@@ -1,0 +1,59 @@
+{
+    "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+    "google_auth": false,
+    "categories": {
+      "visual-engineering": {
+        "model": "google/antigravity-gemini-3-pro-high"
+      },
+      "artistry": {
+        "model": "google/antigravity-gemini-3-pro-high"
+      },
+      "writing": {
+        "model": "google/antigravity-gemini-3-flash"
+      },
+      "business-logic": {
+        "model": "google/antigravity-gemini-3-pro-high"
+      },
+      "general": {
+        "model": "opencode/glm-4.7-free"
+      },
+      "most-capable": {
+        "model": "google/antigravity-gemini-3-pro-high"
+      },
+      "quick": {
+        "model": "google/antigravity-gemini-3-flash"
+      }
+    },
+    "claude_code": {
+      "mcp": false,
+      "commands": false,
+      "skills": true,
+      "agents": false,
+      "hooks": false,
+      "plugins": false
+    },
+    "agents": {
+      "Sisyphus": {
+        "model": "opencode/glm-4.7-free"
+      },
+      "orchestrator-sisyphus": {
+        "model": "opencode/glm-4.7-free"
+      },
+      "librarian": {
+        "model": "opencode/glm-4.7-free"
+      },
+      "explore": {
+        "model": "google/antigravity-gemini-3-flash"
+      },
+      "frontend-ui-ux-engineer": {
+        "model": "google/antigravity-gemini-3-pro-high"
+      },
+      "document-writer": {
+        "model": "google/antigravity-gemini-3-flash"
+      },
+      "multimodal-looker": {
+        "model": "google/antigravity-gemini-3-flash"
+      }
+    }
+  }
+  
