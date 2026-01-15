@@ -54,4 +54,19 @@ class SignalController extends Controller
 
         return Inertia::render('User/SignalCenter', $data);
     }
+
+    public function betaDetails(int $id)
+    {
+        $data['title'] = 'Signal Description';
+
+        $result = $this->signalService->details($id);
+
+        if ($result['type'] === 'error') {
+            abort($result['code'] ?? 404);
+        }
+
+        $data['signal'] = $result['data']['signal'];
+
+        return Inertia::render('User/SignalDetails', $data);
+    }
 }

@@ -276,4 +276,181 @@ class UserController extends Controller
 
         return Inertia::render('User/InterestLog', $data);
     }
+
+    // ========== ADDITIONAL BETA METHODS ==========
+
+    public function betaExternalSignals(Request $request)
+    {
+        $data['title'] = 'External Signals';
+        $data['multiChannelEnabled'] = \App\Support\AddonRegistry::active('multi-channel-signal-addon');
+        $data['activeTab'] = $request->tab ?? 'sources';
+
+        if ($data['multiChannelEnabled']) {
+            $signalAddon = \App\addons\multi_channel_signal_addon\app\Services\MultiChannelSignalService::class;
+            if (class_exists($signalAddon)) {
+                $service = app($signalAddon);
+                $data['sources'] = $service->getUserSources(auth()->id());
+                $data['stats'] = $service->getSourceStats(auth()->id());
+                $data['channels'] = $service->getUserChannels(auth()->id());
+                $data['channelStats'] = $service->getChannelStats(auth()->id());
+            }
+        }
+
+        return Inertia::render('User/ExternalSignals', $data);
+    }
+
+    public function betaTradingOverview(Request $request)
+    {
+        $data['title'] = 'Trading Overview';
+
+        $cards = [];
+        $connectionAddon = \App\Support\AddonRegistry::active('trading-management-addon');
+
+        if ($connectionAddon) {
+            $connections = \App\Models\ExecutionConnection::where('user_id', auth()->id())->where('status', 'active')->get();
+            foreach ($connections as $connection) {
+                $cards[] = [
+                    'name' => $connection->name,
+                    'type' => 'execution_connection',
+                    'type_label' => 'Trading Connection',
+                    'status' => $connection->status,
+                    'broker' => $connection->broker,
+                    'preset_name' => 'Default',
+                    'open_positions' => 0,
+                    'pl_today' => 0,
+                    'pl_week' => 0,
+                    'details_route' => route('user.execution-connections.edit', $connection->id),
+                    'toggle_route' => route('user.execution-connections.toggle', $connection->id),
+                ];
+            }
+        }
+
+        $data['cards'] = $cards;
+
+        return Inertia::render('User/TradingOverview', $data);
+    }
+
+    public function betaGateways(Request $request)
+    {
+        $data['title'] = 'Payment Gateways';
+        $data['gateways'] = \App\Models\Gateway::where('status', 1)->get();
+        $data['type'] = $request->type ?? 'deposit';
+        $data['plan'] = null;
+
+        if ($request->plan_id) {
+            $data['plan'] = \App\Models\Plan::find($request->plan_id);
+        }
+
+        return Inertia::render('User/GatewayList', $data);
+    }
+
+    public function betaPaynow(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $gateway = \App\Models\Gateway::findOrFail($id);
+        $type = $request->type ?? 'deposit';
+
+        $deposit = new \App\Models\Deposit();
+        $deposit->user_id = auth()->id();
+        $deposit->gateway_id = $gateway->id;
+        $deposit->amount = $request->amount;
+        $deposit->charge = 0;
+        $deposit->final_amount = $request->amount;
+        $deposit->trx = str()->random(16);
+        $deposit->status = 0;
+        $deposit->save();
+
+        return redirect()->route('user.gateway MANUAL', ['id' => $gateway->id, 'trx' => $deposit->trx]);
+    }
+
+    // ========== ONBOARDING BETA METHODS ==========
+
+    public function betaOnboardingWelcome(Request $request)
+    {
+        $data['title'] = 'Welcome';
+        $data['progress'] = 0;
+
+        return Inertia::render('User/OnboardingWelcome', $data);
+    }
+
+    public function betaOnboardingWelcomeComplete(Request $request)
+    {
+        auth()->user()->update(['onboarding_completed' => false]);
+
+        $steps = \App\Services\UserOnboardingService::STEPS;
+        $firstStep = array_key_first($steps);
+
+        return redirect()->route('user.onboarding.step', ['step' => $firstStep]);
+    }
+
+    public function betaOnboardingStep(Request $request, $step = null)
+    {
+        $data['title'] = 'Onboarding Setup';
+
+        $service = app(\App\Services\UserOnboardingService::class);
+        $allSteps = $service->getAllSteps();
+
+        if (!$step || !isset($allSteps[$step])) {
+            $step = array_key_first($allSteps);
+        }
+
+        $stepKeys = array_keys($allSteps);
+        $currentStepIndex = array_search($step, $stepKeys);
+        $totalSteps = count($stepKeys);
+        $progress = round((($currentStepIndex + 1) / $totalSteps) * 100);
+
+        $data['step'] = $step;
+        $data['currentStepIndex'] = $currentStepIndex;
+        $data['totalSteps'] = $totalSteps;
+        $data['progress'] = $progress;
+        $data['stepData'] = $service->getStepData(auth()->user(), $step);
+
+        return Inertia::render('User/OnboardingStep', $data);
+    }
+
+    public function betaOnboardingStepComplete(Request $request, $step)
+    {
+        $service = app(\App\Services\UserOnboardingService::class);
+        $allSteps = $service->getAllSteps();
+        $stepKeys = array_keys($allSteps);
+        $currentStepIndex = array_search($step, $stepKeys);
+        $nextStepIndex = $currentStepIndex + 1;
+
+        if ($nextStepIndex < count($stepKeys)) {
+            $nextStep = $stepKeys[$nextStepIndex];
+            return redirect()->route('user.onboarding.step', ['step' => $nextStep]);
+        }
+
+        return redirect()->route('user.onboarding.complete');
+    }
+
+    public function betaOnboardingComplete(Request $request)
+    {
+        $data['title'] = 'Onboarding Complete';
+
+        $service = app(\App\Services\UserOnboardingService::class);
+        $allSteps = $service->getAllSteps();
+
+        $steps = [];
+        foreach ($allSteps as $key => $label) {
+            $steps[$key] = [
+                'label' => $label,
+                'completed' => true,
+            ];
+        }
+
+        $data['steps'] = $steps;
+
+        return Inertia::render('User/OnboardingComplete', $data);
+    }
+
+    public function betaOnboardingSkip(Request $request)
+    {
+        auth()->user()->update(['onboarding_completed' => true]);
+
+        return redirect()->route('user.beta.dashboard');
+    }
 }

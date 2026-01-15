@@ -9,6 +9,7 @@ use App\Models\Configuration;
 use App\Models\GeneralSetting;
 use App\Notifications\KycUpdateNotification;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class KycController extends Controller
 {
@@ -22,6 +23,65 @@ class KycController extends Controller
         return view(Helper::themeView('user.kyc'))->with($data);
     }
 
+    public function betaKyc()
+    {
+        $user = auth()->user();
+
+        if ($user->kyc == 1) {
+            return redirect()->route('user.beta.dashboard')->with('notify', NotificationHelper::success('Your KYC Verification is Successful'));
+        }
+
+        $data['title'] = 'KYC Verification';
+        $data['user'] = $user;
+        $data['kyc_status'] = $user->kyc;
+        $data['kyc_config'] = Configuration::first()->kyc ?? [];
+
+        return Inertia::render('User/KYC', $data);
+    }
+
+    public function kycStore(Request $request)
+    {
+        $general = Configuration::first();
+        $user = auth()->user();
+
+        if ($user->kyc == 2) {
+            return back()->with('notify', NotificationHelper::error('You have already submitted KYC form'));
+        }
+
+        $validation = [];
+        if ($general->kyc != null) {
+            foreach ($general->kyc as $params) {
+                $key = strtolower(str_replace(' ', '_', $params['field_name']));
+
+                if ($params['type'] == 'text' || $params['type'] == 'textarea') {
+                    $validationRules = $params['validation'] == 'required' ? 'required' : 'sometimes';
+                    $validation[$key] = $validationRules;
+                } else {
+                    $validationRules = ($params['validation'] == 'required' ? 'required' : 'sometimes') . "|image|mimes:jpg,png,jpeg|max:2048";
+                    $validation[$key] = $validationRules;
+                }
+            }
+        }
+
+        $validatedData = $request->validate($validation);
+
+        $data = $validatedData;
+        foreach ($data as $key => $upload) {
+            if ($request->hasFile($key)) {
+                $filename = Helper::saveImage($upload, Helper::filePath('user'));
+                $data[$key] = ['file' => $filename, 'type' => 'file'];
+            }
+        }
+
+        $user->kyc_information = $data;
+        $user->is_kyc_verified = 2;
+        $user->save();
+
+        $admin = Admin::where('type','super')->first();
+        $admin->notify(new KycUpdateNotification($user));
+
+        return back()->with('notify', NotificationHelper::success('Successfully sent KYC Information to Admin'));
+    }
 
     public function kycUpdate(Request $request)
     {

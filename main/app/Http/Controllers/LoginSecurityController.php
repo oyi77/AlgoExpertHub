@@ -9,6 +9,7 @@ use App\Models\LoginSecurity;
 use Auth;
 use Hash;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LoginSecurityController extends Controller
 {
@@ -41,6 +42,32 @@ class LoginSecurityController extends Controller
         return view(Helper::themeView('user.2fa_settings'))->with($data);
     }
 
+    public function beta2fa(Request $request)
+    {
+        $general = Configuration::first();
+
+        $data['title'] = '2FA Settings';
+        $user = Auth::user();
+        $google2fa_url = "";
+        $google2fa_enable = false;
+
+        if ($user->loginSecurity()->exists()) {
+            $google2fa = (new \PragmaRX\Google2FAQRCode\Google2FA());
+            $google2fa_url = $google2fa->getQRCodeInline(
+                $general->appname,
+                $user->email,
+                $user->loginSecurity->google2fa_secret
+            );
+            $google2fa_enable = (bool) $user->loginSecurity->google2fa_enable;
+        }
+
+        $data['user'] = $user;
+        $data['google2fa_url'] = $google2fa_url;
+        $data['google2fa_enable'] = $google2fa_enable;
+
+        return Inertia::render('User/TwoFA', $data);
+    }
+
     /**
      * Generate 2FA secret key
      */
@@ -57,7 +84,7 @@ class LoginSecurityController extends Controller
         $login_security->google2fa_secret = $google2fa->generateSecretKey();
         $login_security->save();
 
-        return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("Secret key is generated."));
+        return redirect()->route('user.beta.2fa')->with('notify', NotificationHelper::success("Secret key is generated."));
     }
 
     /**
@@ -74,9 +101,9 @@ class LoginSecurityController extends Controller
         if ($valid) {
             $user->loginSecurity->google2fa_enable = 1;
             $user->loginSecurity->save();
-            return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("2FA is enabled successfully."));
+            return redirect()->route('user.beta.2fa')->with('notify', NotificationHelper::success("2FA is enabled successfully."));
         } else {
-            return redirect()->route('user.2fa')->with('notify', NotificationHelper::error("Invalid verification Code, Please try again."));
+            return redirect()->route('user.beta.2fa')->with('notify', NotificationHelper::error("Invalid verification Code, Please try again."));
         }
     }
 
@@ -96,6 +123,6 @@ class LoginSecurityController extends Controller
         $user = Auth::user();
         $user->loginSecurity->google2fa_enable = 0;
         $user->loginSecurity->save();
-        return redirect()->route('user.2fa')->with('notify', NotificationHelper::success("2FA is now disabled."));
+        return redirect()->route('user.beta.2fa')->with('notify', NotificationHelper::success("2FA is now disabled."));
     }
 }
