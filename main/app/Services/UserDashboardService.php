@@ -18,13 +18,17 @@ class UserDashboardService
     public function dashboard()
     {
         $user = auth()->user();
+        $userId = $user->id; // Optimization: Avoid repeated auth()->id() calls
 
         // Initialize TTL with default value
         $perf = GlobalConfiguration::getValue('performance', config('performance'));
         $ttlMap = $perf['cache']['ttl_map'] ?? [];
         $ttl = (int)($ttlMap['dashboard.user'] ?? 300);
 
-        $cachedTotals = Cache::remember('udash:totals:' . auth()->id(), $ttl, function () use ($user) {
+        // Optimization: Calculate start date for last 12 months to limit query scan range
+        $startDate = Carbon::today()->startOfMonth()->subMonth(11);
+
+        $cachedTotals = Cache::remember('udash:totals:' . $userId, $ttl, function () use ($user, $startDate) {
             return [
                 'currentPlan' => $user->currentplan()->first(),
                 'totalDeposit' => $user->deposits()->where('status', 1)->sum('amount'),
@@ -42,8 +46,9 @@ class UserDashboardService
         $data['totalSupportTickets'] = $cachedTotals['totalSupportTickets'];
 
         if ($data['currentPlan'] != null) {
-            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
-                return UserSignal::where('user_id', auth()->id())
+            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . $userId, $ttl, function () use ($userId, $startDate) {
+                return UserSignal::where('user_id', $userId)
+                    ->where('created_at', '>=', $startDate) // Optimization: Limit to last 12 months
                     ->selectRaw('COUNT(*) as total, MONTHNAME(created_at) as month')
                     ->groupBy('month')
                     ->get();
@@ -55,7 +60,7 @@ class UserDashboardService
         $data['user'] = $user;
         $data['transactions'] = $cachedTotals['recentTransactions'] ?? $user->transactions()->latest()->limit(3)->get();
 
-        $data['signals'] = DashboardSignal::where('user_id', $user->id)->latest()->with('signal.market', 'signal.pair', 'signal.time')->paginate(Helper::pagination());
+        $data['signals'] = DashboardSignal::where('user_id', $userId)->latest()->with('signal.market', 'signal.pair', 'signal.time')->paginate(Helper::pagination());
 
 
         $months = array();
@@ -76,26 +81,28 @@ class UserDashboardService
             $signalGrapTotal->push(0);
         }
 
-        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl, function () {
+        $payment = Cache::remember('udash:paymentAgg:' . $userId, $ttl, function () use ($userId, $startDate) {
             return Payment::where('status', 1)
-                ->where('user_id', auth()->id())
-                ->whereYear('created_at', now()->year)
+                ->where('user_id', $userId)
+                ->where('created_at', '>=', $startDate) // Optimization: Last 12 months instead of current year
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl, function () {
+        $withdraw = Cache::remember('udash:withdrawAgg:' . $userId, $ttl, function () use ($userId, $startDate) {
             return Withdraw::where('status', 1)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $userId)
+                ->where('created_at', '>=', $startDate) // Optimization: Limit to last 12 months
                 ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl, function () {
+        $deposit = Cache::remember('udash:depositAgg:' . $userId, $ttl, function () use ($userId, $startDate) {
             return Deposit::where('status', 1)
-                ->where('user_id', auth()->id())
+                ->where('user_id', $userId)
+                ->where('created_at', '>=', $startDate) // Optimization: Limit to last 12 months
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
