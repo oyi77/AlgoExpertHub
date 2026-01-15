@@ -94,6 +94,22 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
         Route::get('/withdraw/history', [LogController::class, 'betaAllWithdraw'])->name('withdraw.history');
         Route::get('/withdraw/pending', [LogController::class, 'betaPendingWithdraw'])->name('withdraw.pending');
         Route::get('/withdraw/completed', [LogController::class, 'betaCompleteWithdraw'])->name('withdraw.completed');
+
+        // Additional Beta Routes
+        Route::get('/external-signals', [UserController::class, 'betaExternalSignals'])->name('external-signals.index');
+        Route::get('/trading/overview', [UserController::class, 'betaTradingOverview'])->name('trading.overview');
+        Route::get('/gateways', [UserController::class, 'betaGateways'])->name('gateways');
+        Route::post('/gateways/paynow/{id}', [UserController::class, 'betaPaynow'])->name('paynow');
+
+        // Onboarding Routes
+        Route::prefix('onboarding')->name('onboarding.')->group(function () {
+            Route::get('/welcome', [UserController::class, 'betaOnboardingWelcome'])->name('welcome');
+            Route::post('/welcome/complete', [UserController::class, 'betaOnboardingWelcomeComplete'])->name('welcome.complete');
+            Route::get('/step/{step?}', [UserController::class, 'betaOnboardingStep'])->name('step');
+            Route::post('/step/{step}/complete', [UserController::class, 'betaOnboardingStepComplete'])->name('step.complete');
+            Route::get('/complete', [UserController::class, 'betaOnboardingComplete'])->name('complete');
+            Route::post('/skip', [UserController::class, 'betaOnboardingSkip'])->name('skip');
+        });
     });
 });
 

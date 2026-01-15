@@ -28,6 +28,7 @@ Route::name('user.')->middleware(['auth', 'inactive', 'is_email_verified', '2fa'
 
                 // Signal Center in Beta
                 Route::get('/signals', [\App\Http\Controllers\SignalController::class, 'betaIndex'])->name('signals.index');
+                Route::get('/signals/{id}', [\App\Http\Controllers\SignalController::class, 'betaDetails'])->name('signals.details');
 
                 // Help Center in Beta
                 Route::prefix('help')->name('help.')->group(function () {
