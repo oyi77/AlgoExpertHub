@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
+import axios from 'axios';
 
-export const OrderFormWidget = ({ symbol = 'BTCUSDT', currentPrice, balance = { USDT: 1000, BTC: 0.05 } }) => {
+export const OrderFormWidget = ({ symbol = 'BTCUSDT', currentPrice, balance = { USDT: 1000, BTC: 0.05 }, mode = 'real' }) => {
     const [side, setSide] = useState('buy'); // buy | sell
     const [type, setType] = useState('limit'); // limit | market
     const [price, setPrice] = useState('');
     const [amount, setAmount] = useState('');
     const [total, setTotal] = useState('');
     const [sliderValue, setSliderValue] = useState(0);
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     // Update price when currentPrice changes (if empty)
     useEffect(() => {
         if (currentPrice && !price && type === 'limit') {
@@ -68,6 +71,47 @@ export const OrderFormWidget = ({ symbol = 'BTCUSDT', currentPrice, balance = { 
         // Recalculate amount if price exists
         if (price && val) {
             setAmount((parseFloat(val) / parseFloat(price)).toFixed(6));
+        }
+    };
+
+    const handleOrder = async () => {
+        if (!amount || parseFloat(amount) <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        
+        if (type === 'limit' && (!price || parseFloat(price) <= 0)) {
+            alert('Please enter a valid price');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await axios.post('/beta/terminal/order', {
+                symbol: symbol,
+                direction: side,
+                quantity: amount,
+                price: type === 'limit' ? price : null,
+                type: type, // limit or market (backend expects order type, although controller validation looked for mode, connection_id etc. check controller again if needed)
+                mode: mode,
+                // sl_price, tp_price implementation if needed
+            });
+
+            if (response.data.success) {
+                alert('Order placed successfully');
+                // Optional: clear form
+                setAmount('');
+                setTotal('');
+                setSliderValue(0);
+            } else {
+                alert('Order failed: ' + response.data.message);
+            }
+        } catch (error) {
+            console.error('Order error:', error);
+            alert('Failed to place order: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -206,11 +250,15 @@ export const OrderFormWidget = ({ symbol = 'BTCUSDT', currentPrice, balance = { 
 
                 {/* Submit Button */}
                 <button
+                    onClick={handleOrder}
+                    disabled={isSubmitting}
                     className={`w-full h-10 rounded font-bold text-sm transition-opacity hover:opacity-90 mt-2 ${
+                        isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                    } ${
                         side === 'buy' ? 'bg-[#0ecb81] text-white' : 'bg-[#f6465d] text-white'
                     }`}
                 >
-                    {side === 'buy' ? 'Buy BTC' : 'Sell BTC'}
+                    {isSubmitting ? 'Placing Order...' : (side === 'buy' ? 'Buy BTC' : 'Sell BTC')}
                 </button>
             </div>
         </div>

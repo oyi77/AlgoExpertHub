@@ -7,12 +7,28 @@ import { OrderFormWidget } from '../../Components/Terminal/Widgets/OrderFormWidg
 import { SymbolSelector } from '../../Components/Terminal/Widgets/SymbolSelector';
 
 const TradingTerminal = () => {
-    const { symbol: initialSymbol, currentPrice: initialPrice, openPositions, stats24h: initialStats } = usePage().props;
+    const { 
+        symbol: initialSymbol, 
+        currentPrice: initialPrice, 
+        openPositions, 
+        stats24h: initialStats,
+        isDemo,
+        realBalance,
+        demoBalance 
+    } = usePage().props;
+
     const [symbol, setSymbol] = useState(initialSymbol || 'BTCUSDT');
     const [currentPrice, setCurrentPrice] = useState(initialPrice);
     const [stats24h, setStats24h] = useState(initialStats);
+    const [mode, setMode] = useState(isDemo ? 'demo' : 'real');
     const [Layout, setLayout] = useState(null);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    // Calculate current balance based on mode
+    const currentBalance = {
+        USDT: mode === 'demo' ? demoBalance : realBalance,
+        BTC: 0 // Placeholder as backend doesn't send asset balance yet
+    };
 
     useEffect(() => {
         // Dynamically import react-grid-layout only on client side
@@ -72,11 +88,10 @@ const TradingTerminal = () => {
 
     const defaultLayouts = {
         lg: [
-            { i: 'chart', x: 0, y: 0, w: 9, h: 20, minW: 4, minH: 10 },
-            { i: 'orderbook', x: 9, y: 0, w: 3, h: 12, minW: 2, minH: 8 },
-            { i: 'orderform', x: 9, y: 12, w: 3, h: 18, minW: 2, minH: 8 },
-            { i: 'trades', x: 0, y: 20, w: 3, h: 10, minW: 2, minH: 5 }, // Moved trades to bottom left
-            { i: 'positions', x: 3, y: 20, w: 6, h: 10, minW: 4, minH: 5 }, // Adjusted positions width
+            { i: 'chart', x: 0, y: 0, w: 7, h: 22, minW: 4, minH: 10 },
+            { i: 'orderbook', x: 7, y: 0, w: 3, h: 22, minW: 2, minH: 10 },
+            { i: 'orderform', x: 10, y: 0, w: 2, h: 22, minW: 2, minH: 10 },
+            { i: 'positions', x: 0, y: 22, w: 12, h: 10, minW: 4, minH: 5 },
         ]
     };
 
@@ -98,7 +113,7 @@ const TradingTerminal = () => {
 
     if (!Layout || !isLoaded) {
         return (
-            <AppLayout>
+            <AppLayout initialSidebarState={false}>
                 <Head title={`Trading ${symbol || 'Terminal'}`} />
                 <LoadingFallback />
             </AppLayout>
@@ -106,7 +121,7 @@ const TradingTerminal = () => {
     }
 
     return (
-        <AppLayout>
+        <AppLayout initialSidebarState={false}>
             <Head title={`Trading ${symbol || 'Terminal'}`} />
 
             <div className="h-[calc(100vh-64px)] -m-6 bg-[#0b0e11]">
@@ -131,7 +146,27 @@ const TradingTerminal = () => {
                                     {currentPrice}
                                 </span>
                             </span>
-                            <span className="text-xs text-[#848e9c]">Chart</span>
+                            <div className="flex items-center gap-2">
+                                <div className="flex bg-[#0b0e11] rounded p-0.5">
+                                    <button
+                                        onClick={() => setMode('real')}
+                                        className={`px-2 py-0.5 text-[10px] rounded transition-colors ${
+                                            mode === 'real' ? 'bg-[#2b3139] text-[#eaecef]' : 'text-[#848e9c] hover:text-[#eaecef]'
+                                        }`}
+                                    >
+                                        Real
+                                    </button>
+                                    <button
+                                        onClick={() => setMode('demo')}
+                                        className={`px-2 py-0.5 text-[10px] rounded transition-colors ${
+                                            mode === 'demo' ? 'bg-[#f0b90b] text-black font-bold' : 'text-[#848e9c] hover:text-[#eaecef]'
+                                        }`}
+                                    >
+                                        Demo
+                                    </button>
+                                </div>
+                                <span className="text-xs text-[#848e9c]">Chart</span>
+                            </div>
                         </div>
                         <div className="h-[calc(100%-24px)]">
                             <ChartWidget symbol={symbol} currentPrice={currentPrice} />
@@ -139,10 +174,8 @@ const TradingTerminal = () => {
                     </div>
 
                     <div key="orderbook" className="bg-[#181a20] border border-[#2b3139] rounded overflow-hidden">
-                        <div className="drag-handle h-6 bg-[#2b3139] cursor-move flex items-center px-2">
-                            <span className="text-xs text-[#848e9c] font-medium">Order Book</span>
-                        </div>
-                        <div className="h-[calc(100%-24px)]">
+                        {/* Drag handle handled inside OrderBookWidget now for tabs */}
+                        <div className="h-full">
                             <OrderBookWidget symbol={symbol} currentPrice={currentPrice} />
                         </div>
                     </div>
@@ -152,31 +185,12 @@ const TradingTerminal = () => {
                             <span className="text-xs text-[#848e9c] font-medium">Order Entry</span>
                         </div>
                         <div className="h-[calc(100%-24px)]">
-                            <OrderFormWidget symbol={symbol} currentPrice={currentPrice} />
-                        </div>
-                    </div>
-
-                    <div key="trades" className="bg-[#181a20] border border-[#2b3139] rounded flex items-center justify-center text-[#848e9c] overflow-hidden">
-                        <div className="w-full h-full flex flex-col">
-                            <div className="drag-handle w-full h-6 bg-[#2b3139] cursor-move flex items-center px-2 shrink-0">
-                                <span className="text-xs text-[#848e9c] font-medium">Recent Trades</span>
-                            </div>
-                            <div className="w-full flex-1 overflow-y-auto p-2 scrollbar-hide">
-                                <div className="flex justify-between text-[10px] text-[#848e9c] mb-1">
-                                    <span>Price</span>
-                                    <span>Amount</span>
-                                    <span>Time</span>
-                                </div>
-                                {Array.from({ length: 15 }).map((_, i) => (
-                                    <div key={i} className="flex justify-between text-[10px] py-0.5 hover:bg-[#2b3139]">
-                                        <span className={i % 2 === 0 ? "text-[#0ecb81]" : "text-[#f6465d]"}>
-                                            {(parseFloat(currentPrice || 45000) + (Math.random() * 10 - 5)).toFixed(2)}
-                                        </span>
-                                        <span className="text-[#eaecef]">{Math.random().toFixed(4)}</span>
-                                        <span className="text-[#848e9c]">10:3{i}:22</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <OrderFormWidget 
+                                symbol={symbol} 
+                                currentPrice={currentPrice} 
+                                balance={currentBalance}
+                                mode={mode}
+                            />
                         </div>
                     </div>
 

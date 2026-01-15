@@ -3,9 +3,9 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { MobileBottomMenu } from './MobileBottomMenu';
 
-export const AppLayout = ({ children }) => {
-    // Initialize sidebar as open on desktop
-    const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+export const AppLayout = ({ children, initialSidebarState = true }) => {
+    // Initialize sidebar based on prop (default open on desktop)
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(initialSidebarState);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
