@@ -41,9 +41,14 @@ class UserDashboardService
         $data['totalPayments'] = $cachedTotals['totalPayments'];
         $data['totalSupportTickets'] = $cachedTotals['totalSupportTickets'];
 
+        // Optimization: Limit aggregation to the last 12 months to prevent full table scans
+        // and incorrect merging of data from multiple years.
+        $startDate = now()->startOfMonth()->subMonths(11);
+
         if ($data['currentPlan'] != null) {
-            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () {
+            $data['signalGraph'] = Cache::remember('udash:signalGraph:' . auth()->id(), $ttl, function () use ($startDate) {
                 return UserSignal::where('user_id', auth()->id())
+                    ->where('created_at', '>=', $startDate)
                     ->selectRaw('COUNT(*) as total, MONTHNAME(created_at) as month')
                     ->groupBy('month')
                     ->get();
@@ -76,26 +81,28 @@ class UserDashboardService
             $signalGrapTotal->push(0);
         }
 
-        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl, function () {
+        $payment = Cache::remember('udash:paymentAgg:' . auth()->id(), $ttl, function () use ($startDate) {
             return Payment::where('status', 1)
                 ->where('user_id', auth()->id())
-                ->whereYear('created_at', now()->year)
+                ->where('created_at', '>=', $startDate)
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl, function () {
+        $withdraw = Cache::remember('udash:withdrawAgg:' . auth()->id(), $ttl, function () use ($startDate) {
             return Withdraw::where('status', 1)
                 ->where('user_id', auth()->id())
+                ->where('created_at', '>=', $startDate)
                 ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
         });
 
-        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl, function () {
+        $deposit = Cache::remember('udash:depositAgg:' . auth()->id(), $ttl, function () use ($startDate) {
             return Deposit::where('status', 1)
                 ->where('user_id', auth()->id())
+                ->where('created_at', '>=', $startDate)
                 ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
                 ->groupBy('month')
                 ->get();
