@@ -274,7 +274,7 @@
 
     <div class="tv-panel">
         <!-- Sidebar -->
-        @include(\App\Helpers\Helper\Helper::theme() . 'layout.user_sidebar')
+        @include('frontend.trading-v1.layout.user_sidebar')
         
         <!-- Main Content -->
         <div class="tv-main">
