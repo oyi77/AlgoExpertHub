@@ -99,9 +99,11 @@
                     }
                 @endphp
                 @if ($hasConfigRoute || $hasStrategyRoute || $hasOperationsRoute || $hasCopyTradingRoute || $hasTestRoute || $hasTradingBotsRoute)
-                <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
-                            data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span></a>
-                    <ul aria-expanded="false">
+                <li class="{{ request()->routeIs('admin.trading-management.*') ? 'mm-active' : '' }}">
+                    <a class="has-arrow" href="javascript:void(0)" aria-expanded="{{ request()->routeIs('admin.trading-management.*') ? 'true' : 'false' }}">
+                        <i data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Management') }}</span>
+                    </a>
+                    <ul aria-expanded="{{ request()->routeIs('admin.trading-management.*') ? 'true' : 'false' }}" class="{{ request()->routeIs('admin.trading-management.*') ? 'mm-show' : '' }}">
                         @if ($hasConfigRoute)
                         @php
                             try {
@@ -110,7 +112,7 @@
                                 $configRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $configRouteUrl }}" aria-expanded="false">{{ __('Trading Configuration') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.config.*') ? 'mm-active' : '' }}"><a href="{{ $configRouteUrl }}">{{ __('Trading Configuration') }}</a></li>
                         @endif
                         @if ($hasStrategyRoute)
                         @php
@@ -120,7 +122,7 @@
                                 $strategyRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $strategyRouteUrl }}" aria-expanded="false">{{ __('Strategy Management') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.strategy.*') ? 'mm-active' : '' }}"><a href="{{ $strategyRouteUrl }}">{{ __('Strategy Management') }}</a></li>
                         @endif
                         @if ($hasOperationsRoute)
                         @php
@@ -130,7 +132,7 @@
                                 $operationsRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $operationsRouteUrl }}" aria-expanded="false">{{ __('Trading Operations') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.operations.*') ? 'mm-active' : '' }}"><a href="{{ $operationsRouteUrl }}">{{ __('Trading Operations') }}</a></li>
                         @endif
                         @if ($hasCopyTradingRoute)
                         @php
@@ -140,7 +142,7 @@
                                 $copyTradingRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $copyTradingRouteUrl }}" aria-expanded="false">{{ __('Copy Trading') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.copy-trading.*') ? 'mm-active' : '' }}"><a href="{{ $copyTradingRouteUrl }}">{{ __('Copy Trading') }}</a></li>
                         @endif
                         @if ($hasTestRoute)
                         @php
@@ -150,7 +152,7 @@
                                 $testRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $testRouteUrl }}" aria-expanded="false">{{ __('Backtesting') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.test.*') ? 'mm-active' : '' }}"><a href="{{ $testRouteUrl }}">{{ __('Backtesting') }}</a></li>
                         @endif
                         @if ($hasTradingBotsRoute)
                         @php
@@ -160,7 +162,7 @@
                                 $tradingBotsRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $tradingBotsRouteUrl }}" aria-expanded="false">{{ __('Trading Bots') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.trading-bots.*') ? 'mm-active' : '' }}"><a href="{{ $tradingBotsRouteUrl }}">{{ __('Trading Bots') }}</a></li>
                         @endif
                         @if ($hasMarketplaceBotsRoute || $hasMarketplaceTradersRoute)
                         <li class="nav-label">{{ __('Marketplace') }}</li>
@@ -172,7 +174,7 @@
                                 $marketplaceBotsRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $marketplaceBotsRouteUrl }}" aria-expanded="false">{{ __('Bot Marketplace') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.marketplace.bots.*') ? 'mm-active' : '' }}"><a href="{{ $marketplaceBotsRouteUrl }}">{{ __('Bot Marketplace') }}</a></li>
                         @endif
                         @if ($hasMarketplaceTradersRoute)
                         @php
@@ -182,7 +184,7 @@
                                 $marketplaceTradersRouteUrl = '#';
                             }
                         @endphp
-                        <li><a href="{{ $marketplaceTradersRouteUrl }}" aria-expanded="false">{{ __('Trader Marketplace') }}</a></li>
+                        <li class="{{ request()->routeIs('admin.trading-management.marketplace.traders.*') ? 'mm-active' : '' }}"><a href="{{ $marketplaceTradersRouteUrl }}">{{ __('Trader Marketplace') }}</a></li>
                         @endif
                         @endif
                     </ul>

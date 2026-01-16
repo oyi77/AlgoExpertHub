@@ -6,9 +6,9 @@ export default function WithdrawHistory({ withdrawlogs }) {
     const { url } = usePage();
 
     const tabs = [
-        { name: 'All Withdrawals', href: '/user/beta/withdraw/history', active: url.includes('/withdraw/history') },
-        { name: 'Pending', href: '/user/beta/withdraw/pending', active: url.includes('/withdraw/pending') },
-        { name: 'Completed', href: '/user/beta/withdraw/completed', active: url.includes('/withdraw/completed') },
+        { name: 'All Withdrawals', href: '/beta/withdraw/history', active: url.includes('/withdraw/history') },
+        { name: 'Pending', href: '/beta/withdraw/pending', active: url.includes('/withdraw/pending') },
+        { name: 'Completed', href: '/beta/withdraw/completed', active: url.includes('/withdraw/completed') },
     ];
 
     return (

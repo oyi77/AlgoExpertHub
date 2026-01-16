@@ -23,7 +23,7 @@ export default function Subscription({ title, subscription }) {
                                 <p>Expires: {subscription.plan_expired_at || 'Never'}</p>
                             </div>
                             <div className="mt-6">
-                                <a href="/user/beta/plans">
+                                <a href="/beta/plans">
                                     <Button>Upgrade Plan</Button>
                                 </a>
                             </div>
@@ -31,7 +31,7 @@ export default function Subscription({ title, subscription }) {
                     ) : (
                         <div className="text-center py-6">
                             <p className="text-[#848e9c] mb-4">No active subscription</p>
-                            <a href="/user/beta/plans">
+                            <a href="/beta/plans">
                                 <Button>Subscribe Now</Button>
                             </a>
                         </div>

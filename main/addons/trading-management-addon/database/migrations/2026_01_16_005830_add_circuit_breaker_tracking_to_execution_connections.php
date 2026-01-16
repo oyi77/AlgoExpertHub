@@ -8,20 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('execution_connections')) {
+        if (!Schema::hasTable('sp_execution_connections')) {
             return;
         }
 
-        Schema::table('execution_connections', function (Blueprint $table) {
-            if (!Schema::hasColumn('execution_connections', 'consecutive_failures')) {
+        Schema::table('sp_execution_connections', function (Blueprint $table) {
+            if (!Schema::hasColumn('sp_execution_connections', 'consecutive_failures')) {
                 $table->integer('consecutive_failures')->default(0)->after('max_consecutive_failures');
             }
 
-            if (!Schema::hasColumn('execution_connections', 'last_failure_at')) {
+            if (!Schema::hasColumn('sp_execution_connections', 'last_failure_at')) {
                 $table->dateTime('last_failure_at')->nullable()->after('consecutive_failures');
             }
 
-            if (!$this->indexExists('execution_connections', 'execution_connections_consecutive_failures_index')) {
+            if (!$this->indexExists('sp_execution_connections', 'sp_execution_connections_consecutive_failures_index')) {
                 $table->index('consecutive_failures');
             }
         });
@@ -29,20 +29,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasTable('execution_connections')) {
+        if (!Schema::hasTable('sp_execution_connections')) {
             return;
         }
 
-        Schema::table('execution_connections', function (Blueprint $table) {
-            if ($this->indexExists('execution_connections', 'execution_connections_consecutive_failures_index')) {
-                $table->dropIndex('execution_connections_consecutive_failures_index');
+        Schema::table('sp_execution_connections', function (Blueprint $table) {
+            if ($this->indexExists('sp_execution_connections', 'sp_execution_connections_consecutive_failures_index')) {
+                $table->dropIndex('sp_execution_connections_consecutive_failures_index');
             }
 
-            if (Schema::hasColumn('execution_connections', 'last_failure_at')) {
+            if (Schema::hasColumn('sp_execution_connections', 'last_failure_at')) {
                 $table->dropColumn('last_failure_at');
             }
 
-            if (Schema::hasColumn('execution_connections', 'consecutive_failures')) {
+            if (Schema::hasColumn('sp_execution_connections', 'consecutive_failures')) {
                 $table->dropColumn('consecutive_failures');
             }
         });
@@ -55,7 +55,7 @@ return new class extends Migration
 
         $result = $connection->select(
             "SELECT COUNT(*) as count FROM information_schema.statistics\n             WHERE table_schema = ? AND table_name = ? AND index_name = ?",
-            [$databaseName, $table, $index]
+            [$databaseName, 'sp_' . $table, $index]
         );
 
         return (int) $result[0]->count > 0;

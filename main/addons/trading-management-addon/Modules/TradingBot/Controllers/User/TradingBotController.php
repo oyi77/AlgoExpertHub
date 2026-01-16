@@ -118,7 +118,6 @@ class TradingBotController extends Controller
     {
         $isAjax = $request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
         
-        try {
             $validated = $request->validated();
 
         // Auto-fill data_connection_id from exchange_connection_id if not provided and MARKET_STREAM_BASED

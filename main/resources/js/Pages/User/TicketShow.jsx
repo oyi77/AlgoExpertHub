@@ -10,7 +10,7 @@ export default function TicketShow({ title, ticket, ticket_reply }) {
             <Head title={title || 'Ticket Discussion'} />
 
             <div className="mb-6">
-                <Link href="/user/beta/ticket" className="text-[#848e9c] hover:text-[#eaecef] text-sm mb-2 inline-block">
+                <Link href="/beta/ticket" className="text-[#848e9c] hover:text-[#eaecef] text-sm mb-2 inline-block">
                     ← Back to Tickets
                 </Link>
                 <h1 className="text-2xl font-bold text-[#eaecef]">#{ticket.id} - {ticket.subject}</h1>

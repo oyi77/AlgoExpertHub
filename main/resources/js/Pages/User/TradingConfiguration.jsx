@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { AppLayout } from '../../Components/Layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../Components/ui/Card';
 
@@ -21,9 +21,9 @@ export default function TradingConfiguration({ title, activeTab, tradingManageme
 
             <div className="flex gap-2 mb-6 overflow-x-auto">
                 {tabs.map((tab) => (
-                    <a
+                    <Link
                         key={tab.key}
-                        href={`/user/beta/trading/configuration?tab=${tab.key}`}
+                        href={`/beta/trading/configuration?tab=${tab.key}`}
                         className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === tab.key
                                 ? 'bg-[#3b82f6] text-white'
@@ -31,7 +31,7 @@ export default function TradingConfiguration({ title, activeTab, tradingManageme
                         }`}
                     >
                         {tab.label}
-                    </a>
+                    </Link>
                 ))}
             </div>
 

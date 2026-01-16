@@ -170,10 +170,6 @@ class MarketDataService
         });
     }
 
-            return $data;
-        });
-    }
-
     /**
      * Get indices market data (via Twelve Data)
      */

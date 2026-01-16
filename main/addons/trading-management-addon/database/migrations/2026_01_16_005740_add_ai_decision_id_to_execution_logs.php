@@ -8,16 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('execution_logs') || !Schema::hasTable('ai_decisions')) {
+        if (!Schema::hasTable('sp_execution_logs') || !Schema::hasTable('sp_ai_decisions')) {
             return;
         }
 
-        Schema::table('execution_logs', function (Blueprint $table) {
-            if (!Schema::hasColumn('execution_logs', 'ai_decision_id')) {
+        Schema::table('sp_execution_logs', function (Blueprint $table) {
+            if (!Schema::hasColumn('sp_execution_logs', 'ai_decision_id')) {
                 $table->foreignId('ai_decision_id')
                     ->nullable()
                     ->after('connection_id')
-                    ->constrained('ai_decisions')
+                    ->constrained('sp_ai_decisions')
                     ->nullOnDelete();
             }
         });
@@ -25,12 +25,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (!Schema::hasTable('execution_logs')) {
+        if (!Schema::hasTable('sp_execution_logs')) {
             return;
         }
 
-        Schema::table('execution_logs', function (Blueprint $table) {
-            if (Schema::hasColumn('execution_logs', 'ai_decision_id')) {
+        Schema::table('sp_execution_logs', function (Blueprint $table) {
+            if (Schema::hasColumn('sp_execution_logs', 'ai_decision_id')) {
                 $table->dropForeign(['ai_decision_id']);
                 $table->dropColumn('ai_decision_id');
             }

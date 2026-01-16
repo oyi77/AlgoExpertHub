@@ -23,7 +23,7 @@ export default function TicketList({ title, tickets, tickets_pending, tickets_an
                     <h1 className="text-2xl font-bold text-[#eaecef]">Support Tickets</h1>
                     <p className="text-[#848e9c] mt-1">Manage your support requests</p>
                 </div>
-                <Link href="/user/beta/ticket/create">
+                <Link href="/beta/ticket/create">
                     <Button>New Ticket</Button>
                 </Link>
             </div>
@@ -33,7 +33,7 @@ export default function TicketList({ title, tickets, tickets_pending, tickets_an
                 {tabs.map((tab) => (
                     <Link
                         key={tab.key}
-                        href={`/user/beta/ticket/status/${tab.key}`}
+                        href={`/beta/ticket/status/${tab.key}`}
                         className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === tab.key
                                 ? 'bg-[#3b82f6] text-white'
@@ -54,7 +54,7 @@ export default function TicketList({ title, tickets, tickets_pending, tickets_an
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <Link
-                                                href={`/user/beta/ticket/${ticket.id}`}
+                                                href={`/beta/ticket/${ticket.id}`}
                                                 className="font-medium text-[#eaecef] hover:text-[#3b82f6]"
                                             >
                                                 #{ticket.id} - {ticket.subject}

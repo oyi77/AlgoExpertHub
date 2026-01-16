@@ -8,16 +8,16 @@ return new class extends Migration
 {
     public function up()
     {
-        if (!Schema::hasTable('internal_trades')) {
+        if (!Schema::hasTable('sp_internal_trades')) {
             return;
         }
 
-        Schema::table('internal_trades', function (Blueprint $table) {
-            if (!Schema::hasColumn('internal_trades', 'is_paper')) {
+        Schema::table('sp_internal_trades', function (Blueprint $table) {
+            if (!Schema::hasColumn('sp_internal_trades', 'is_paper')) {
                 $table->boolean('is_paper')->default(false)->after('status');
             }
 
-            if (!$this->indexExists('internal_trades', 'internal_trades_is_paper_index')) {
+            if (!$this->indexExists('sp_internal_trades', 'sp_internal_trades_is_paper_index')) {
                 $table->index('is_paper');
             }
         });
@@ -25,16 +25,12 @@ return new class extends Migration
 
     public function down()
     {
-        if (!Schema::hasTable('internal_trades')) {
+        if (!Schema::hasTable('sp_internal_trades')) {
             return;
         }
 
-        Schema::table('internal_trades', function (Blueprint $table) {
-            if ($this->indexExists('internal_trades', 'internal_trades_is_paper_index')) {
-                $table->dropIndex('internal_trades_is_paper_index');
-            }
-
-            if (Schema::hasColumn('internal_trades', 'is_paper')) {
+        Schema::table('sp_internal_trades', function (Blueprint $table) {
+            if (Schema::hasColumn('sp_internal_trades', 'is_paper')) {
                 $table->dropColumn('is_paper');
             }
         });
@@ -47,7 +43,7 @@ return new class extends Migration
 
         $result = $connection->select(
             "SELECT COUNT(*) as count FROM information_schema.statistics\n             WHERE table_schema = ? AND table_name = ? AND index_name = ?",
-            [$databaseName, $table, $index]
+            [$databaseName, 'sp_' . $table, $index]
         );
 
         return (int) $result[0]->count > 0;

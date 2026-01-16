@@ -6,9 +6,9 @@ export default function Invest({ investments }) {
     const { url } = usePage();
 
     const tabs = [
-        { name: 'All Investments', href: '/user/beta/invest/all', active: url.includes('/invest/all') },
-        { name: 'Pending', href: '/user/beta/invest/pending', active: url.includes('/invest/pending') },
-        { name: 'Investment Log', href: '/user/beta/invest/log', active: url.includes('/invest/log') },
+        { name: 'All Investments', href: '/beta/invest/all', active: url.includes('/invest/all') },
+        { name: 'Pending', href: '/beta/invest/pending', active: url.includes('/invest/pending') },
+        { name: 'Investment Log', href: '/beta/invest/log', active: url.includes('/invest/log') },
     ];
 
     return (

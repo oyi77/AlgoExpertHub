@@ -23,7 +23,7 @@ export default function MultiChannelSignal({ title, activeTab, multiChannelEnabl
                 {tabs.map((tab) => (
                     <a
                         key={tab.key}
-                        href={`/user/beta/trading/multi-channel-signal?tab=${tab.key}`}
+                        href={`/beta/trading/multi-channel-signal?tab=${tab.key}`}
                         className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                             activeTab === tab.key
                                 ? 'bg-[#3b82f6] text-white'

@@ -45,7 +45,7 @@ const SignalCard = ({ signal }) => {
             <div className="p-4">
                 <h3 className="font-semibold text-[#eaecef] mb-4 truncate">
                     <Link
-                        href={`/user/beta/signals/${signal.id}/${signal.slug || signal.title.toLowerCase().replace(/\s+/g, '-')}`}
+                        href={`/beta/signals/${signal.id}/${signal.slug || signal.title.toLowerCase().replace(/\s+/g, '-')}`}
                         className="hover:text-[#0ecb81] transition-colors"
                     >
                         {signal.title}
@@ -95,7 +95,7 @@ const SignalCard = ({ signal }) => {
                 </div>
 
                 <Link
-                    href={`/user/beta/signals/${signal.id}/${signal.slug || signal.title.toLowerCase().replace(/\s+/g, '-')}`}
+                    href={`/beta/signals/${signal.id}/${signal.slug || signal.title.toLowerCase().replace(/\s+/g, '-')}`}
                     className="mt-4 block w-full text-center py-2 px-4 bg-[#2b3139] hover:bg-[#3b82f6] text-[#eaecef] rounded-lg transition-colors text-sm font-medium"
                 >
                     View Details
@@ -126,7 +126,7 @@ const EmptyState = () => (
                     Upgrade Plan
                 </Button>
             </Link>
-            <Link href="/user/beta/trading/multi-channel-signal?tab=signal-sources">
+            <Link href="/beta/trading/multi-channel-signal?tab=signal-sources">
                 <Button variant="outline" className="w-full sm:w-auto border-[#2b3139] text-[#848e9c] hover:text-[#eaecef] hover:bg-[#2b3139]">
                     <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />

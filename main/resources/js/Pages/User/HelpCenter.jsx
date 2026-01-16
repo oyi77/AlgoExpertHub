@@ -13,7 +13,7 @@ export default function HelpCenter({ title, topic, topics }) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {topics && Object.entries(topics).map(([key, label]) => (
-                    <Link key={key} href={`/user/beta/help/topic/${key}`}>
+                    <Link key={key} href={`/beta/help/topic/${key}`}>
                         <Card className="bg-[#1e2329] border-[#2b3139] hover:border-[#3b82f6] cursor-pointer transition-colors h-full">
                             <CardContent className="p-4 flex items-center">
                                 <span className="font-medium text-[#eaecef]">{label}</span>
