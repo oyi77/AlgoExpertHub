@@ -23,19 +23,20 @@ class InternalBrokerService
         float $quantity,
         float $currentPrice,
         ?float $slPrice = null,
-        ?float $tpPrice = null
+        ?float $tpPrice = null,
+        bool $isPaper = false
     ): InternalTrade {
         DB::beginTransaction();
-        
+
         try {
             // Validate user has sufficient balance
             $requiredMargin = $this->calculateRequiredMargin($quantity, $currentPrice);
-            
+
             if ($user->balance < $requiredMargin) {
                 throw new \Exception('Insufficient balance. Required: ' . $requiredMargin . ', Available: ' . $user->balance);
             }
 
-            // Create the trade
+            // Create trade
             $trade = InternalTrade::create([
                 'user_id' => $user->id,
                 'symbol' => strtoupper($symbol),
@@ -45,6 +46,7 @@ class InternalBrokerService
                 'current_price' => $currentPrice,
                 'sl_price' => $slPrice,
                 'tp_price' => $tpPrice,
+                'is_paper' => $isPaper,
                 'pnl' => 0,
                 'status' => 'open',
                 'opened_at' => now(),

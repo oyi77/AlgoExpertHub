@@ -60,6 +60,8 @@ class ExecutionConnection extends Model
         // Circuit breaker fields
         'circuit_breaker_enabled',
         'max_consecutive_failures',
+        'consecutive_failures',
+        'last_failure_at',
     ];
 
     protected $casts = [
@@ -72,6 +74,8 @@ class ExecutionConnection extends Model
         'liquidation_threshold' => 'decimal:2',
         'max_margin_usage_pct' => 'decimal:2',
         'circuit_breaker_enabled' => 'boolean',
+        'consecutive_failures' => 'integer',
+        'last_failure_at' => 'datetime',
     ];
 
     /**
@@ -154,7 +158,20 @@ class ExecutionConnection extends Model
      */
     public function canExecuteTrades(): bool
     {
-        return $this->is_active && $this->status === 'active';
+        if (!$this->is_active || $this->status !== 'active') {
+            return false;
+        }
+
+        if ($this->circuit_breaker_enabled && $this->consecutive_failures >= $this->max_consecutive_failures) {
+            // Check cooldown
+            if ($this->last_failure_at && $this->last_failure_at->diffInMinutes(now()) < 15) {
+                return false; // Still in cooldown
+            }
+            // Cooldown expired, reset counter
+            $this->update(['consecutive_failures' => 0]);
+        }
+
+        return true;
     }
 
     /**

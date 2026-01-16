@@ -76,13 +76,13 @@ class ExecutionJob implements ShouldQueue
                 return;
             }
 
-            // Validate market status before execution (skip in test mode)
-            $isTestMode = $this->executionData['test_mode'] ?? false;
+            // Validate market status before execution (skip in paper trading mode)
+            $isTestMode = $this->executionData['is_paper_trading'] ?? false;
 
-            // Paper trading mode not yet implemented for bot execution
-            // Use manual trading terminal for paper trading (TradingTerminalController -> InternalBrokerService)
+            // Paper trading mode: Use virtual positions created via InternalBrokerService for paper trading
+            // (already works for manual trading via TradingTerminalController)
             if ($isTestMode) {
-                Log::warning('Paper trading for bot execution not yet implemented in ExecutionJob', [
+                Log::warning('Paper trading mode: Use virtual positions created via InternalBrokerService for paper trading (already works for manual trading)', [
                     'bot_id' => $botId,
                     'symbol' => $symbol,
                     'direction' => $direction,
@@ -113,11 +113,68 @@ class ExecutionJob implements ShouldQueue
         // Get adapter for connection - create directly based on connection type
             $adapter = $this->createAdapter($connection);
 
-            Log::info('ExecutionJob: Adapter created, executing trade', [
+            Log::info('ExecutionJob: Adapter created, checking market data freshness', [
                 'connection_id' => $connection->id,
                 'provider' => $connection->provider,
                 'symbol' => $this->executionData['symbol'],
                 'direction' => $this->executionData['direction'],
+            ]);
+
+            // Check market data freshness before execution
+            $symbol = $this->executionData['symbol'] ?? '';
+            $timeframe = $this->executionData['timeframe'] ?? '';
+            $dataConnection = $connection->dataConnection;
+            $accountId = $dataConnection?->credentials['account_id'] ?? null;
+
+            $marketStatus = app(MarketStatusChecker::class)->checkMarketDataFreshness(
+                symbol: $symbol,
+                timeframe: $timeframe,
+                accountId: $accountId,
+                botId: $this->executionData['bot_id'] ?? null,
+                dataConnection: $dataConnection
+            );
+
+            if (!$marketStatus['is_fresh']) {
+                Log::warning('ExecutionJob: Market data stale, rejecting trade', [
+                    'bot_id' => $this->executionData['bot_id'] ?? null,
+                    'connection_id' => $connection->id,
+                    'symbol' => $symbol,
+                    'timeframe' => $timeframe,
+                    'status' => $marketStatus['status'] ?? 'unknown',
+                    'age_minutes' => $marketStatus['age_minutes'] ?? 0,
+                    'max_age_minutes' => $marketStatus['max_age_minutes'] ?? 0,
+                    'last_timestamp' => $marketStatus['last_timestamp'] ?? null,
+                ]);
+
+                // Create failed execution log for tracking
+                \Addons\TradingManagement\Modules\Execution\Models\ExecutionLog::create([
+                    'connection_id' => $connection->id,
+                    'signal_id' => $this->executionData['signal_id'] ?? null,
+                    'status' => 'failed',
+                    'execution_type' => ($this->executionData['entry_price'] ?? null) ? 'limit' : 'market',
+                    'symbol' => $this->executionData['symbol'] ?? '',
+                    'direction' => $this->executionData['direction'] ?? '',
+                    'quantity' => $this->executionData['quantity'] ?? 0,
+                    'entry_price' => $this->executionData['entry_price'] ?? null,
+                    'sl_price' => $this->executionData['stop_loss'] ?? null,
+                    'tp_price' => $this->executionData['take_profit'] ?? null,
+                    'error_message' => sprintf(
+                        'Market data stale (age: %s minutes, max: %s minutes) - status: %s',
+                        $marketStatus['age_minutes'] ?? 0,
+                        $marketStatus['max_age_minutes'] ?? 0,
+                        $marketStatus['status'] ?? 'unknown'
+                    ),
+                ]);
+
+                return; // Reject trade
+            }
+
+            Log::info('ExecutionJob: Market data fresh, proceeding with execution', [
+                'bot_id' => $this->executionData['bot_id'] ?? null,
+                'connection_id' => $connection->id,
+                'symbol' => $symbol,
+                'timeframe' => $timeframe,
+                'data_age_minutes' => $marketStatus['age_minutes'] ?? 0,
             ]);
 
             // Create execution log FIRST to track all attempts (success or failure)
@@ -144,7 +201,10 @@ class ExecutionJob implements ShouldQueue
                     'status' => 'executed',
                     'executed_at' => now(),
                 ]);
-                
+
+                // On successful execution, reset failure counter
+                $connection->update(['consecutive_failures' => 0]);
+
                 // Create position record
                 $this->createPosition($connection, $result);
                 
@@ -164,7 +224,11 @@ class ExecutionJob implements ShouldQueue
                     'status' => 'failed',
                     'error_message' => $result['error'] ?? 'Unknown error',
                 ]);
-                
+
+                // On execution failure, track consecutive failures
+                $connection->increment('consecutive_failures');
+                $connection->update(['last_failure_at' => now()]);
+
                 Log::error('ExecutionJob: Trade execution failed', [
                     'connection_id' => $connection->id,
                     'bot_id' => $this->executionData['bot_id'] ?? null,

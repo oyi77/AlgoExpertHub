@@ -2,6 +2,7 @@
 
 namespace App\Services\Trading;
 
+use App\Services\Trading\TwelveDataService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -9,9 +10,14 @@ use Exception;
 
 class MarketDataService
 {
-    protected $coingeckoBaseUrl = 'https://api.coingecko.com/api/v3';
-    protected $cacheTtl = 30; // 30 seconds cache
+    protected $cacheTtl = 900; // 15 minutes (900 seconds) for Twelve Data API
     protected $maxRetries = 3;
+    protected TwelveDataService $twelveDataService;
+
+    public function __construct(TwelveDataService $twelveDataService = null)
+    {
+        $this->twelveDataService = $twelveDataService ?? new TwelveDataService();
+    }
 
     /**
      * Supported cryptocurrencies for the platform
@@ -98,7 +104,7 @@ class MarketDataService
             try {
                 $cryptoIds = array_keys($this->supportedCryptos);
 
-                $response = Http::timeout(10)->retry($this->maxRetries)->get($this->coingeckoBaseUrl . '/coins/markets', [
+                $response = Http::timeout(10)->retry($this->maxRetries)->get('https://api.coingecko.com/api/v3/coins/markets', [
                     'vs_currency' => 'usd',
                     'ids' => implode(',', array_slice($cryptoIds, 0, $limit)),
                     'order' => 'market_cap_desc',
@@ -131,50 +137,133 @@ class MarketDataService
     }
 
     /**
-     * Get forex market data (simulated)
+     * Get forex market data (via Twelve Data)
      */
     public function getForexData($limit = 10)
     {
         $cacheKey = "market_data_forex_{$limit}";
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
-            return $this->getSimulatedForexData($limit);
+            $data = [];
+            $pairs = array_slice($this->forexPairs, 0, $limit, true);
+
+            foreach ($pairs as $pair => $pairData) {
+                // Convert pair name from 'EURUSD' to 'EUR/USD' format for API
+                $from = substr($pair, 0, 3);
+                $to = substr($pair, 3, 6);
+                $result = $this->twelveDataService->getExchangeRate($from, $to);
+
+                $data[] = [
+                    'symbol' => $pair,
+                    'name' => $pairData['name'],
+                    'price' => $result['price'],
+                    'change_24h' => $result['change_24h'],
+                    'change_1h' => $result['change_1h'],
+                    'change_7d' => $result['change_7d'],
+                    'volume' => $result['volume'] ?? 0,
+                    'source' => $result['source'],
+                    'last_updated' => $result['timestamp'],
+                ];
+            }
+
+            return $data;
+        });
+    }
+
+            return $data;
         });
     }
 
     /**
-     * Get indices market data (simulated)
+     * Get indices market data (via Twelve Data)
      */
     public function getIndicesData($limit = 10)
     {
         $cacheKey = "market_data_indices_{$limit}";
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
-            return $this->getSimulatedIndicesData($limit);
+            $data = [];
+            $indices = array_slice($this->indices, 0, $limit, true);
+
+            foreach ($indices as $index => $indexData) {
+                $result = $this->twelveDataService->getQuote($index);
+
+                $data[] = [
+                    'symbol' => $index,
+                    'name' => $indexData['name'],
+                    'price' => $result['price'],
+                    'change_24h' => isset($result['change']) ? $result['change'] : 0,
+                    'change_1h' => isset($result['percent_change']) ? $result['percent_change'] : 0,
+                    'change_7d' => isset($result['change']) ? $result['change'] : 0,
+                    'volume' => $result['volume'] ?? 0,
+                    'source' => $result['source'],
+                    'last_updated' => $result['timestamp'],
+                ];
+            }
+
+            return $data;
         });
     }
 
     /**
-     * Get commodities market data (simulated)
+     * Get commodities market data (via Twelve Data)
      */
     public function getCommoditiesData($limit = 10)
     {
         $cacheKey = "market_data_commodities_{$limit}";
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
-            return $this->getSimulatedCommoditiesData($limit);
+            $data = [];
+            $commodities = array_slice($this->commodities, 0, $limit, true);
+
+            foreach ($commodities as $symbol => $commodityData) {
+                $result = $this->twelveDataService->getQuote($symbol);
+
+                $data[] = [
+                    'symbol' => $symbol,
+                    'name' => $commodityData['name'],
+                    'price' => $result['price'],
+                    'change_24h' => isset($result['change']) ? $result['change'] : 0,
+                    'change_1h' => isset($result['percent_change']) ? $result['percent_change'] : 0,
+                    'change_7d' => isset($result['percent_change']) ? $result['percent_change'] : 0,
+                    'volume' => $result['volume'] ?? 0,
+                    'source' => $result['source'],
+                    'last_updated' => $result['timestamp'],
+                ];
+            }
+
+            return $data;
         });
     }
 
     /**
-     * Get stocks market data (simulated)
+     * Get stocks market data (via Twelve Data)
      */
     public function getStocksData($limit = 10)
     {
         $cacheKey = "market_data_stocks_{$limit}";
 
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($limit) {
-            return $this->getSimulatedStocksData($limit);
+            $data = [];
+            $stocks = array_slice($this->stocks, 0, $limit, true);
+
+            foreach ($stocks as $symbol => $stockData) {
+                $result = $this->twelveDataService->getQuote($symbol);
+
+                $data[] = [
+                    'symbol' => $symbol,
+                    'name' => $stockData['name'],
+                    'price' => $result['price'],
+                    'change_24h' => isset($result['change']) ? $result['change'] : 0,
+                    'change_1h' => isset($result['percent_change']) ? $result['percent_change'] : 0,
+                    'change_7d' => isset($result['percent_change']) ? $result['percent_change'] : 0,
+                    'volume' => $result['volume'] ?? 0,
+                    'source' => $result['source'],
+                    'last_updated' => $result['timestamp'],
+                ];
+            }
+
+            return $data;
         });
     }
 
@@ -188,12 +277,29 @@ class MarketDataService
         return Cache::remember($cacheKey, $this->cacheTtl, function () {
             $cryptoData = $this->getCryptoData(5);
             $forexData = $this->getForexData(5);
+            $indicesData = $this->getIndicesData(5);
+            $commoditiesData = $this->getCommoditiesData(5);
+            $stocksData = $this->getStocksData(5);
+
+            // Determine data sources
+            $cryptoSource = !empty($cryptoData) && $cryptoData[0]['source'] === 'api' ? 'api' : 'simulated';
+            $forexSource = !empty($forexData) && $forexData[0]['source'] === 'api' ? 'api' : 'simulated';
+            $indicesSource = !empty($indicesData) && $indicesData[0]['source'] === 'api' ? 'api' : 'simulated';
+            $commoditiesSource = !empty($commoditiesData) && $commoditiesData[0]['source'] === 'api' ? 'api' : 'simulated';
+            $stocksSource = !empty($stocksData) && $stocksData[0]['source'] === 'api' ? 'api' : 'simulated';
+
+            // If at least one real data source, show 'api', otherwise 'simulated'
+            $overallSource = ($cryptoSource === 'api' || $forexSource === 'api' || $indicesSource === 'api' ||
+                          $commoditiesSource === 'api' || $stocksSource === 'api') ? 'api' : 'simulated';
 
             return [
                 'cryptocurrencies' => $cryptoData,
                 'forex_pairs' => $forexData,
+                'indices' => $indicesData,
+                'commodities' => $commoditiesData,
+                'stocks' => $stocksData,
                 'last_updated' => now()->toISOString(),
-                'source' => 'mixed' // 'api' or 'simulated'
+                'source' => $overallSource,
             ];
         });
     }
@@ -209,7 +315,22 @@ class MarketDataService
                 return $this->getSpecificCryptoData($cryptoId);
             }
         } elseif ($type === 'forex') {
-            return $this->getSpecificForexData($symbol);
+            // Convert forex symbol format (EUR/USD) to pair name for Twelve Data
+            $from = substr($symbol, 0, 3);
+            $to = substr($symbol, 4, 6);
+            $result = $this->twelveDataService->getExchangeRate($from, $to);
+
+            return [
+                'symbol' => $symbol,
+                'name' => "{$from}/{$to}",
+                'price' => $result['price'],
+                'change_24h' => $result['change_24h'],
+                'change_1h' => $result['change_1h'],
+                'change_7d' => $result['change_7d'],
+                'volume' => $result['volume'],
+                'source' => $result['source'],
+                'last_updated' => $result['timestamp'],
+            ];
         }
 
         return null;
@@ -378,7 +499,7 @@ class MarketDataService
     protected function getSpecificCryptoData($cryptoId)
     {
         try {
-            $response = Http::timeout(10)->retry($this->maxRetries)->get($this->coingeckoBaseUrl . '/coins/' . $cryptoId, [
+             $response = Http::timeout(10)->retry($this->maxRetries)->get('https://api.coingecko.com/api/v3/coins/' . $cryptoId, [
                 'localization' => false,
                 'tickers' => false,
                 'market_data' => true,

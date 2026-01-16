@@ -188,17 +188,17 @@ class TechnicalAnalysisService
      */
     public function analyzeSignals(array $indicators, ?array $ohlcv = null): array
     {
-        // Handle Test Mode - return immediate buy signal
+        // Handle Paper Trading Mode - return immediate buy signal
         if (isset($indicators['TEST_MODE']) && $indicators['TEST_MODE'] === true) {
-            Log::info('TechnicalAnalysisService: Test mode active, returning immediate buy signal', [
+            Log::info('TechnicalAnalysisService: Paper trading mode active, returning immediate buy signal', [
                 'signal' => $indicators['SIGNAL'] ?? 'BUY',
             ]);
-            
+
             return [
                 'signal' => strtolower($indicators['SIGNAL'] ?? 'buy'),
                 'strength' => ($indicators['STRENGTH'] ?? 100) / 100,
-                'reason' => 'Test mode: Immediate trade for testing bot functionality',
-                'test_mode' => true,
+                'reason' => 'Paper trading mode: Immediate trade for testing bot functionality',
+                'is_paper_trading' => true,
             ];
         }
 

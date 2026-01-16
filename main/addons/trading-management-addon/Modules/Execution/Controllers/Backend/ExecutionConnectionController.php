@@ -314,5 +314,21 @@ class ExecutionConnectionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Reset circuit breaker for connection
+     */
+    public function resetCircuitBreaker(ExecutionConnection $connection)
+    {
+        $connection->update([
+            'consecutive_failures' => 0,
+            'last_failure_at' => null
+        ]);
+
+        return response()->json([
+            'type' => 'success',
+            'message' => 'Circuit breaker reset successfully'
+        ]);
+    }
 }
 

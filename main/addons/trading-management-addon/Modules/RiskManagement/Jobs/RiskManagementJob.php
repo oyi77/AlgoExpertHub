@@ -132,10 +132,10 @@ class RiskManagementJob implements ShouldQueue
             }
 
             // Prepare execution data
-            // For test mode, use market orders (entry_price = null) for immediate execution
+            // For paper trading mode, use market orders (entry_price = null) for immediate execution
             // Otherwise use limit orders at current close price
-            $isTestMode = isset($this->decision['test_mode']) && $this->decision['test_mode'] === true;
-            
+            $isTestMode = isset($this->decision['is_paper_trading']) && $this->decision['is_paper_trading'] === true;
+
             $executionData = [
                 'bot_id' => $this->bot->id,
                 'connection_id' => $connection->id,
@@ -148,12 +148,12 @@ class RiskManagementJob implements ShouldQueue
                 'entry_price' => $isTestMode ? null : ($this->marketData[0]['close'] ?? 0),
                 'risk_amount' => $positionSize['risk_amount'] ?? 0,
                 'risk_percent' => $positionSize['risk_percent'] ?? 0,
-                'test_mode' => $isTestMode,
+                'is_paper_trading' => $isTestMode,
             ];
-            
+
             Log::info('RiskManagementJob: Execution data prepared', [
                 'bot_id' => $this->bot->id,
-                'test_mode' => $isTestMode,
+                'is_paper_trading' => $isTestMode,
                 'order_type' => $isTestMode ? 'market' : 'limit',
                 'entry_price' => $executionData['entry_price'],
             ]);

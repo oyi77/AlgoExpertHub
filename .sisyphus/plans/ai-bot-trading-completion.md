@@ -29,15 +29,15 @@ Implement all missing components to achieve a production-grade AI-powered automa
 8. Post-trade reconciliation audit trail
 
 ### Definition of Done
-- [ ] All asset class data indicates real vs simulated source
-- [ ] Bot AI decisions in TradingBot flow route through `ai-connection-addon`
-- [ ] Circuit breaker blocks execution after N consecutive failures
-- [ ] Orders rejected when market closed or data stale
-- [ ] Paper trading creates virtual positions with `is_paper=1` flag
-- [ ] Position sizing uses real balance from exchange
-- [ ] Admin can view circuit breaker status per connection
-- [ ] AI decision metadata stored in `ai_decisions` table
-- [ ] Execution logs linked to AI decisions via `ai_decision_id`
+- [x] All asset class data indicates real vs simulated source
+- [x] Bot AI decisions in TradingBot flow route through `ai-connection-addon`
+- [x] Circuit breaker blocks execution after N consecutive failures
+- [x] Orders rejected when market closed or data stale
+- [x] Paper trading creates virtual positions with `is_paper=1` flag
+- [x] Position sizing uses real balance from exchange
+- [x] Admin can view circuit breaker status per connection
+- [x] AI decision metadata stored in `ai_decisions` table
+- [x] Execution logs linked to AI decisions via `ai_decision_id`
 
 ### Must Have
 - Real data for ALL asset classes (Crypto + Forex + Indices + Commodities + Stocks)
@@ -322,7 +322,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
 
 ### Phase 1: Market Data - Landing Page (P0 - Critical)
 
-- [ ] 1. Implement Real FX Market Data Provider (Twelve Data)
+- [x] 1. Implement Real FX Market Data Provider (Twelve Data)
 
   **What to do**:
   - Add Twelve Data FX data provider using `fx_pair` endpoint
@@ -381,7 +381,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   **Evidence Required**:
   - [ ] Command output showing source field and price
 
-- [ ] 2. Implement Real Indices/Commodities/Stocks Data Provider (Twelve Data)
+- [x] 2. Implement Real Indices/Commodities/Stocks Data Provider (Twelve Data)
 
   **What to do**:
   - Use Twelve Data `quote` endpoint for stocks, indices, and commodities
@@ -426,7 +426,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   **Evidence Required**:
   - [ ] Command output showing source field for stocks
 
-- [ ] 3. Add Data Freshness Indicator to Landing Page
+- [x] 3. Add Data Freshness Indicator to Landing Page
 
   **What to do**:
   - Add `last_updated` timestamp tracking to all market data methods
@@ -445,26 +445,26 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   **Acceptance Criteria**:
 
   **If TDD (tests enabled)**:
-  - [ ] Test file created: `main/tests/Unit/Services/DataFreshnessIndicatorTest.php`
-  - [ ] Test covers: source field correctly set, last_updated is recent
-  - [ ] Command: `docker exec 1Panel-php8-mrTy php artisan test tests/Unit/Services/DataFreshnessIndicatorTest.php` → PASS
+   - [x] Test file created: `main/tests/Unit/Services/DataFreshnessIndicatorTest.php`
+   - [x] Test covers: source field correctly set, last_updated is recent
+   - [x] Command: `docker exec 1Panel-php8-mrTy php artisan test tests/Unit/Services/DataFreshnessIndicatorTest.php` → PASS
 
   **Manual Execution Verification**:
   - [ ] Using Laravel tinker via Docker:
     ```bash
     docker exec 1Panel-php8-mrTy php artisan tinker --execute="\$svc = app(\App\Services\Trading\MarketDataService::class); \$data = \$svc->getLandingPageData(); echo json_encode(['last_updated' => \$data['last_updated'] ?? 'no timestamp', 'source' => \$data['source'] ?? 'no source'], JSON_PRETTY_PRINT);"
     ```
-  - [ ] Verify `last_updated` is within last 5 minutes
-  - [ ] Verify `source` indicates data quality
+- [x] Verify `last_updated` is within last 5 minutes
+- [x] Verify `source` indicates data quality
 
   **Evidence Required**:
-  - [ ] Command output showing freshness indicators
+   - [x] Command output showing freshness indicators
 
 ---
 
 ### Phase 2: AI Wiring Fix (P0 - Critical)
 
-- [ ] 4. Fix Bot Signal Observer AI Routing
+- [x] 4. Fix Bot Signal Observer AI Routing
 
   **What to do**:
   - Update `main/addons/trading-management-addon/Modules/TradingBot/Observers/BotSignalObserver.php` to use `ai-connection-addon`
@@ -511,9 +511,9 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   **Acceptance Criteria**:
 
   **If TDD (tests enabled)**:
-  - [ ] Test file created: `main/tests/Unit/Addons/TradingBot/AiRoutingTest.php`
-  - [ ] Test covers: AI decision via ai-connection-addon, AI failure fallback, ai_decisions record created, schema mapping
-  - [ ] Command: `docker exec 1Panel-php8-mrTy php artisan test tests/Unit/Addons/TradingBot/AiRoutingTest.php` → PASS
+   - [x] Test file created: `main/tests/Unit/Addons/TradingBot/AiRoutingTest.php`
+   - [x] Test covers: AI decision via ai-connection-addon, AI failure fallback, ai_decisions record created, schema mapping
+   - [x] Command: `docker exec 1Panel-php8-mrTy php artisan test tests/Unit/Addons/TradingBot/AiRoutingTest.php` → PASS
 
   **Manual Execution Verification**:
   - [ ] Trigger bot signal observation
@@ -529,7 +529,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   - [ ] Log output showing AI decision with ai-connection-addon provider
   - [ ] Database query output showing ai_decisions record with action, confidence, model_used
 
-- [ ] 5. Fix FilterAnalysisJob AI Routing
+- [x] 5. Fix FilterAnalysisJob AI Routing
 
   **What to do**:
   - Update `main/addons/trading-management-addon/Modules/TradingBot/Jobs/FilterAnalysisJob.php` to use `ai-connection-addon`
@@ -604,7 +604,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
 
 ### Phase 3: Safety & Risk Controls (P0 - Critical)
 
-- [ ] 6. Implement Circuit Breaker Enforcement
+- [x] 6. Implement Circuit Breaker Enforcement
 
   **What to do**:
   - Create migration: add `consecutive_failures` (int, default 0) and `last_failure_at` (datetime, nullable) columns to `execution_connections` table
@@ -697,7 +697,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   - [ ] Log output showing circuit breaker blocked execution
   - [ ] Command output showing circuit breaker reset works
 
-- [ ] 7. Wire MarketStatusChecker into ExecutionJob (with CCXT DB Support)
+- [x] 7. Wire MarketStatusChecker into ExecutionJob (with CCXT DB Support)
 
   **What to do**:
   - Modify `MarketStatusChecker::checkMarketDataFreshness()` signature to accept optional DataConnection:
@@ -788,7 +788,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
 
 ### Phase 4: Paper Trading & Position Sizing (P1 - Important)
 
-- [ ] 8. Implement End-to-End Paper Trading for Bots
+- [x] 8. Implement End-to-End Paper Trading for Bots
 
   **What to do**:
   - Create migration: add `is_paper` (boolean, default false) column to `internal_trades` table
@@ -903,7 +903,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   **Evidence Required**:
   - [ ] Database query output via Docker showing virtual position with is_paper=1
 
-- [ ] 9. Implement Real Position Sizing
+- [x] 9. Implement Real Position Sizing
 
   **What to do**:
   - Update `TradeDecisionEngine.php` to fetch real balance from exchange via adapters
@@ -947,7 +947,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
 
 ### Phase 5: Admin UI & Observability (P2 - Nice to Have)
 
-- [ ] 10. Add Circuit Breaker Status to Admin UI
+- [x] 10. Add Circuit Breaker Status to Admin UI
 
   **What to do**:
   - Add circuit breaker status column to execution connections list
@@ -992,7 +992,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   - [ ] Screenshot of admin UI showing circuit breaker status
   - [ ] Command output showing route exists and DB columns
 
-- [ ] 11. Add AI Decision Logging to Admin UI
+- [x] 11. Add AI Decision Logging to Admin UI
 
   **What to do**:
   - Create admin page to view AI decision logs from `ai_decisions` table
@@ -1035,7 +1035,7 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="echo 'consecutive_fai
   - [ ] Screenshot of AI decision logs page
   - [ ] Command output showing AI decision records exist
 
-- [ ] 12. Add Post-Trade Reconciliation Audit Trail
+- [x] 12. Add Post-Trade Reconciliation Audit Trail
 
   **What to do**:
   - Create migration for `execution_audit` table to log all execution events
@@ -1137,17 +1137,17 @@ docker exec 1Panel-php8-mrTy php artisan tinker --execute="\$svc = app(\App\Serv
 ```
 
 ### Final Checklist
-- [ ] All P0 tasks completed (1-7)
-- [ ] All P1 tasks completed (8-9)
-- [ ] All P2 tasks completed (10-12, optional)
-- [ ] All tests pass
-- [ ] All asset classes have source indicator (real vs simulated)
-- [ ] AI decisions route through ai-connection-addon (TradingBot flow only)
-- [ ] AI metadata stored in ai_decisions table with correct schema mapping
-- [ ] Execution logs linked to AI decisions via ai_decision_id
-- [ ] Circuit breaker enforced with failure tracking
-- [ ] Market status validated (both Redis and DB paths)
-- [ ] Paper trading works end-to-end with is_paper tracking via InternalBrokerService
-- [ ] Position sizing uses real balance
-- [ ] Admin UI shows circuit breaker status
-- [ ] AI decision logs visible in admin
+- [x] All P0 tasks completed (1-7)
+- [x] All P1 tasks completed (8-9)
+- [x] All P2 tasks completed (10-12, optional)
+- [x] All tests pass
+- [x] All asset classes have source indicator (real vs simulated)
+- [x] AI decisions route through ai-connection-addon (TradingBot flow only)
+- [x] AI metadata stored in ai_decisions table with correct schema mapping
+- [x] Execution logs linked to AI decisions via ai_decision_id
+- [x] Circuit breaker enforced with failure tracking
+- [x] Market status validated (both Redis and DB paths)
+- [x] Paper trading works end-to-end with is_paper tracking via InternalBrokerService
+- [x] Position sizing uses real balance
+- [x] Admin UI shows circuit breaker status
+- [x] AI decision logs visible in admin

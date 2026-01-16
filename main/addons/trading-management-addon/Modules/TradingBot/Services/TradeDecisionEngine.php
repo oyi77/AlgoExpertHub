@@ -2,9 +2,11 @@
 
 namespace Addons\TradingManagement\Modules\TradingBot\Services;
 
+use Addons\TradingManagement\Modules\ExchangeConnection\Services\ExchangeConnectionService;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBot;
 use Addons\TradingManagement\Modules\TradingBot\Models\TradingBotPosition;
 use App\Models\Signal;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -15,10 +17,12 @@ use Illuminate\Support\Facades\Log;
 class TradeDecisionEngine
 {
     protected TechnicalAnalysisService $analysisService;
+    protected ExchangeConnectionService $exchangeConnectionService;
 
-    public function __construct(TechnicalAnalysisService $analysisService)
+    public function __construct(TechnicalAnalysisService $analysisService, ExchangeConnectionService $exchangeConnectionService)
     {
         $this->analysisService = $analysisService;
+        $this->exchangeConnectionService = $exchangeConnectionService;
     }
 
     /**
@@ -30,19 +34,19 @@ class TradeDecisionEngine
      */
     public function shouldEnterTrade(array $analysis, TradingBot $bot): array
     {
-        // Handle Test Mode - always enter trade immediately
-        if (isset($analysis['test_mode']) && $analysis['test_mode'] === true) {
-            Log::info('TradeDecisionEngine: Test mode active, entering trade immediately', [
+        // Handle Paper Trading Mode - always enter trade immediately
+        if (isset($analysis['is_paper_trading']) && $analysis['is_paper_trading'] === true) {
+            Log::info('TradeDecisionEngine: Paper trading mode active, entering trade immediately', [
                 'bot_id' => $bot->id,
                 'signal' => $analysis['signal'],
             ]);
-            
+
             return [
                 'should_enter' => true,
                 'direction' => $analysis['signal'] === 'buy' ? 'buy' : 'sell',
                 'confidence' => $analysis['strength'] ?? 1.0,
-                'reason' => 'Test mode: Immediate trade execution',
-                'test_mode' => true,
+                'reason' => 'Paper trading mode: Immediate trade execution',
+                'is_paper_trading' => true,
             ];
         }
 
@@ -122,8 +126,39 @@ class TradeDecisionEngine
             
             case 'percentage':
                 // Percentage of account balance
-                // Would need account balance from exchange connection
-                $balance = 1000; // Placeholder
+                // Fetch real balance from exchange connection adapter
+                $connection = $bot->exchangeConnection;
+                if (!$connection) {
+                    Log::warning('No exchange connection found, using fixed lot fallback', [
+                        'bot_id' => $bot->id,
+                    ]);
+                    return 0.01; // Fixed minimum lot
+                }
+
+                try {
+                    $adapter = $this->exchangeConnectionService->getAdapter($connection);
+                    if (method_exists($adapter, 'getAccountInfo')) {
+                        $accountInfo = $adapter->getAccountInfo();
+                        $balance = $accountInfo['free'] ?? 1000;
+                        Log::info('Fetched real balance for position sizing', [
+                            'connection_id' => $connection->id,
+                            'balance' => $balance,
+                        ]);
+                    } else {
+                        Log::warning('Adapter does not support getAccountInfo, using fixed lot fallback', [
+                            'connection_id' => $connection->id,
+                        ]);
+                        // Fallback to fixed lot
+                        return 0.01; // Fixed minimum lot
+                    }
+                } catch (Exception $e) {
+                    Log::warning('Failed to fetch balance, using fixed lot fallback', [
+                        'connection_id' => $connection->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Fallback to fixed lot on error
+                    return 0.01; // Fixed minimum lot
+                }
                 $percentage = $preset->position_sizing_value ?? 1;
                 return ($balance * $percentage / 100) / ($currentPrice ?? 1);
             

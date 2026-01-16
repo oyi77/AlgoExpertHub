@@ -77,24 +77,3 @@ Route::name('user.')->group(function () {
     });
 });
 
-    // Authenticated auth routes (2FA, KYC, logout)
-    Route::middleware(['auth', 'inactive', 'is_email_verified'])->group(function () {
-        Route::get('2fa', [LoginSecurityController::class, 'show2faForm'])->name('2fa');
-        Route::post('2fa/generateSecret', [LoginSecurityController::class, 'generate2faSecret'])->name('generate2faSecret');
-        Route::post('2fa/enable2fa', [LoginSecurityController::class, 'enable2fa'])->name('enable2fa');
-        Route::post('2fa/disable2fa', [LoginSecurityController::class, 'disable2fa'])->name('disable2fa');
-        Route::post('2fa/2faVerify', function () {
-            return redirect(URL()->previous());
-        })->name('2faVerify')->middleware('2fa');
-
-        Route::get('authentication-verify', [ForgotPasswordController::class, 'verifyAuth'])->name('authentication.verify')->withoutMiddleware('is_email_verified');
-        Route::post('authentication-verify/email', [ForgotPasswordController::class, 'verifyEmailAuth'])->name('authentication.verify.email')->withoutMiddleware('is_email_verified');
-        Route::post('authentication-verify/sms', [ForgotPasswordController::class, 'verifySmsAuth'])->name('authentication.verify.sms')->withoutMiddleware('is_email_verified');
-
-        Route::get('logout', [LoginController::class, 'signOut'])->name('logout');
-
-        Route::get('kyc', [KycController::class, 'kyc'])->name('kyc');
-        Route::post('kyc', [KycController::class, 'kycUpdate']);
-    });
-});
-

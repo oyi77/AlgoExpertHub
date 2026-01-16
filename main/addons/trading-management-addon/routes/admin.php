@@ -207,6 +207,8 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
             ->name('connections.activate');
         Route::post('connections/{connection}/deactivate', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'deactivate'])
             ->name('connections.deactivate');
+        Route::post('connections/{connection}/reset-circuit-breaker', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'resetCircuitBreaker'])
+            ->name('connections.reset-circuit-breaker');
         
         // MetaApi provisioning endpoints for execution connections
         Route::post('connections/add-metaapi-account', [\Addons\TradingManagement\Modules\Execution\Controllers\Backend\ExecutionConnectionController::class, 'addMetaApiAccount'])
@@ -280,6 +282,10 @@ Route::prefix('exchange-connections')->name('exchange-connections.')->group(func
         // Filter Strategies tab
         Route::resource('filters', \Addons\TradingManagement\Modules\FilterStrategy\Controllers\Backend\FilterStrategyController::class);
         
+        // AI Decisions Logs
+        Route::get('ai-decisions', [\Addons\TradingManagement\Modules\AiAnalysis\Controllers\Backend\AiDecisionLogController::class, 'index'])->name('ai-decisions.index');
+        Route::get('ai-decisions/export', [\Addons\TradingManagement\Modules\AiAnalysis\Controllers\Backend\AiDecisionLogController::class, 'export'])->name('ai-decisions.export');
+
         // AI Model Profiles tab
         Route::resource('ai-models', \Addons\TradingManagement\Modules\AiAnalysis\Controllers\Backend\AiModelProfileController::class);
     });

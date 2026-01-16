@@ -22,6 +22,7 @@
                                 <th>Type</th>
                                 <th>Exchange</th>
                                 <th>Status</th>
+                                <th>Circuit Breaker</th>
                                 <th>Active</th>
                                 <th>Preset</th>
                                 <th>Data Connection</th>
@@ -53,6 +54,21 @@
                                     <span class="badge badge-danger" title="{{ $connection->last_error }}">Error</span>
                                     @else
                                     <span class="badge badge-warning">{{ $connection->status }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($connection->circuit_breaker_enabled)
+                                        @if($connection->consecutive_failures >= $connection->max_consecutive_failures)
+                                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                Tripped
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Active
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="text-gray-400 small">Disabled</span>
                                     @endif
                                 </td>
                                 <td>

@@ -2,6 +2,8 @@
 
 namespace Addons\TradingManagement\Modules\Execution\Services;
 
+use Addons\TradingManagement\Modules\DataProvider\Models\DataConnection;
+use Addons\TradingManagement\Modules\MarketData\Services\MarketDataService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
@@ -28,40 +30,42 @@ class MarketStatusChecker
 
     /**
      * Check if market data is fresh enough for trading
-     * 
+     *
      * @param string $symbol Trading symbol
      * @param string $timeframe Timeframe (1m, 5m, 1h, etc.)
      * @param string|null $accountId MetaAPI account ID (for Redis lookup)
      * @param int|null $botId Bot ID for logging
+     * @param DataConnection|null $dataConnection Data connection for CCXT (for DB lookup)
      * @return array ['is_fresh' => bool, 'age_minutes' => float, 'status' => string]
      */
     public function checkMarketDataFreshness(
-        string $symbol, 
-        string $timeframe, 
-        ?string $accountId = null, 
-        ?int $botId = null
+        string $symbol,
+        string $timeframe,
+        ?string $accountId = null,
+        ?int $botId = null,
+        ?DataConnection $dataConnection = null
     ): array {
         $maxAgeMinutes = $this->getMaxAgeForTimeframe($timeframe);
         
         // Try to get latest candle from Redis (for MetaAPI)
         if ($accountId) {
-            $redisPrefix = config('trading-management.metaapi.stream_redis_prefix', 'metaapi:stream');
+            $redisPrefix = config('trading-management.metaapi.streaming.redis_prefix', 'metaapi:stream');
             $candlesCacheKey = sprintf('%s:%s:%s:%s:candles', $redisPrefix, $accountId, $symbol, $timeframe);
-            
+
             $candlesList = Redis::lrange($candlesCacheKey, -1, -1);
-            
+
             if (!empty($candlesList)) {
                 try {
                     $latestCandleJson = $candlesList[0];
                     $latestCandle = json_decode($latestCandleJson, true);
-                    
+
                     if ($latestCandle && isset($latestCandle['timestamp'])) {
                         $timestamp = $latestCandle['timestamp'];
                         $ageMinutes = (time() * 1000 - $timestamp) / 60000;
-                        
+
                         $isFresh = $ageMinutes <= $maxAgeMinutes;
                         $status = $isFresh ? 'fresh' : 'stale';
-                        
+
                         if (!$isFresh) {
                             Log::warning('MarketStatusChecker: Stale market data detected', [
                                 'bot_id' => $botId,
@@ -74,7 +78,7 @@ class MarketStatusChecker
                                 'likely_reason' => 'Market may be closed or data stream disconnected',
                             ]);
                         }
-                        
+
                         return [
                             'is_fresh' => $isFresh,
                             'age_minutes' => round($ageMinutes, 2),
@@ -91,6 +95,52 @@ class MarketStatusChecker
                         'error' => $e->getMessage(),
                     ]);
                 }
+            }
+        }
+
+        // Try to get latest candle from database (for CCXT)
+        if ($dataConnection) {
+            try {
+                $marketDataService = app(MarketDataService::class);
+                $latestTimestamp = $marketDataService->getLatestTimestamp($symbol, $timeframe);
+
+                if ($latestTimestamp) {
+                    // Convert timestamp to milliseconds for consistency with Redis logic
+                    $timestampMs = $latestTimestamp * 1000;
+                    $ageMinutes = (time() * 1000 - $timestampMs) / 60000;
+
+                    $isFresh = $ageMinutes <= $maxAgeMinutes;
+                    $status = $isFresh ? 'fresh' : 'stale';
+
+                    if (!$isFresh) {
+                        Log::warning('MarketStatusChecker: Stale market data detected (CCXT)', [
+                            'bot_id' => $botId,
+                            'symbol' => $symbol,
+                            'timeframe' => $timeframe,
+                            'age_minutes' => round($ageMinutes, 2),
+                            'max_age_minutes' => $maxAgeMinutes,
+                            'last_candle_timestamp' => $timestampMs,
+                            'current_timestamp' => time() * 1000,
+                            'likely_reason' => 'Market may be closed or data not updated',
+                        ]);
+                    }
+
+                    return [
+                        'is_fresh' => $isFresh,
+                        'age_minutes' => round($ageMinutes, 2),
+                        'status' => $status,
+                        'last_timestamp' => $timestampMs,
+                        'max_age_minutes' => $maxAgeMinutes,
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::error('MarketStatusChecker: Error querying market data from database', [
+                    'bot_id' => $botId,
+                    'symbol' => $symbol,
+                    'timeframe' => $timeframe,
+                    'data_connection_id' => $dataConnection->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
         
@@ -128,17 +178,17 @@ class MarketStatusChecker
         $symbol = $executionData['symbol'] ?? null;
         $timeframe = $executionData['timeframe'] ?? '1h'; // Default timeframe
         
-        // Skip validation in test mode
+        // Skip validation in paper trading mode
         if ($isTestMode) {
-            Log::info('MarketStatusChecker: Test mode - skipping market validation', [
+            Log::info('MarketStatusChecker: Paper trading mode - skipping market validation', [
                 'bot_id' => $botId,
                 'symbol' => $symbol,
             ]);
-            
+
             return [
                 'should_proceed' => true,
-                'reason' => 'Test mode - validation skipped',
-                'freshness_check' => ['is_fresh' => true, 'status' => 'test_mode'],
+                'reason' => 'Paper trading mode - validation skipped',
+                'freshness_check' => ['is_fresh' => true, 'status' => 'paper_trading'],
             ];
         }
         

@@ -73,3 +73,22 @@
   - Pros: Lightweight
   - Cons: Limited debugging capability
 
+
+### BotSignalObserver AI Routing (Decided 2025-01-16 - Task 4 Completed)
+- **Task**: Fix BotSignalObserver AI Routing
+- **Changes**: 
+  - Replaced deprecated `AiTradingAddon` services with `AiConnectionService`
+  - Implemented fail-open AI behavior
+  - Created AiDecision records with proper schema
+  - Added ai_decision_id, user_id, is_paper_trading, timeframe to executionData
+- **Files Modified**: 
+  - `main/addons/trading-management-addon/Modules/TradingBot/Observers/BotSignalObserver.php`
+- **Fail-Open Implementation**:
+  - AI unavailable: Create AiDecision with action='HOLD', confidence=0, reasoning='AI unavailable - fail-open'
+  - High-confidence HOLD (>70%): Skip execution pipeline
+  - Continue pipeline: Trading proceeds with AI as guidance, not mandatory approval
+- **Helper Methods Added**:
+  - `buildAiPrompt(Signal $signal): string` - Builds AI prompt
+  - `parseAiResponse(string $response): array` - Parses AI JSON response
+- **Verification**: PHP syntax valid, LSP clean (stale hint only)
+
