@@ -27,8 +27,13 @@ const isInertiaRoute = (url) => {
 const NavItem = ({ item, url, onClose }) => {
     const [isOpen, setIsOpen] = useState(false);
     const hasChildren = item.children && item.children.length > 0;
-    const isActive = url === item.url || (item.url !== '#' && url.startsWith(item.url));
-    const isChildActive = hasChildren && item.children.some(child => url === child.url);
+    
+    // Fix: Use exact match or path segment boundary to prevent false positives
+    // For example: /beta/profile should NOT match /beta/ (only /beta/profile or /beta/something)
+    const isActive = item.url !== '#' && (url === item.url || url.startsWith(item.url + '/'));
+    const isChildActive = hasChildren && item.children.some(child => 
+        child.url !== '#' && (url === child.url || url.startsWith(child.url + '/'))
+    );
 
     React.useEffect(() => {
         if (isChildActive) {
@@ -63,8 +68,9 @@ const NavItem = ({ item, url, onClose }) => {
                         {item.children.map((child, idx) => {
                             const childUrl = child.url;
                             const shouldUseInertia = isInertiaRoute(childUrl);
-                            const childClasses = `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${url === childUrl ? 'text-[#0ecb81]' : 'text-[#848e9c] hover:text-[#eaecef]'
-                                }`;
+                            // Fix: Use exact match or path segment boundary for child items too
+                            const isChildItemActive = childUrl !== '#' && (url === childUrl || url.startsWith(childUrl + '/'));
+                            const childClasses = `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isChildItemActive ? 'text-[#0ecb81]' : 'text-[#848e9c] hover:text-[#eaecef]'}`;
 
                             if (shouldUseInertia) {
                                 return (
