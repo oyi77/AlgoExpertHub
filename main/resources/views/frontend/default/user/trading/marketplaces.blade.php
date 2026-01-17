@@ -578,7 +578,8 @@
         function switchTab(categoryName) {
             const url = new URL(window.location);
             url.searchParams.set('category', categoryName);
-            window.location.href = url.toString();
+            // Don't reload page - just update URL for browser history
+            window.history.pushState({}, '', url.toString());
         }
         
         // Make switchTab available globally

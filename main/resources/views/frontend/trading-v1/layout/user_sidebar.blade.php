@@ -17,7 +17,7 @@
             <span>HOME</span>
         </div>
         
-        <a href="{{ route('user.dashboard') }}" class="tv-sidebar-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('user.beta.dashboard') }}" class="tv-sidebar-link {{ request()->routeIs('beta.dashboard') ? 'active' : '' }}">
             <i class="las la-th-large"></i>
             <span>Dashboard</span>
         </a>
@@ -29,7 +29,7 @@
             <span>TRADING</span>
         </div>
         
-        <a href="{{ route('user.terminal.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.terminal.*') ? 'active' : '' }}">
+        <a href="{{ route('user.terminal.index') }}" class="tv-sidebar-link {{ request()->routeIs('beta.terminal.*') ? 'active' : '' }}">
             <i class="las la-chart-area"></i>
             <span>Trading Terminal</span>
         </a>
@@ -112,7 +112,7 @@
         </div>
         
         @if(Route::has('user.subscription.log'))
-            <a href="{{ route('user.subscription.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.subscription.log') ? 'active' : '' }}">
+            <a href="{{ route('user.subscription.log') }}" class="tv-sidebar-link {{ request()->routeIs('beta.subscription.log') ? 'active' : '' }}">
                 <i class="las la-id-card"></i>
                 <span>My Subscription</span>
             </a>
@@ -125,9 +125,9 @@
             </a>
         @endif
         
-        <!-- Wallet Submenu -->
+         <!-- Wallet Submenu -->
         @php
-            $walletRoutes = ['user.deposit', 'user.withdraw', 'user.transfer_money', 'user.transaction'];
+            $walletRoutes = ['beta.deposit', 'beta.withdraw', 'beta.transfer_money', 'beta.transaction.log'];
             $walletActive = collect($walletRoutes)->contains(fn($r) => request()->routeIs($r));
         @endphp
         <div class="tv-sidebar-submenu {{ $walletActive ? 'open' : '' }}">
@@ -136,30 +136,30 @@
                 <span>Wallet</span>
                 <i class="las la-angle-down tv-submenu-arrow"></i>
             </a>
-            <div class="tv-submenu-items">
+             <div class="tv-submenu-items">
                 @if(Route::has('user.deposit'))
-                    <a href="{{ route('user.deposit') }}" class="tv-submenu-link {{ request()->routeIs('user.deposit') ? 'active' : '' }}">
+                    <a href="{{ route('user.deposit') }}" class="tv-submenu-link {{ request()->routeIs('beta.deposit') ? 'active' : '' }}">
                         <i class="las la-credit-card"></i>
                         <span>Deposit</span>
                     </a>
                 @endif
                 
                 @if(Route::has('user.withdraw'))
-                    <a href="{{ route('user.withdraw') }}" class="tv-submenu-link {{ request()->routeIs('user.withdraw') ? 'active' : '' }}">
+                    <a href="{{ route('user.withdraw') }}" class="tv-submenu-link {{ request()->routeIs('beta.withdraw') ? 'active' : '' }}">
                         <i class="las la-hand-holding-usd"></i>
                         <span>Withdraw</span>
                     </a>
                 @endif
                 
                 @if(Route::has('user.transfer_money'))
-                    <a href="{{ route('user.transfer_money') }}" class="tv-submenu-link {{ request()->routeIs('user.transfer_money') ? 'active' : '' }}">
+                    <a href="{{ route('user.transfer_money') }}" class="tv-submenu-link {{ request()->routeIs('beta.transfer_money') ? 'active' : '' }}">
                         <i class="las la-exchange-alt"></i>
                         <span>Transfer Money</span>
                     </a>
                 @endif
                 
                 @if(Route::has('user.transaction'))
-                    <a href="{{ route('user.transaction') }}" class="tv-submenu-link {{ request()->routeIs('user.transaction') ? 'active' : '' }}">
+                    <a href="{{ route('user.transaction') }}" class="tv-submenu-link {{ request()->routeIs('beta.transaction.log') ? 'active' : '' }}">
                         <i class="las la-history"></i>
                         <span>Transaction History</span>
                     </a>
@@ -168,47 +168,47 @@
         </div>
         
         @if(Route::has('user.deposit.log'))
-            <a href="{{ route('user.deposit.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.deposit.log') ? 'active' : '' }}">
+            <a href="{{ route('user.deposit.log') }}" class="tv-sidebar-link {{ request()->routeIs('beta.deposit.log') ? 'active' : '' }}">
                 <i class="las la-wallet"></i>
                 <span>Deposit Log</span>
             </a>
         @endif
         
         @if(Route::has('user.withdraw.log'))
-            <a href="{{ route('user.withdraw.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.withdraw.*') ? 'active' : '' }}">
+            <a href="{{ route('user.withdraw.log') }}" class="tv-sidebar-link {{ request()->routeIs('beta.withdraw.*') ? 'active' : '' }}">
                 <i class="las la-money-bill-wave"></i>
                 <span>Withdrawal Log</span>
             </a>
         @endif
         
         @if(Route::has('user.invest.log'))
-            <a href="{{ route('user.invest.log') }}" class="tv-sidebar-link {{ request()->routeIs('user.invest.log') ? 'active' : '' }}">
+            <a href="{{ route('user.invest.log') }}" class="tv-sidebar-link {{ request()->routeIs('beta.invest.log') ? 'active' : '' }}">
                 <i class="las la-chart-bar"></i>
                 <span>Investment Log</span>
             </a>
         @endif
         
-        <a href="{{ route('user.profile') }}" class="tv-sidebar-link {{ request()->routeIs('user.profile') ? 'active' : '' }}">
+        <a href="{{ route('user.beta.profile') }}" class="tv-sidebar-link {{ request()->routeIs('beta.profile') ? 'active' : '' }}">
             <i class="las la-user-circle"></i>
             <span>Profile Settings</span>
         </a>
         
         @if(Route::has('user.changepassword'))
-            <a href="{{ route('user.changepassword') }}" class="tv-sidebar-link {{ request()->routeIs('user.changepassword') ? 'active' : '' }}">
+            <a href="{{ route('user.beta.update.password') }}" class="tv-sidebar-link {{ request()->routeIs('beta.update.password') ? 'active' : '' }}">
                 <i class="las la-key"></i>
                 <span>Change Password</span>
             </a>
         @endif
         
         @if(Route::has('user.2fa.settings'))
-            <a href="{{ route('user.2fa.settings') }}" class="tv-sidebar-link {{ request()->routeIs('user.2fa.*') ? 'active' : '' }}">
+            <a href="{{ route('user.2fa.settings') }}" class="tv-sidebar-link {{ request()->routeIs('beta.2fa.settings') ? 'active' : '' }}">
                 <i class="las la-shield-alt"></i>
                 <span>2FA Security</span>
             </a>
         @endif
         
         @if(Route::has('user.refferal'))
-            <a href="{{ route('user.refferal') }}" class="tv-sidebar-link {{ request()->routeIs('user.refferal') ? 'active' : '' }}">
+            <a href="{{ route('user.beta.refferal') }}" class="tv-sidebar-link {{ request()->routeIs('beta.refferal') ? 'active' : '' }}">
                 <i class="las la-users"></i>
                 <span>Referral Log</span>
             </a>
@@ -221,10 +221,10 @@
         </div>
         
         @if(Route::has('user.ticket.index'))
-            <a href="{{ route('user.ticket.index') }}" class="tv-sidebar-link {{ request()->routeIs('user.ticket*') ? 'active' : '' }}">
-                <i class="las la-ticket-alt"></i>
-                <span>Support Tickets</span>
-            </a>
+        <a href="{{ route('user.ticket.index') }}" class="tv-sidebar-link {{ request()->routeIs('beta.ticket*') ? 'active' : '' }}">
+            <i class="las la-ticket-alt"></i>
+            <span>Support Tickets</span>
+        </a>
         @endif
         
         <!-- OTHERS -->
