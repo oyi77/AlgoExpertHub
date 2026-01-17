@@ -3,15 +3,13 @@
 namespace App\Services;
 
 use App\Helpers\Helper\Helper;
-use Addons\MultiChannelSignalAddon\App\Services as PaymentService as AddonsPaymentService;
 use Illuminate\Support\Str;
 use App\Models\Gateway;
 use App\Models\Deposit;
 use App\Models\Payment;
 use App\Models\Plan;
-use App\Models\UserPlan;
+use App\Models\PlanSubscription;
 use App\Models\Wallet;
-use Illuminate\Support\Str;
 
 class PaymentService
 {
@@ -120,8 +118,59 @@ class PaymentService
         return ['type'=> '', 'view' => Helper::theme().'user.gateway.online', 'data' => $data];
     }
 
-    public function processRenewal(UserPlan $plan): void
+    public function processRenewal(PlanSubscription $planSubscription): array
     {
-        $result = $paymentService->processRenewal($plan);
+        // Validate subscription is active
+        if (!$planSubscription->is_current) {
+            return [
+                'success' => false,
+                'message' => 'Subscription is not active'
+            ];
+        }
+
+        // Load plan data
+        $plan = Plan::find($planSubscription->plan_id);
+        if (!$plan) {
+            return [
+                'success' => false,
+                'message' => 'Plan not found'
+            ];
+        }
+
+        // Get default gateway for renewal
+        $gateway = Gateway::where('status', 1)->first();
+        if (!$gateway) {
+            return [
+                'success' => false,
+                'message' => 'No active gateway available'
+            ];
+        }
+
+        // Calculate expiry date based on plan type
+        $planExpiredAt = $plan->plan_type === 'limited'
+            ? now()->addDays($plan->duration)
+            : now()->addYear(50);
+
+        // Create renewal payment record
+        $payment = Payment::create([
+            'plan_id' => $plan->id,
+            'gateway_id' => $gateway->id,
+            'user_id' => $planSubscription->user_id,
+            'trx' => Str::upper(Str::random(16)),
+            'amount' => $plan->price,
+            'rate' => $gateway->rate,
+            'charge' => $gateway->charge,
+            'total' => ($plan->price * $gateway->rate) + $gateway->charge,
+            'status' => 0, // Pending
+            'type' => $gateway->type,
+            'plan_expired_at' => $planExpiredAt
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Renewal payment created successfully',
+            'payment_id' => $payment->id,
+            'trx' => $payment->trx
+        ];
     }
 }
