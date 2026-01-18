@@ -43,8 +43,48 @@ class TradingOperationsController extends Controller
 
         $data['tradingManagementEnabled'] = $this->tradingService->isTradingManagementEnabled();
 
-        if ($data['tradingManagementEnabled'] && $data['activeTab'] === 'trading-bots') {
-            $data['bots'] = $this->tradingService->getTradingBots(Auth::id());
+        if ($data['tradingManagementEnabled']) {
+            // Trading Bots tab
+            if ($data['activeTab'] === 'trading-bots') {
+                $data['bots'] = $this->tradingService->getTradingBots(Auth::id());
+            }
+
+            // Connections tab
+            if ($data['activeTab'] === 'connections') {
+                try {
+                    if (class_exists(\Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::class)) {
+                        $data['connections'] = \Addons\TradingManagement\Modules\ExchangeConnection\Models\ExchangeConnection::where('user_id', Auth::id())
+                            ->orWhere(function($query) {
+                                $query->where('is_admin_owned', true)
+                                      ->whereHas('assignedUsers', function($q) {
+                                          $q->where('id', Auth::id());
+                                      });
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(20, ['*'], 'connections_page');
+                    } else {
+                        $data['connections'] = collect([]);
+                    }
+                } catch (\Exception $e) {
+                    $data['connections'] = collect([]);
+                }
+            }
+
+            // Open Positions tab
+            if ($data['activeTab'] === 'open-positions') {
+                try {
+                    if (class_exists(\Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::class)) {
+                        $data['positions'] = \Addons\TradingManagement\Modules\PositionMonitoring\Models\ExecutionPosition::where('user_id', Auth::id())
+                            ->where('status', 'open')
+                            ->orderBy('opened_at', 'desc')
+                            ->paginate(20, ['*'], 'positions_page');
+                    } else {
+                        $data['positions'] = collect([]);
+                    }
+                } catch (\Exception $e) {
+                    $data['positions'] = collect([]);
+                }
+            }
         }
 
         return Inertia::render('User/TradingOperations', $data);
