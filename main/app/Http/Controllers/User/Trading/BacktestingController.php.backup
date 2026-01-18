@@ -8,10 +8,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use App\Services\BacktestReportService;
 
 class BacktestingController extends Controller
 {
+    protected $backtestReportService;
     protected $backtestReportService;
 
     public function __construct(BacktestReportService $backtestReportService)
@@ -58,16 +60,21 @@ class BacktestingController extends Controller
                     }
                 }
 
-                  // Performance Reports tab
-                  if ($data['activeTab'] === 'reports') {
-                      try {
-                          // Load performance reports from service
-                          $data['reports'] = $this->backtestReportService->getUserReports(auth()->id(), 'summary', 50);
-                      } catch (\Exception $e) {
-                          \Log::error('Backtesting: Error loading reports', ['error' => $e->getMessage()]);
-                          $data['reports'] = collect([]);
-                      }
-                  }
+                 // Performance Reports tab
+                 if ($data['activeTab'] === 'reports') {
+                    // Load performance reports from service
+                    $data['reports'] = \App\Services\BacktestReportService::getUserReports(auth()->id(), 'summary', 50);
+                    } catch (\Exception $e) {
+                        Log::error('Backtesting: Error loading reports', ['error' => $e->getMessage()]);
+                        $data['reports'] = collect([]);
+                    }
+                 }
+                 }
+                 }
+                 }
+                 }
+                 }
+                 }
             } catch (\Exception $e) {
                 \Log::error('Backtesting: General error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             }
