@@ -134,17 +134,11 @@ class AppServiceProvider extends ServiceProvider
                 'ai-connection-addon' => \Addons\AiConnectionAddon\AddonServiceProvider::class,
                 'multi-channel-signal-addon' => \Addons\MultiChannelSignalAddon\AddonServiceProvider::class,
                 'trading-bot-signal-addon' => \Addons\TradingBotSignalAddon\AddonServiceProvider::class,
-                // Consolidated into trading-management-addon:
-                // - trading-execution-engine-addon (module: execution)
-                // - copy-trading-addon (module: copy_trading)
-                // - trading-preset-addon (module: risk_management)
-                // - filter-strategy-addon (module: filter_strategy)
-                // - ai-trading-addon (module: ai_analysis)
-                // - smart-risk-management-addon (module: risk_management)
                 'openrouter-integration-addon' => \Addons\OpenRouterIntegration\AddonServiceProvider::class,
-                'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class, // Consolidated trading management
+                'trading-management-addon' => \Addons\TradingManagement\AddonServiceProvider::class,
                 'page-builder-addon' => \Addons\PageBuilderAddon\PageBuilderServiceProvider::class,
                 'algoexpert-plus-addon' => \Addons\AlgoExpertPlus\AddonServiceProvider::class,
+                'dex-analytics-addon' => \Addons\DexAnalyticsAddon\AddonServiceProvider::class,
             ];
 
             foreach ($addonProviders as $addonSlug => $providerClass) {

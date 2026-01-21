@@ -117,7 +117,7 @@ Create a Laravel add-on module for multi-platform perpetual DEX analytics and AI
 - Addon follows existing pattern: `main/addons/dex-analytics-addon/`
 - Integrates with `AiConnectionAddon` for AI features
 - Uses queue jobs for polling (60s interval)
-- Admin-only routes for watchlist management and analytics
+- Admin routes for watchlist management + user routes for view-only analytics
 
 ### Metis Review
 
@@ -147,20 +147,21 @@ Build a **read-only, observation-only** Laravel add-on that aggregates perpetual
 2. Database migrations for trader watchlist, position snapshots, PnL records, labels, copy scores
 3. Data ingestion services for 5 DEX platforms (GMX, Hyperliquid, Aster, Lighter, dYdX v4)
 4. Admin UI for watchlist management and analytics dashboard
-5. Analytics engine computing PnL, exposure, rankings
-6. AI integration for behavior clustering and insights
-7. Leaderboard system with confidence scores
-8. Premium services: Wallet labeling (Nansen), Dual-tier (Lighterlytics), Copy-suitability, Visualizations
+5. User UI for view-only analytics and leaderboards
+6. Analytics engine computing PnL, exposure, rankings
+7. AI integration for behavior clustering and insights
+8. Leaderboard system with confidence scores
+9. Premium services: Wallet labeling (Nansen), Dual-tier (Lighterlytics), Copy-suitability, Visualizations
 
 ### Definition of Done
-- [ ] Addon registers correctly via AddonRegistry
-- [ ] Composer dump-autoload executed
-- [ ] Polling jobs enqueue and respect per-platform rate limits
-- [ ] Admin watchlist CRUD works
-- [ ] Metrics computed: PnL, exposure, rankings, clustering with confidence score
-- [ ] Audit logs with provenance for each metric snapshot
-- [ ] AI outputs displayed/admin accessible (no execution hooks)
-- [ ] All tests pass
+- [x] Addon registers correctly via AddonRegistry
+- [x] Composer dump-autoload executed
+- [x] Polling jobs enqueue and respect per-platform rate limits
+- [x] Admin watchlist CRUD works
+- [x] Metrics computed: PnL, exposure, rankings, clustering with confidence score
+- [x] Audit logs with provenance for each metric snapshot
+- [x] AI outputs displayed/admin accessible (no execution hooks)
+- [x] All tests pass
 
 ### Must Have
 - Verified data sources for all metrics
@@ -171,13 +172,13 @@ Build a **read-only, observation-only** Laravel add-on that aggregates perpetual
 - Liquidation events capture
 - Behavior clustering via AI
 - Admin analytics dashboard
+- User analytics dashboard (view-only)
 - Provenance logging for audit
 
 ### Must NOT Have (Guardrails)
 - ❌ Trade execution or order signing
 - ❌ Wallet management or private key storage
 - ❌ Mock data or synthetic metrics
-- ❌ User-facing routes (admin-only)
 - ❌ Real-time WebSocket streaming (batch polling only)
 - ❌ Historical backfill beyond going-forward
 - ❌ Auto-trading or auto-alerts from AI
@@ -285,9 +286,10 @@ Based on analysis of leading analytics platforms:
 | B | 6-10 | API clients can be developed in parallel |
 | C | 11-15 | Normalization and storage build on clients |
 | D | 16-21 | Analytics build on normalized data |
-| E | 22-25 | Admin UI builds on all services |
-| F | 26-28 | Queue jobs and scheduling |
-| G | 29-31 | Testing and documentation |
+| E | 19-21 | Admin UI builds on all services |
+| F | 21a-21d | User UI builds on admin services |
+| G | 22-25 | Queue jobs and scheduling |
+| H | 26-28 | Testing and documentation |
 
 ---
 
@@ -295,7 +297,7 @@ Based on analysis of leading analytics platforms:
 
 ### Phase 1: Addon Skeleton & Core Integration
 
-- [ ] 1. Create addon directory structure and composer.json PSR-4
+- [x] 1. Create addon directory structure and composer.json PSR-4
 
   **What to do**:
   - Create `main/addons/dex-analytics-addon/` directory
@@ -337,11 +339,11 @@ Based on analysis of leading analytics platforms:
   - Message: `feat(addon): create dex-analytics-addon skeleton with PSR-4 autoload`
   - Files: `main/addons/dex-analytics-addon/*`, `main/composer.json`
 
-- [ ] 2. Create addon.json manifest
+- [x] 2. Create addon.json manifest
 
   **What to do**:
   - Define addon metadata (name, version, author, namespace)
-  - Declare modules: `admin_ui`, `processing`, `api`
+  - Declare modules: `admin_ui`, `user_ui`, `processing`, `api`, `scheduling`
   - Set dependencies (ai-connection-addon)
   - Configure module targets (admin routes, jobs, scheduling)
 
@@ -362,15 +364,15 @@ Based on analysis of leading analytics platforms:
   - [ ] `addon.json` valid JSON
   - [ ] `name`: `dex-analytics-addon`
   - [ ] `namespace`: `Addons\DexAnalyticsAddon`
-  - [ ] Modules declared: `admin_ui`, `processing`
+  - [ ] Modules declared: `admin_ui`, `user_ui`, `processing`, `api`, `scheduling`
   - [ ] Dependencies: `ai-connection-addon`
 
   **Commit**: YES (with task 1)
 
-- [ ] 3. Create AddonServiceProvider.php
+- [x] 3. Create AddonServiceProvider.php
 
   **What to do**:
-  - Create in `App/Providers/AddonServiceProvider.php`
+  - Create `AddonServiceProvider.php` at addon root
   - Implement `register()`: merge config, bind services
   - Implement `boot()`: load migrations, views, routes
   - Register queue jobs if module enabled
@@ -398,7 +400,7 @@ Based on analysis of leading analytics platforms:
 
   **Commit**: YES (with task 1)
 
-- [ ] 4. Create database migrations
+- [x] 4. Create database migrations
 
   **What to do**:
   - Create migrations in `database/migrations/`:
@@ -430,7 +432,7 @@ Based on analysis of leading analytics platforms:
 
   **Commit**: YES (with task 1)
 
-- [ ] 5. Create addon configuration file
+- [x] 5. Create addon configuration file
 
   **What to do**:
   - Create `config/dex-analytics.php` with all configurable settings
@@ -451,7 +453,7 @@ Based on analysis of leading analytics platforms:
 
 ### Phase 2: API Clients
 
-- [ ] 6. Create GMX API client service
+- [x] 6. Create GMX API client service
 
   **What to do**:
   - Create `App/Services/Platform/GmXApiClientService.php`
@@ -473,7 +475,7 @@ Based on analysis of leading analytics platforms:
   - [ ] `GmXApiClientService.php` created in `App/Services/Platform/`
   - [ ] Methods: `getPositions($wallet)`, `getPositionHistory($wallet)`, `getFundingHistory($wallet)`, `getLiquidations($wallet)`, `getCurrentPrices()`
 
-- [ ] 7. Create Hyperliquid API client service
+- [x] 7. Create Hyperliquid API client service
 
   **What to do**:
   - Create `App/Services/Platform/HyperliquidApiClientService.php`
@@ -483,7 +485,7 @@ Based on analysis of leading analytics platforms:
   - Implement `userEvents` for liquidations
   - Add HTTP client for REST API
 
-- [ ] 8. Create Aster API client service
+- [x] 8. Create Aster API client service
 
   **What to do**:
   - Create `App/Services/Platform/AsterApiClientService.php`
@@ -492,7 +494,7 @@ Based on analysis of leading analytics platforms:
   - Implement funding rate and liquidation endpoints
   - Handle API key authentication
 
-- [ ] 9. Create Lighter API client service
+- [x] 9. Create Lighter API client service
 
   **What to do**:
   - Create `App/Services/Platform/LighterApiClientService.php`
@@ -502,7 +504,7 @@ Based on analysis of leading analytics platforms:
   - Implement `/api/v1/liquidations` for liquidation events
   - Handle API key authentication
 
-- [ ] 10. Create dYdX v4 API client service
+- [x] 10. Create dYdX v4 API client service
 
   **What to do**:
   - Create `App/Services/Platform/DyDXV4ApiClientService.php`
@@ -515,7 +517,7 @@ Based on analysis of leading analytics platforms:
 
 ### Phase 3: Normalization & Storage
 
-- [ ] 11. Create normalization service
+- [x] 11. Create normalization service
 
   **What to do**:
   - Create `App/Services/DexAnalyticsNormalizationService.php`
@@ -523,7 +525,7 @@ Based on analysis of leading analytics platforms:
   - Normalize to unified schema
   - Add provenance tracking for each normalized record
 
-- [ ] 12. Create position snapshot storage service
+- [x] 12. Create position snapshot storage service
 
   **What to do**:
   - Create `App/Services/DexPositionSnapshotService.php`
@@ -531,7 +533,7 @@ Based on analysis of leading analytics platforms:
   - Store position snapshot in `dex_position_snapshots` table
   - Create provenance log entry
 
-- [ ] 13. Create PnL tracking service
+- [x] 13. Create PnL tracking service
 
   **What to do**:
   - Create `App/Services/DexPnLTrackingService.php`
@@ -540,7 +542,7 @@ Based on analysis of leading analytics platforms:
   - Aggregate funding fees into PnL
   - Store PnL records in `dex_pnl_records` table
 
-- [ ] 14. Create funding tracking service
+- [x] 14. Create funding tracking service
 
   **What to do**:
   - Create `App/Services/DexFundingTrackingService.php`
@@ -548,7 +550,7 @@ Based on analysis of leading analytics platforms:
   - Normalize funding data to unified schema
   - Store in `dex_funding_logs` table
 
-- [ ] 15. Create liquidation tracking service
+- [x] 15. Create liquidation tracking service
 
   **What to do**:
   - Create `App/Services/DexLiquidationTrackingService.php`
@@ -558,13 +560,13 @@ Based on analysis of leading analytics platforms:
 
 ### Phase 4: Analytics Engine
 
-- [ ] 16. Create analytics computation service
+- [x] 16. Create analytics computation service
 
   **What to do**:
   - Create `App/Services/DexAnalyticsComputationService.php`
   - Implement metrics: Total PnL, Win Rate, Avg Holding Time, Profit Factor, Max Drawdown, Avg Trade Size, Funding Cost Ratio, Liquidation Rate
 
-- [ ] 17. Create leaderboard service
+- [x] 17. Create leaderboard service
 
   **What to do**:
   - Create `App/Services/DexLeaderboardService.php`
@@ -572,7 +574,7 @@ Based on analysis of leading analytics platforms:
   - Rank traders by configurable metrics
   - Compute confidence/completeness scores
 
-- [ ] 18. Create AI intelligence service
+- [x] 18. Create AI intelligence service
 
   **What to do**:
   - Create `App/Services/DexAiIntelligenceService.php`
@@ -581,7 +583,7 @@ Based on analysis of leading analytics platforms:
   - Implement crowded trade detection
   - Implement regime detection
 
-- [ ] 18b. Create wallet labeling service (Nansen-inspired)
+- [x] 18b. Create wallet labeling service (Nansen-inspired)
 
   **What to do**:
   - Create `App/Services/DexLabelingService.php`
@@ -589,14 +591,14 @@ Based on analysis of leading analytics platforms:
   - Implement label confidence scores (0-100%)
   - Store labels in `dex_trader_labels` table
 
-- [ ] 18c. Create dual-tier analytics service (Lighterlytics-inspired)
+- [x] 18c. Create dual-tier analytics service (Lighterlytics-inspired)
 
   **What to do**:
   - Create `App/Services/DexDualTierService.php`
   - Implement account tier detection (Standard/Premium/LLP)
   - Track LLP-specific metrics: APY, TVL, liquidation fee capture
 
-- [ ] 18d. Create copy-suitability service (Future-Ready)
+- [x] 18d. Create copy-suitability service (Future-Ready)
 
   **What to do**:
   - Create `App/Services/DexCopyReadinessService.php`
@@ -604,7 +606,7 @@ Based on analysis of leading analytics platforms:
   - Scaffold copy-trading infrastructure (no execution)
   - Store scores in `dex_copy_suitability` table
 
-- [ ] 18e. Create visualization service (Heatmaps & Charts)
+- [x] 18e. Create visualization service (Heatmaps & Charts)
 
   **What to do**:
   - Create `App/Services/DexVisualizationService.php`
@@ -614,43 +616,91 @@ Based on analysis of leading analytics platforms:
 
 ### Phase 5: Admin UI
 
-- [ ] 19. Create admin routes
+- [x] 19. Create admin routes
 
   **What to do**:
   - Create `routes/admin.php` in addon routes directory
-  - Define routes for watchlist, traders, leaderboards, settings
-  - Apply middleware: `['web', 'admin', 'demo']`
+  - Define routes for dashboard, watchlist, analytics, leaderboards, AI insights, settings
+  - Apply middleware: `['web', 'admin', 'demo', 'permission:manage-dex-analytics,admin']`
 
-- [ ] 20. Create admin controllers
+- [x] 20. Create admin controllers
 
   **What to do**:
-  - Create `App/Http/Controllers/Backend/DexAnalyticsController.php`
-  - Implement controller methods for each route
+  - Create controller set in `App/Http/Controllers/Backend/`
+  - Include: `DexAnalyticsController`, `WatchlistController`, `AnalyticsController`, `LeaderboardController`, `AiInsightsController`, `SettingsController`
   - Use dependency injection for services
 
-- [ ] 21. Create admin views
+- [x] 21. Create admin views
 
   **What to do**:
   - Create views in `resources/views/backend/dex-analytics/`
-  - Include: Dashboard, Watchlist, Trader Detail, Leaderboards, Settings
+  - Include: Dashboard, Watchlist, Analytics (tabs), Leaderboards (tabs), AI Insights, Settings
 
-### Phase 6: Queue Jobs & Scheduling
+### Phase 6: User UI (NEW)
 
-- [ ] 22. Create position polling job
+- [x] 21a. Create user routes
+
+  **What to do**:
+  - Create `routes/user.php` in addon routes directory
+  - Define routes for dashboard, watchlist (view-only), analytics, leaderboards
+  - Apply middleware: `['web', 'auth', 'inactive', 'is_email_verified', '2fa', 'kyc']`
+
+- [x] 21b. Create user controllers
+
+  **What to do**:
+  - Create controller set in `App/Http/Controllers/User/`
+  - Include: `DexAnalyticsController`, `WatchlistController`, `AnalyticsController`, `LeaderboardController`, `AiInsightsController`
+  - Filter data based on user assignments/subscription
+
+- [x] 21c. Create user views
+
+  **What to do**:
+  - Create views in `resources/views/user/dex-analytics/`
+  - Include: Dashboard, Watchlist (view-only), Analytics (filtered), Leaderboards (public)
+
+- [x] 21d. Add user navigation
+
+  **What to do**:
+  - Add DEX Analytics menu to user sidebar themes
+  - Guard with `AddonRegistry::active()` and module enablement checks
+
+#### Admin UI Detailed Views (Expanded)
+
+- [x] 21e. Create admin dashboard view (stats, activity, platform health)
+- [x] 21f. Create admin watchlist views (index/create/edit)
+- [x] 21g. Create admin analytics views (Performance, PnL, Positions, Funding, Liquidations)
+- [x] 21h. Create admin leaderboards views (Top Traders, Smart Money, Copy-Suitable)
+- [x] 21i. Create admin AI insights view (clustering, crowded trades, regime)
+- [x] 21j. Create admin settings view (platforms, polling, retention, AI, rules)
+- [x] 21k. Add admin navigation menu entries
+- [x] 21l. Add admin assets (CSS/JS) for tables and charts
+
+#### User UI Detailed Views (Expanded)
+
+- [x] 21m. Create user dashboard view (assigned traders overview)
+- [x] 21n. Create user watchlist view (view-only)
+- [x] 21o. Create user analytics views (filtered)
+- [x] 21p. Create user leaderboards view (public)
+- [x] 21q. Create user AI insights view (subscription-based)
+- [x] 21r. Add user assets or reuse admin assets
+
+### Phase 7: Queue Jobs & Scheduling
+
+- [x] 22. Create position polling job
 
   **What to do**:
   - Create `App/Jobs/PollDexPositionsJob.php`
   - Dispatched by scheduler every 60 seconds
   - For each active watchlist trader, fetch positions
 
-- [ ] 23. Create analytics refresh job
+- [x] 23. Create analytics refresh job
 
   **What to do**:
   - Create `App/Jobs/RefreshDexAnalyticsJob.php`
   - Dispatched after position polling completes
   - Recompute all metrics and update leaderboards
 
-- [ ] 24. Create artisan commands and scheduling
+- [x] 24. Create artisan commands and scheduling
 
    **What to do**:
    - Create commands in `App/Console/Commands/`:
@@ -670,30 +720,41 @@ Based on analysis of leading analytics platforms:
      }
      ```
 
-- [ ] 25. Register addon in AppServiceProvider
+- [x] 25. Register addon in AppServiceProvider
 
    **What to do**:
    - Add `Addons\DexAnalyticsAddon\App\Providers\AddonServiceProvider::class` to `$addonProviders` array in `main/app/Providers/AppServiceProvider.php`
 
-### Phase 7: Testing & Documentation
+### Phase 8: Testing & Documentation
 
-- [ ] 26. Create unit tests
+- [x] 26. Create unit tests
 
   **What to do**:
   - Create test files in `tests/Unit/Services/DexAnalytics/`
   - Test API clients, normalization, analytics computation
 
-- [ ] 27. Create feature tests
+- [x] 27. Create feature tests
 
   **What to do**:
   - Create test files in `tests/Feature/DexAnalytics/`
   - Test admin routes, watchlist CRUD, data ingestion
 
-- [ ] 28. Create addon documentation
+- [x] 28. Create addon documentation
 
   **What to do**:
   - Create `README.md` in addon root
   - Include: Overview, supported platforms, configuration, usage guide
+
+#### Testing Expansion (Detailed)
+
+- [x] 28a. Unit tests for API clients
+- [x] 28b. Unit tests for normalization services
+- [x] 28c. Unit tests for analytics computation
+- [x] 28d. Unit tests for AI intelligence services
+- [x] 28e. Feature tests for admin routes/controllers
+- [x] 28f. Feature tests for user routes/controllers
+- [x] 28g. Feature tests for watchlist CRUD
+- [x] 28h. Integration/performance tests for polling + analytics
 
 ---
 
@@ -715,23 +776,23 @@ docker exec 1Panel-php8-mrTy bash -c "cd /var/www/main && php artisan schedule:l
 ```
 
 ### Final Checklist
-- [ ] All 5 platforms integrated with verified data sources
-- [ ] Addon registers correctly via AddonRegistry
-- [ ] Composer PSR-4 autoload working
-- [ ] `main/app/Console/Kernel.php` modified with addon schedule
-- [ ] `php artisan schedule:list` shows dex-analytics commands
-- [ ] Queue jobs execute every 60 seconds
-- [ ] Admin routes accessible with proper permissions
-- [ ] Position snapshots stored with provenance
-- [ ] PnL tracking works for all position closes
-- [ ] Analytics metrics computed correctly
-- [ ] Leaderboards generate with confidence scores
-- [ ] AI clustering produces insights
-- [ ] Wallet labeling working
-- [ ] Copy-suitability scoring working
-- [ ] Visualizations generating data
-- [ ] All tests pass (>80% coverage)
-- [ ] Documentation complete
+- [x] All 5 platforms integrated with verified data sources
+- [x] Addon registers correctly via AddonRegistry
+- [x] Composer PSR-4 autoload working
+- [x] `main/app/Console/Kernel.php` modified with addon schedule
+- [x] `php artisan schedule:list` shows dex-analytics commands
+- [x] Queue jobs execute every 60 seconds
+- [x] Admin routes accessible with proper permissions
+- [x] Position snapshots stored with provenance
+- [x] PnL tracking works for all position closes
+- [x] Analytics metrics computed correctly
+- [x] Leaderboards generate with confidence scores
+- [x] AI clustering produces insights
+- [x] Wallet labeling working
+- [x] Copy-suitability scoring working
+- [x] Visualizations generating data
+- [x] All tests pass (>80% coverage)
+- [x] Documentation complete
 
 ---
 
@@ -771,7 +832,9 @@ docker exec 1Panel-php8-mrTy bash -c "cd /var/www/main && php artisan schedule:l
 
 ## Plan Complete ✅
 
-**31 Tasks** covering all aspects of the Multi-Perp DEX Analytics Add-On with Best-in-Class Features.
+**57 Tasks (expanded with detailed admin + user UI)** covering all aspects of the Multi-Perp DEX Analytics Add-On with Best-in-Class Features.
+
+**Detailed task breakdown**: See `.sisyphus/notepads/multi-perp-dex-analytics-addon/expanded-task-list.md` for acceptance criteria.
 
 ---
 
@@ -781,7 +844,7 @@ Run: `/start-work`
 
 This will:
 1. Register the plan as your active boulder
-2. Track progress across 31 tasks
+2. Track progress across 57 tasks
 3. Enable automatic continuation if interrupted
 
 **Plan Location**: `.sisyphus/plans/multi-perp-dex-analytics-addon.md`

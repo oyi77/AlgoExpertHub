@@ -75,6 +75,8 @@
             "Addons\\OpenRouterIntegration\\App\\": "addons/openrouter-integration-addon/app/",
             "Addons\\AiConnectionAddon\\": "addons/ai-connection-addon/",
             "Addons\\AiConnectionAddon\\App\\": "addons/ai-connection-addon/App/",
+            "Addons\\DexAnalyticsAddon\\": "addons/dex-analytics-addon/",
+            "Addons\\DexAnalyticsAddon\\App\\": "addons/dex-analytics-addon/App/",
             "Addons\\TradingManagement\\": "addons/trading-management-addon/",
             "Addons\\TradingManagement\\Modules\\": "addons/trading-management-addon/Modules/",
             "Addons\\PageBuilderAddon\\": "addons/page-builder-addon/",

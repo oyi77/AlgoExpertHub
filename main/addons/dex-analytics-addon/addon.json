@@ -1,0 +1,53 @@
+{
+    "name": "dex-analytics-addon",
+    "title": "DEX Analytics",
+    "description": "Read-only multi-platform perpetual DEX analytics with AI insights, leaderboards, and watchlist management",
+    "version": "1.0.0",
+    "author": "AlgoExpertHub",
+    "namespace": "Addons\\DexAnalyticsAddon",
+    "status": "active",
+    "requires": {
+        "php": "^8.1",
+        "laravel": "^10.0"
+    },
+    "dependencies": {
+        "ai-connection-addon": "^1.0"
+    },
+    "modules": [
+        {
+            "key": "admin_ui",
+            "name": "Admin Interface",
+            "description": "Admin routes and views for analytics, watchlist, leaderboards, and settings",
+            "targets": ["admin_routes", "admin_menu"],
+            "enabled": true
+        },
+        {
+            "key": "user_ui",
+            "name": "User Interface",
+            "description": "User-facing view-only analytics and leaderboards",
+            "targets": ["user_routes", "user_menu"],
+            "enabled": true
+        },
+        {
+            "key": "processing",
+            "name": "Analytics Processing",
+            "description": "Normalization, analytics computation, and AI processing services",
+            "targets": ["jobs"],
+            "enabled": true
+        },
+        {
+            "key": "api",
+            "name": "API",
+            "description": "Internal API endpoints for analytics data retrieval",
+            "targets": ["api"],
+            "enabled": true
+        },
+        {
+            "key": "scheduling",
+            "name": "Scheduling",
+            "description": "Polling and analytics refresh scheduling",
+            "targets": ["scheduling"],
+            "enabled": true
+        }
+    ]
+}

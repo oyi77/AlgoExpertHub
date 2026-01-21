@@ -25,6 +25,8 @@
                 $filterStrategyAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'filter_strategy');
                 $aiTradingAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'ai_analysis');
                 $srmAdminModuleEnabled = $tradingManagementEnabled && \App\Support\AddonRegistry::moduleEnabled('trading-management-addon', 'risk_management');
+                $dexAnalyticsAdminModuleEnabled = \App\Support\AddonRegistry::active('dex-analytics-addon')
+                    && \App\Support\AddonRegistry::moduleEnabled('dex-analytics-addon', 'admin_ui');
             @endphp
 
 
@@ -192,7 +194,36 @@
                 @endif
             @endif
 
-            {{-- OLD: Keep for backward compatibility during migration (can be hidden if trading-management-addon active) --}}
+            @if ($adminUser && $dexAnalyticsAdminModuleEnabled)
+                <li class="{{ request()->routeIs('admin.dex-analytics.*') ? 'mm-active' : '' }}">
+                    <a class="has-arrow" href="javascript:void(0)" aria-expanded="{{ request()->routeIs('admin.dex-analytics.*') ? 'true' : 'false' }}">
+                        <i data-feather="bar-chart-2"></i><span class="nav-text">{{ __('DEX Analytics') }}</span>
+                    </a>
+                    <ul aria-expanded="{{ request()->routeIs('admin.dex-analytics.*') ? 'true' : 'false' }}" class="{{ request()->routeIs('admin.dex-analytics.*') ? 'mm-show' : '' }}">
+                        <li class="{{ request()->routeIs('admin.dex-analytics.dashboard') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.dashboard') }}">{{ __('Dashboard') }}</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.dex-analytics.watchlist.*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.watchlist.index') }}">{{ __('Watchlist') }}</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.dex-analytics.analytics.*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.analytics.index') }}">{{ __('Analytics') }}</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.dex-analytics.leaderboards.*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.leaderboards.index') }}">{{ __('Leaderboards') }}</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.dex-analytics.ai-insights.*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.ai-insights.index') }}">{{ __('AI Insights') }}</a>
+                        </li>
+                        <li class="{{ request()->routeIs('admin.dex-analytics.settings.*') ? 'mm-active' : '' }}">
+                            <a href="{{ route('admin.dex-analytics.settings.index') }}">{{ __('Settings') }}</a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+ 
+             {{-- OLD: Keep for backward compatibility during migration (can be hidden if trading-management-addon active) --}}
+
             @if ($adminUser && $executionEngineAdminModuleEnabled && !$tradingManagementEnabled)
                 <li><a class="has-arrow" href="javascript:void(0)" aria-expanded="false"><i
                             data-feather="trending-up"></i><span class="nav-text">{{ __('Trading Execution') }}</span></a>

@@ -71,6 +71,11 @@
         <li class="{{ Config::singleMenu('user.signal.all') }}"><a href="{{ route('user.signal.all') }}"><i
                     class="fas fa-chart-bar"></i> {{ __('All Signal') }}</a></li>
 
+        @if (\App\Support\AddonRegistry::active('dex-analytics-addon') && \App\Support\AddonRegistry::moduleEnabled('dex-analytics-addon', 'user_ui'))
+            <li class="{{ Config::singleMenu('user.dex-analytics.dashboard') }}"><a href="{{ route('user.dex-analytics.dashboard') }}"><i
+                        class="fas fa-chart-line"></i> {{ __('DEX Analytics') }}</a></li>
+        @endif
+
         @if ($multiChannelUserModuleEnabled)
             <li class="{{ Config::singleMenu('user.signal-sources.index') }}"><a href="{{ route('user.signal-sources.index') }}"><i
                         class="fas fa-plug"></i> {{ __('Signal Sources') }}</a></li>

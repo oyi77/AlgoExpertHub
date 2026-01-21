@@ -22,6 +22,13 @@
             <span>Dashboard</span>
         </a>
         
+        @if (\App\Support\AddonRegistry::active('dex-analytics-addon') && \App\Support\AddonRegistry::moduleEnabled('dex-analytics-addon', 'user_ui'))
+            <a href="{{ route('user.dex-analytics.dashboard') }}" class="tv-sidebar-link {{ request()->routeIs('user.dex-analytics.*') ? 'active' : '' }}">
+                <i class="las la-chart-line"></i>
+                <span>DEX Analytics</span>
+            </a>
+        @endif
+        
         
         <!-- TRADING -->
         <div class="tv-menu-label">

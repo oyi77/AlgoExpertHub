@@ -217,6 +217,11 @@ class Kernel extends ConsoleKernel
                 ->everyThirtySeconds()
                 ->withoutOverlapping();
         }
+
+        if (AddonRegistry::active('dex-analytics-addon') && AddonRegistry::moduleEnabled('dex-analytics-addon', 'processing')) {
+            $schedule->command('dex-analytics:poll')->everyMinute()->withoutOverlapping();
+            $schedule->command('dex-analytics:refresh')->everyFiveMinutes()->withoutOverlapping();
+        }
     }
 
     /**
