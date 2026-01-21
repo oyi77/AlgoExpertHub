@@ -3,22 +3,22 @@
     "google_auth": false,
     "categories": {
       "visual-engineering": {
-        "model": "google/antigravity-gemini-3-pro-high"
+        "model": "google/antigravity-gemini-3-pro"
       },
       "artistry": {
-        "model": "google/antigravity-gemini-3-pro-high"
+        "model": "google/antigravity-gemini-3-pro"
       },
       "writing": {
         "model": "google/antigravity-gemini-3-flash"
       },
       "business-logic": {
-        "model": "google/antigravity-gemini-3-pro-high"
+        "model": "google/antigravity-gemini-3-pro"
       },
       "general": {
         "model": "opencode/glm-4.7-free"
       },
       "most-capable": {
-        "model": "google/antigravity-gemini-3-pro-high"
+        "model": "google/antigravity-gemini-3-pro"
       },
       "quick": {
         "model": "google/antigravity-gemini-3-flash"
@@ -33,6 +33,9 @@
       "plugins": false
     },
     "agents": {
+      "Momus (Plan Reviewer)": {
+        "model": "opencode/minimax-2.1-free"
+      },
       "Sisyphus": {
         "model": "opencode/glm-4.7-free"
       },
@@ -46,7 +49,7 @@
         "model": "google/antigravity-gemini-3-flash"
       },
       "frontend-ui-ux-engineer": {
-        "model": "google/antigravity-gemini-3-pro-high"
+        "model": "google/antigravity-gemini-3-pro"
       },
       "document-writer": {
         "model": "google/antigravity-gemini-3-flash"
