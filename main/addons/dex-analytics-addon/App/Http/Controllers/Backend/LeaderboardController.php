@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Addons\DexAnalyticsAddon\App\Http\Controllers\Backend;
 
+use Addons\DexAnalyticsAddon\App\Services\DexCopySuitabilityService;
 use Addons\DexAnalyticsAddon\App\Services\DexLeaderboardService;
 use Addons\DexAnalyticsAddon\App\Services\DexThemeService;
 use App\Http\Controllers\Controller;
@@ -13,6 +14,7 @@ class LeaderboardController extends Controller
 {
     public function __construct(
         private readonly DexLeaderboardService $leaderboardService,
+        private readonly DexCopySuitabilityService $copySuitabilityService,
         private readonly DexThemeService $themeService
     ) {
     }
@@ -67,16 +69,20 @@ class LeaderboardController extends Controller
 
     public function copySuitable(Request $request)
     {
-        $leaderboard = $this->leaderboardService->buildLeaderboard('win_rate', $request->query('platform'));
+        $limit = (int) $request->query('limit', 100);
+        $leaderboard = $this->copySuitabilityService->calculateAllScores();
+
+        // Take only top traders by copy suitability
+        $topLeaders = array_slice($leaderboard, 0, $limit);
 
         if ($this->themeService->getActiveTheme() === 'beta-ui') {
             return inertia('Admin/DexAnalytics/Leaderboards', [
-                'leaderboard' => $leaderboard,
-                'metricKey' => 'win_rate',
-                'platform' => $request->query('platform'),
+                'leaderboard' => $topLeaders,
+                'metricKey' => 'copy_suitability_score',
+                'platform' => null,
             ]);
         }
 
-        return view('dex-analytics-addon::backend.leaderboards.copy-suitable', compact('leaderboard'));
+        return view('dex-analytics-addon::backend.leaderboards.copy-suitable', compact('topLeaders'));
     }
 }

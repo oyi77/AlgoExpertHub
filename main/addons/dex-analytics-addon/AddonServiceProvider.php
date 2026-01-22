@@ -57,6 +57,7 @@ class AddonServiceProvider extends ServiceProvider
             $this->commands([
                 \Addons\DexAnalyticsAddon\App\Console\Commands\DexAnalyticsPollCommand::class,
                 \Addons\DexAnalyticsAddon\App\Console\Commands\DexAnalyticsRefreshCommand::class,
+                \Addons\DexAnalyticsAddon\App\Console\Commands\DexAnalyticsComputeCommand::class,
             ]);
         }
     }
