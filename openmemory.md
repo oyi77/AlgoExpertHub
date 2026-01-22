@@ -17,7 +17,7 @@
 
 ## Components
 - Services pattern: controllers delegate to `App\Services\*` for signal publishing, payments, plan management, Telegram messaging, etc.
-- Queue + job ecosystem: background parsing (`ProcessChannelMessage`), execution engine jobs, email + subscriber sends, with scheduled tasks defined in `app/Console/Kernel.php`.
+- Queue + job ecosystem: background parsing (`ProcessChannelMessage`), execution engine jobs (including `ExecutionJob` for signal/bot execution with paper trading support via `createVirtualPosition`), email + subscriber sends, with scheduled tasks defined in `app/Console/Kernel.php`.
 - Payments subsystem: `PaymentService`, `Gateway` models, manual + automated gateways (PayPal, Stripe, Paystack, Coinpayments, Nowpayments, Paghiper, etc.), wallet + subscription activation flow, transaction logging.
 - Authentication/authorization: dual guards (`web`, `admin`), Spatie permissions, middleware stack enforcing inactivity, email verification, 2FA, KYC, demo mode restrictions.
 - Notifications: database, email, Telegram channels, plus addon-specific push (execution, tickets, KYC).

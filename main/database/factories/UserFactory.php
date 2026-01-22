@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -9,6 +11,7 @@ class UserFactory extends Factory
 {
     /**
      * Define the model's default state.
+     * Matches actual sp_users table schema.
      *
      * @return array
      */
@@ -17,16 +20,15 @@ class UserFactory extends Factory
         return [
             'username' => $this->faker->unique()->userName(),
             'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'is_email_verified' => 1,
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'phone' => $this->faker->optional()->phoneNumber(),
+            'phone' => $this->faker->phoneNumber(), // Required field
             'balance' => $this->faker->randomFloat(2, 0, 1000),
             'status' => 1,
             'kyc_status' => $this->faker->randomElement(['unverified', 'pending', 'approved']),
-            'ref_id' => null,
+            'ref_id' => 0, // Required field, use 0 for no referrer
             'telegram_chat_id' => $this->faker->optional()->numerify('##########'),
             'address' => [
                 'country' => $this->faker->country(),
@@ -41,14 +43,11 @@ class UserFactory extends Factory
 
     /**
      * Indicate that the model's email address should be unverified.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
     public function unverified()
     {
         return $this->state(function (array $attributes) {
             return [
-                'email_verified_at' => null,
                 'is_email_verified' => 0,
             ];
         });

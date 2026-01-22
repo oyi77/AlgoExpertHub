@@ -1,0 +1,3 @@
+- Existing tests (Phase 1.5) had incorrect Cache::remember signatures (missing key).
+- Existing tests expected 'bot_id' column in 'trading_presets' table which does not exist in the current schema (relation is Bot -> Preset).
+- Missing factories for TradingBot and TradingPreset models required manual creation to run tests.

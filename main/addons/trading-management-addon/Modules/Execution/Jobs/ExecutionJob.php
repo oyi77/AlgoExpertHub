@@ -81,12 +81,25 @@ class ExecutionJob implements ShouldQueue
 
             // Paper trading mode: Use virtual positions created via InternalBrokerService for paper trading
             // (already works for manual trading via TradingTerminalController)
+            // Paper trading mode: Create virtual position
             if ($isTestMode) {
-                Log::warning('Paper trading mode: Use virtual positions created via InternalBrokerService for paper trading (already works for manual trading)', [
-                    'bot_id' => $botId,
-                    'symbol' => $symbol,
-                    'direction' => $direction,
+                Log::info('Paper trading mode: Creating virtual position', [
+                    'symbol' => $this->executionData['symbol'] ?? 'unknown',
                 ]);
+
+                $result = $this->createVirtualPosition(
+                    $this->executionData['symbol'],
+                    $this->executionData['direction'],
+                    $this->executionData['quantity'],
+                    $this->executionData['entry_price'] ?? null,
+                    $this->executionData['stop_loss'] ?? null,
+                    $this->executionData['take_profit'] ?? null,
+                    $this->executionData['connection_id'] ?? null
+                );
+
+                if ($result['success']) {
+                    Log::info('Paper trade executed', ['trade_id' => $result['trade_id'] ?? null]);
+                }
                 return;
             }
 
@@ -746,7 +759,8 @@ class ExecutionJob implements ShouldQueue
                 $quantity,
                 $entryPrice ?? 0,
                 $stopLoss,
-                $takeProfit
+                $takeProfit,
+                true
             );
 
             Log::info('Paper trading position created', [

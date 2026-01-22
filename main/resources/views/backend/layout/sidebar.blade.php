@@ -195,31 +195,105 @@
             @endif
 
             @if ($adminUser && $dexAnalyticsAdminModuleEnabled)
+                @php
+                    try {
+                        $hasDashboardRoute = Route::has('admin.dex-analytics.dashboard');
+                        $hasWatchlistRoute = Route::has('admin.dex-analytics.watchlist.index');
+                        $hasAnalyticsRoute = Route::has('admin.dex-analytics.analytics.index');
+                        $hasLeaderboardsRoute = Route::has('admin.dex-analytics.leaderboards.index');
+                        $hasAiInsightsRoute = Route::has('admin.dex-analytics.ai-insights.index');
+                        $hasSettingsRoute = Route::has('admin.dex-analytics.settings.index');
+                    } catch (\Exception $e) {
+                        \Log::error('DEX Analytics menu route check error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+                        $hasDashboardRoute = false;
+                        $hasWatchlistRoute = false;
+                        $hasAnalyticsRoute = false;
+                        $hasLeaderboardsRoute = false;
+                        $hasAiInsightsRoute = false;
+                        $hasSettingsRoute = false;
+                    }
+                @endphp
+                @if ($hasDashboardRoute || $hasWatchlistRoute || $hasAnalyticsRoute || $hasLeaderboardsRoute || $hasAiInsightsRoute || $hasSettingsRoute)
                 <li class="{{ request()->routeIs('admin.dex-analytics.*') ? 'mm-active' : '' }}">
                     <a class="has-arrow" href="javascript:void(0)" aria-expanded="{{ request()->routeIs('admin.dex-analytics.*') ? 'true' : 'false' }}">
                         <i data-feather="bar-chart-2"></i><span class="nav-text">{{ __('DEX Analytics') }}</span>
                     </a>
                     <ul aria-expanded="{{ request()->routeIs('admin.dex-analytics.*') ? 'true' : 'false' }}" class="{{ request()->routeIs('admin.dex-analytics.*') ? 'mm-show' : '' }}">
+                        @if ($hasDashboardRoute)
+                        @php
+                            try {
+                                $dashboardRouteUrl = route('admin.dex-analytics.dashboard');
+                            } catch (\Exception $e) {
+                                $dashboardRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.dashboard') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.dashboard') }}">{{ __('Dashboard') }}</a>
+                            <a href="{{ $dashboardRouteUrl }}">{{ __('Dashboard') }}</a>
                         </li>
+                        @endif
+                        @if ($hasWatchlistRoute)
+                        @php
+                            try {
+                                $watchlistRouteUrl = route('admin.dex-analytics.watchlist.index');
+                            } catch (\Exception $e) {
+                                $watchlistRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.watchlist.*') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.watchlist.index') }}">{{ __('Watchlist') }}</a>
+                            <a href="{{ $watchlistRouteUrl }}">{{ __('Watchlist') }}</a>
                         </li>
+                        @endif
+                        @if ($hasAnalyticsRoute)
+                        @php
+                            try {
+                                $analyticsRouteUrl = route('admin.dex-analytics.analytics.index');
+                            } catch (\Exception $e) {
+                                $analyticsRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.analytics.*') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.analytics.index') }}">{{ __('Analytics') }}</a>
+                            <a href="{{ $analyticsRouteUrl }}">{{ __('Analytics') }}</a>
                         </li>
+                        @endif
+                        @if ($hasLeaderboardsRoute)
+                        @php
+                            try {
+                                $leaderboardsRouteUrl = route('admin.dex-analytics.leaderboards.index');
+                            } catch (\Exception $e) {
+                                $leaderboardsRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.leaderboards.*') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.leaderboards.index') }}">{{ __('Leaderboards') }}</a>
+                            <a href="{{ $leaderboardsRouteUrl }}">{{ __('Leaderboards') }}</a>
                         </li>
+                        @endif
+                        @if ($hasAiInsightsRoute)
+                        @php
+                            try {
+                                $aiInsightsRouteUrl = route('admin.dex-analytics.ai-insights.index');
+                            } catch (\Exception $e) {
+                                $aiInsightsRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.ai-insights.*') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.ai-insights.index') }}">{{ __('AI Insights') }}</a>
+                            <a href="{{ $aiInsightsRouteUrl }}">{{ __('AI Insights') }}</a>
                         </li>
+                        @endif
+                        @if ($hasSettingsRoute)
+                        @php
+                            try {
+                                $settingsRouteUrl = route('admin.dex-analytics.settings.index');
+                            } catch (\Exception $e) {
+                                $settingsRouteUrl = '#';
+                            }
+                        @endphp
                         <li class="{{ request()->routeIs('admin.dex-analytics.settings.*') ? 'mm-active' : '' }}">
-                            <a href="{{ route('admin.dex-analytics.settings.index') }}">{{ __('Settings') }}</a>
+                            <a href="{{ $settingsRouteUrl }}">{{ __('Settings') }}</a>
                         </li>
+                        @endif
                     </ul>
                 </li>
+                @endif
             @endif
  
              {{-- OLD: Keep for backward compatibility during migration (can be hidden if trading-management-addon active) --}}

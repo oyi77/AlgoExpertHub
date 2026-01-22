@@ -6,6 +6,7 @@ namespace Addons\DexAnalyticsAddon\App\Http\Controllers\Backend;
 
 use Addons\DexAnalyticsAddon\App\Http\Requests\StoreWatchlistRequest;
 use Addons\DexAnalyticsAddon\App\Http\Requests\UpdateWatchlistRequest;
+use Addons\DexAnalyticsAddon\App\Services\DexThemeService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -13,17 +14,31 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class WatchlistController extends Controller
 {
+    public function __construct(private readonly DexThemeService $themeService)
+    {
+    }
+
     public function index()
     {
         $watchlist = DB::table('dex_trader_watchlist')
             ->orderByDesc('created_at')
             ->paginate(25);
 
+        if ($this->themeService->getActiveTheme() === 'beta-ui') {
+            return inertia('Admin/DexAnalytics/Watchlist', [
+                'watchlist' => $watchlist,
+            ]);
+        }
+
         return view('dex-analytics-addon::backend.watchlist.index', compact('watchlist'));
     }
 
     public function create()
     {
+        if ($this->themeService->getActiveTheme() === 'beta-ui') {
+            return inertia('Admin/DexAnalytics/WatchlistCreate');
+        }
+
         return view('dex-analytics-addon::backend.watchlist.create');
     }
 
@@ -46,6 +61,12 @@ class WatchlistController extends Controller
     public function edit(int $id)
     {
         $watchlist = DB::table('dex_trader_watchlist')->where('id', $id)->first();
+
+        if ($this->themeService->getActiveTheme() === 'beta-ui') {
+            return inertia('Admin/DexAnalytics/WatchlistEdit', [
+                'watchlist' => $watchlist,
+            ]);
+        }
 
         return view('dex-analytics-addon::backend.watchlist.edit', compact('watchlist'));
     }

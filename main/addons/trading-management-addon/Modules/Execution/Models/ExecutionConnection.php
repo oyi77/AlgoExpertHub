@@ -204,5 +204,13 @@ class ExecutionConnection extends Model
 
         return $value ?? 'Unknown';
     }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): \Database\Factories\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnectionFactory
+    {
+        return \Database\Factories\Addons\TradingManagement\Modules\Execution\Models\ExecutionConnectionFactory::new();
+    }
 }
 

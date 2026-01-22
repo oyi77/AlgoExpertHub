@@ -1,8 +1,10 @@
 {
-  "active_plan": "/Users/paijo/AlgoExpertHub/.sisyphus/plans/trading-bot-refactor-consolidated.md",
-  "started_at": "2026-01-21T15:52:30.224Z",
+  "active_plan": "/opt/1panel/apps/openresty/openresty/www/sites/aitradepulse.com/index/.sisyphus/plans/trading-bot-refactor-consolidated.md",
+  "started_at": "2026-01-21T16:28:41.885Z",
   "session_ids": [
-    "ses_41fa19becffe7c26FSKIFUxdAW"
+    "ses_41fa19becffe7c26FSKIFUxdAW",
+    "ses_41e9cfba8ffeE4Dbp4lsNqcDJV",
+    "ses_41e9cfba8ffeE4Dbp4lsNqcDJV"
   ],
   "plan_name": "trading-bot-refactor-consolidated",
   "previous_plan": "multi-perp-dex-analytics-addon",
