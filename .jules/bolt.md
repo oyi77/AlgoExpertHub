@@ -5,3 +5,7 @@
 ## 2025-05-20 - [Optimizing Rolling Window Aggregations]
 **Learning:** Aggregating user data for charts (e.g., "last 12 months") without a date filter causes full-table scans and merges historical data incorrectly (e.g., Jan 2023 + Jan 2024). Using `whereYear` is also incorrect as it cuts off data at year boundaries.
 **Action:** Explicitly calculate the start date (e.g., `now()->subMonths(11)`) and add `where('created_at', '>=', $startDate)` to all aggregation queries. This ensures correctness and leverages `created_at` indexes.
+
+## 2025-05-23 - [Optimizing Dashboard Aggregations with Integer Grouping]
+**Learning:** Using `MONTH(created_at)` (integer) is more performant than `MONTHNAME(created_at)` (string) for database grouping and sorting, and avoids locale dependencies. However, API compatibility might require maintaining string keys for certain endpoints (like `signalGraph`).
+**Action:** When optimizing SQL aggregations, prefer integer-based date functions (`MONTH`, `YEAR`, `DAY`) and map them to display labels in the application layer, but be mindful of existing API contracts that might expect specific keys.
