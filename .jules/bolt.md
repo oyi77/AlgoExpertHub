@@ -5,3 +5,7 @@
 ## 2025-05-20 - [Optimizing Rolling Window Aggregations]
 **Learning:** Aggregating user data for charts (e.g., "last 12 months") without a date filter causes full-table scans and merges historical data incorrectly (e.g., Jan 2023 + Jan 2024). Using `whereYear` is also incorrect as it cuts off data at year boundaries.
 **Action:** Explicitly calculate the start date (e.g., `now()->subMonths(11)`) and add `where('created_at', '>=', $startDate)` to all aggregation queries. This ensures correctness and leverages `created_at` indexes.
+
+## 2025-10-27 - [Carbon Object Instantiation Overhead in Loops]
+**Learning:** Re-instantiating `Carbon::today()` inside a loop (e.g., for rolling 12-month windows) is significantly slower (~33% overhead) than instantiating once and mutating the object.
+**Action:** Instantiate `Carbon` once outside the loop and use `addMonth()` (or similar mutators) to iterate.
