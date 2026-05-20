@@ -1,70 +1,97 @@
-# AlgoExpertHub Trading Signal Platform
+# AlgoExpertHub — AI-Powered Trading Signal Platform
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/oyi77/AlgoExpertHub)
 
 ## Overview
 
-**AlgoExpertHub** is a comprehensive Laravel-based subscription platform for distributing trading signals across multiple asset markets (Forex, Crypto, Stocks). It features automated signal ingestion, AI-powered analysis, and automated trade execution.
+Laravel-based subscription platform for distributing trading signals across Forex, Crypto, and Stock markets. Features automated signal ingestion from Telegram/API/RSS, AI-powered analysis (OpenAI, Gemini), and automated trade execution via CCXT and MetaApi.
 
-For detailed documentation, please visit the **[Documentation Index](./docs/README.md)**.
+## Architecture
+
+```
+├── main/                  # Laravel application
+│   ├── app/               # Core logic (Services, Models, Controllers)
+│   ├── addons/            # Modular feature packages (8 addons)
+│   ├── config/            # Configuration
+│   ├── database/          # Migrations, seeders, factories
+│   ├── routes/            # Web, API, console routes
+│   ├── resources/         # Blade views, assets, lang
+│   └── tests/             # Unit, Feature, Property tests
+├── docs/                  # Documentation (architecture, API, deployment)
+├── docker/                # Docker config (MySQL, Nginx, PHP)
+├── install/               # Installation wizard
+├── scripts/               # Deployment & utility scripts
+├── openspec/              # OpenSpec change proposals
+├── .omc/                  # Improvement plans & state
+│   ├── plans/             # IMPROVEMENT_PLAN.md
+│   └── state/             # improvement.json
+└── AGENTS.md              # Hierarchical AI-readable docs (25 files)
+```
 
 ## Key Features
 
-- **Multi-Plan Subscription System**
-- **Automated Signal Ingestion** (Telegram, API, RSS, Web)
-- **AI-Powered Market Analysis** (OpenAI, Gemini, OpenRouter)
-- **Automated Trade Execution** (CCXT, MetaApi)
-- **Copy Trading System**
-- **Risk Management Presets**
-- **Modular Addon Architecture**
+| Feature | Description |
+|---------|-------------|
+| Signal Ingestion | Telegram, API, RSS, Web scraping via webhook endpoints |
+| AI Parsing | Regex → OCR → AI (OpenAI/Gemini) parsing pipeline |
+| Trade Execution | CCXT (crypto), MetaApi (MT4/MT5 forex) |
+| Bot System | SIGNAL_BASED + MARKET_STREAM_BASED modes |
+| Risk Management | Circuit breakers, position sizing, AI-adaptive risk |
+| Multi-Channel Distribution | Dashboard, Telegram, WhatsApp, SMS, Email |
+| Subscription Tiers | Free → Enterprise with Stripe billing |
+| Addon Architecture | 8 toggleable modules (trading, AI, signals, etc.) |
 
-## Quick Links
+## Tech Stack
 
-- **[Architecture Overview](./docs/architecture/overview.md)**
-- **[Installation Guide](./docs/deployment/general-guide.md)**
-- **[Docker Deployment](./docs/deployment/docker.md)**
-- **[Developer Onboarding](./docs/development/onboarding.md)**
-- **[API Reference](./docs/api/reference.md)**
+| Layer | Technology |
+|-------|-----------|
+| Backend | Laravel 10, PHP 8.1+ |
+| Database | MySQL 8, Redis (queues + cache) |
+| Frontend | Blade, Bootstrap 4, jQuery |
+| Real-time | Soketi (WebSocket) |
+| Deployment | Docker, Railway, traditional hosting |
 
-## Technology Stack
+## Quick Start
 
-- **Backend**: Laravel 10.x, PHP 8.1+
-- **Database**: MySQL 5.7+
-- **Queue**: Database/Redis
-- **Frontend**: Blade, Bootstrap 4, jQuery
-- **Real-time**: WebSocket (Soketi)
+```bash
+# Docker
+docker-compose up -d
 
-## Project Structure
-
-The project follows a modular structure with core application code in `main/app` and features encapsulated in `main/addons`.
-
+# Traditional
+composer install
+php artisan migrate --seed
+php artisan serve
 ```
-public_html/
-├── main/
-│   ├── app/               # Core application logic
-│   ├── addons/            # Modular feature packages
-│   ├── config/            # Configuration
-│   └── ...
-├── docs/                  # Detailed documentation
-├── docker/                # Docker configuration
-└── specs/                 # Feature specifications
-```
+
+## Improvement Plan
+
+A comprehensive audit was conducted on 2026-05-21. See [.omc/plans/IMPROVEMENT_PLAN.md](.omc/plans/IMPROVEMENT_PLAN.md) for the full 8-week plan covering:
+
+| Phase | Focus | Severity |
+|-------|-------|----------|
+| Week 1 | Critical Security (SQL injection, mass assignment, webhook auth) | CRITICAL |
+| Week 2 | High Security (XSS, CSP, OAuth password, debug mode) | HIGH |
+| Week 3-4 | Trading Logic (rate limiting, price fetcher, circuit breakers, idempotency) | HIGH |
+| Week 5-6 | Architecture (dedup services, addon cleanup, indexes, error handling) | MEDIUM |
+| Week 7 | Testing & CI (GitHub Actions, PHPStan, coverage) | HIGH |
+| Week 8 | Monitoring (audit trail, health dashboard, alerting) | MEDIUM |
 
 ## Documentation
 
-We maintain comprehensive documentation in the `docs/` directory:
-
-- 🏗️ **[Architecture](./docs/architecture/overview.md)**
-- ⚙️ **[Core Workflows](./docs/core/end-to-end-trading-flow.md)**
-- 🧩 **[Addons](./docs/addons/trading-management/user-guide.md)**
-- 💻 **[Development](./docs/development/onboarding.md)**
-- 🚀 **[Deployment](./docs/deployment/docker.md)**
+- [Architecture Overview](docs/architecture/overview.md)
+- [Installation Guide](docs/deployment/general-guide.md)
+- [Docker Deployment](docs/deployment/docker.md)
+- [Developer Onboarding](docs/development/onboarding.md)
+- [API Reference](docs/api/reference.md)
+- [Core Workflows](docs/core/end-to-end-trading-flow.md)
+- [Addon Guide](docs/addons/trading-management/user-guide.md)
+- [AGENTS.md Hierarchy](AGENTS.md) — AI-readable codebase documentation
 
 ## Support
 
 - **Issues**: Open an issue in the repository
-- **Wiki**: See the [Documentation Index](./docs/README.md)
+- **Wiki**: See the [Documentation Index](docs/README.md)
 
 ---
 
-**Built with ❤️ using Laravel**
+**Built with Laravel**

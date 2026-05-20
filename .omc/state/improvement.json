@@ -1,0 +1,23 @@
+{
+  "active": true,
+  "phase": "planning",
+  "plan_path": ".omc/plans/IMPROVEMENT_PLAN.md",
+  "started_at": "2026-05-21T00:00:00Z",
+  "current_week": 0,
+  "total_weeks": 8,
+  "phases": [
+    {"week": 1, "name": "Critical Security Fixes", "status": "pending"},
+    {"week": 2, "name": "High Security Fixes", "status": "pending"},
+    {"week": "3-4", "name": "Trading Logic Improvements", "status": "pending"},
+    {"week": "5-6", "name": "Architecture Improvements", "status": "pending"},
+    {"week": 7, "name": "Testing & CI", "status": "pending"},
+    {"week": 8, "name": "Monitoring & Observability", "status": "pending"}
+  ],
+  "audit_summary": {
+    "critical": 4,
+    "high": 4,
+    "medium": 6,
+    "low": 2,
+    "trading_gaps": 7
+  }
+}
