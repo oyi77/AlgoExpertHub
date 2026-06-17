@@ -73,29 +73,29 @@ class UserDashboardService
         // Retrieve aggregated data as maps [month => total] for O(1) lookup
         // v2 cache keys for logic change
 
-        $paymentMap = Cache::remember('udash:paymentAgg:v2:' . auth()->id(), $ttl, function () use ($startDate) {
+        $paymentMap = Cache::remember('udash:paymentAgg:v3:' . auth()->id(), $ttl, function () use ($startDate) {
             return Payment::where('status', 1)
                 ->where('user_id', auth()->id())
                 ->where('created_at', '>=', $startDate)
-                ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
+                ->selectRaw('SUM(amount) as total, MONTH(created_at) as month')
                 ->groupBy('month')
                 ->pluck('total', 'month');
         });
 
-        $withdrawMap = Cache::remember('udash:withdrawAgg:v2:' . auth()->id(), $ttl, function () use ($startDate) {
+        $withdrawMap = Cache::remember('udash:withdrawAgg:v3:' . auth()->id(), $ttl, function () use ($startDate) {
             return Withdraw::where('status', 1)
                 ->where('user_id', auth()->id())
                 ->where('created_at', '>=', $startDate)
-                ->selectRaw('SUM(withdraw_amount) as total, MONTHNAME(created_at) as month')
+                ->selectRaw('SUM(withdraw_amount) as total, MONTH(created_at) as month')
                 ->groupBy('month')
                 ->pluck('total', 'month');
         });
 
-        $depositMap = Cache::remember('udash:depositAgg:v2:' . auth()->id(), $ttl, function () use ($startDate) {
+        $depositMap = Cache::remember('udash:depositAgg:v3:' . auth()->id(), $ttl, function () use ($startDate) {
             return Deposit::where('status', 1)
                 ->where('user_id', auth()->id())
                 ->where('created_at', '>=', $startDate)
-                ->selectRaw('SUM(amount) as total, MONTHNAME(created_at) as month')
+                ->selectRaw('SUM(amount) as total, MONTH(created_at) as month')
                 ->groupBy('month')
                 ->pluck('total', 'month');
         });
@@ -113,9 +113,9 @@ class UserDashboardService
             array_push($months, $monthName);
 
             // O(1) lookup instead of array_search loop
-            $totalAmount->push($paymentMap[$monthName] ?? 0);
-            $withdrawTotalAmount->push($withdrawMap[$monthName] ?? 0);
-            $depositTotalAmount->push($depositMap[$monthName] ?? 0);
+            $totalAmount->push($paymentMap[$month->month] ?? 0);
+            $withdrawTotalAmount->push($withdrawMap[$month->month] ?? 0);
+            $depositTotalAmount->push($depositMap[$month->month] ?? 0);
             $signalGrapTotal->push($signalMap[$monthName] ?? 0);
         }
 
